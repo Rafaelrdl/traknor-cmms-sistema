@@ -130,68 +130,84 @@ export function Dashboard() {
             <div className="space-y-4">
               {/* Donut chart representation */}
               <div className="flex items-center justify-center">
-                <div className="relative w-32 h-32">
-                  {/* Base circle */}
-                  <div className="absolute inset-0 rounded-full overflow-hidden">
-                    {/* Calculate total for percentages */}
-                    {(() => {
-                      const total = chartData.equipmentStatus.functioning + 
-                                   chartData.equipmentStatus.maintenance + 
-                                   chartData.equipmentStatus.stopped;
-                      
-                      // Calculate angles for each segment
-                      const funcAngle = (chartData.equipmentStatus.functioning / total) * 360;
-                      const maintAngle = (chartData.equipmentStatus.maintenance / total) * 360;
-                      
-                      return (
-                        <>
-                          {/* Functioning segment (green) */}
-                          <div 
-                            className="absolute inset-0 bg-green-500"
-                            style={{
-                              clipPath: `polygon(50% 50%, 50% 0, ${funcAngle <= 180 
-                                ? `${50 + 50 * Math.sin(funcAngle * Math.PI / 180)}% ${50 - 50 * Math.cos(funcAngle * Math.PI / 180)}%` 
-                                : '100% 0, 100% 100%, 0 100%, 0 0'}, 50% 0)`
-                            }}
-                          />
-                          
-                          {/* Maintenance segment (yellow) */}
-                          <div 
-                            className="absolute inset-0 bg-yellow-500"
-                            style={{
-                              clipPath: `polygon(50% 50%, ${funcAngle <= 180 
-                                ? `${50 + 50 * Math.sin(funcAngle * Math.PI / 180)}% ${50 - 50 * Math.cos(funcAngle * Math.PI / 180)}%` 
-                                : '100% 0'}, ${(funcAngle + maintAngle) <= 180 
-                                ? `${50 + 50 * Math.sin((funcAngle + maintAngle) * Math.PI / 180)}% ${50 - 50 * Math.cos((funcAngle + maintAngle) * Math.PI / 180)}%` 
-                                : '100% 100%, 0 100%, 0 0, 100% 0'})`
-                            }}
-                          />
-                          
-                          {/* Stopped segment (red) */}
-                          <div 
-                            className="absolute inset-0 bg-red-500"
-                            style={{
-                              clipPath: `polygon(50% 50%, ${(funcAngle + maintAngle) <= 180 
-                                ? `${50 + 50 * Math.sin((funcAngle + maintAngle) * Math.PI / 180)}% ${50 - 50 * Math.cos((funcAngle + maintAngle) * Math.PI / 180)}%` 
-                                : '0 100%'}, 50% 100%, 0 100%, 0 0, 50% 0)`
-                            }}
-                          />
-                        </>
-                      );
-                    })()}
-                  </div>
+                {(() => {
+                  const total = chartData.equipmentStatus.functioning + 
+                               chartData.equipmentStatus.maintenance + 
+                               chartData.equipmentStatus.stopped;
                   
-                  {/* Center hole */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-16 h-16 bg-background rounded-full flex items-center justify-center">
-                      <span className="text-2xl font-bold">
-                        {chartData.equipmentStatus.functioning + 
-                         chartData.equipmentStatus.maintenance + 
-                         chartData.equipmentStatus.stopped}
-                      </span>
+                  // Calculate percentages
+                  const functioningPercent = (chartData.equipmentStatus.functioning / total) * 100;
+                  const maintenancePercent = (chartData.equipmentStatus.maintenance / total) * 100;
+                  const stoppedPercent = (chartData.equipmentStatus.stopped / total) * 100;
+                  
+                  // Calculate stroke-dasharray for each segment
+                  const circumference = 2 * Math.PI * 40; // radius = 40
+                  const functioningLength = (functioningPercent / 100) * circumference;
+                  const maintenanceLength = (maintenancePercent / 100) * circumference;
+                  const stoppedLength = (stoppedPercent / 100) * circumference;
+                  
+                  return (
+                    <div className="relative w-32 h-32">
+                      <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 100 100">
+                        {/* Background circle */}
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="40"
+                          fill="transparent"
+                          stroke="rgb(229 231 235)"
+                          strokeWidth="10"
+                        />
+                        
+                        {/* Functioning segment (green) */}
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="40"
+                          fill="transparent"
+                          stroke="rgb(34 197 94)"
+                          strokeWidth="10"
+                          strokeDasharray={`${functioningLength} ${circumference}`}
+                          strokeDashoffset="0"
+                          strokeLinecap="round"
+                        />
+                        
+                        {/* Maintenance segment (yellow) */}
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="40"
+                          fill="transparent"
+                          stroke="rgb(234 179 8)"
+                          strokeWidth="10"
+                          strokeDasharray={`${maintenanceLength} ${circumference}`}
+                          strokeDashoffset={-functioningLength}
+                          strokeLinecap="round"
+                        />
+                        
+                        {/* Stopped segment (red) */}
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="40"
+                          fill="transparent"
+                          stroke="rgb(239 68 68)"
+                          strokeWidth="10"
+                          strokeDasharray={`${stoppedLength} ${circumference}`}
+                          strokeDashoffset={-(functioningLength + maintenanceLength)}
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      
+                      {/* Center number */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-2xl font-bold">
+                          {total}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  );
+                })()}
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
