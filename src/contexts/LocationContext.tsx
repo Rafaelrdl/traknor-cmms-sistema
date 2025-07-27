@@ -1,32 +1,32 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
-
+import type { LocationNode, Company, Sector, SubSection } from '@/types';
 
 /** Context typing */
 interface LocationContextType {
   tree: LocationNode[];
   filteredTree: LocationNode[];
   selectedNode: LocationNode | null;
-  setSearchTerm: (term: strin
+  expandedNodes: Set<string>;
   searchTerm: string;
   setSelectedNode: (node: LocationNode | null) => void;
   toggleExpanded: (nodeId: string) => void;
-  const [searchTerm, setSearchTerm] = us
- 
+  setSearchTerm: (term: string) => void;
+}
 
-      name: 'TechCorp Ltd',
+const LocationContext = createContext<LocationContextType | null>(null);
 
-        zip: '01234-567',
-        state: 'SP',
- 
+interface LocationProviderProps {
+  children: ReactNode;
+}
 
-      email: 'joao@techcorp.com',
-      occupants: 500,
-      notes: 'Main headquarters',
+export function LocationProvider({ children }: LocationProviderProps) {
+  const [selectedNode, setSelectedNode] = useState<LocationNode | null>(null);
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
 
   /* TODO: replace mocks with real API calls */
   const mockCompanies: Company[] = [
-     
+    {
       id: '1',
       name: 'TechCorp Ltd',
       segment: 'Technology',
@@ -46,54 +46,55 @@ interface LocationContextType {
       hvacUnits: 12,
       notes: 'Main headquarters',
       createdAt: '2024-01-15'
-    {
-     
-      email: '
-      occupants: 150,
-    }
-
-    {
-      name: 'Development 
-      responsible: 'Ana Silva',
-      email: 'ana@te
-      occupants: 90,
     },
+    {
       id: '2',
-      sectorId: '1',
-      phone: '(11) 33333-3333',
-      area: 800,
-      hvacUnits: 2
-    {
-      name: 'Recruit
-      responsible: 'Patricia 
-     
-    
-
-      id: '4',
-     
-      phone: '
-      area: 3000,
-      hvacUnits: 6
-    {
-      name: 'Quality Control',
-      responsible: 'Fernanda Rocha'
-      email: 'fer
-      occupants: 30,
+      name: 'Industrial Corp',
+      segment: 'Manufacturing',
+      cnpj: '98.765.432/0001-10',
+      address: {
+        zip: '05432-100',
+        city: 'São Paulo',
+        state: 'SP',
+        fullAddress: 'Rua Industrial, 500'
+      },
+      responsible: 'Maria Oliveira',
+      role: 'Operations Manager',
+      phone: '(11) 87654-3210',
+      email: 'maria@industrial.com',
+      totalArea: 8000,
+      occupants: 200,
+      hvacUnits: 20,
+      notes: 'Manufacturing facility',
+      createdAt: '2024-01-20'
     }
+  ];
 
-  con
-      const co
-      const sectorNodes: Locat
-        
-          id: subSection.id,
-          type: 'subsection' as
-          data: subSection,
-        }));
-        return {
-          name: se
-      
-     
-      });
+  const mockSectors: Sector[] = [
+    {
+      id: '1',
+      name: 'IT Department',
+      companyId: '1',
+      responsible: 'Carlos Santos',
+      phone: '(11) 55555-5555',
+      email: 'carlos@techcorp.com',
+      area: 2000,
+      occupants: 150,
+      hvacUnits: 6
+    },
+    {
+      id: '2',
+      name: 'Human Resources',
+      companyId: '1',
+      responsible: 'Ana Costa',
+      phone: '(11) 66666-6666',
+      email: 'ana@techcorp.com',
+      area: 800,
+      occupants: 25,
+      hvacUnits: 2
+    },
+    {
+      id: '3',
       name: 'Production Floor',
       companyId: '2',
       responsible: 'Pedro Lima',
@@ -190,15 +191,15 @@ interface LocationContextType {
         };
       });
 
-
+      return {
         id: company.id,
         name: company.name,
         type: 'company' as const,
-
+        data: company,
         children: sectorNodes
-
+      };
     });
-
+  };
 
   const tree = buildTree();
 
@@ -212,15 +213,15 @@ interface LocationContextType {
       
       if (matchesSearch || filteredChildren.length > 0) {
         const filteredNode = {
-
+          ...node,
           children: filteredChildren
         };
         filtered.push(filteredNode);
-
+      }
       
-
+      return filtered;
     }, []);
-
+  };
 
   const filteredTree = filterTree(tree, searchTerm);
 
@@ -232,19 +233,19 @@ interface LocationContextType {
       } else {
         next.add(nodeId);
       }
-
+      return next;
     });
-
+  };
 
   const value: LocationContextType = {
     tree,
     filteredTree,
     selectedNode,
-
+    expandedNodes,
     searchTerm,
-
+    setSelectedNode,
     toggleExpanded,
-
+    setSearchTerm,
   };
 
   return (
@@ -252,11 +253,12 @@ interface LocationContextType {
       {children}
     </LocationContext.Provider>
   );
-
+}
 
 export function useLocation() {
   const context = useContext(LocationContext);
   if (!context) {
     throw new Error('useLocation must be used within a LocationProvider');
-
+  }
   return context;
+}
