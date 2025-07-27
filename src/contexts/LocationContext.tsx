@@ -1,12 +1,11 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
+import type { LocationNode, Company, Sector, SubSection } from '@/types';
 
-
-/** Context typing */
 interface LocationContextType {
   tree: LocationNode[];
   filteredTree: LocationNode[];
   selectedNode: LocationNode | null;
-  setSearchTerm: (term: strin
+  expandedNodes: Set<string>;
   searchTerm: string;
   setSelectedNode: (node: LocationNode | null) => void;
   toggleExpanded: (nodeId: string) => void;
@@ -28,168 +27,166 @@ export function LocationProvider({ children }: LocationProviderProps) {
   const mockCompanies: Company[] = [
     {
       id: '1',
-      hvacUnits: 12,
+      name: 'TechCorp Industrial',
       segment: 'Technology',
       cnpj: '12.345.678/0001-90',
       address: {
-      name: 'Industrial C
+        zip: '01310-100',
         city: 'São Paulo',
-      address: {
+        state: 'SP',
         fullAddress: 'Av. Paulista, 1000'
       },
-      responsible: 'João Silva',
+      responsible: 'Maria Santos',
       role: 'Facilities Manager',
       phone: '(11) 98765-4321',
-      email: 'maria@industrial.co
+      email: 'maria@techcorp.com',
       totalArea: 5000,
-      hvacUnits: 20,
+      occupants: 150,
       hvacUnits: 12,
-    }
       createdAt: '2024-01-15'
-      
-     
-      phone: '
-      area: 6000,
-      hvacUnits: 12
-  ];
-  const mockSubS
-      id: '1',
-      sectorId: '1',
-      phone: '(11) 4
-      area: 1200,
-      hv
+    },
     {
-      name: 'Infrastructure Team'
-      responsible: 'Roberto Oli
-      email: 'roberto@techcorp.com',
-      occupants: 60,
-    },
-      id: '3',
-      sectorId: '2',
-      phone: '(11) 22222-2222
-     
-    
-
-      name: 'Assembly Line A',
-     
-      email: '
-      occupants: 75,
-    },
-      id: '5',
-      sectorId: '3',
-      phone: '(11) 88888-8888',
-      area: 1500,
-      hvacUnits: 3
+      id: '2',
+      name: 'Industrial Corp',
+      segment: 'Manufacturing',
+      cnpj: '98.765.432/0001-10',
+      address: {
+        zip: '04567-000',
+        city: 'São Paulo',
+        state: 'SP',
+        fullAddress: 'Rua Industrial, 500'
+      },
+      responsible: 'João Silva',
+      role: 'Plant Manager',
+      phone: '(11) 91234-5678',
+      email: 'joao@industrial.com',
+      totalArea: 10000,
+      occupants: 300,
+      hvacUnits: 25,
+      createdAt: '2024-01-10'
+    }
   ];
-  /** 
-    r
+
+  const mockSectors: Sector[] = [
+    {
+      id: '1',
+      name: 'Administrative Sector',
+      companyId: '1',
+      responsible: 'Ana Costa',
+      phone: '(11) 91111-1111',
+      email: 'ana@techcorp.com',
+      area: 1500,
+      occupants: 50,
+      hvacUnits: 4
+    },
+    {
+      id: '2',
+      name: 'IT Department',
+      companyId: '1',
+      responsible: 'Carlos Lima',
+      phone: '(11) 92222-2222',
+      email: 'carlos@techcorp.com',
+      area: 800,
+      occupants: 30,
+      hvacUnits: 3
+    },
+    {
+      id: '3',
+      name: 'Production Floor',
+      companyId: '2',
+      responsible: 'Roberto Oliveira',
+      phone: '(11) 93333-3333',
+      email: 'roberto@industrial.com',
+      area: 6000,
+      occupants: 200,
+      hvacUnits: 15
+    }
+  ];
+
+  const mockSubSections: SubSection[] = [
+    {
+      id: '1',
+      name: 'Reception',
+      sectorId: '1',
+      responsible: 'Lucia Ferreira',
+      phone: '(11) 94444-4444',
+      email: 'lucia@techcorp.com',
+      area: 200,
+      occupants: 5,
+      hvacUnits: 1
+    },
+    {
+      id: '2',
+      name: 'Meeting Rooms',
+      sectorId: '1',
+      responsible: 'Pedro Santos',
+      phone: '(11) 95555-5555',
+      email: 'pedro@techcorp.com',
+      area: 300,
+      occupants: 20,
+      hvacUnits: 2
+    },
+    {
+      id: '3',
+      name: 'Server Room',
+      sectorId: '2',
+      responsible: 'Ana Tech',
+      phone: '(11) 96666-6666',
+      email: 'ana.tech@techcorp.com',
+      area: 100,
+      occupants: 5,
+      hvacUnits: 2
+    },
+    {
+      id: '4',
+      name: 'Assembly Line A',
+      sectorId: '3',
+      responsible: 'Mario Silva',
+      phone: '(11) 97777-7777',
+      email: 'mario@industrial.com',
+      area: 2000,
+      occupants: 75,
+      hvacUnits: 6
+    },
+    {
+      id: '5',
+      name: 'Quality Control',
+      sectorId: '3',
+      responsible: 'Elena Rodriguez',
+      phone: '(11) 98888-8888',
+      email: 'elena@industrial.com',
+      area: 500,
+      occupants: 25,
+      hvacUnits: 2
+    }
+  ];
+
+  /** Helper to build hierarchical tree structure */
+  const buildTree = (): LocationNode[] => {
+    return mockCompanies.map(company => {
+      const companySectors = mockSectors.filter(sector => sector.companyId === company.id);
       
-        const sectorSubSection
-        const subSect
-          name: subSection.name
+      const sectorNodes: LocationNode[] = companySectors.map(sector => {
+        const sectorSubSections = mockSubSections.filter(subSection => subSection.sectorId === sector.id);
+        
+        const subSectionNodes: LocationNode[] = sectorSubSections.map(subSection => ({
+          id: subSection.id,
+          name: subSection.name,
+          type: 'subsection' as const,
           parentId: sector.id,
+          data: subSection,
           children: []
-
-          id: sector
-          type: 's
-      
-     
-
-        id: company.id,
-        type: 'compan
-        children: sectorNodes
-    });
-
-
-  const filterTree = 
-
-     
-    
-
-          children: filteredChildren
-     
-      
-    }, []);
-
-
-    setExpandedNodes(prev => {
-      if (next.has(nodeId)) {
-      } else {
-      }
-    });
-
-    t
-    selectedNo
-    searchTerm,
-    toggleExpanded,
-  };
-  return (
-      {children}
-  );
-
-  const context = 
-    th
-  ret
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        }));
+
+        return {
+          id: sector.id,
+          name: sector.name,
+          type: 'sector' as const,
+          parentId: company.id,
+          data: sector,
+          children: subSectionNodes
+        };
+      });
 
       return {
         id: company.id,
