@@ -17,7 +17,7 @@ import {
   Settings
 } from 'lucide-react';
 import { useUser } from '@/hooks/useData';
-import TrakNorLogo from '@/assets/images/traknor-logo.svg';
+import TrakNorLogo from '@/assets/images/traknor-logo.svg.svg';
 
 const navigation = [
   { name: 'Visão Geral', href: '/', icon: Home },
