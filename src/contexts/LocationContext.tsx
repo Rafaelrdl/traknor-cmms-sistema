@@ -28,7 +28,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
     {
       id: '1',
       name: 'TechCorp Industrial',
-      segment: 'Technology',
+      segment: 'Tecnologia',
       cnpj: '12.345.678/0001-90',
       address: {
         zip: '01310-100',
@@ -37,7 +37,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
         fullAddress: 'Av. Paulista, 1000'
       },
       responsible: 'Maria Santos',
-      role: 'Facilities Manager',
+      role: 'Gerente de Facilities',
       phone: '(11) 98765-4321',
       email: 'maria@techcorp.com',
       totalArea: 5000,
@@ -48,7 +48,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
     {
       id: '2',
       name: 'Industrial Corp',
-      segment: 'Manufacturing',
+      segment: 'Manufatura',
       cnpj: '98.765.432/0001-10',
       address: {
         zip: '04567-000',
@@ -57,7 +57,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
         fullAddress: 'Rua Industrial, 500'
       },
       responsible: 'João Silva',
-      role: 'Plant Manager',
+      role: 'Gerente de Planta',
       phone: '(11) 91234-5678',
       email: 'joao@industrial.com',
       totalArea: 10000,
@@ -70,7 +70,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
   const mockSectors: Sector[] = [
     {
       id: '1',
-      name: 'Administrative Sector',
+      name: 'Setor Administrativo',
       companyId: '1',
       responsible: 'Ana Costa',
       phone: '(11) 91111-1111',
@@ -81,7 +81,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
     },
     {
       id: '2',
-      name: 'IT Department',
+      name: 'Departamento de TI',
       companyId: '1',
       responsible: 'Carlos Lima',
       phone: '(11) 92222-2222',
@@ -92,7 +92,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
     },
     {
       id: '3',
-      name: 'Production Floor',
+      name: 'Chão de Fábrica',
       companyId: '2',
       responsible: 'Roberto Oliveira',
       phone: '(11) 93333-3333',
@@ -106,7 +106,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
   const mockSubSections: SubSection[] = [
     {
       id: '1',
-      name: 'Reception',
+      name: 'Recepção',
       sectorId: '1',
       responsible: 'Lucia Ferreira',
       phone: '(11) 94444-4444',
@@ -117,7 +117,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
     },
     {
       id: '2',
-      name: 'Meeting Rooms',
+      name: 'Salas de Reunião',
       sectorId: '1',
       responsible: 'Pedro Santos',
       phone: '(11) 95555-5555',
@@ -128,7 +128,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
     },
     {
       id: '3',
-      name: 'Server Room',
+      name: 'Sala de Servidores',
       sectorId: '2',
       responsible: 'Ana Tech',
       phone: '(11) 96666-6666',
@@ -139,7 +139,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
     },
     {
       id: '4',
-      name: 'Assembly Line A',
+      name: 'Linha de Montagem A',
       sectorId: '3',
       responsible: 'Mario Silva',
       phone: '(11) 97777-7777',
@@ -150,7 +150,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
     },
     {
       id: '5',
-      name: 'Quality Control',
+      name: 'Controle de Qualidade',
       sectorId: '3',
       responsible: 'Elena Rodriguez',
       phone: '(11) 98888-8888',
