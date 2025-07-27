@@ -342,9 +342,9 @@ export const MOCK_STOCK_ITEMS: StockItem[] = [
 
 // ============= KPIS DO DASHBOARD =============
 export const MOCK_DASHBOARD_KPIS: DashboardKPIs = {
-  openWorkOrders: 12,
-  overdueWorkOrders: 3,
-  criticalEquipment: 2,
+  openWorkOrders: 32,
+  overdueWorkOrders: 2,
+  criticalEquipment: 3,
   mttr: 2.5, // horas
   mtbf: 168 // horas
 };

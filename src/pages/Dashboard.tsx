@@ -159,13 +159,13 @@ export function Dashboard() {
                           strokeWidth="10"
                         />
                         
-                        {/* Functioning segment (green) */}
+                        {/* Functioning segment (teal) */}
                         <circle
                           cx="50"
                           cy="50"
                           r="40"
                           fill="transparent"
-                          stroke="rgb(34 197 94)"
+                          stroke="#006b76"
                           strokeWidth="10"
                           strokeDasharray={`${functioningLength} ${circumference}`}
                           strokeDashoffset="0"
@@ -191,7 +191,7 @@ export function Dashboard() {
                           cy="50"
                           r="40"
                           fill="transparent"
-                          stroke="rgb(239 68 68)"
+                          stroke="#ff5b5b"
                           strokeWidth="10"
                           strokeDasharray={`${stoppedLength} ${circumference}`}
                           strokeDashoffset={-(functioningLength + maintenanceLength)}
@@ -212,7 +212,7 @@ export function Dashboard() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-500 rounded" />
+                    <div className="w-3 h-3 rounded" style={{ backgroundColor: '#006b76' }} />
                     <span className="text-sm">Funcionando</span>
                   </div>
                   <span className="text-sm font-medium">
@@ -230,7 +230,7 @@ export function Dashboard() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-red-500 rounded" />
+                    <div className="w-3 h-3 rounded" style={{ backgroundColor: '#ff5b5b' }} />
                     <span className="text-sm">Parado</span>
                   </div>
                   <span className="text-sm font-medium">
