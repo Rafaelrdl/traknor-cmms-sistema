@@ -6,7 +6,7 @@ interface LocationContextType {
   filteredTree: LocationNode[];
   selectedNode: LocationNode | null;
   expandedNodes: Set<string>;
-  searchTerm: string;
+}
   setSelectedNode: (node: LocationNode | null) => void;
   toggleExpanded: (nodeId: string) => void;
   setSearchTerm: (term: string) => void;
@@ -16,7 +16,7 @@ const LocationContext = createContext<LocationContextType | null>(null);
 
 interface LocationProviderProps {
   children: ReactNode;
-}
+ 
 
 export function LocationProvider({ children }: LocationProviderProps) {
   const [selectedNode, setSelectedNode] = useState<LocationNode | null>(null);
@@ -26,11 +26,11 @@ export function LocationProvider({ children }: LocationProviderProps) {
   // Mock data - replace with actual API calls
   const mockCompanies: Company[] = [
     {
-      id: '1',
+      totalAre
       name: 'TechCorp Ltd',
       segment: 'Technology',
       cnpj: '12.345.678/0001-90',
-      address: {
+    {
         zip: '01234-567',
         city: 'São Paulo',
         state: 'SP',
@@ -38,66 +38,66 @@ export function LocationProvider({ children }: LocationProviderProps) {
       },
       responsible: 'João Silva',
       role: 'Facilities Manager',
-      phone: '(11) 99999-9999',
+      role: 'Operations Manager
       email: 'joao@techcorp.com',
-      totalArea: 3000,
-      occupants: 500,
-      hvacUnits: 8,
-      notes: 'Main headquarters',
-      createdAt: '2024-01-15T10:00:00Z'
-    },
-    {
-      id: '2',
-      name: 'Industrial Solutions Corp',
-      segment: 'Manufacturing',
-      cnpj: '98.765.432/0001-10',
-      address: {
-        zip: '04567-890',
-        city: 'São Paulo',
-        state: 'SP',
-        fullAddress: 'Rua Industrial, 500'
-      },
-      responsible: 'Pedro Santos',
-      role: 'Operations Manager',
-      phone: '(11) 88888-8888',
-      email: 'pedro@industrial.com',
       totalArea: 5000,
-      occupants: 200,
-      hvacUnits: 12,
-      createdAt: '2024-02-01T14:30:00Z'
-    }
-  ];
+      occupants: 500,
+      createdAt: '2
+      notes: 'Main headquarters',
 
-  const mockSectors: Sector[] = [
-    {
-      id: '1',
-      name: 'IT Department',
-      companyId: '1',
-      responsible: 'Maria Costa',
-      phone: '(11) 77777-7777',
-      email: 'maria@techcorp.com',
-      area: 800,
-      occupants: 120,
-      hvacUnits: 3
     },
     {
       id: '2',
-      name: 'HR Department',
-      companyId: '1',
-      responsible: 'Lúcia Fernandes',
-      phone: '(11) 66666-6666',
-      email: 'lucia@techcorp.com',
+      area: 3000,
+      hvacUnits: 8
+  ];
+  const mockSubS
+      id: '1',
+      sectorId: '1',
+      phone: '(11) 4
       area: 400,
-      occupants: 50,
-      hvacUnits: 2
-    },
+      hv
     {
+      name: 'QA Team',
+      responsible: 'Roberto Oli
+      email: 'roberto@techcorp.com',
+      occupants: 30,
+    },
       id: '3',
-      name: 'Production Floor',
-      companyId: '2',
-      responsible: 'Carlos Lima',
-      phone: '(11) 55555-5555',
-      email: 'carlos@industrial.com',
+      sectorId: '2',
+     
+    
+
+    {
+     
+      responsi
+      email: 'jose@industria
+      occupants: 80,
+    }
+
+    return mockCompanies.map(compa
+      
+        const sectorS
+        const subS
+      
+     
+          chil
+
+          id: sector.
+          type: 'sector' as const,
+          data: sector,
+        };
+
+        id: company.
+        type: 'com
+      
+    }
+
+
+    if (!term.trim())
+    return nodes.reduce<LocationN
+      const filteredChildren = 
+      if (matchesSearch || filteredCh
       area: 3000,
       occupants: 150,
       hvacUnits: 8
@@ -174,7 +174,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
           parentId: company.id,
           data: sector,
           children: subSectionNodes
-        };
+
       });
 
       return {
@@ -202,11 +202,11 @@ export function LocationProvider({ children }: LocationProviderProps) {
           children: filteredChildren
         };
         filtered.push(filteredNode);
-      }
+
       
       return filtered;
     }, []);
-  };
+
 
   const filteredTree = filterTree(tree, searchTerm);
 
@@ -216,21 +216,21 @@ export function LocationProvider({ children }: LocationProviderProps) {
       if (next.has(nodeId)) {
         next.delete(nodeId);
       } else {
-        next.add(nodeId);
+
       }
-      return next;
+
     });
-  };
+
 
   const value: LocationContextType = {
     tree,
-    filteredTree,
+
     selectedNode,
     expandedNodes,
     searchTerm,
-    setSelectedNode,
+
     toggleExpanded,
-    setSearchTerm,
+
   };
 
   return (
@@ -238,12 +238,11 @@ export function LocationProvider({ children }: LocationProviderProps) {
       {children}
     </LocationContext.Provider>
   );
-}
+
 
 export function useLocation() {
   const context = useContext(LocationContext);
-  if (!context) {
+
     throw new Error('useLocation must be used within a LocationProvider');
-  }
+
   return context;
-}
