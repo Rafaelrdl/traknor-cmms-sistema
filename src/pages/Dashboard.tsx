@@ -31,13 +31,13 @@ export function Dashboard() {
 
   // Mock chart data
   const weeklyData = [
-    { day: 'Seg', completed: 3, inProgress: 5 },
-    { day: 'Ter', completed: 5, inProgress: 4 },
-    { day: 'Qua', completed: 6, inProgress: 3 },
-    { day: 'Qui', completed: 4, inProgress: 6 },
-    { day: 'Sex', completed: 8, inProgress: 2 },
-    { day: 'Sáb', completed: 2, inProgress: 1 },
-    { day: 'Dom', completed: 1, inProgress: 2 }
+    { day: 'Seg', completed: 3, inProgress: 5, open: 2 },
+    { day: 'Ter', completed: 5, inProgress: 4, open: 3 },
+    { day: 'Qua', completed: 6, inProgress: 3, open: 4 },
+    { day: 'Qui', completed: 4, inProgress: 6, open: 2 },
+    { day: 'Sex', completed: 8, inProgress: 2, open: 1 },
+    { day: 'Sáb', completed: 2, inProgress: 1, open: 3 },
+    { day: 'Dom', completed: 1, inProgress: 2, open: 2 }
   ];
 
   return (
@@ -109,6 +109,10 @@ export function Dashboard() {
                         className="w-6 bg-secondary rounded-t"
                         style={{ height: `${day.inProgress * 8}px` }}
                       />
+                      <div 
+                        className="w-6 bg-accent rounded-t"
+                        style={{ height: `${day.open * 8}px` }}
+                      />
                     </div>
                     <span className="text-xs text-muted-foreground">{day.day}</span>
                   </div>
@@ -122,6 +126,10 @@ export function Dashboard() {
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-secondary rounded" />
                   <span>Em Atraso</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-accent rounded" />
+                  <span>Aberto</span>
                 </div>
               </div>
             </div>
