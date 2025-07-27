@@ -9,7 +9,22 @@ export interface User {
 export interface Company {
   id: string;
   name: string;
+  segment: string;
   cnpj: string;
+  address: {
+    zip: string;
+    city: string;
+    state: string;
+    fullAddress: string;
+  };
+  responsible: string;
+  role: string;
+  phone: string;
+  email: string;
+  totalArea: number;
+  occupants: number;
+  hvacUnits: number;
+  notes?: string;
   createdAt: string;
 }
 
@@ -22,6 +37,21 @@ export interface Sector {
   email: string;
   area: number;
   occupants: number;
+  hvacUnits: number;
+  notes?: string;
+}
+
+export interface SubSection {
+  id: string;
+  name: string;
+  sectorId: string;
+  responsible: string;
+  phone: string;
+  email: string;
+  area: number;
+  occupants: number;
+  hvacUnits: number;
+  notes?: string;
 }
 
 export interface Equipment {
@@ -31,10 +61,20 @@ export interface Equipment {
   brand: string;
   type: 'SPLIT' | 'CENTRAL' | 'VRF' | 'CHILLER';
   capacity: number;
-  sectorId: string;
+  sectorId?: string;
+  subSectionId?: string;
   installDate: string;
   nextMaintenance: string;
   status: 'FUNCTIONING' | 'MAINTENANCE' | 'STOPPED';
+}
+
+export interface LocationNode {
+  id: string;
+  name: string;
+  type: 'company' | 'sector' | 'subsection';
+  parentId?: string;
+  children?: LocationNode[];
+  data: Company | Sector | SubSection;
 }
 
 export interface MaintenancePlan {
