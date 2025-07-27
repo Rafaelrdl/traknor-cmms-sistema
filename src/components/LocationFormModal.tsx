@@ -182,29 +182,29 @@ export function LocationFormModal({
     <div className="space-y-4 max-h-[70vh] overflow-y-auto">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="name">Company Name *</Label>
+          <Label htmlFor="name">Nome da Empresa *</Label>
           <Input
             id="name"
             value={companyForm.name}
             onChange={(e) => setCompanyForm(prev => ({ ...prev, name: e.target.value }))}
-            placeholder="Company Name"
+            placeholder="Nome da Empresa"
             required
           />
         </div>
         <div>
-          <Label htmlFor="segment">Segment *</Label>
+          <Label htmlFor="segment">Segmento *</Label>
           <Input
             id="segment"
             value={companyForm.segment}
             onChange={(e) => setCompanyForm(prev => ({ ...prev, segment: e.target.value }))}
-            placeholder="e.g., Retail, Corporate"
+            placeholder="ex.: Varejo, Corporativo"
             required
           />
         </div>
       </div>
 
       <div>
-        <Label htmlFor="cnpj">Tax ID (CNPJ) *</Label>
+        <Label htmlFor="cnpj">CNPJ *</Label>
         <Input
           id="cnpj"
           value={companyForm.cnpj}
@@ -215,7 +215,7 @@ export function LocationFormModal({
       </div>
 
       <div className="space-y-3">
-        <Label>Address *</Label>
+        <Label>Endereço *</Label>
         <div>
           <Input
             value={companyForm.address?.fullAddress || ''}
@@ -223,7 +223,7 @@ export function LocationFormModal({
               ...prev, 
               address: { ...prev.address!, fullAddress: e.target.value }
             }))}
-            placeholder="Full Address"
+            placeholder="Endereço Completo"
             className="mb-2"
           />
         </div>
@@ -234,7 +234,7 @@ export function LocationFormModal({
               ...prev, 
               address: { ...prev.address!, zip: e.target.value }
             }))}
-            placeholder="ZIP Code"
+            placeholder="CEP"
           />
           <Input
             value={companyForm.address?.city || ''}
@@ -242,7 +242,7 @@ export function LocationFormModal({
               ...prev, 
               address: { ...prev.address!, city: e.target.value }
             }))}
-            placeholder="City"
+            placeholder="Cidade"
           />
           <Input
             value={companyForm.address?.state || ''}
@@ -250,29 +250,29 @@ export function LocationFormModal({
               ...prev, 
               address: { ...prev.address!, state: e.target.value }
             }))}
-            placeholder="State"
+            placeholder="Estado"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="responsible">Responsible *</Label>
+          <Label htmlFor="responsible">Responsável *</Label>
           <Input
             id="responsible"
             value={companyForm.responsible}
             onChange={(e) => setCompanyForm(prev => ({ ...prev, responsible: e.target.value }))}
-            placeholder="Full Name"
+            placeholder="Nome Completo"
             required
           />
         </div>
         <div>
-          <Label htmlFor="role">Role *</Label>
+          <Label htmlFor="role">Cargo *</Label>
           <Input
             id="role"
             value={companyForm.role}
             onChange={(e) => setCompanyForm(prev => ({ ...prev, role: e.target.value }))}
-            placeholder="e.g., General Manager"
+            placeholder="ex.: Gerente Geral"
             required
           />
         </div>
@@ -280,7 +280,7 @@ export function LocationFormModal({
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="phone">Phone *</Label>
+          <Label htmlFor="phone">Telefone *</Label>
           <Input
             id="phone"
             value={companyForm.phone}
@@ -296,7 +296,7 @@ export function LocationFormModal({
             type="email"
             value={companyForm.email}
             onChange={(e) => setCompanyForm(prev => ({ ...prev, email: e.target.value }))}
-            placeholder="email@company.com"
+            placeholder="email@empresa.com"
             required
           />
         </div>
@@ -304,7 +304,7 @@ export function LocationFormModal({
 
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <Label htmlFor="totalArea">Total Area (m²) *</Label>
+          <Label htmlFor="totalArea">Área Total (m²) *</Label>
           <Input
             id="totalArea"
             type="number"
@@ -316,7 +316,7 @@ export function LocationFormModal({
           />
         </div>
         <div>
-          <Label htmlFor="occupants">Occupants *</Label>
+          <Label htmlFor="occupants">Ocupantes *</Label>
           <Input
             id="occupants"
             type="number"
@@ -328,7 +328,7 @@ export function LocationFormModal({
           />
         </div>
         <div>
-          <Label htmlFor="hvacUnits">HVAC Units *</Label>
+          <Label htmlFor="hvacUnits">Unidades HVAC *</Label>
           <Input
             id="hvacUnits"
             type="number"
@@ -342,12 +342,12 @@ export function LocationFormModal({
       </div>
 
       <div>
-        <Label htmlFor="notes">Additional Notes</Label>
+        <Label htmlFor="notes">Observações Adicionais</Label>
         <Textarea
           id="notes"
           value={companyForm.notes}
           onChange={(e) => setCompanyForm(prev => ({ ...prev, notes: e.target.value }))}
-          placeholder="Any additional information..."
+          placeholder="Informações adicionais..."
           rows={3}
         />
       </div>
@@ -357,24 +357,24 @@ export function LocationFormModal({
   const renderSectorForm = () => (
     <div className="space-y-4">
       <div>
-        <Label htmlFor="sectorName">Section Name *</Label>
+        <Label htmlFor="sectorName">Nome do Setor *</Label>
         <Input
           id="sectorName"
           value={sectorForm.name}
           onChange={(e) => setSectorForm(prev => ({ ...prev, name: e.target.value }))}
-          placeholder="Section Name"
+          placeholder="Nome do Setor"
           required
         />
       </div>
 
       <div>
-        <Label htmlFor="companySelect">Company *</Label>
+        <Label htmlFor="companySelect">Empresa *</Label>
         <Select 
           value={sectorForm.companyId} 
           onValueChange={(value) => setSectorForm(prev => ({ ...prev, companyId: value }))}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select company" />
+            <SelectValue placeholder="Selecionar empresa" />
           </SelectTrigger>
           <SelectContent>
             {companies.map(company => (
@@ -388,17 +388,17 @@ export function LocationFormModal({
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="sectorResponsible">Responsible *</Label>
+          <Label htmlFor="sectorResponsible">Responsável *</Label>
           <Input
             id="sectorResponsible"
             value={sectorForm.responsible}
             onChange={(e) => setSectorForm(prev => ({ ...prev, responsible: e.target.value }))}
-            placeholder="Full Name"
+            placeholder="Nome Completo"
             required
           />
         </div>
         <div>
-          <Label htmlFor="sectorPhone">Phone *</Label>
+          <Label htmlFor="sectorPhone">Telefone *</Label>
           <Input
             id="sectorPhone"
             value={sectorForm.phone}
@@ -416,14 +416,14 @@ export function LocationFormModal({
           type="email"
           value={sectorForm.email}
           onChange={(e) => setSectorForm(prev => ({ ...prev, email: e.target.value }))}
-          placeholder="email@company.com"
+          placeholder="email@empresa.com"
           required
         />
       </div>
 
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <Label htmlFor="sectorArea">Area (m²) *</Label>
+          <Label htmlFor="sectorArea">Área (m²) *</Label>
           <Input
             id="sectorArea"
             type="number"
@@ -435,7 +435,7 @@ export function LocationFormModal({
           />
         </div>
         <div>
-          <Label htmlFor="sectorOccupants">Occupants *</Label>
+          <Label htmlFor="sectorOccupants">Ocupantes *</Label>
           <Input
             id="sectorOccupants"
             type="number"
@@ -447,7 +447,7 @@ export function LocationFormModal({
           />
         </div>
         <div>
-          <Label htmlFor="sectorHvacUnits">HVAC Units *</Label>
+          <Label htmlFor="sectorHvacUnits">Unidades HVAC *</Label>
           <Input
             id="sectorHvacUnits"
             type="number"
@@ -461,12 +461,12 @@ export function LocationFormModal({
       </div>
 
       <div>
-        <Label htmlFor="sectorNotes">Additional Notes</Label>
+        <Label htmlFor="sectorNotes">Observações Adicionais</Label>
         <Textarea
           id="sectorNotes"
           value={sectorForm.notes}
           onChange={(e) => setSectorForm(prev => ({ ...prev, notes: e.target.value }))}
-          placeholder="Any additional information..."
+          placeholder="Informações adicionais..."
           rows={3}
         />
       </div>
@@ -482,18 +482,18 @@ export function LocationFormModal({
     return (
       <div className="space-y-4">
         <div>
-          <Label htmlFor="subSectionName">Sub-section Name *</Label>
+          <Label htmlFor="subSectionName">Nome do Subsetor *</Label>
           <Input
             id="subSectionName"
             value={subSectionForm.name}
             onChange={(e) => setSubSectionForm(prev => ({ ...prev, name: e.target.value }))}
-            placeholder="Sub-section Name"
+            placeholder="Nome do Subsetor"
             required
           />
         </div>
 
         <div>
-          <Label htmlFor="companySelectSub">Company *</Label>
+          <Label htmlFor="companySelectSub">Empresa *</Label>
           <Select 
             value={
               subSectionForm.sectorId 
@@ -508,7 +508,7 @@ export function LocationFormModal({
             }}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select company" />
+              <SelectValue placeholder="Selecionar empresa" />
             </SelectTrigger>
             <SelectContent>
               {companies.map(company => (
@@ -521,14 +521,14 @@ export function LocationFormModal({
         </div>
 
         <div>
-          <Label htmlFor="sectorSelectSub">Section *</Label>
+          <Label htmlFor="sectorSelectSub">Setor *</Label>
           <Select 
             value={subSectionForm.sectorId} 
             onValueChange={(value) => setSubSectionForm(prev => ({ ...prev, sectorId: value }))}
             disabled={!sectorForm.companyId}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select section" />
+              <SelectValue placeholder="Selecionar setor" />
             </SelectTrigger>
             <SelectContent>
               {availableSectors.map(sector => (
@@ -542,17 +542,17 @@ export function LocationFormModal({
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="subSectionResponsible">Responsible *</Label>
+            <Label htmlFor="subSectionResponsible">Responsável *</Label>
             <Input
               id="subSectionResponsible"
               value={subSectionForm.responsible}
               onChange={(e) => setSubSectionForm(prev => ({ ...prev, responsible: e.target.value }))}
-              placeholder="Full Name"
+              placeholder="Nome Completo"
               required
             />
           </div>
           <div>
-            <Label htmlFor="subSectionPhone">Phone *</Label>
+            <Label htmlFor="subSectionPhone">Telefone *</Label>
             <Input
               id="subSectionPhone"
               value={subSectionForm.phone}
@@ -570,14 +570,14 @@ export function LocationFormModal({
             type="email"
             value={subSectionForm.email}
             onChange={(e) => setSubSectionForm(prev => ({ ...prev, email: e.target.value }))}
-            placeholder="email@company.com"
+            placeholder="email@empresa.com"
             required
           />
         </div>
 
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <Label htmlFor="subSectionArea">Area (m²) *</Label>
+            <Label htmlFor="subSectionArea">Área (m²) *</Label>
             <Input
               id="subSectionArea"
               type="number"
@@ -589,7 +589,7 @@ export function LocationFormModal({
             />
           </div>
           <div>
-            <Label htmlFor="subSectionOccupants">Occupants *</Label>
+            <Label htmlFor="subSectionOccupants">Ocupantes *</Label>
             <Input
               id="subSectionOccupants"
               type="number"
@@ -601,7 +601,7 @@ export function LocationFormModal({
             />
           </div>
           <div>
-            <Label htmlFor="subSectionHvacUnits">HVAC Units *</Label>
+            <Label htmlFor="subSectionHvacUnits">Unidades HVAC *</Label>
             <Input
               id="subSectionHvacUnits"
               type="number"
@@ -615,12 +615,12 @@ export function LocationFormModal({
         </div>
 
         <div>
-          <Label htmlFor="subSectionNotes">Additional Notes</Label>
+          <Label htmlFor="subSectionNotes">Observações Adicionais</Label>
           <Textarea
             id="subSectionNotes"
             value={subSectionForm.notes}
             onChange={(e) => setSubSectionForm(prev => ({ ...prev, notes: e.target.value }))}
-            placeholder="Any additional information..."
+            placeholder="Informações adicionais..."
             rows={3}
           />
         </div>
@@ -629,9 +629,9 @@ export function LocationFormModal({
   };
 
   const getTitle = () => {
-    const action = mode === 'create' ? 'Add' : 'Edit';
-    const typeName = type === 'company' ? 'Company' : 
-                     type === 'sector' ? 'Section' : 'Sub-section';
+    const action = mode === 'create' ? 'Adicionar' : 'Editar';
+    const typeName = type === 'company' ? 'Empresa' : 
+                     type === 'sector' ? 'Setor' : 'Subsetor';
     return `${action} ${typeName}`;
   };
 
@@ -648,10 +648,10 @@ export function LocationFormModal({
 
         <div className="flex justify-end gap-2 pt-4">
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            Cancelar
           </Button>
           <Button onClick={handleSubmit}>
-            {mode === 'create' ? 'Create' : 'Save Changes'}
+            {mode === 'create' ? 'Criar' : 'Salvar Alterações'}
           </Button>
         </div>
       </DialogContent>

@@ -89,7 +89,7 @@ function AssetsContent() {
       <div className="w-80 border-r bg-card">
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between p-4 border-b">
-            <h3 className="font-semibold text-lg">Locations</h3>
+            <h3 className="font-semibold text-lg">Localizações</h3>
           </div>
           <LocationTree />
         </div>
@@ -100,14 +100,14 @@ function AssetsContent() {
         {/* Action Buttons */}
         <div className="p-6 border-b bg-background">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Asset Management</h1>
+            <h1 className="text-2xl font-bold">Gestão de Ativos</h1>
             <div className="flex items-center gap-2">
               <Button 
                 onClick={() => handleCreateLocation('company')}
                 className="flex items-center gap-2"
               >
                 <Building2 className="h-4 w-4" />
-                + Company
+                + Empresa
               </Button>
               <Button 
                 onClick={() => handleCreateLocation('sector')}
@@ -116,7 +116,7 @@ function AssetsContent() {
                 className="flex items-center gap-2"
               >
                 <MapPin className="h-4 w-4" />
-                + Section
+                + Setor
               </Button>
               <Button 
                 onClick={() => handleCreateLocation('subsection')}
@@ -125,7 +125,7 @@ function AssetsContent() {
                 className="flex items-center gap-2"
               >
                 <Users className="h-4 w-4" />
-                + Sub-section
+                + Subsetor
               </Button>
             </div>
           </div>
@@ -144,12 +144,12 @@ function AssetsContent() {
       <Dialog open={isEquipmentDialogOpen} onOpenChange={setIsEquipmentDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Add Equipment</DialogTitle>
+            <DialogTitle>Adicionar Equipamento</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="tag">Equipment Tag</Label>
+                <Label htmlFor="tag">Tag do Equipamento</Label>
                 <Input 
                   id="tag"
                   value={newEquipment.tag}
@@ -158,7 +158,7 @@ function AssetsContent() {
                 />
               </div>
               <div>
-                <Label htmlFor="type">Type</Label>
+                <Label htmlFor="type">Tipo</Label>
                 <Select 
                   value={newEquipment.type} 
                   onValueChange={(value: Equipment['type']) => 
@@ -180,7 +180,7 @@ function AssetsContent() {
             
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="brand">Brand</Label>
+                <Label htmlFor="brand">Marca</Label>
                 <Input 
                   id="brand"
                   value={newEquipment.brand}
@@ -189,7 +189,7 @@ function AssetsContent() {
                 />
               </div>
               <div>
-                <Label htmlFor="model">Model</Label>
+                <Label htmlFor="model">Modelo</Label>
                 <Input 
                   id="model"
                   value={newEquipment.model}
@@ -201,7 +201,7 @@ function AssetsContent() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="capacity">Capacity (BTUs)</Label>
+                <Label htmlFor="capacity">Capacidade (BTUs)</Label>
                 <Input 
                   id="capacity"
                   type="number"
@@ -211,14 +211,14 @@ function AssetsContent() {
                 />
               </div>
               <div>
-                <Label htmlFor="sector">Section</Label>
+                <Label htmlFor="sector">Setor</Label>
                 <Select 
                   value={newEquipment.sectorId} 
                   onValueChange={(value) => setNewEquipment(prev => ({ ...prev, sectorId: value, subSectionId: '' }))}
                   disabled={selectedNode?.type === 'sector' || selectedNode?.type === 'subsection'}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select section" />
+                    <SelectValue placeholder="Selecionar setor" />
                   </SelectTrigger>
                   <SelectContent>
                     {sectors.map(sector => (
@@ -232,14 +232,14 @@ function AssetsContent() {
             </div>
 
             <div>
-              <Label htmlFor="subSection">Sub-section (Optional)</Label>
+              <Label htmlFor="subSection">Subsetor (Opcional)</Label>
               <Select 
                 value={newEquipment.subSectionId} 
                 onValueChange={(value) => setNewEquipment(prev => ({ ...prev, subSectionId: value }))}
                 disabled={selectedNode?.type === 'subsection' || !newEquipment.sectorId}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select sub-section" />
+                  <SelectValue placeholder="Selecionar subsetor" />
                 </SelectTrigger>
                 <SelectContent>
                   {subSections
@@ -255,7 +255,7 @@ function AssetsContent() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="installDate">Install Date</Label>
+                <Label htmlFor="installDate">Data de Instalação</Label>
                 <Input 
                   id="installDate"
                   type="date"
@@ -264,7 +264,7 @@ function AssetsContent() {
                 />
               </div>
               <div>
-                <Label htmlFor="nextMaintenance">Next Maintenance</Label>
+                <Label htmlFor="nextMaintenance">Próxima Manutenção</Label>
                 <Input 
                   id="nextMaintenance"
                   type="date"
@@ -275,7 +275,7 @@ function AssetsContent() {
             </div>
 
             <Button onClick={handleAddEquipment} className="w-full">
-              Add Equipment
+              Adicionar Equipamento
             </Button>
           </div>
         </DialogContent>

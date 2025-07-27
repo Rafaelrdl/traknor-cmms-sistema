@@ -55,7 +55,7 @@ export function LocationTree() {
                 toggleExpanded(node.id);
               }}
               className="flex items-center justify-center p-0.5 hover:bg-muted rounded"
-              aria-label={isExpanded ? "Collapse" : "Expand"}
+              aria-label={isExpanded ? "Recolher" : "Expandir"}
             >
               {isExpanded ? (
                 <ChevronDown className="h-3 w-3" />
@@ -85,7 +85,7 @@ export function LocationTree() {
       {/* Search */}
       <div className="p-4 border-b">
         <Input
-          placeholder="Search location"
+          placeholder="Buscar localização"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="h-9"
@@ -96,13 +96,13 @@ export function LocationTree() {
       <div 
         className="flex-1 overflow-auto p-2 space-y-1"
         role="tree"
-        aria-label="Location hierarchy"
+        aria-label="Hierarquia de localizações"
       >
         {filteredTree.length > 0 ? (
           filteredTree.map(node => renderTreeNode(node))
         ) : (
           <div className="text-center text-muted-foreground py-8">
-            {searchTerm ? 'No locations found' : 'No locations available'}
+            {searchTerm ? 'Nenhuma localização encontrada' : 'Nenhuma localização disponível'}
           </div>
         )}
       </div>

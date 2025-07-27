@@ -21,7 +21,7 @@ import TrakNorLogoUrl from '@/assets/images/traknor-logo.svg';
 
 const navigation = [
   { name: 'Visão Geral', href: '/', icon: Home },
-  { name: 'Ativos', href: '/equipment', icon: Package },
+  { name: 'Ativos', href: '/ativos', icon: Package },
   { name: 'Ordens de Serviço', href: '/work-orders', icon: ClipboardList },
   { name: 'Solicitações', href: '/requests', icon: MessageSquare },
   { name: 'Planos', href: '/plans', icon: Calendar },

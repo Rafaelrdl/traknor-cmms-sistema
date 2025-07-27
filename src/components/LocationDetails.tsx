@@ -18,8 +18,8 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
       <div className="flex items-center justify-center h-full text-muted-foreground">
         <div className="text-center space-y-2">
           <Building2 className="h-12 w-12 mx-auto opacity-50" />
-          <p className="text-lg font-medium">Select a location</p>
-          <p className="text-sm">Choose a company, section or sub-section to view details</p>
+          <p className="text-lg font-medium">Selecione uma localização</p>
+          <p className="text-sm">Escolha uma empresa, setor ou subsetor para ver os detalhes</p>
         </div>
       </div>
     );
@@ -39,11 +39,11 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
   const getTypeLabel = () => {
     switch (selectedNode.type) {
       case 'company':
-        return 'Company';
+        return 'Empresa';
       case 'sector':
-        return 'Section';
+        return 'Setor';
       case 'subsection':
-        return 'Sub-section';
+        return 'Subsetor';
     }
   };
 
@@ -52,19 +52,19 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">General Information</CardTitle>
+            <CardTitle className="text-base">Informações Gerais</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Company Name</label>
+              <label className="text-sm font-medium text-muted-foreground">Nome da Empresa</label>
               <p className="font-medium">{company.name}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Segment</label>
+              <label className="text-sm font-medium text-muted-foreground">Segmento</label>
               <p>{company.segment}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Tax ID (CNPJ)</label>
+              <label className="text-sm font-medium text-muted-foreground">CNPJ</label>
               <p>{company.cnpj}</p>
             </div>
           </CardContent>
@@ -72,20 +72,20 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Address</CardTitle>
+            <CardTitle className="text-base">Endereço</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Full Address</label>
+              <label className="text-sm font-medium text-muted-foreground">Endereço Completo</label>
               <p>{company.address.fullAddress}</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-muted-foreground">City</label>
+                <label className="text-sm font-medium text-muted-foreground">Cidade</label>
                 <p>{company.address.city}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-muted-foreground">State</label>
+                <label className="text-sm font-medium text-muted-foreground">Estado</label>
                 <p>{company.address.state}</p>
               </div>
             </div>
@@ -94,19 +94,19 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Contact Information</CardTitle>
+            <CardTitle className="text-base">Informações de Contato</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Responsible</label>
+              <label className="text-sm font-medium text-muted-foreground">Responsável</label>
               <p className="font-medium">{company.responsible}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Role</label>
+              <label className="text-sm font-medium text-muted-foreground">Cargo</label>
               <p>{company.role}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Phone</label>
+              <label className="text-sm font-medium text-muted-foreground">Telefone</label>
               <p>{company.phone}</p>
             </div>
             <div>
@@ -118,26 +118,26 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Operational Data</CardTitle>
+            <CardTitle className="text-base">Dados Operacionais</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Total Area</label>
+                <label className="text-sm font-medium text-muted-foreground">Área Total</label>
                 <p className="font-medium">{company.totalArea.toLocaleString()} m²</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Occupants</label>
+                <label className="text-sm font-medium text-muted-foreground">Ocupantes</label>
                 <p className="font-medium">{company.occupants}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-muted-foreground">HVAC Units</label>
+                <label className="text-sm font-medium text-muted-foreground">Unidades HVAC</label>
                 <p className="font-medium">{company.hvacUnits}</p>
               </div>
             </div>
             {company.notes && (
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Additional Notes</label>
+                <label className="text-sm font-medium text-muted-foreground">Observações Adicionais</label>
                 <p>{company.notes}</p>
               </div>
             )}
@@ -152,15 +152,15 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Contact Information</CardTitle>
+            <CardTitle className="text-base">Informações de Contato</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Responsible</label>
+              <label className="text-sm font-medium text-muted-foreground">Responsável</label>
               <p className="font-medium">{sector.responsible}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Phone</label>
+              <label className="text-sm font-medium text-muted-foreground">Telefone</label>
               <p>{sector.phone}</p>
             </div>
             <div>
@@ -172,26 +172,26 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Operational Data</CardTitle>
+            <CardTitle className="text-base">Dados Operacionais</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Area</label>
+                <label className="text-sm font-medium text-muted-foreground">Área</label>
                 <p className="font-medium">{sector.area.toLocaleString()} m²</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Occupants</label>
+                <label className="text-sm font-medium text-muted-foreground">Ocupantes</label>
                 <p className="font-medium">{sector.occupants}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-muted-foreground">HVAC Units</label>
+                <label className="text-sm font-medium text-muted-foreground">Unidades HVAC</label>
                 <p className="font-medium">{sector.hvacUnits}</p>
               </div>
             </div>
             {sector.notes && (
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Additional Notes</label>
+                <label className="text-sm font-medium text-muted-foreground">Observações Adicionais</label>
                 <p>{sector.notes}</p>
               </div>
             )}
@@ -206,15 +206,15 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Contact Information</CardTitle>
+            <CardTitle className="text-base">Informações de Contato</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Responsible</label>
+              <label className="text-sm font-medium text-muted-foreground">Responsável</label>
               <p className="font-medium">{subSection.responsible}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Phone</label>
+              <label className="text-sm font-medium text-muted-foreground">Telefone</label>
               <p>{subSection.phone}</p>
             </div>
             <div>
@@ -226,26 +226,26 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Operational Data</CardTitle>
+            <CardTitle className="text-base">Dados Operacionais</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Area</label>
+                <label className="text-sm font-medium text-muted-foreground">Área</label>
                 <p className="font-medium">{subSection.area.toLocaleString()} m²</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Occupants</label>
+                <label className="text-sm font-medium text-muted-foreground">Ocupantes</label>
                 <p className="font-medium">{subSection.occupants}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-muted-foreground">HVAC Units</label>
+                <label className="text-sm font-medium text-muted-foreground">Unidades HVAC</label>
                 <p className="font-medium">{subSection.hvacUnits}</p>
               </div>
             </div>
             {subSection.notes && (
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Additional Notes</label>
+                <label className="text-sm font-medium text-muted-foreground">Observações Adicionais</label>
                 <p>{subSection.notes}</p>
               </div>
             )}
@@ -272,11 +272,11 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={onEdit} className="flex items-center gap-2">
             <Edit className="h-4 w-4" />
-            Edit
+            Editar
           </Button>
           <Button onClick={onCreateAsset} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
-            Asset
+            Ativo
           </Button>
         </div>
       </div>
