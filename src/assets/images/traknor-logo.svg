@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="currentColor" aria-labelledby="traknor-logo-title">
+  <title id="traknor-logo-title">TrakNor Logo</title>
+  
+  <!-- Main hexagon shape using currentColor for theme adaptation -->
+  <path d="M25 20 L75 20 L90 50 L75 80 L25 80 L10 50 Z" fill="currentColor" opacity="0.9"/>
+  
+  <!-- Inner geometric pattern -->
+  <g fill="white" opacity="0.95">
+    <!-- Central hexagonal void -->
+    <path d="M35 35 L65 35 L75 50 L65 65 L35 65 L25 50 Z"/>
+    
+    <!-- Connecting elements -->
+    <rect x="30" y="25" width="8" height="50" rx="2"/>
+    <rect x="62" y="25" width="8" height="50" rx="2"/>
+    
+    <!-- Top and bottom connectors -->
+    <polygon points="35,30 65,30 70,40 60,40 40,40 30,40"/>
+    <polygon points="35,70 65,70 70,60 60,60 40,60 30,60"/>
+  </g>
+</svg>
