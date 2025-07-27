@@ -44,14 +44,14 @@ export function Layout({ children }: LayoutProps) {
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-16 items-center px-6">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 mr-8 hover:opacity-80 transition-opacity" aria-label="Página inicial">
+          <Link to="/" className="flex items-center mr-8 hover:opacity-80 transition-opacity" aria-label="Página inicial">
             <img 
               src={TrakNorLogo} 
               alt="Logo TrakNor" 
-              className="h-8 w-8 text-primary"
+              className="h-8 w-8 mr-2"
             />
             <span className="font-bold text-xl text-primary">TrakNor</span>
-            <span className="text-sm text-muted-foreground">CMMS</span>
+            <span className="text-sm text-muted-foreground ml-2">CMMS</span>
           </Link>
 
           {/* Navigation */}

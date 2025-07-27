@@ -1,0 +1,17 @@
+<svg width="32" height="32" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="TrakNor Logo">
+  <defs>
+    <linearGradient id="traknor-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38B2A4"/>
+      <stop offset="100%" stop-color="#B1E0DA"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Hexagonal base with gradient -->
+  <path d="M50 30 L150 30 L175 100 L150 170 L50 170 L25 100 Z" 
+        fill="url(#traknor-gradient)" 
+        stroke="none"/>
+  
+  <!-- Inner 'n' shape in white -->
+  <path d="M65 70 L65 130 L75 130 L75 95 L95 130 L105 130 L105 95 L125 130 L135 130 L135 70 L125 70 L125 105 L105 70 L95 70 L95 105 L75 70 Z" 
+        fill="white"/>
+</svg>
