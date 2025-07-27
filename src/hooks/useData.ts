@@ -20,91 +20,48 @@ import {
   MOCK_DASHBOARD_KPIS
 } from '@/data/mockData';
 
-// Hook personalizado para empresas
+// Hooks retornando arrays simples para compatibilidade
 export const useCompanies = () => {
-  return {
-    data: MOCK_COMPANIES,
-    isLoading: false,
-    error: null
-  };
+  return [MOCK_COMPANIES, () => {}];
 };
 
-// Hook personalizado para setores
 export const useSectors = () => {
-  return {
-    data: MOCK_SECTORS,
-    isLoading: false,
-    error: null
-  };
+  return [MOCK_SECTORS, () => {}];
 };
 
-// Hook personalizado para subseções
 export const useSubSections = () => {
-  return {
-    data: MOCK_SUBSECTIONS,
-    isLoading: false,
-    error: null
-  };
+  return [MOCK_SUBSECTIONS, () => {}];
 };
 
-// Hook personalizado para equipamentos
 export const useEquipment = () => {
-  return {
-    data: MOCK_EQUIPMENT,
-    isLoading: false,
-    error: null
-  };
+  return [MOCK_EQUIPMENT, () => {}];
 };
 
-// Hook personalizado para ordens de serviço
 export const useWorkOrders = () => {
-  return {
-    data: MOCK_WORK_ORDERS,
-    isLoading: false,
-    error: null
-  };
+  return [MOCK_WORK_ORDERS, () => {}];
 };
 
-// Hook personalizado para planos de manutenção
 export const useMaintenancePlans = () => {
-  return {
-    data: MOCK_MAINTENANCE_PLANS,
-    isLoading: false,
-    error: null
-  };
+  return [MOCK_MAINTENANCE_PLANS, () => {}];
 };
 
-// Hook personalizado para estoque
 export const useStock = () => {
-  return {
-    data: MOCK_STOCK_ITEMS,
-    isLoading: false,
-    error: null
-  };
+  return [MOCK_STOCK_ITEMS, () => {}];
 };
 
-// Hook personalizado para KPIs do dashboard
 export const useDashboardKPIs = () => {
-  return {
-    data: MOCK_DASHBOARD_KPIS,
-    isLoading: false,
-    error: null
-  };
+  return [MOCK_DASHBOARD_KPIS, () => {}];
 };
 
-// Hook personalizado para usuário (adicionado para resolver erro de importação)
 export const useUser = () => {
-  return {
-    data: {
-      id: '1',
-      name: 'Admin',
-      email: 'admin@climatrak.com',
-      role: 'ADMIN' as const,
-      avatar: '/assets/avatar.png'
-    },
-    isLoading: false,
-    error: null
+  const userData = {
+    id: '1',
+    name: 'Admin',
+    email: 'admin@climatrak.com',
+    role: 'ADMIN' as const,
+    avatar: '/assets/avatar.png'
   };
+  return [userData, () => {}];
 };
 
 // Funções utilitárias para buscar dados específicos
