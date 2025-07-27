@@ -11,6 +11,7 @@ import {
   Calendar,
   BarChart3,
   Warehouse,
+  BookOpen,
   FileText,
   LogOut,
   User,
@@ -27,6 +28,7 @@ const navigation = [
   { name: 'Planos', href: '/plans', icon: Calendar },
   { name: 'Métricas', href: '/metrics', icon: BarChart3 },
   { name: 'Estoque', href: '/inventory', icon: Warehouse },
+  { name: 'Procedimentos', href: '/procedures', icon: BookOpen },
   { name: 'Relatórios', href: '/reports', icon: FileText },
 ];
 

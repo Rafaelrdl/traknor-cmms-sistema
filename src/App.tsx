@@ -8,6 +8,7 @@ import { RequestsPage } from '@/pages/RequestsPage';
 import { PlansPage } from '@/pages/PlansPage';
 import { MetricsPage } from '@/pages/MetricsPage';
 import { InventoryPage } from '@/pages/InventoryPage';
+import { ProceduresPage } from '@/pages/ProceduresPage';
 import { ReportsPage } from '@/pages/ReportsPage';
 import { Toaster } from '@/components/ui/sonner';
 
@@ -26,6 +27,7 @@ function App() {
             <Route path="/plans" element={<PlansPage />} />
             <Route path="/metrics" element={<MetricsPage />} />
             <Route path="/inventory" element={<InventoryPage />} />
+            <Route path="/procedures" element={<ProceduresPage />} />
             <Route path="/reports" element={<ReportsPage />} />
           </Routes>
         </Layout>
