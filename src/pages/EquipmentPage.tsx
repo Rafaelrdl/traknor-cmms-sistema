@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Building2, MapPin, Users } from 'lucide-react';
 import { useEquipment, useSectors, useSubSections, useCompanies } from '@/hooks/useData';
-import { LocationProvider, useLocation } from '@/contexts/LocationContext';
+import { LocationProvider, useLocation as useLocationContext } from '@/contexts/LocationContext';
 import type { Equipment, SubSection } from '@/types';
 
 function AssetsContent() {
@@ -18,7 +18,7 @@ function AssetsContent() {
   const [sectors] = useSectors();
   const [subSections] = useSubSections();
   const [companies] = useCompanies();
-  const { selectedNode } = useLocation();
+  const { selectedNode } = useLocationContext();
   
   const [isEquipmentDialogOpen, setIsEquipmentDialogOpen] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);

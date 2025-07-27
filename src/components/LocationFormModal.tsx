@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCompanies, useSectors, useSubSections } from '@/hooks/useData';
-import { useLocation } from '@/contexts/LocationContext';
+import { useLocation as useLocationContext } from '@/contexts/LocationContext';
 import type { Company, Sector, SubSection } from '@/types';
 
 interface LocationFormModalProps {
@@ -27,7 +27,7 @@ export function LocationFormModal({
   const [companies, setCompanies] = useCompanies();
   const [sectors, setSectors] = useSectors();
   const [subSections, setSubSections] = useSubSections();
-  const { selectedNode, setSelectedNode } = useLocation();
+  const { selectedNode, setSelectedNode } = useLocationContext();
 
   // Company form state
   const [companyForm, setCompanyForm] = useState<Partial<Company>>({

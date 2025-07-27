@@ -1,7 +1,7 @@
 import { Building2, MapPin, Users, ChevronRight, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { useLocation } from '@/contexts/LocationContext';
+import { useLocation as useLocationContext } from '@/contexts/LocationContext';
 import type { LocationNode } from '@/types';
 
 export function LocationTree() {
@@ -13,7 +13,7 @@ export function LocationTree() {
     setSelectedNode, 
     toggleExpanded, 
     setSearchTerm 
-  } = useLocation();
+  } = useLocationContext();
 
   const getNodeIcon = (type: LocationNode['type']) => {
     switch (type) {

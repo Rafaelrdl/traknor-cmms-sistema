@@ -86,7 +86,7 @@ export function Dashboard() {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* OS Evolution Chart */}
         <Card
-          className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py- shadow-sm">
+          className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />

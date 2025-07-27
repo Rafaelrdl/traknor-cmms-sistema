@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Building2, MapPin, Users, Edit, Plus } from 'lucide-react';
-import { useLocation } from '@/contexts/LocationContext';
+import { useLocation as useLocationContext } from '@/contexts/LocationContext';
 import type { Company, Sector, SubSection } from '@/types';
 
 interface LocationDetailsProps {
@@ -11,7 +11,7 @@ interface LocationDetailsProps {
 }
 
 export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps) {
-  const { selectedNode } = useLocation();
+  const { selectedNode } = useLocationContext();
 
   if (!selectedNode) {
     return (
