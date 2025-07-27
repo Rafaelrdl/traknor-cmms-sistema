@@ -121,17 +121,14 @@ export function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Enhanced Equipment Status */}
-        <Card className="relative overflow-hidden">
+        {/* Equipment Status */}
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 animate-pulse"></div>
-              Status dos Ativos
-            </CardTitle>
+            <CardTitle>Status dos Ativos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-6">
-              {/* Enhanced Donut chart representation */}
+            <div className="space-y-4">
+              {/* Donut chart representation */}
               <div className="flex items-center justify-center">
                 {(() => {
                   const total = chartData.equipmentStatus.functioning + 
@@ -144,172 +141,101 @@ export function Dashboard() {
                   const stoppedPercent = (chartData.equipmentStatus.stopped / total) * 100;
                   
                   // Calculate stroke-dasharray for each segment
-                  const circumference = 2 * Math.PI * 45; // increased radius for better visual
+                  const circumference = 2 * Math.PI * 40; // radius = 40
                   const functioningLength = (functioningPercent / 100) * circumference;
                   const maintenanceLength = (maintenancePercent / 100) * circumference;
                   const stoppedLength = (stoppedPercent / 100) * circumference;
                   
                   return (
-                    <div className="relative w-40 h-40">
-                      {/* Subtle shadow backdrop */}
-                      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 opacity-20 blur-sm"></div>
-                      
-                      <svg className="w-40 h-40 transform -rotate-90 drop-shadow-sm" viewBox="0 0 100 100">
-                        {/* Gradient definitions */}
-                        <defs>
-                          <linearGradient id="functioning-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="#10b981" />
-                            <stop offset="100%" stopColor="#059669" />
-                          </linearGradient>
-                          <linearGradient id="maintenance-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="#f59e0b" />
-                            <stop offset="100%" stopColor="#d97706" />
-                          </linearGradient>
-                          <linearGradient id="stopped-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="#ef4444" />
-                            <stop offset="100%" stopColor="#dc2626" />
-                          </linearGradient>
-                          
-                          {/* Glow filters */}
-                          <filter id="glow">
-                            <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
-                            <feMerge> 
-                              <feMergeNode in="coloredBlur"/>
-                              <feMergeNode in="SourceGraphic"/>
-                            </feMerge>
-                          </filter>
-                        </defs>
-                        
-                        {/* Background circle with subtle gradient */}
+                    <div className="relative w-32 h-32">
+                      <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 100 100">
+                        {/* Background circle */}
                         <circle
                           cx="50"
                           cy="50"
-                          r="45"
+                          r="40"
                           fill="transparent"
-                          stroke="rgb(243 244 246)"
-                          strokeWidth="8"
+                          stroke="rgb(229 231 235)"
+                          strokeWidth="10"
                         />
                         
-                        {/* Functioning segment with gradient and animation */}
+                        {/* Functioning segment (green) */}
                         <circle
                           cx="50"
                           cy="50"
-                          r="45"
+                          r="40"
                           fill="transparent"
-                          stroke="url(#functioning-gradient)"
-                          strokeWidth="8"
+                          stroke="rgb(34 197 94)"
+                          strokeWidth="10"
                           strokeDasharray={`${functioningLength} ${circumference}`}
                           strokeDashoffset="0"
                           strokeLinecap="round"
-                          filter="url(#glow)"
-                          className="transition-all duration-1000 ease-out animate-in"
                         />
                         
-                        {/* Maintenance segment with gradient and animation */}
+                        {/* Maintenance segment (yellow) */}
                         <circle
                           cx="50"
                           cy="50"
-                          r="45"
+                          r="40"
                           fill="transparent"
-                          stroke="url(#maintenance-gradient)"
-                          strokeWidth="8"
+                          stroke="rgb(234 179 8)"
+                          strokeWidth="10"
                           strokeDasharray={`${maintenanceLength} ${circumference}`}
                           strokeDashoffset={-functioningLength}
                           strokeLinecap="round"
-                          filter="url(#glow)"
-                          className="transition-all duration-1000 ease-out animate-in"
-                          style={{ animationDelay: '0.2s' }}
                         />
                         
-                        {/* Stopped segment with gradient and animation */}
+                        {/* Stopped segment (red) */}
                         <circle
                           cx="50"
                           cy="50"
-                          r="45"
+                          r="40"
                           fill="transparent"
-                          stroke="url(#stopped-gradient)"
-                          strokeWidth="8"
+                          stroke="rgb(239 68 68)"
+                          strokeWidth="10"
                           strokeDasharray={`${stoppedLength} ${circumference}`}
                           strokeDashoffset={-(functioningLength + maintenanceLength)}
                           strokeLinecap="round"
-                          filter="url(#glow)"
-                          className="transition-all duration-1000 ease-out animate-in"
-                          style={{ animationDelay: '0.4s' }}
                         />
                       </svg>
                       
-                      {/* Enhanced center display with hover state */}
-                      <div className="absolute inset-0 flex flex-col items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                        <div className="text-center bg-white/90 backdrop-blur-sm rounded-full p-4 shadow-lg border border-gray-100">
-                          <span className="text-3xl font-bold text-gray-900 block leading-none">
-                            {total}
-                          </span>
-                          <span className="text-xs text-gray-500 font-medium uppercase tracking-wider">
-                            Equipamentos
-                          </span>
-                        </div>
+                      {/* Center number */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-2xl font-bold">
+                          {total}
+                        </span>
                       </div>
-                      
-                      {/* Interactive hover overlay */}
-                      <div className="absolute inset-0 rounded-full transition-all duration-300 hover:scale-105 cursor-pointer group"></div>
                     </div>
                   );
                 })()}
               </div>
-              {/* Enhanced Legend */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between group hover:bg-gray-50 rounded-lg p-2 transition-colors duration-200">
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <div className="w-4 h-4 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-sm"></div>
-                      <div className="absolute inset-0 w-4 h-4 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 opacity-40 animate-pulse"></div>
-                    </div>
-                    <span className="text-sm font-medium text-gray-700">Funcionando</span>
-                  </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-gray-900">
-                      {chartData.equipmentStatus.functioning}
-                    </span>
-                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                      {((chartData.equipmentStatus.functioning / (chartData.equipmentStatus.functioning + chartData.equipmentStatus.maintenance + chartData.equipmentStatus.stopped)) * 100).toFixed(0)}%
-                    </span>
+                    <div className="w-3 h-3 bg-green-500 rounded" />
+                    <span className="text-sm">Funcionando</span>
                   </div>
+                  <span className="text-sm font-medium">
+                    {chartData.equipmentStatus.functioning}
+                  </span>
                 </div>
-                
-                <div className="flex items-center justify-between group hover:bg-gray-50 rounded-lg p-2 transition-colors duration-200">
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <div className="w-4 h-4 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 shadow-sm"></div>
-                      <div className="absolute inset-0 w-4 h-4 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 opacity-40 animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-                    </div>
-                    <span className="text-sm font-medium text-gray-700">Em Manutenção</span>
-                  </div>
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-gray-900">
-                      {chartData.equipmentStatus.maintenance}
-                    </span>
-                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                      {((chartData.equipmentStatus.maintenance / (chartData.equipmentStatus.functioning + chartData.equipmentStatus.maintenance + chartData.equipmentStatus.stopped)) * 100).toFixed(0)}%
-                    </span>
+                    <div className="w-3 h-3 bg-yellow-500 rounded" />
+                    <span className="text-sm">Em Manutenção</span>
                   </div>
+                  <span className="text-sm font-medium">
+                    {chartData.equipmentStatus.maintenance}
+                  </span>
                 </div>
-                
-                <div className="flex items-center justify-between group hover:bg-gray-50 rounded-lg p-2 transition-colors duration-200">
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <div className="w-4 h-4 rounded-full bg-gradient-to-br from-red-400 to-red-600 shadow-sm"></div>
-                      <div className="absolute inset-0 w-4 h-4 rounded-full bg-gradient-to-br from-red-400 to-red-600 opacity-40 animate-pulse" style={{ animationDelay: '1s' }}></div>
-                    </div>
-                    <span className="text-sm font-medium text-gray-700">Parado</span>
-                  </div>
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-gray-900">
-                      {chartData.equipmentStatus.stopped}
-                    </span>
-                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                      {((chartData.equipmentStatus.stopped / (chartData.equipmentStatus.functioning + chartData.equipmentStatus.maintenance + chartData.equipmentStatus.stopped)) * 100).toFixed(0)}%
-                    </span>
+                    <div className="w-3 h-3 bg-red-500 rounded" />
+                    <span className="text-sm">Parado</span>
                   </div>
+                  <span className="text-sm font-medium">
+                    {chartData.equipmentStatus.stopped}
+                  </span>
                 </div>
               </div>
             </div>

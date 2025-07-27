@@ -83,7 +83,7 @@ export const MOCK_COMPANIES: Company[] = [
 export const MOCK_SECTORS: Sector[] = [
   {
     id: '1',
-    name: 'Administrativo',
+    name: 'Setor Administrativo',
     companyId: '1',
     responsible: 'Ana Costa',
     phone: '(11) 91111-1111',
