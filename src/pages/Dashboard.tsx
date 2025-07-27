@@ -131,12 +131,66 @@ export function Dashboard() {
               {/* Donut chart representation */}
               <div className="flex items-center justify-center">
                 <div className="relative w-32 h-32">
-                  <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center">
+                  {/* Base circle */}
+                  <div className="absolute inset-0 rounded-full overflow-hidden">
+                    {/* Calculate total for percentages */}
+                    {(() => {
+                      const total = chartData.equipmentStatus.functioning + 
+                                   chartData.equipmentStatus.maintenance + 
+                                   chartData.equipmentStatus.stopped;
+                      
+                      // Calculate angles for each segment
+                      const funcAngle = (chartData.equipmentStatus.functioning / total) * 360;
+                      const maintAngle = (chartData.equipmentStatus.maintenance / total) * 360;
+                      
+                      return (
+                        <>
+                          {/* Functioning segment (green) */}
+                          <div 
+                            className="absolute inset-0 bg-green-500"
+                            style={{
+                              clipPath: `polygon(50% 50%, 50% 0, ${funcAngle <= 180 
+                                ? `${50 + 50 * Math.sin(funcAngle * Math.PI / 180)}% ${50 - 50 * Math.cos(funcAngle * Math.PI / 180)}%` 
+                                : '100% 0, 100% 100%, 0 100%, 0 0'}, 50% 0)`
+                            }}
+                          />
+                          
+                          {/* Maintenance segment (yellow) */}
+                          <div 
+                            className="absolute inset-0 bg-yellow-500"
+                            style={{
+                              clipPath: `polygon(50% 50%, ${funcAngle <= 180 
+                                ? `${50 + 50 * Math.sin(funcAngle * Math.PI / 180)}% ${50 - 50 * Math.cos(funcAngle * Math.PI / 180)}%` 
+                                : '100% 0'}, ${(funcAngle + maintAngle) <= 180 
+                                ? `${50 + 50 * Math.sin((funcAngle + maintAngle) * Math.PI / 180)}% ${50 - 50 * Math.cos((funcAngle + maintAngle) * Math.PI / 180)}%` 
+                                : '100% 100%, 0 100%, 0 0, 100% 0'})`
+                            }}
+                          />
+                          
+                          {/* Stopped segment (red) */}
+                          <div 
+                            className="absolute inset-0 bg-red-500"
+                            style={{
+                              clipPath: `polygon(50% 50%, ${(funcAngle + maintAngle) <= 180 
+                                ? `${50 + 50 * Math.sin((funcAngle + maintAngle) * Math.PI / 180)}% ${50 - 50 * Math.cos((funcAngle + maintAngle) * Math.PI / 180)}%` 
+                                : '0 100%'}, 50% 100%, 0 100%, 0 0, 50% 0)`
+                            }}
+                          />
+                        </>
+                      );
+                    })()}
+                  </div>
+                  
+                  {/* Center hole */}
+                  <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-16 h-16 bg-background rounded-full flex items-center justify-center">
-                      <span className="text-2xl font-bold">{equipment.length}</span>
+                      <span className="text-2xl font-bold">
+                        {chartData.equipmentStatus.functioning + 
+                         chartData.equipmentStatus.maintenance + 
+                         chartData.equipmentStatus.stopped}
+                      </span>
                     </div>
                   </div>
-                  {/* Segments would be calculated and positioned here */}
                 </div>
               </div>
               <div className="space-y-2">
