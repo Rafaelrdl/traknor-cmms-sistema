@@ -101,16 +101,16 @@ export function Dashboard() {
                   <div key={day.day} className="flex flex-col items-center gap-2">
                     <div className="flex flex-col items-center gap-1">
                       <div 
-                        className="w-6 bg-primary rounded-t"
-                        style={{ height: `${day.completed * 8}px` }}
+                        className="w-6 rounded-t"
+                        style={{ height: `${day.completed * 8}px`, backgroundColor: '#006b76' }}
                       />
                       <div 
-                        className="w-6 bg-secondary rounded-t"
-                        style={{ height: `${day.inProgress * 8}px` }}
+                        className="w-6 rounded-t"
+                        style={{ height: `${day.inProgress * 8}px`, backgroundColor: '#ff5b5b' }}
                       />
                       <div 
-                        className="w-6 bg-accent rounded-t"
-                        style={{ height: `${day.open * 8}px` }}
+                        className="w-6 rounded-t"
+                        style={{ height: `${day.open * 8}px`, backgroundColor: '#e0f3f4' }}
                       />
                     </div>
                     <span className="text-xs text-muted-foreground">{day.day}</span>
@@ -119,15 +119,15 @@ export function Dashboard() {
               </div>
               <div className="flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-primary rounded" />
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: '#006b76' }} />
                   <span>Concluído</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-secondary rounded" />
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: '#ff5b5b' }} />
                   <span>Em Atraso</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-accent rounded" />
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: '#e0f3f4' }} />
                   <span>Aberto</span>
                 </div>
               </div>
