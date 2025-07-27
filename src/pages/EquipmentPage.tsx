@@ -89,12 +89,11 @@ function AssetsContent() {
       <div className="w-80 border-r bg-card">
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between p-4 border-b">
-            <h3 className="font-semibold text-lg">Localizações</h3>
+            <h3 className="font-semibold text-lg">Locais</h3>
           </div>
           <LocationTree />
         </div>
       </div>
-
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Action Buttons */}
@@ -139,7 +138,6 @@ function AssetsContent() {
           />
         </div>
       </div>
-
       {/* Equipment Creation Modal */}
       <Dialog open={isEquipmentDialogOpen} onOpenChange={setIsEquipmentDialogOpen}>
         <DialogContent className="max-w-md">
@@ -280,7 +278,6 @@ function AssetsContent() {
           </div>
         </DialogContent>
       </Dialog>
-
       {/* Location Form Modal */}
       <LocationFormModal
         isOpen={isLocationModalOpen}
