@@ -113,7 +113,6 @@ export function Layout({ children }: LayoutProps) {
           </DropdownMenu>
         </div>
       </header>
-
       {/* Main Content */}
       <main className="p-6">
         {children}
