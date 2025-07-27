@@ -36,7 +36,7 @@ const generateMockCompanies = (): Company[] => [
   },
   {
     id: '2',
-    name: 'Edifício Comercial Sul',
+    name: 'Edifício Administrativo Sul',
     segment: 'Corporativo',
     cnpj: '98.765.432/0001-10',
     address: {
