@@ -349,6 +349,72 @@ export const MOCK_DASHBOARD_KPIS: DashboardKPIs = {
   mtbf: 168 // horas
 };
 
+// ============= DADOS PARA GRÁFICOS E VISUALIZAÇÕES =============
+export const MOCK_CHART_DATA = {
+  // Dados para o gráfico de evolução de OS por dia
+  workOrderEvolution: [
+    { day: 'Seg', completed: 5, inProgress: 3, open: 2 },
+    { day: 'Ter', completed: 4, inProgress: 2, open: 3 },
+    { day: 'Qua', completed: 6, inProgress: 3, open: 2 },
+    { day: 'Qui', completed: 7, inProgress: 2, open: 1 },
+    { day: 'Sex', completed: 8, inProgress: 2, open: 1 },
+    { day: 'Sáb', completed: 2, inProgress: 1, open: 3 },
+    { day: 'Dom', completed: 1, inProgress: 2, open: 2 }
+  ],
+  
+  // Dados para o status dos ativos (donut chart)
+  equipmentStatus: {
+    functioning: 38,
+    maintenance: 5, 
+    stopped: 2
+  },
+  
+  // Próximas manutenções (tabela)
+  upcomingMaintenance: [
+    {
+      id: '1',
+      equipmentName: 'Climatizador Central CLI-001',
+      type: 'Manutenção Preventiva',
+      scheduledDate: '2024-08-05',
+      responsible: 'José Silva',
+      priority: 'MEDIUM' as const
+    },
+    {
+      id: '2', 
+      equipmentName: 'Split Sala TI SPL-002',
+      type: 'Inspeção Trimestral',
+      scheduledDate: '2024-08-07',
+      responsible: 'Carlos Pereira',
+      priority: 'HIGH' as const
+    },
+    {
+      id: '3',
+      equipmentName: 'Chiller Industrial CHI-003', 
+      type: 'Análise de Óleo',
+      scheduledDate: '2024-08-10',
+      responsible: 'Roberto Oliveira',
+      priority: 'MEDIUM' as const
+    }
+  ],
+
+  // Dados para gráfico de distribuição de OS por tipo
+  workOrdersByType: {
+    preventive: 18,
+    corrective: 7,
+    emergency: 2
+  },
+
+  // Dados para gráfico de eficiência energética
+  energyEfficiency: [
+    { month: 'Jan', efficiency: 85 },
+    { month: 'Fev', efficiency: 87 },
+    { month: 'Mar', efficiency: 89 },
+    { month: 'Abr', efficiency: 88 },
+    { month: 'Mai', efficiency: 90 },
+    { month: 'Jun', efficiency: 92 }
+  ]
+};
+
 // ============= FUNÇÕES GERADORAS (para compatibilidade) =============
 export const generateMockCompanies = (): Company[] => MOCK_COMPANIES;
 export const generateMockSectors = (): Sector[] => MOCK_SECTORS;

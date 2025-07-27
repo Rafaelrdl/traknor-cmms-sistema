@@ -17,51 +17,57 @@ import {
   MOCK_WORK_ORDERS,
   MOCK_MAINTENANCE_PLANS,
   MOCK_STOCK_ITEMS,
-  MOCK_DASHBOARD_KPIS
+  MOCK_DASHBOARD_KPIS,
+  MOCK_CHART_DATA
 } from '@/data/mockData';
 
-// Hooks retornando arrays simples para compatibilidade
-export const useCompanies = () => {
+// Hooks retornando arrays tipados para compatibilidade
+export const useCompanies = (): [Company[], () => void] => {
   return [MOCK_COMPANIES, () => {}];
 };
 
-export const useSectors = () => {
+export const useSectors = (): [Sector[], () => void] => {
   return [MOCK_SECTORS, () => {}];
 };
 
-export const useSubSections = () => {
+export const useSubSections = (): [SubSection[], () => void] => {
   return [MOCK_SUBSECTIONS, () => {}];
 };
 
-export const useEquipment = () => {
+export const useEquipment = (): [Equipment[], () => void] => {
   return [MOCK_EQUIPMENT, () => {}];
 };
 
-export const useWorkOrders = () => {
+export const useWorkOrders = (): [WorkOrder[], () => void] => {
   return [MOCK_WORK_ORDERS, () => {}];
 };
 
-export const useMaintenancePlans = () => {
+export const useMaintenancePlans = (): [MaintenancePlan[], () => void] => {
   return [MOCK_MAINTENANCE_PLANS, () => {}];
 };
 
-export const useStock = () => {
+export const useStock = (): [StockItem[], () => void] => {
   return [MOCK_STOCK_ITEMS, () => {}];
 };
 
-export const useDashboardKPIs = () => {
+export const useDashboardKPIs = (): [DashboardKPIs, () => void] => {
   return [MOCK_DASHBOARD_KPIS, () => {}];
 };
 
-export const useUser = () => {
-  const userData = {
+export const useUser = (): [User, () => void] => {
+  const userData: User = {
     id: '1',
     name: 'Admin',
     email: 'admin@climatrak.com',
-    role: 'ADMIN' as const,
+    role: 'ADMIN',
     avatar: '/assets/avatar.png'
   };
   return [userData, () => {}];
+};
+
+// Hook para dados de gráficos centralizados
+export const useChartData = (): [typeof MOCK_CHART_DATA, () => void] => {
+  return [MOCK_CHART_DATA, () => {}];
 };
 
 // Funções utilitárias para buscar dados específicos

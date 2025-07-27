@@ -12,33 +12,19 @@ import {
   Activity,
   TrendingUp
 } from 'lucide-react';
-import { useDashboardKPIs, useWorkOrders, useEquipment, useSectors, useCompanies } from '@/hooks/useData';
+import { useDashboardKPIs, useWorkOrders, useEquipment, useSectors, useCompanies, useChartData } from '@/hooks/useData';
 
 export function Dashboard() {
-  const kpis = useDashboardKPIs();
+  const [kpis] = useDashboardKPIs();
   const [workOrders] = useWorkOrders();
   const [equipment] = useEquipment();
   const [sectors] = useSectors();
   const [companies] = useCompanies();
+  const [chartData] = useChartData();
 
-  // Upcoming maintenance (next 7 days)
-  const upcomingMaintenance = equipment.filter(eq => {
-    const nextDate = new Date(eq.nextMaintenance);
-    const inSevenDays = new Date();
-    inSevenDays.setDate(inSevenDays.getDate() + 7);
-    return nextDate <= inSevenDays;
-  });
-
-  // Mock chart data
-  const weeklyData = [
-    { day: 'Seg', completed: 3, inProgress: 5, open: 2 },
-    { day: 'Ter', completed: 5, inProgress: 4, open: 3 },
-    { day: 'Qua', completed: 6, inProgress: 3, open: 4 },
-    { day: 'Qui', completed: 4, inProgress: 6, open: 2 },
-    { day: 'Sex', completed: 8, inProgress: 2, open: 1 },
-    { day: 'Sáb', completed: 2, inProgress: 1, open: 3 },
-    { day: 'Dom', completed: 1, inProgress: 2, open: 2 }
-  ];
+  // Dados centralizados do mock
+  const weeklyData = chartData.workOrderEvolution;
+  const upcomingMaintenance = chartData.upcomingMaintenance;
 
   return (
     <div className="space-y-6">
@@ -160,7 +146,7 @@ export function Dashboard() {
                     <span className="text-sm">Funcionando</span>
                   </div>
                   <span className="text-sm font-medium">
-                    {equipment.filter(eq => eq.status === 'FUNCTIONING').length}
+                    {chartData.equipmentStatus.functioning}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -169,7 +155,7 @@ export function Dashboard() {
                     <span className="text-sm">Em Manutenção</span>
                   </div>
                   <span className="text-sm font-medium">
-                    {equipment.filter(eq => eq.status === 'MAINTENANCE').length}
+                    {chartData.equipmentStatus.maintenance}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -178,7 +164,7 @@ export function Dashboard() {
                     <span className="text-sm">Parado</span>
                   </div>
                   <span className="text-sm font-medium">
-                    {equipment.filter(eq => eq.status === 'STOPPED').length}
+                    {chartData.equipmentStatus.stopped}
                   </span>
                 </div>
               </div>
@@ -203,24 +189,21 @@ export function Dashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {upcomingMaintenance.map((eq) => {
-                const sector = sectors.find(s => s.id === eq.sectorId);
-                const company = companies.find(c => c.id === sector?.companyId);
-                
-                return (
-                  <TableRow key={eq.id}>
-                    <TableCell className="font-medium">{eq.tag}</TableCell>
-                    <TableCell>{eq.brand} {eq.model}</TableCell>
-                    <TableCell>{sector?.name} - {company?.name}</TableCell>
-                    <TableCell>
-                      {new Date(eq.nextMaintenance).toLocaleDateString('pt-BR')}
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge status={eq.status} />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {upcomingMaintenance.map((maintenance) => (
+                <TableRow key={maintenance.id}>
+                  <TableCell className="font-medium">{maintenance.equipmentName}</TableCell>
+                  <TableCell>{maintenance.type}</TableCell>
+                  <TableCell>Setor Principal</TableCell>
+                  <TableCell>
+                    {new Date(maintenance.scheduledDate).toLocaleDateString('pt-BR')}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={maintenance.priority === 'HIGH' ? 'destructive' : 'secondary'}>
+                      {maintenance.priority === 'HIGH' ? 'Alta' : 'Média'}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
               {upcomingMaintenance.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
