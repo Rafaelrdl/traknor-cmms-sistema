@@ -1,8 +1,16 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
-import { useCompanies, useSectors, useSubSections } from '@/hooks/useData';
 import type { LocationNode } from '@/types';
 
-interface LocationContextType {
+  filteredTree: LocationNode[];
+  expandedNod
+  setSelectedNo
+  type: 'company' | 'sector' | 'subsection';
+  parentId?: string;
+  children?: LocationNode[];
+  data: any;
+}
+
+  children: ReactNode;
   tree: LocationNode[];
   filteredTree: LocationNode[];
   selectedNode: LocationNode | null;
@@ -15,31 +23,31 @@ interface LocationContextType {
 
 const LocationContext = createContext<LocationContextType | null>(null);
 
-interface LocationProviderProps {
-  children: ReactNode;
-}
+          children: subSectionNod
+        };
 
-export function LocationProvider({ children }: LocationProviderProps) {
-  const [selectedNode, setSelectedNode] = useState<LocationNode | null>(null);
-  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
-  const [searchTerm, setSearchTerm] = useState('');
 
-  const { data: companies = [] } = useCompanies();
-  const { data: sectors = [] } = useSectors();
-  const { data: subSections = [] } = useSubSections();
+        type: 'company' as const,
+        data: company,
+    });
 
-  const buildTree = (): LocationNode[] => {
-    return companies.map(company => {
-      const companySectors = sectors.filter(s => s.companyId === company.id);
+
+  const filterTree = (nodes: LocationNode[], searc
+
+      const matchesSearch = node.name.toLowerCase().in
+
+        const filteredNode = { ...node };
+          filteredNode.children = fil
+        filtered.push(filteredNode);
       
-      const sectorNodes: LocationNode[] = companySectors.map(sector => {
-        const sectorSubSections = subSections.filter(sub => sub.sectorId === sector.id);
-        
-        const subSectionNodes: LocationNode[] = sectorSubSections.map(subSection => ({
-          id: subSection.id,
-          name: subSection.name,
-          type: 'subsection' as const,
-          parentId: sector.id,
+    }, []);
+
+
+    setExpandedNodes(prev => {
+      if (newSet.has(nodeId)
+      } else {
+      }
+    });
           data: subSection,
         }));
 
@@ -90,37 +98,36 @@ export function LocationProvider({ children }: LocationProviderProps) {
   const toggleExpanded = (nodeId: string) => {
     setExpandedNodes(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(nodeId)) {
-        newSet.delete(nodeId);
-      } else {
-        newSet.add(nodeId);
-      }
-      return newSet;
-    });
-  };
 
-  const value: LocationContextType = {
-    tree,
-    filteredTree,
-    selectedNode,
-    expandedNodes,
-    searchTerm,
-    setSelectedNode,
-    toggleExpanded,
-    setSearchTerm,
-  };
 
-  return (
-    <LocationContext.Provider value={value}>
-      {children}
-    </LocationContext.Provider>
-  );
-}
 
-export function useLocation() {
-  const context = useContext(LocationContext);
-  if (!context) {
-    throw new Error('useLocation must be used within a LocationProvider');
-  }
-  return context;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
