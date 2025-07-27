@@ -46,7 +46,6 @@ export function Dashboard() {
         title="Visão Geral" 
         description="Dashboard do sistema de gestão de manutenção HVAC"
       />
-
       {/* KPI Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
         <KPICard
@@ -84,10 +83,10 @@ export function Dashboard() {
           variant="success"
         />
       </div>
-
       <div className="grid gap-6 lg:grid-cols-2">
         {/* OS Evolution Chart */}
-        <Card>
+        <Card
+          className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py- shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
@@ -187,7 +186,6 @@ export function Dashboard() {
           </CardContent>
         </Card>
       </div>
-
       {/* Upcoming Maintenance Table */}
       <Card>
         <CardHeader>
