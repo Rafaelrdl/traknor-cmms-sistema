@@ -91,3 +91,44 @@ export const useDashboardKPIs = () => {
     error: null
   };
 };
+
+// Hook personalizado para usuário (adicionado para resolver erro de importação)
+export const useUser = () => {
+  return {
+    data: {
+      id: '1',
+      name: 'Admin',
+      email: 'admin@climatrak.com',
+      role: 'ADMIN' as const,
+      avatar: '/assets/avatar.png'
+    },
+    isLoading: false,
+    error: null
+  };
+};
+
+// Funções utilitárias para buscar dados específicos
+export const findCompanyById = (id: string) => {
+  return MOCK_COMPANIES.find(company => company.id === id);
+};
+
+export const findSectorById = (id: string) => {
+  return MOCK_SECTORS.find(sector => sector.id === id);
+};
+
+export const findEquipmentById = (id: string) => {
+  return MOCK_EQUIPMENT.find(equipment => equipment.id === id);
+};
+
+export const findWorkOrderById = (id: string) => {
+  return MOCK_WORK_ORDERS.find(workOrder => workOrder.id === id);
+};
+
+// Hook utilitário para buscar qualquer item por ID
+export const useFindById = <T extends { id: string }>(
+  collection: T[],
+  id: string | undefined
+) => {
+  if (!id) return null;
+  return collection.find(item => item.id === id) || null;
+};
