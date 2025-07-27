@@ -17,7 +17,7 @@ import {
   Settings
 } from 'lucide-react';
 import { useUser } from '@/hooks/useData';
-import TrakNorLogo from '@/assets/images/traknor-logo.svg.svg';
+import TrakNorLogo from '@/assets/images/traknor-logo.svg';
 
 const navigation = [
   { name: 'Visão Geral', href: '/', icon: Home },
@@ -48,7 +48,7 @@ export function Layout({ children }: LayoutProps) {
             <img 
               src={TrakNorLogo} 
               alt="Logo TrakNor" 
-              className="h-8 w-8 mr-2"
+              className="h-8 w-8 md:h-10 md:w-10 text-primary-600 dark:text-primary-100 mr-2 md:mr-3"
             />
             <span className="font-bold text-xl text-primary">TrakNor</span>
             <span className="text-sm text-muted-foreground ml-2">CMMS</span>
