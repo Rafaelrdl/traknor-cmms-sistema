@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Search, Download, Filter } from 'lucide-react';
+import { BookOpen, MagnifyingGlass, Download, Funnel } from '@phosphor-icons/react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { NewProcedureModal } from '@/components/NewProcedureModal';
@@ -120,7 +120,7 @@ export function ProceduresPage() {
         <CardContent className="pt-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <MagnifyingGlass className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Buscar procedimentos..."
                 className="pl-10"
@@ -134,7 +134,7 @@ export function ProceduresPage() {
                 size="sm"
                 onClick={() => setSelectedCategory(null)}
               >
-                <Filter className="mr-2 h-4 w-4" />
+                <Funnel className="mr-2 h-4 w-4" />
                 Todos
               </Button>
               {categories.map((category) => (

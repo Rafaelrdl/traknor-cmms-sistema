@@ -20,7 +20,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Save, X } from 'lucide-react';
+import { Plus, FloppyDisk, X } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
 interface NewProcedureModalProps {
@@ -311,7 +311,7 @@ export function NewProcedureModal({ onProcedureCreated }: NewProcedureModalProps
               Cancelar
             </Button>
             <Button onClick={handleSubmit} disabled={isSubmitting}>
-              <Save className="mr-2 h-4 w-4" />
+              <FloppyDisk className="mr-2 h-4 w-4" />
               {isSubmitting ? 'Salvando...' : 'Criar Procedimento'}
             </Button>
           </div>

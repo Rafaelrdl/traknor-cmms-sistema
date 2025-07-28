@@ -16,14 +16,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Eye, 
   Download, 
-  Edit, 
+  PencilSimple, 
   Clock, 
-  AlertTriangle, 
+  Warning, 
   Wrench,
-  Calendar,
+  CalendarBlank,
   User,
   FileText
-} from 'lucide-react';
+} from '@phosphor-icons/react';
 
 interface Procedure {
   id: number;
@@ -170,7 +170,7 @@ export function ProcedureViewModal({ procedure, trigger }: ProcedureViewModalPro
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={handleEdit}>
-                <Edit className="mr-2 h-4 w-4" />
+                <PencilSimple className="mr-2 h-4 w-4" />
                 Editar
               </Button>
               <Button variant="outline" size="sm" onClick={handleDownload}>
@@ -204,7 +204,7 @@ export function ProcedureViewModal({ procedure, trigger }: ProcedureViewModalPro
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Prioridade</CardTitle>
-                    <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                    <Warning className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
                     <Badge variant={getPriorityColor(procedure.priority)}>
@@ -216,7 +216,7 @@ export function ProcedureViewModal({ procedure, trigger }: ProcedureViewModalPro
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Última Atualização</CardTitle>
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <CalendarBlank className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-sm">{procedure.lastUpdated}</div>
@@ -287,7 +287,7 @@ export function ProcedureViewModal({ procedure, trigger }: ProcedureViewModalPro
                     <CardTitle className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
                       Notas de Segurança
                     </CardTitle>
-                    <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                    <Warning className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-sm text-yellow-800 dark:text-yellow-200 whitespace-pre-wrap">
