@@ -1,20 +1,20 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
-import {
+import { Card } from '@/components/ui/card';
   Bold,
+import {
+  Headi
   Italic,
-  Heading1,
+  List,
   Heading2,
   Heading3,
   Type,
-  List,
+
   ListOrdered,
-  Quote,
+import P
   Undo,
-  Redo,
+  onCli
 } from '@phosphor-icons/react';
 
 // TipTap extensions
@@ -30,38 +30,38 @@ interface ToolbarButtonProps {
 }
 
 function ToolbarButton({ onClick, isActive, disabled, title, children }: ToolbarButtonProps) {
-  return (
-    <Button
-      variant={isActive ? "default" : "ghost"}
-      size="sm"
-      onClick={onClick}
-      disabled={disabled}
-      title={title}
-      className="h-8 w-8 p-0"
-    >
-      {children}
-    </Button>
-  );
-}
+      Plac
+      }),
+    content,
+    onUpdate: (
+    },
+      attributes: {
+          'prose pr
+          'prose-em:text-fore
+     
+      },
+  });
+  if
+ 
 
-interface RichTextEditorProps {
-  content?: string;
-  onUpdate?: (html: string) => void;
-  placeholder?: string;
-  editable?: boolean;
-  className?: string;
-}
+      {editable && (
+          <div clas
+              {/* Text formatting */
+                <Toolba
+                  isA
+                  dis
+ 
 
-export function RichTextEditor({
-  content = '',
-  onUpdate,
-  placeholder = 'Digite seu texto aqui...',
-  editable = true,
-  className,
-}: RichTextEditorProps) {
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
+                  isActive={edit
+               
+           
+              </div>
+              <Sep
+            
+                <ToolbarB
+                  isActive={
+                 
+                 
       Placeholder.configure({
         placeholder,
       }),
@@ -112,9 +112,9 @@ export function RichTextEditor({
                 >
                   <Italic className="h-4 w-4" />
                 </ToolbarButton>
-              </div>
+                  ti
 
-              <Separator orientation="vertical" className="h-6" />
+                  <Undo className="h-4 w-4" />
 
               {/* Headings */}
               <div className="flex items-center gap-1">
@@ -154,9 +154,9 @@ export function RichTextEditor({
 
               <Separator orientation="vertical" className="h-6" />
 
-              {/* Lists */}
+
               <div className="flex items-center gap-1">
-                <ToolbarButton
+
                   onClick={() => editor.chain().focus().toggleBulletList().run()}
                   isActive={editor.isActive('bulletList')}
                   title="Lista com marcadores"
@@ -180,32 +180,31 @@ export function RichTextEditor({
                 >
                   <Quote className="h-4 w-4" />
                 </ToolbarButton>
-              </div>
+
 
               <Separator orientation="vertical" className="h-6" />
 
               {/* History */}
               <div className="flex items-center gap-1">
-                <ToolbarButton
+
                   onClick={() => editor.chain().focus().undo().run()}
-                  title="Desfazer"
+
                   disabled={!editor.can().chain().focus().undo().run()}
-                >
+
                   <Undo className="h-4 w-4" />
-                </ToolbarButton>
+
                 <ToolbarButton
                   onClick={() => editor.chain().focus().redo().run()}
                   title="Refazer"
-                  disabled={!editor.can().chain().focus().redo().run()}
+
                 >
-                  <Redo className="h-4 w-4" />
+
                 </ToolbarButton>
-              </div>
+
             </div>
-          </div>
+
         </>
-      )}
+
       <EditorContent editor={editor} />
-    </Card>
+
   );
-}
