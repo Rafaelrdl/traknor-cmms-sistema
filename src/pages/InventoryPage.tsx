@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Warehouse, Search, Plus, AlertTriangle } from 'lucide-react';
 import { useStock } from '@/hooks/useData';
+import type { StockItem } from '@/types';
 
 export function InventoryPage() {
   const [stock] = useStock();
 
-  const getStockStatus = (item: typeof stock[0]) => {
+  const getStockStatus = (item: StockItem) => {
     if (item.quantity <= item.minimum) return 'critical';
     if (item.quantity <= item.minimum * 1.5) return 'low';
     return 'normal';
@@ -70,7 +71,7 @@ export function InventoryPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {stock.map((item) => {
+              {(stock || []).map((item) => {
                 const status = getStockStatus(item);
                 
                 return (

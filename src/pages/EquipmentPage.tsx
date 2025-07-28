@@ -51,7 +51,7 @@ function AssetsContent() {
       subSectionId: selectedNode?.type === 'subsection' ? selectedNode.id : newEquipment.subSectionId
     };
     
-    setEquipment(current => [...current, equipment_data]);
+    setEquipment((current) => [...(current || []), equipment_data]);
     setNewEquipment({
       tag: '',
       model: '',

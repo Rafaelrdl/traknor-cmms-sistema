@@ -132,46 +132,46 @@ export function LocationFormModal({
   const handleSubmit = () => {
     if (type === 'company') {
       const newCompany: Company = {
+        ...(companyForm as Omit<Company, 'id'>),
         id: mode === 'edit' ? (initialData as Company).id : Date.now().toString(),
-        ...companyForm as Company,
         createdAt: mode === 'edit' ? (initialData as Company).createdAt : new Date().toISOString()
       };
 
       if (mode === 'edit') {
-        setCompanies(current => current.map(c => c.id === newCompany.id ? newCompany : c));
+        setCompanies((current) => current?.map(c => c.id === newCompany.id ? newCompany : c) || [newCompany]);
         if (selectedNode?.id === newCompany.id) {
           setSelectedNode({ ...selectedNode, data: newCompany });
         }
       } else {
-        setCompanies(current => [...current, newCompany]);
+        setCompanies((current) => [...(current || []), newCompany]);
       }
     } else if (type === 'sector') {
       const newSector: Sector = {
-        id: mode === 'edit' ? (initialData as Sector).id : Date.now().toString(),
-        ...sectorForm as Sector
+        ...(sectorForm as Omit<Sector, 'id'>),
+        id: mode === 'edit' ? (initialData as Sector).id : Date.now().toString()
       };
 
       if (mode === 'edit') {
-        setSectors(current => current.map(s => s.id === newSector.id ? newSector : s));
+        setSectors((current) => current?.map(s => s.id === newSector.id ? newSector : s) || [newSector]);
         if (selectedNode?.id === newSector.id) {
           setSelectedNode({ ...selectedNode, data: newSector });
         }
       } else {
-        setSectors(current => [...current, newSector]);
+        setSectors((current) => [...(current || []), newSector]);
       }
     } else if (type === 'subsection') {
       const newSubSection: SubSection = {
-        id: mode === 'edit' ? (initialData as SubSection).id : Date.now().toString(),
-        ...subSectionForm as SubSection
+        ...(subSectionForm as Omit<SubSection, 'id'>),
+        id: mode === 'edit' ? (initialData as SubSection).id : Date.now().toString()
       };
 
       if (mode === 'edit') {
-        setSubSections(current => current.map(ss => ss.id === newSubSection.id ? newSubSection : ss));
+        setSubSections((current) => current?.map(ss => ss.id === newSubSection.id ? newSubSection : ss) || [newSubSection]);
         if (selectedNode?.id === newSubSection.id) {
           setSelectedNode({ ...selectedNode, data: newSubSection });
         }
       } else {
-        setSubSections(current => [...current, newSubSection]);
+        setSubSections((current) => [...(current || []), newSubSection]);
       }
     }
 
@@ -377,7 +377,7 @@ export function LocationFormModal({
             <SelectValue placeholder="Selecionar empresa" />
           </SelectTrigger>
           <SelectContent>
-            {companies.map(company => (
+            {(companies || []).map(company => (
               <SelectItem key={company.id} value={company.id}>
                 {company.name}
               </SelectItem>

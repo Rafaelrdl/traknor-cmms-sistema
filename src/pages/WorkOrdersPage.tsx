@@ -54,7 +54,7 @@ export function WorkOrdersPage() {
   const [checklist, setChecklist] = useState<ChecklistItem[]>(mockChecklist);
 
   // Filter work orders
-  const filteredOrders = workOrders.filter(wo => {
+  const filteredOrders = (workOrders || []).filter(wo => {
     const matchesSearch = wo.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          wo.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'ALL' || wo.status === statusFilter;
@@ -62,22 +62,22 @@ export function WorkOrdersPage() {
   });
 
   const startWorkOrder = (id: string) => {
-    setWorkOrders(current =>
-      current.map(wo => 
+    setWorkOrders((current) =>
+      current?.map(wo => 
         wo.id === id ? { ...wo, status: 'IN_PROGRESS' as const } : wo
-      )
+      ) || []
     );
   };
 
   const completeWorkOrder = (id: string) => {
-    setWorkOrders(current =>
-      current.map(wo => 
+    setWorkOrders((current) =>
+      current?.map(wo => 
         wo.id === id ? { 
           ...wo, 
           status: 'COMPLETED' as const,
           completedAt: new Date().toISOString()
         } : wo
-      )
+      ) || []
     );
     setSelectedOrder(null);
   };
@@ -256,7 +256,7 @@ export function WorkOrdersPage() {
                                               id={item.id}
                                               checked={item.response === true}
                                               onCheckedChange={(checked) => 
-                                                updateChecklistResponse(item.id, checked)
+                                                updateChecklistResponse(item.id, checked === true)
                                               }
                                             />
                                             <label htmlFor={item.id} className="text-sm">
@@ -269,7 +269,7 @@ export function WorkOrdersPage() {
                                           <Input
                                             type="number"
                                             placeholder="Digite o valor"
-                                            value={item.response || ''}
+                                            value={typeof item.response === 'number' ? item.response.toString() : ''}
                                             onChange={(e) => 
                                               updateChecklistResponse(item.id, parseFloat(e.target.value))
                                             }
@@ -279,7 +279,7 @@ export function WorkOrdersPage() {
                                         {item.type === 'TEXT' && (
                                           <Textarea
                                             placeholder="Digite suas observações"
-                                            value={item.response || ''}
+                                            value={typeof item.response === 'string' ? item.response : ''}
                                             onChange={(e) => 
                                               updateChecklistResponse(item.id, e.target.value)
                                             }

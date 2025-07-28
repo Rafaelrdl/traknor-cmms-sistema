@@ -23,8 +23,8 @@ export function Dashboard() {
   const [chartData] = useChartData();
 
   // Dados centralizados do mock
-  const weeklyData = chartData.workOrderEvolution;
-  const upcomingMaintenance = chartData.upcomingMaintenance;
+  const weeklyData = chartData?.workOrderEvolution || [];
+  const upcomingMaintenance = chartData?.upcomingMaintenance || [];
 
   return (
     <div className="space-y-6">
@@ -36,25 +36,25 @@ export function Dashboard() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
         <KPICard
           title="OS em Aberto"
-          value={kpis.openWorkOrders}
+          value={kpis?.openWorkOrders || 0}
           icon={<ClipboardList className="h-4 w-4" />}
           variant="default"
         />
         <KPICard
           title="OS em Atraso"
-          value={kpis.overdueWorkOrders}
+          value={kpis?.overdueWorkOrders || 0}
           icon={<AlertTriangle className="h-4 w-4" />}
-          variant={kpis.overdueWorkOrders > 0 ? "danger" : "success"}
+          variant={(kpis?.overdueWorkOrders || 0) > 0 ? "danger" : "success"}
         />
         <KPICard
           title="Equipamentos Críticos"
-          value={kpis.criticalEquipment}
+          value={kpis?.criticalEquipment || 0}
           icon={<AlertCircle className="h-4 w-4" />}
-          variant={kpis.criticalEquipment > 0 ? "warning" : "success"}
+          variant={(kpis?.criticalEquipment || 0) > 0 ? "warning" : "success"}
         />
         <KPICard
           title="MTTR"
-          value={`${kpis.mttr}h`}
+          value={`${kpis?.mttr || 0}h`}
           icon={<Clock className="h-4 w-4" />}
           trend="down"
           trendValue="2h menos que o mês anterior"
@@ -62,7 +62,7 @@ export function Dashboard() {
         />
         <KPICard
           title="MTBF"
-          value={`${kpis.mtbf}h`}
+          value={`${kpis?.mtbf || 0}h`}
           icon={<Activity className="h-4 w-4" />}
           trend="up"
           trendValue="5h mais que o mês anterior"
@@ -131,14 +131,17 @@ export function Dashboard() {
               {/* Donut chart representation */}
               <div className="flex items-center justify-center">
                 {(() => {
-                  const total = chartData.equipmentStatus.functioning + 
-                               chartData.equipmentStatus.maintenance + 
-                               chartData.equipmentStatus.stopped;
+                  const equipmentStatus = chartData?.equipmentStatus || { functioning: 0, maintenance: 0, stopped: 0 };
+                  const total = equipmentStatus.functioning + 
+                               equipmentStatus.maintenance + 
+                               equipmentStatus.stopped;
+                  
+                  if (total === 0) return <div className="text-muted-foreground">Sem dados disponíveis</div>;
                   
                   // Calculate percentages
-                  const functioningPercent = (chartData.equipmentStatus.functioning / total) * 100;
-                  const maintenancePercent = (chartData.equipmentStatus.maintenance / total) * 100;
-                  const stoppedPercent = (chartData.equipmentStatus.stopped / total) * 100;
+                  const functioningPercent = (equipmentStatus.functioning / total) * 100;
+                  const maintenancePercent = (equipmentStatus.maintenance / total) * 100;
+                  const stoppedPercent = (equipmentStatus.stopped / total) * 100;
                   
                   // Calculate stroke-dasharray for each segment
                   const circumference = 2 * Math.PI * 40; // radius = 40

@@ -1,23 +1,22 @@
 import { useEditor, EditorContent } from '@tiptap/react';
-import { Button } from '@/components/ui/butto
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import {
-  List,
+  Bold,
   Italic,
-  Undo,
   List,
   ListOrdered,
   Quote,
-} from 
+  Undo,
   Redo,
-interfa
   Heading1,
-  placehold
+  Heading2,
   Heading3,
+  Type,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import StarterKit from '@tiptap/starter-kit';
 
 interface RichTextEditorProps {
   content?: string;
@@ -30,104 +29,101 @@ interface RichTextEditorProps {
 export function RichTextEditor({
   content = '',
   onChange,
-          'prose-blockquote:text-muted-
+  placeholder = 'Digite aqui...',
+  className,
+  editable = true,
+}: RichTextEditorProps) {
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        bulletList: {
+          keepMarks: true,
+          keepAttributes: false,
+        },
+        orderedList: {
+          keepMarks: true,
+          keepAttributes: false,
+        },
+      }),
+    ],
+    content,
+    editable,
+    onUpdate: ({ editor }) => {
+      if (onChange) {
+        onChange(editor.getHTML());
+      }
+    },
+    editorProps: {
+      attributes: {
+        class: cn(
+          'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none p-4',
+          'prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground',
+          'prose-ul:text-foreground prose-ol:text-foreground prose-li:text-foreground',
+          'prose-blockquote:text-muted-foreground prose-blockquote:border-l-border',
+          className
         ),
       },
+    },
   });
+
   if (!editor) {
+    return null;
   }
+
   const ToolbarButton = ({
+    onClick,
     isActive = false,
+    disabled = false,
+    title,
     children,
   }: {
-    isActi
-    children: React.Re
+    onClick: () => void;
+    isActive?: boolean;
+    disabled?: boolean;
+    title: string;
+    children: React.ReactNode;
   }) => (
-      variant={isActive ? 'secon
-      onCl
-      tit
+    <Button
+      variant={isActive ? 'secondary' : 'ghost'}
+      size="sm"
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      className="h-8 w-8 p-0"
     >
-    </Button
-
-    <Card className={cn('overfl
-        <>
-            <div className="flex fl
-       
-      
-                  
-                  <
-                <T
-                  isActive={editor.isActive('italic')}
-                >
-                </ToolbarButton>
-
-
-              <div className="flex items-center gap-1">
-                  onCl
-          
-                  <H
-        
-      
-     
-
-                
-                
-   
-
-                  isActive
-            
-                </Too
-
-
-          
-      
-                  title=
-                  <List
-                <Toolba
-                  isActive={ed
-                >
-         
-
-
-              <
-                isActiv
-              >
-              </Too
-              <Separator orie
-     
-                
-             
-    
-
-          
-                  title="Refazer"
-                  <R
-          
-          </div>
-      )}
-      <EditorContent 
-              <div className="flex items-center gap-1">
-                <ToolbarButton
-      />
+      {children}
+    </Button>
   );
 
+  return (
+    <Card className={cn('overflow-hidden', className)}>
+      {editable && (
+        <>
+          <div className="border-b p-2">
+            <div className="flex flex-wrap items-center gap-1">
+              {/* Text formatting */}
+              <div className="flex items-center gap-1">
+                <ToolbarButton
+                  onClick={() => editor.chain().focus().toggleBold().run()}
+                  isActive={editor.isActive('bold')}
+                  title="Negrito"
+                >
+                  <Bold className="h-4 w-4" />
+                </ToolbarButton>
+                <ToolbarButton
+                  onClick={() => editor.chain().focus().toggleItalic().run()}
+                  isActive={editor.isActive('italic')}
+                  title="Itálico"
+                >
+                  <Italic className="h-4 w-4" />
+                </ToolbarButton>
+              </div>
 
+              <Separator orientation="vertical" className="h-6" />
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+              {/* Headings */}
+              <div className="flex items-center gap-1">
+                <ToolbarButton
                   onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
                   isActive={editor.isActive('heading', { level: 1 })}
                   title="Título 1"
