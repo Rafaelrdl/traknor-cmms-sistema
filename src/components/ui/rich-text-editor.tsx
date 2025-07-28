@@ -1,20 +1,19 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import { Separator } from '@/components/ui/separator';
 import { Card } from '@/components/ui/card';
-import { Card } from '@/components/ui/card';
-  Bold,
+import { cn } from '@/lib/utils';
 import {
-  Headi
+  Bold,
   Italic,
   List,
+  ListOrdered,
+  Quote,
+  Heading1,
   Heading2,
   Heading3,
   Type,
-
-  ListOrdered,
-import P
   Undo,
-  onCli
+  Redo,
 } from '@phosphor-icons/react';
 
 // TipTap extensions
@@ -30,38 +29,40 @@ interface ToolbarButtonProps {
 }
 
 function ToolbarButton({ onClick, isActive, disabled, title, children }: ToolbarButtonProps) {
-      Plac
-      }),
-    content,
-    onUpdate: (
-    },
-      attributes: {
-          'prose pr
-          'prose-em:text-fore
-     
-      },
-  });
-  if
- 
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      className={cn(
+        'p-2 rounded hover:bg-muted transition-colors',
+        isActive ? 'bg-muted text-primary' : 'text-muted-foreground',
+        disabled && 'opacity-50 cursor-not-allowed'
+      )}
+    >
+      {children}
+    </button>
+  );
+}
 
-      {editable && (
-          <div clas
-              {/* Text formatting */
-                <Toolba
-                  isA
-                  dis
- 
+interface RichTextEditorProps {
+  content?: string;
+  placeholder?: string;
+  onUpdate?: (html: string) => void;
+  editable?: boolean;
+  className?: string;
+}
 
-                  isActive={edit
-               
-           
-              </div>
-              <Sep
-            
-                <ToolbarB
-                  isActive={
-                 
-                 
+export function RichTextEditor({
+  content = '',
+  placeholder = 'Escreva aqui...',
+  onUpdate,
+  editable = true,
+  className,
+}: RichTextEditorProps) {
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
       Placeholder.configure({
         placeholder,
       }),
@@ -112,9 +113,9 @@ function ToolbarButton({ onClick, isActive, disabled, title, children }: Toolbar
                 >
                   <Italic className="h-4 w-4" />
                 </ToolbarButton>
-                  ti
+              </div>
 
-                  <Undo className="h-4 w-4" />
+              <Separator orientation="vertical" className="h-6" />
 
               {/* Headings */}
               <div className="flex items-center gap-1">
@@ -154,9 +155,9 @@ function ToolbarButton({ onClick, isActive, disabled, title, children }: Toolbar
 
               <Separator orientation="vertical" className="h-6" />
 
-
+              {/* Lists */}
               <div className="flex items-center gap-1">
-
+                <ToolbarButton
                   onClick={() => editor.chain().focus().toggleBulletList().run()}
                   isActive={editor.isActive('bulletList')}
                   title="Lista com marcadores"
@@ -180,31 +181,32 @@ function ToolbarButton({ onClick, isActive, disabled, title, children }: Toolbar
                 >
                   <Quote className="h-4 w-4" />
                 </ToolbarButton>
-
+              </div>
 
               <Separator orientation="vertical" className="h-6" />
 
               {/* History */}
               <div className="flex items-center gap-1">
-
+                <ToolbarButton
                   onClick={() => editor.chain().focus().undo().run()}
-
+                  title="Desfazer"
                   disabled={!editor.can().chain().focus().undo().run()}
-
+                >
                   <Undo className="h-4 w-4" />
-
+                </ToolbarButton>
                 <ToolbarButton
                   onClick={() => editor.chain().focus().redo().run()}
                   title="Refazer"
-
+                  disabled={!editor.can().chain().focus().redo().run()}
                 >
-
+                  <Redo className="h-4 w-4" />
                 </ToolbarButton>
-
+              </div>
             </div>
-
+          </div>
         </>
-
+      )}
       <EditorContent editor={editor} />
-
+    </Card>
   );
+}
