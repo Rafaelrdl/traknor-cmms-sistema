@@ -1,4 +1,4 @@
-import { useKV } from '@github/spark/hooks';
+import { useState } from 'react';
 import type { 
   User, 
   Company, 
@@ -21,6 +21,29 @@ import {
   MOCK_DASHBOARD_KPIS,
   MOCK_CHART_DATA
 } from '@/data/mockData';
+
+// Hook simples para simular persistência key-value
+const useKV = <T>(key: string, defaultValue: T): [T, (value: T) => void] => {
+  const [data, setData] = useState<T>(() => {
+    try {
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : defaultValue;
+    } catch {
+      return defaultValue;
+    }
+  });
+
+  const setValue = (value: T) => {
+    setData(value);
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+      console.warn('Failed to save to localStorage:', error);
+    }
+  };
+
+  return [data, setValue];
+};
 
 // Hooks usando useKV para persistência de dados
 export const useCompanies = () => {
