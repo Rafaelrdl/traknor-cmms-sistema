@@ -1,11 +1,15 @@
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Plus, Search, Download, Eye } from 'lucide-react';
+import { BookOpen, Search, Download, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { NewProcedureModal } from '@/components/NewProcedureModal';
+import { ProcedureViewModal } from '@/components/ProcedureViewModal';
+import { toast } from 'sonner';
 
 export function ProceduresPage() {
-  const procedures = [
+  const [procedures, setProcedures] = useState([
     {
       id: 1,
       title: 'Procedimento de Limpeza de Filtros HVAC',
@@ -14,6 +18,11 @@ export function ProceduresPage() {
       status: 'Ativo',
       lastUpdated: '2024-01-15',
       description: 'Procedimento padrão para limpeza e substituição de filtros em sistemas de ar condicionado.',
+      tags: ['filtros', 'limpeza', 'hvac'],
+      priority: 'medium',
+      estimatedTime: '30 minutos',
+      requiredTools: 'Chaves de fenda, aspirador, filtros novos, EPIs',
+      safetyNotes: 'Sempre desligue o sistema antes de iniciar. Use EPIs adequados.',
     },
     {
       id: 2,
@@ -23,6 +32,11 @@ export function ProceduresPage() {
       status: 'Ativo',
       lastUpdated: '2024-01-10',
       description: 'Checklist completo para inspeção de compressores e identificação de problemas.',
+      tags: ['compressor', 'inspeção', 'diagnóstico'],
+      priority: 'high',
+      estimatedTime: '45 minutos',
+      requiredTools: 'Multímetro, manômetro, chaves diversas',
+      safetyNotes: 'Cuidado com pressão do sistema. Verifique vazamentos.',
     },
     {
       id: 3,
@@ -32,6 +46,11 @@ export function ProceduresPage() {
       status: 'Em Revisão',
       lastUpdated: '2024-01-08',
       description: 'Procedimentos para identificação e reparo de vazamentos em sistemas HVAC.',
+      tags: ['vazamento', 'reparo', 'emergência'],
+      priority: 'critical',
+      estimatedTime: '60-120 minutos',
+      requiredTools: 'Detector de vazamentos, solda, EPIs especiais',
+      safetyNotes: 'Procedimento crítico. Evacue área se necessário.',
     },
     {
       id: 4,
@@ -41,8 +60,45 @@ export function ProceduresPage() {
       status: 'Ativo',
       lastUpdated: '2024-01-05',
       description: 'Procedimento para calibração e ajuste de termostatos digitais e analógicos.',
+      tags: ['termostato', 'calibração', 'temperatura'],
+      priority: 'low',
+      estimatedTime: '20 minutos',
+      requiredTools: 'Termômetro digital, chaves pequenas',
+      safetyNotes: 'Verifique tensão antes de abrir equipamentos.',
     },
-  ];
+  ]);
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  const filteredProcedures = procedures.filter(procedure => {
+    const matchesSearch = procedure.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         procedure.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         procedure.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesCategory = !selectedCategory || procedure.category === selectedCategory;
+    
+    return matchesSearch && matchesCategory;
+  });
+
+  const categories = [...new Set(procedures.map(p => p.category))];
+  
+  const stats = {
+    total: procedures.length,
+    active: procedures.filter(p => p.status === 'Ativo').length,
+    inReview: procedures.filter(p => p.status === 'Em Revisão').length,
+    obsolete: procedures.filter(p => p.status === 'Obsoleto').length,
+  };
+
+  const handleProcedureCreated = (newProcedure: any) => {
+    setProcedures(prev => [newProcedure, ...prev]);
+    toast.success('Procedimento adicionado à lista!');
+  };
+
+  const handleDownload = (procedure: any) => {
+    // Implementar download do procedimento
+    toast.success(`Download iniciado: ${procedure.title}`);
+  };
 
   return (
     <div className="space-y-6">
@@ -55,10 +111,7 @@ export function ProceduresPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Novo Procedimento
-          </Button>
+          <NewProcedureModal onProcedureCreated={handleProcedureCreated} />
         </div>
       </div>
 
@@ -71,15 +124,29 @@ export function ProceduresPage() {
               <Input
                 placeholder="Buscar procedimentos..."
                 className="pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                Categoria
+              <Button 
+                variant={selectedCategory ? "default" : "outline"} 
+                size="sm"
+                onClick={() => setSelectedCategory(null)}
+              >
+                <Filter className="mr-2 h-4 w-4" />
+                Todos
               </Button>
-              <Button variant="outline" size="sm">
-                Status
-              </Button>
+              {categories.map((category) => (
+                <Button
+                  key={category}
+                  variant={selectedCategory === category ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedCategory(selectedCategory === category ? null : category)}
+                >
+                  {category}
+                </Button>
+              ))}
             </div>
           </div>
         </CardContent>
@@ -93,9 +160,9 @@ export function ProceduresPage() {
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24</div>
+            <div className="text-2xl font-bold">{stats.total}</div>
             <p className="text-xs text-muted-foreground">
-              +2 este mês
+              +{procedures.filter(p => new Date(p.lastUpdated) > new Date(Date.now() - 30*24*60*60*1000)).length} este mês
             </p>
           </CardContent>
         </Card>
@@ -105,9 +172,9 @@ export function ProceduresPage() {
             <Badge variant="secondary" className="h-4 w-4 p-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">20</div>
+            <div className="text-2xl font-bold">{stats.active}</div>
             <p className="text-xs text-muted-foreground">
-              83% do total
+              {Math.round((stats.active / stats.total) * 100)}% do total
             </p>
           </CardContent>
         </Card>
@@ -117,7 +184,7 @@ export function ProceduresPage() {
             <Badge variant="outline" className="h-4 w-4 p-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3</div>
+            <div className="text-2xl font-bold">{stats.inReview}</div>
             <p className="text-xs text-muted-foreground">
               Pendente aprovação
             </p>
@@ -129,7 +196,7 @@ export function ProceduresPage() {
             <Badge variant="destructive" className="h-4 w-4 p-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1</div>
+            <div className="text-2xl font-bold">{stats.obsolete}</div>
             <p className="text-xs text-muted-foreground">
               Requer atualização
             </p>
@@ -139,42 +206,93 @@ export function ProceduresPage() {
 
       {/* Procedures List */}
       <div className="grid gap-4">
-        {procedures.map((procedure) => (
-          <Card key={procedure.id} className="hover:shadow-md transition-shadow">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <CardTitle className="text-lg">{procedure.title}</CardTitle>
-                  <CardDescription>{procedure.description}</CardDescription>
+        {filteredProcedures.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Nenhum procedimento encontrado</h3>
+              <p className="text-muted-foreground text-center">
+                {searchTerm || selectedCategory 
+                  ? 'Tente ajustar os filtros de busca ou criar um novo procedimento.'
+                  : 'Comece criando seu primeiro procedimento operacional.'
+                }
+              </p>
+              {!searchTerm && !selectedCategory && (
+                <div className="mt-4">
+                  <NewProcedureModal onProcedureCreated={handleProcedureCreated} />
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    <Eye className="mr-2 h-4 w-4" />
-                    Visualizar
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Download className="mr-2 h-4 w-4" />
-                    Download
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span>Categoria: {procedure.category}</span>
-                  <span>Versão: {procedure.version}</span>
-                  <span>Atualizado: {procedure.lastUpdated}</span>
-                </div>
-                <Badge 
-                  variant={procedure.status === 'Ativo' ? 'default' : procedure.status === 'Em Revisão' ? 'secondary' : 'destructive'}
-                >
-                  {procedure.status}
-                </Badge>
-              </div>
+              )}
             </CardContent>
           </Card>
-        ))}
+        ) : (
+          filteredProcedures.map((procedure) => (
+            <Card key={procedure.id} className="hover:shadow-md transition-shadow">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1">
+                    <CardTitle className="text-lg">{procedure.title}</CardTitle>
+                    <CardDescription>{procedure.description}</CardDescription>
+                    {procedure.tags && procedure.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {procedure.tags.map((tag) => (
+                          <Badge key={tag} variant="outline" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <ProcedureViewModal procedure={procedure} />
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleDownload(procedure)}
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Download
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <span>Categoria: {procedure.category}</span>
+                    <span>Versão: {procedure.version}</span>
+                    <span>Atualizado: {procedure.lastUpdated}</span>
+                    {procedure.estimatedTime && (
+                      <span>Tempo: {procedure.estimatedTime}</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {procedure.priority && (
+                      <Badge 
+                        variant={
+                          procedure.priority === 'critical' || procedure.priority === 'high' 
+                            ? 'destructive' 
+                            : procedure.priority === 'medium' 
+                            ? 'default' 
+                            : 'secondary'
+                        }
+                        className="text-xs"
+                      >
+                        {procedure.priority === 'critical' ? 'Crítica' :
+                         procedure.priority === 'high' ? 'Alta' :
+                         procedure.priority === 'medium' ? 'Média' : 'Baixa'}
+                      </Badge>
+                    )}
+                    <Badge 
+                      variant={procedure.status === 'Ativo' ? 'default' : procedure.status === 'Em Revisão' ? 'secondary' : 'destructive'}
+                    >
+                      {procedure.status}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
     </div>
   );
