@@ -1,7 +1,5 @@
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig, PluginOption } from "vite";
-import tailwindcss from 'tailwindcss';
-import autoprefixer from 'autoprefixer';
 
 import sparkPlugin from "@github/spark/spark-vite-plugin";
 import createIconImportProxy from "@github/spark/vitePhosphorIconProxyPlugin";
@@ -21,13 +19,5 @@ export default defineConfig({
     alias: {
       '@': resolve(projectRoot, 'src')
     }
-  },
-  css: {
-    postcss: {
-      plugins: [
-        tailwindcss,
-        autoprefixer,
-      ],
-    },
   }
 });
