@@ -20,4 +20,7 @@ export default defineConfig({
       '@': resolve(projectRoot, 'src')
     }
   },
+  css: {
+    postcss: './postcss.config.js'
+  }
 });
