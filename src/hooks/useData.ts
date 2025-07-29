@@ -96,5 +96,4 @@ export const useFindById = <T extends { id: string }>(
   id: string | undefined
 ) => {
   if (!id) return null;
-  return collection.find(item => item.id === id) || null;
-};
+  return collect
