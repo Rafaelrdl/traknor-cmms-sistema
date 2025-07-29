@@ -1,16 +1,15 @@
-// Teste simples para verificar se PostCSS está funcionando
-const postcss = require('postcss');
-
-
+// Test simple PostCSS configuration
+import postcss from 'postcss';
+import tailwindcss from 'tailwindcss';
+import autoprefixer from 'autoprefixer';
 
 const css = '@tailwind base; @tailwind components; @tailwind utilities; .test { display: flex; }';
 
 postcss([tailwindcss(), autoprefixer()])
   .process(css, { from: undefined })
   .then(result => {
-  });
-    console.log('Resultado de teste:', result.css.length, 'caracteres');
+    console.log('✅ PostCSS working! Generated CSS:', result.css.length, 'characters');
   })
   .catch(err => {
-    console.error('❌ Erro no PostCSS:', err.message);
+    console.error('❌ PostCSS Error:', err.message);
   });
