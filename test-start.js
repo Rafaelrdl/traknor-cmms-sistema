@@ -1,24 +1,23 @@
 #!/usr/bin/env node
 
-import { spawn } from 'child_process';
+console.log('🚀 Starting Vite developm
 
-console.log('🚀 Starting Vite development server...');
-
-const vite = spawn('npx', ['vite'], {
-  stdio: 'inherit',
   cwd: process.cwd()
-});
 
-vite.on('error', (error) => {
-  console.error('❌ Error starting Vite:', error);
-});
+  console.error('❌ Error starting Vit
 
-vite.on('exit', (code) => {
-  console.log(`📊 Vite exited with code ${code}`);
-});
+  console.log(`📊 Vi
 
-// Timeout after 30 seconds for testing
-setTimeout(() => {
-  console.log('⏰ Test timeout reached, stopping server...');
+
   vite.kill();
-}, 30000);
+
+
+
+
+
+
+
+
+
+
+
