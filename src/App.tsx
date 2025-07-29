@@ -10,19 +10,30 @@ function App() {
             Sistema de Gestão de Manutenção HVAC
           </p>
           <div className="w-24 h-1 bg-primary mx-auto rounded-full"></div>
-          <div className="max-w-2xl mx-auto space-y-4">
+          <div className="max-w-4xl mx-auto space-y-4">
             <p className="text-muted-foreground">
-              ✅ PostCSS configurado corretamente
+              Sistema de gestão de manutenção preventiva e corretiva para equipamentos HVAC
             </p>
-            <p className="text-muted-foreground">
-              ✅ TailwindCSS v3.4.17 funcionando
-            </p>
-            <p className="text-muted-foreground">
-              ✅ Autoprefixer instalado
-            </p>
-            <p className="text-muted-foreground">
-              ✅ Sistema pronto para desenvolvimento
-            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+              <div className="bg-card p-6 rounded-lg border">
+                <h3 className="font-semibold mb-2">Características</h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li>✅ Multi-tenant (SaaS)</li>
+                  <li>✅ Normas PMOC brasileiras</li>
+                  <li>✅ Interface responsiva</li>
+                  <li>✅ Gestão completa de ativos</li>
+                </ul>
+              </div>
+              <div className="bg-card p-6 rounded-lg border">
+                <h3 className="font-semibold mb-2">Tecnologias</h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li>✅ React 19 + TypeScript</li>
+                  <li>✅ TailwindCSS v3.4.17</li>
+                  <li>✅ Vite para build</li>
+                  <li>✅ Shadcn/ui componentes</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </div>
