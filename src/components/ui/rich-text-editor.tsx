@@ -1,10 +1,7 @@
-<<<<<<< HEAD
 import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Placeholder from '@tiptap/extension-placeholder';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
 import {
   Bold,
   Italic,
@@ -18,261 +15,61 @@ import {
   Heading2
 } from 'lucide-react';
 
-interface ToolbarButtonProps {
-  onClick: () => void;
-  isActive?: boolean;
-  disabled?: boolean;
-  title: string;
-  children: React.ReactNode;
-}
-
-function ToolbarButton({ onClick, isActive, disabled, title, children }: ToolbarButtonProps) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      title={title}
-      className={cn(
-        'p-2 rounded hover:bg-muted transition-colors',
-        isActive ? 'bg-muted text-primary' : 'text-muted-foreground',
-        disabled && 'opacity-50 cursor-not-allowed'
-      )}
-    >
-      {children}
-    </button>
-  );
-}
-
-interface RichTextEditorProps {
-  content?: string;
-  placeholder?: string;
-  onUpdate?: (html: string) => void;
-  editable?: boolean;
-  className?: string;
-}
-
-export function RichTextEditor({
-  content = '',
-  placeholder = 'Escreva aqui...',
-  onUpdate,
-  editable = true,
-  className
-}: RichTextEditorProps) {
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Placeholder.configure({
-        placeholder,
-      }),
-    ],
-    content,
-    editable,
-    onUpdate: ({ editor }) => {
-      onUpdate?.(editor.getHTML());
-    },
-  });
-
-  if (!editor) {
-    return null;
-  }
-
-  return (
-    <Card className={cn('border', className)}>
-      {/* Toolbar */}
-      {editable && (
-        <div className="border-b p-2">
-          <div className="flex items-center gap-1 flex-wrap">
-            {/* Formatting */}
-            <div className="flex items-center gap-1">
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-                isActive={editor.isActive('heading', { level: 1 })}
-                title="Título 1"
-              >
-                <Heading1 className="h-4 w-4" />
-              </ToolbarButton>
-              
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                isActive={editor.isActive('heading', { level: 2 })}
-                title="Título 2"
-              >
-                <Heading2 className="h-4 w-4" />
-              </ToolbarButton>
-            </div>
-
-            <Separator orientation="vertical" className="h-6" />
-
-            {/* Text Formatting */}
-            <div className="flex items-center gap-1">
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleBold().run()}
-                isActive={editor.isActive('bold')}
-                title="Negrito"
-              >
-                <Bold className="h-4 w-4" />
-              </ToolbarButton>
-
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleItalic().run()}
-                isActive={editor.isActive('italic')}
-                title="Itálico"
-              >
-                <Italic className="h-4 w-4" />
-              </ToolbarButton>
-
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleCode().run()}
-                isActive={editor.isActive('code')}
-                title="Código"
-              >
-                <Code className="h-4 w-4" />
-              </ToolbarButton>
-            </div>
-
-            <Separator orientation="vertical" className="h-6" />
-
-            {/* Lists */}
-            <div className="flex items-center gap-1">
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleBulletList().run()}
-                isActive={editor.isActive('bulletList')}
-                title="Lista com marcadores"
-              >
-                <List className="h-4 w-4" />
-              </ToolbarButton>
-
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                isActive={editor.isActive('orderedList')}
-                title="Lista numerada"
-              >
-                <ListOrdered className="h-4 w-4" />
-              </ToolbarButton>
-
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                isActive={editor.isActive('blockquote')}
-                title="Citação"
-              >
-                <Quote className="h-4 w-4" />
-              </ToolbarButton>
-            </div>
-
-            <Separator orientation="vertical" className="h-6" />
-
-            {/* Undo/Redo */}
-            <div className="flex items-center gap-1">
-              <ToolbarButton
-                onClick={() => editor.chain().focus().undo().run()}
-                disabled={!editor.can().chain().focus().undo().run()}
-                title="Desfazer"
-              >
-                <Undo className="h-4 w-4" />
-              </ToolbarButton>
-
-              <ToolbarButton
-                onClick={() => editor.chain().focus().redo().run()}
-                disabled={!editor.can().chain().focus().redo().run()}
-                title="Refazer"
-              >
-                <Redo className="h-4 w-4" />
-              </ToolbarButton>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Editor Content */}
-      <div className="p-4">
-        <EditorContent 
-          editor={editor} 
-          className={cn(
-            'prose prose-sm max-w-none',
-            'focus-within:outline-none',
-            '[&_.ProseMirror]:outline-none',
-            '[&_.ProseMirror]:min-h-[120px]',
-            '[&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]',
-            '[&_.ProseMirror_p.is-editor-empty:first-child::before]:text-muted-foreground',
-            '[&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left',
-            '[&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none',
-            '[&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0'
-          )}
-        />
-      </div>
-    </Card>
-  );
-=======
-import { useEditor, EditorContent } from '@tiptap/react';
-import { Card } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
-import {
-  Bold,
-  Italic,
-  List,
-  ListOrdered,
-  Quote,
-  Undo,
-  Redo,
-  Type,
-} from '@phosphor-icons/react';
-
 // TipTap extensions
 import StarterKit from '@tiptap/starter-kit';
-import Placeholder from '@tiptap/extension-placeholder';
 
 interface ToolbarButtonProps {
   onClick: () => void;
-  isActive?: boolean;
-  disabled?: boolean;
+  isActive: boolean;
+  disabled: boolean;
   title: string;
   children: React.ReactNode;
 }
 
 function ToolbarButton({ onClick, isActive, disabled, title, children }: ToolbarButtonProps) {
   return (
-    <button
+    <Button
       onClick={onClick}
       disabled={disabled}
+      variant={isActive ? "default" : "outline"}
+      size="sm"
       title={title}
-      className={cn(
-        'p-2 rounded hover:bg-muted transition-colors',
-        isActive ? 'bg-muted text-primary' : 'text-muted-foreground',
-        disabled && 'opacity-50 cursor-not-allowed'
-      )}
+      className="h-8 w-8 p-0"
     >
       {children}
-    </button>
+    </Button>
   );
 }
 
 interface RichTextEditorProps {
-  content?: string;
+  content: string;
+  onChange: (content: string) => void;
   placeholder?: string;
-  onUpdate?: (html: string) => void;
-  editable?: boolean;
   className?: string;
 }
 
-export function RichTextEditor({
-  content = '',
-  placeholder = 'Escreva aqui...',
-  onUpdate,
-  editable = true,
-  className,
-}: RichTextEditorProps) {
+export function RichTextEditor({ content, onChange, placeholder = "Digite o conteúdo...", className }: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
-      StarterKit,
-      Placeholder.configure({
-        placeholder,
+      StarterKit.configure({
+        bulletList: {
+          keepMarks: true,
+          keepAttributes: false,
+        },
+        orderedList: {
+          keepMarks: true,
+          keepAttributes: false,
+        },
       }),
     ],
     content,
-    editable,
-    onUpdate: ({ editor }) => {
-      onUpdate?.(editor.getHTML());
+    editorProps: {
+      attributes: {
+        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none min-h-[200px] p-4',
+      },
+    },
+    onUpdate({ editor }) {
+      onChange(editor.getHTML());
     },
   });
 
@@ -281,110 +78,103 @@ export function RichTextEditor({
   }
 
   return (
-    <Card className={cn('overflow-hidden', className)}>
-      {editable && (
-        <div className="border-b p-2">
-          <div className="flex items-center gap-1 flex-wrap">
-            {/* Typography */}
-            <div className="flex items-center gap-1">
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-                isActive={editor.isActive('heading', { level: 1 })}
-                title="Título 1"
-              >
-                <Type className="h-4 w-4" weight="bold" />
-              </ToolbarButton>
-              
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                isActive={editor.isActive('heading', { level: 2 })}
-                title="Título 2"
-              >
-                <Type className="h-4 w-4" />
-              </ToolbarButton>
-            </div>
+    <Card className={className}>
+      <div className="flex flex-wrap items-center gap-1 p-2 border-b">
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          isActive={editor.isActive('bold')}
+          disabled={!editor.can().chain().focus().toggleBold().run()}
+          title="Negrito"
+        >
+          <Bold className="h-4 w-4" />
+        </ToolbarButton>
 
-            <Separator orientation="vertical" className="h-6" />
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+          isActive={editor.isActive('italic')}
+          disabled={!editor.can().chain().focus().toggleItalic().run()}
+          title="Itálico"
+        >
+          <Italic className="h-4 w-4" />
+        </ToolbarButton>
 
-            {/* Text formatting */}
-            <div className="flex items-center gap-1">
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleBold().run()}
-                isActive={editor.isActive('bold')}
-                title="Negrito"
-              >
-                <Bold className="h-4 w-4" />
-              </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+          isActive={editor.isActive('heading', { level: 1 })}
+          disabled={!editor.can().chain().focus().toggleHeading({ level: 1 }).run()}
+          title="Título 1"
+        >
+          <Heading1 className="h-4 w-4" />
+        </ToolbarButton>
 
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleItalic().run()}
-                isActive={editor.isActive('italic')}
-                title="Itálico"
-              >
-                <Italic className="h-4 w-4" />
-              </ToolbarButton>
-            </div>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          isActive={editor.isActive('heading', { level: 2 })}
+          disabled={!editor.can().chain().focus().toggleHeading({ level: 2 }).run()}
+          title="Título 2"
+        >
+          <Heading2 className="h-4 w-4" />
+        </ToolbarButton>
 
-            <Separator orientation="vertical" className="h-6" />
+        <Separator orientation="vertical" className="h-6" />
 
-            {/* Lists */}
-            <div className="flex items-center gap-1">
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleBulletList().run()}
-                isActive={editor.isActive('bulletList')}
-                title="Lista com marcadores"
-              >
-                <List className="h-4 w-4" />
-              </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          isActive={editor.isActive('bulletList')}
+          disabled={!editor.can().chain().focus().toggleBulletList().run()}
+          title="Lista com marcadores"
+        >
+          <List className="h-4 w-4" />
+        </ToolbarButton>
 
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                isActive={editor.isActive('orderedList')}
-                title="Lista numerada"
-              >
-                <ListOrdered className="h-4 w-4" />
-              </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          isActive={editor.isActive('orderedList')}
+          disabled={!editor.can().chain().focus().toggleOrderedList().run()}
+          title="Lista numerada"
+        >
+          <ListOrdered className="h-4 w-4" />
+        </ToolbarButton>
 
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                isActive={editor.isActive('blockquote')}
-                title="Citação"
-              >
-                <Quote className="h-4 w-4" />
-              </ToolbarButton>
-            </div>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          isActive={editor.isActive('blockquote')}
+          disabled={!editor.can().chain().focus().toggleBlockquote().run()}
+          title="Citação"
+        >
+          <Quote className="h-4 w-4" />
+        </ToolbarButton>
 
-            <Separator orientation="vertical" className="h-6" />
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+          isActive={editor.isActive('codeBlock')}
+          disabled={!editor.can().chain().focus().toggleCodeBlock().run()}
+          title="Bloco de código"
+        >
+          <Code className="h-4 w-4" />
+        </ToolbarButton>
 
-            {/* Undo/Redo */}
-            <div className="flex items-center gap-1">
-              <ToolbarButton
-                onClick={() => editor.chain().focus().undo().run()}
-                disabled={!editor.can().chain().focus().undo().run()}
-                title="Desfazer"
-              >
-                <Undo className="h-4 w-4" />
-              </ToolbarButton>
+        <Separator orientation="vertical" className="h-6" />
 
-              <ToolbarButton
-                onClick={() => editor.chain().focus().redo().run()}
-                disabled={!editor.can().chain().focus().redo().run()}
-                title="Refazer"
-              >
-                <Redo className="h-4 w-4" />
-              </ToolbarButton>
-            </div>
-          </div>
-        </div>
-      )}
+        <ToolbarButton
+          onClick={() => editor.chain().focus().undo().run()}
+          isActive={false}
+          disabled={!editor.can().chain().focus().undo().run()}
+          title="Desfazer"
+        >
+          <Undo className="h-4 w-4" />
+        </ToolbarButton>
 
-      <div className="p-4">
-        <EditorContent 
-          editor={editor} 
-          className="prose prose-sm max-w-none focus:outline-none min-h-[200px]"
-        />
+        <ToolbarButton
+          onClick={() => editor.chain().focus().redo().run()}
+          isActive={false}
+          disabled={!editor.can().chain().focus().redo().run()}
+          title="Refazer"
+        >
+          <Redo className="h-4 w-4" />
+        </ToolbarButton>
       </div>
+      <EditorContent editor={editor} />
     </Card>
   );
->>>>>>> 8121d1d0c5c02541261f932f53e7fdd4ae525d33
 }
