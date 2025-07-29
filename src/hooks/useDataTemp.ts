@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { 
-  Sector
-  Equipment
+  User,
+  Company, 
   Sector, 
   SubSection,
   Equipment, 
@@ -10,11 +10,11 @@ import type {
   StockItem,
   DashboardKPIs 
 } from '@/types';
-  MOCK_MA
+import { 
   MOCK_COMPANIES,
   MOCK_SECTORS,
   MOCK_SUBSECTIONS,
-// Temporary hook
+  MOCK_EQUIPMENT,
   MOCK_WORK_ORDERS,
   MOCK_MAINTENANCE_PLANS,
   MOCK_STOCK_ITEMS,
@@ -48,35 +48,35 @@ export const useSectors = (): [Sector[], (value: Sector[] | ((current: Sector[])
 
 export const useSubSections = (): [SubSection[], (value: SubSection[] | ((current: SubSection[]) => SubSection[])) => void, () => void] => {
   const [data] = useState<SubSection[]>(MOCK_SUBSECTIONS);
-  const deleteData = () => {
+  const setData = (value: SubSection[] | ((current: SubSection[]) => SubSection[])) => {
     console.log('SubSections updated:', value);
-  re
-  const deleteData = () => {
-export const useMaintenancePlans = (): 
   };
-    console.log('MaintenancePlans upd
+  const deleteData = () => {
+    console.log('SubSections deleted');
+  };
+  return [data, setData, deleteData];
 };
 
 export const useEquipment = (): [Equipment[], (value: Equipment[] | ((current: Equipment[]) => Equipment[])) => void, () => void] => {
   const [data] = useState<Equipment[]>(MOCK_EQUIPMENT);
   const setData = (value: Equipment[] | ((current: Equipment[]) => Equipment[])) => {
     console.log('Equipment updated:', value);
-  co
   };
+  const deleteData = () => {
     console.log('Equipment deleted');
   };
+  return [data, setData, deleteData];
 };
-ex
 
 export const useWorkOrders = (): [WorkOrder[], (value: WorkOrder[] | ((current: WorkOrder[]) => WorkOrder[])) => void, () => void] => {
   const [data] = useState<WorkOrder[]>(MOCK_WORK_ORDERS);
   const setData = (value: WorkOrder[] | ((current: WorkOrder[]) => WorkOrder[])) => {
     console.log('WorkOrders updated:', value);
-  re
-  const deleteData = () => {
-export const useUser = (): [User, (val
   };
-    name: 'Admin',
+  const deleteData = () => {
+    console.log('WorkOrders deleted');
+  };
+  return [data, setData, deleteData];
 };
 
 export const useMaintenancePlans = (): [MaintenancePlan[], (value: MaintenancePlan[] | ((current: MaintenancePlan[]) => MaintenancePlan[])) => void, () => void] => {
@@ -84,21 +84,21 @@ export const useMaintenancePlans = (): [MaintenancePlan[], (value: MaintenancePl
   const setData = (value: MaintenancePlan[] | ((current: MaintenancePlan[]) => MaintenancePlan[])) => {
     console.log('MaintenancePlans updated:', value);
   };
-  return [data, setData, del
+  const deleteData = () => {
     console.log('MaintenancePlans deleted');
-// H
+  };
   return [data, setData, deleteData];
-  
+};
 
 export const useStock = (): [StockItem[], (value: StockItem[] | ((current: StockItem[]) => StockItem[])) => void, () => void] => {
   const [data] = useState<StockItem[]>(MOCK_STOCK_ITEMS);
   const setData = (value: StockItem[] | ((current: StockItem[]) => StockItem[])) => {
     console.log('Stock updated:', value);
-// F
-  const deleteData = () => {
-};
   };
-  return MOCK_SECTORS.find(sector => 
+  const deleteData = () => {
+    console.log('Stock deleted');
+  };
+  return [data, setData, deleteData];
 };
 
 export const useDashboardKPIs = (): [DashboardKPIs, (value: DashboardKPIs | ((current: DashboardKPIs) => DashboardKPIs)) => void, () => void] => {
@@ -106,9 +106,9 @@ export const useDashboardKPIs = (): [DashboardKPIs, (value: DashboardKPIs | ((cu
   const setData = (value: DashboardKPIs | ((current: DashboardKPIs) => DashboardKPIs)) => {
     console.log('DashboardKPIs updated:', value);
   };
-export const useFindById = <
+  const deleteData = () => {
     console.log('DashboardKPIs deleted');
-) =>
+  };
   return [data, setData, deleteData];
 };
 
@@ -116,48 +116,49 @@ export const useUser = (): [User, (value: User | ((current: User) => User)) => v
   const userData: User = {
     id: '1',
     name: 'Admin',
-
+    email: 'admin@traknor.com',
     role: 'ADMIN',
-
+    avatar: '/assets/avatar.png'
   };
-
+  
+  const [data] = useState<User>(userData);
   const setData = (value: User | ((current: User) => User)) => {
-
-
+    console.log('User updated:', value);
+  };
   const deleteData = () => {
     console.log('User deleted');
   };
   return [data, setData, deleteData];
+};
 
+// Hook para dados de gráficos centralizados
+export const useChartData = (): [typeof MOCK_CHART_DATA, (value: typeof MOCK_CHART_DATA | ((current: typeof MOCK_CHART_DATA) => typeof MOCK_CHART_DATA)) => void, () => void] => {
+  const [data] = useState(MOCK_CHART_DATA);
+  const setData = (value: typeof MOCK_CHART_DATA | ((current: typeof MOCK_CHART_DATA) => typeof MOCK_CHART_DATA)) => {
+    console.log('Chart data updated:', value);
+  };
+  const deleteData = () => {
+    console.log('Chart data deleted');
+  };
+  return [data, setData, deleteData];
+};
 
+// Funções utilitárias para buscar dados específicos
+export const findCompanyById = (id: string) => {
+  return MOCK_COMPANIES.find(company => company.id === id);
+};
 
+export const findSectorById = (id: string) => {
+  return MOCK_SECTORS.find(sector => sector.id === id);
+};
 
+export const findEquipmentById = (id: string) => {
+  return MOCK_EQUIPMENT.find(equipment => equipment.id === id);
+};
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export const findWorkOrderById = (id: string) => {
+  return MOCK_WORK_ORDERS.find(workOrder => workOrder.id === id);
+};
 
 // Hook utilitário para buscar qualquer item por ID
 export const useFindById = <T extends { id: string }>(
