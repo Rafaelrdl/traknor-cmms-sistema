@@ -219,7 +219,7 @@ export function Dashboard() {
                     <span className="text-sm">Funcionando</span>
                   </div>
                   <span className="text-sm font-medium">
-                    {chartData.equipmentStatus.functioning}
+                    {chartData?.equipmentStatus?.functioning || 0}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -228,7 +228,7 @@ export function Dashboard() {
                     <span className="text-sm">Em Manutenção</span>
                   </div>
                   <span className="text-sm font-medium">
-                    {chartData.equipmentStatus.maintenance}
+                    {chartData?.equipmentStatus?.maintenance || 0}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -237,7 +237,7 @@ export function Dashboard() {
                     <span className="text-sm">Parado</span>
                   </div>
                   <span className="text-sm font-medium">
-                    {chartData.equipmentStatus.stopped}
+                    {chartData?.equipmentStatus?.stopped || 0}
                   </span>
                 </div>
               </div>

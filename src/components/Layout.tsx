@@ -18,7 +18,7 @@ import {
   Settings
 } from 'lucide-react';
 import { useUser } from '@/hooks/useData';
-import TrakNorLogo from '@/assets/images/traknor-logo.svg';
+// import LogoSimple from '@/assets/images/logo-simple.svg';
 
 const navigation = [
   { name: 'Visão Geral', href: '/', icon: Home },
@@ -47,11 +47,9 @@ export function Layout({ children }: LayoutProps) {
         <div className="flex h-16 items-center px-6">
           {/* Logo */}
           <Link to="/" className="flex items-center mr-8 hover:opacity-80 transition-opacity" aria-label="Página inicial">
-            <img 
-              src={TrakNorLogo} 
-              alt="Logo TrakNor" 
-              className="h-8 w-8 md:h-10 md:w-10 mr-2 md:mr-3"
-            />
+            <div className="h-8 w-8 md:h-10 md:w-10 mr-2 md:mr-3 bg-primary text-primary-foreground rounded-md flex items-center justify-center">
+              <span className="font-bold text-lg">T</span>
+            </div>
             <span className="font-bold text-xl text-primary">TrakNor</span>
             <span className="text-sm text-muted-foreground ml-2">CMMS</span>
           </Link>
