@@ -12,7 +12,7 @@ import {
   Activity,
   TrendingUp
 } from 'lucide-react';
-import { useDashboardKPIs, useWorkOrders, useEquipment, useSectors, useCompanies, useChartData } from '@/hooks/useData';
+import { useDashboardKPIs, useWorkOrders, useEquipment, useSectors, useCompanies, useChartData } from '@/hooks/useDataTemp';
 
 export function Dashboard() {
   const [kpis] = useDashboardKPIs();

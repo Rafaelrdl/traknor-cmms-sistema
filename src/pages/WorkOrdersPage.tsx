@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, ClipboardList, Play, CheckCircle, Camera } from 'lucide-react';
-import { useWorkOrders, useEquipment, useSectors, useCompanies } from '@/hooks/useData';
+import { useWorkOrders, useEquipment, useSectors, useCompanies } from '@/hooks/useDataTemp';
 import type { WorkOrder, ChecklistItem } from '@/types';
 
 const mockChecklist: ChecklistItem[] = [

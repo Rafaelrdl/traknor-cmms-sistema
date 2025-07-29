@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Building2, MapPin, Users } from 'lucide-react';
-import { useEquipment, useSectors, useSubSections, useCompanies } from '@/hooks/useData';
+import { useEquipment, useSectors, useSubSections, useCompanies } from '@/hooks/useDataTemp';
 import { LocationProvider, useLocation as useLocationContext } from '@/contexts/LocationContext';
 import type { Equipment, SubSection } from '@/types';
 

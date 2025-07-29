@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Warehouse, Search, Plus, AlertTriangle } from 'lucide-react';
-import { useStock } from '@/hooks/useData';
+import { useStock } from '@/hooks/useDataTemp';
 import type { StockItem } from '@/types';
 
 export function InventoryPage() {

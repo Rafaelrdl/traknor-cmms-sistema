@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileText, Download, Eye } from 'lucide-react';
-import { useCompanies, useSectors } from '@/hooks/useData';
+import { useCompanies, useSectors } from '@/hooks/useDataTemp';
 
 export function ReportsPage() {
   const [companies] = useCompanies();

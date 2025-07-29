@@ -17,7 +17,7 @@ import {
   User,
   Settings
 } from 'lucide-react';
-import { useUser } from '@/hooks/useData';
+import { useUser } from '@/hooks/useDataTemp';
 import TrakNorLogoUrl from '@/assets/images/traknor-logo.svg';
 
 const navigation = [

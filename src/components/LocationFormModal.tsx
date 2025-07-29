@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useCompanies, useSectors, useSubSections } from '@/hooks/useData';
+import { useCompanies, useSectors, useSubSections } from '@/hooks/useDataTemp';
 import { useLocation as useLocationContext } from '@/contexts/LocationContext';
 import type { Company, Sector, SubSection } from '@/types';
 
