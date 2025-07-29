@@ -19,8 +19,5 @@ export default defineConfig({
     alias: {
       '@': resolve(projectRoot, 'src')
     }
-  },
-  css: {
-    postcss: resolve(projectRoot, 'postcss.config.cjs')
   }
 });
