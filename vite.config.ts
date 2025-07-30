@@ -32,5 +32,21 @@ export default defineConfig({
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
       "Access-Control-Allow-Headers": "*"
     }
+  },
+  build: {
+    rollupOptions: {
+      onwarn(warning, warn) {
+        // Suppress Spark-related warnings during build
+        if (warning.code === 'UNRESOLVED_IMPORT' && 
+            (warning.source?.includes('curly-succotash') ||
+             warning.source?.includes('app.github.dev'))) {
+          return;
+        }
+        warn(warning);
+      }
+    }
+  },
+  optimizeDeps: {
+    exclude: ['@github/spark'] // Don't try to optimize Spark dependencies
   }
 });

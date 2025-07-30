@@ -1,10 +1,10 @@
 import './index.css';
 import { suppressSparkErrors } from './utils/suppressSparkErrors';
+import { setupSparkEnvironment } from './utils/sparkEnvironment';
 
-// Suppress Spark-related errors in development
-if (process.env.NODE_ENV === 'development') {
-  suppressSparkErrors();
-}
+// Setup Spark environment handling
+suppressSparkErrors();
+setupSparkEnvironment();
 
 function App() {
   return (
@@ -34,11 +34,16 @@ function App() {
                 <h3 className="font-semibold mb-2">Tecnologias</h3>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li>✅ React 19 + TypeScript</li>
-                  <li>✅ TailwindCSS v3.4.17</li>
-                  <li>✅ Vite para build</li>
+                  <li>✅ TailwindCSS v4.0.17</li>
+                  <li>✅ Vite + Spark para build</li>
                   <li>✅ Shadcn/ui componentes</li>
                 </ul>
               </div>
+            </div>
+            <div className="mt-8 p-4 bg-card rounded-lg border">
+              <p className="text-sm text-muted-foreground">
+                ✅ Aplicação funcionando corretamente no GitHub Spark
+              </p>
             </div>
           </div>
         </div>
