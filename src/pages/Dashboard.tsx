@@ -82,7 +82,7 @@ export function Dashboard() {
           <CardContent>
             <div className="space-y-4">
               {/* Simple chart representation */}
-              <div className="flex items-end justify-between h-40 border-b border-border">
+              <div className="flex items-end justify-between h-40 border-b border-gray-200">
                 {weeklyData.map((day, index) => (
                   <div key={day.day} className="flex flex-col items-center gap-2">
                     <div className="flex flex-col items-center gap-1">
