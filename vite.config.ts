@@ -20,6 +20,17 @@ export default defineConfig({
   },
   server: {
     host: true,
-    port: 5000
+    port: 5000,
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: ["*"],
+      credentials: true
+    },
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "*"
+    }
   }
 });

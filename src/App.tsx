@@ -1,4 +1,10 @@
 import './index.css';
+import { suppressSparkErrors } from './utils/suppressSparkErrors';
+
+// Suppress Spark-related errors in development
+if (process.env.NODE_ENV === 'development') {
+  suppressSparkErrors();
+}
 
 function App() {
   return (
