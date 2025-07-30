@@ -1,13 +1,32 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="spark-preview" content="true" />
+    <meta name="spark-codespace-port" content="5175" />
     <title>TrakNor CMMS - Sistema de Gestão de Manutenção HVAC</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter&family=Noto+Serif&display=swap">
+    <link href="/src/main.css" rel="stylesheet" />
+    
+    <!-- Spark Communication Script -->
+    <script>
+      // Detectar ambiente Spark
+      if (window.location.hostname.includes('spark-preview')) {
+        window.SPARK_ENVIRONMENT = true;
+        
+        // Estabelecer comunicação inicial
+        window.addEventListener('DOMContentLoaded', () => {
+          window.parent.postMessage({
+            type: 'spark-app-loaded',
+            port: 5175
+          }, 'https://github.com');
+        });
+      }
+    </script>
 </head>
 
 <body>

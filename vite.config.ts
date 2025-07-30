@@ -1,52 +1,57 @@
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig } from "vite";
-import { resolve } from 'path'
-import sparkVitePlugin from "@github/spark/spark-vite-plugin";
-
-const projectRoot = process.env.PROJECT_ROOT || import.meta.dirname;
 
 // https://vite.dev/config/
+// Configuração específica para GitHub Spark Preview
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    ...sparkVitePlugin(),
   ],
   resolve: {
     alias: {
-      '@': resolve(projectRoot, 'src')
+      '@': '/src'
     }
   },
   server: {
+    port: 5175,
     host: true,
-    port: 5000,
     cors: {
-      origin: "*",
-      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-      allowedHeaders: ["*"],
+      origin: [
+        'https://github.com',
+        'https://*.github.com',
+        'https://*.github.app',
+        'https://*.app.github.dev'
+      ],
       credentials: true
     },
     headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-      "Access-Control-Allow-Headers": "*"
-    }
-  },
-  build: {
-    rollupOptions: {
-      onwarn(warning, warn) {
-        // Suppress Spark-related warnings during build
-        if (warning.code === 'UNRESOLVED_IMPORT' && 
-            (warning.source?.includes('curly-succotash') ||
-             warning.source?.includes('app.github.dev'))) {
-          return;
-        }
-        warn(warning);
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
+      'Access-Control-Allow-Credentials': 'true'
+    },
+    proxy: {
+      // Proxy para requisições do Spark
+      '/api': {
+        target: 'https://api.github.com',
+        changeOrigin: true,
+        secure: false
+      },
+      // Proxy para assets
+      '/css': {
+        target: 'http://localhost:5175',
+        changeOrigin: true
       }
     }
   },
   optimizeDeps: {
-    exclude: ['@github/spark'] // Don't try to optimize Spark dependencies
+    exclude: ['@github/spark']
+  },
+  build: {
+    rollupOptions: {
+      external: ['@github/spark']
+    }
   }
 });
