@@ -12,6 +12,7 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    sparkVitePlugin(),
   ],
   resolve: {
     alias: {
@@ -19,8 +20,29 @@ export default defineConfig({
     }
   },
   server: {
-    port: 5175,
+    port: 5002,
     host: true,
-    port: 5000
+    cors: {
+      origin: [
+        'https://github.com',
+        'https://*.github.com',
+        'https://*.github.app',
+        'https://*.app.github.dev'
+      ],
+      credentials: true
+    }
+  },
+  preview: {
+    port: 4173,
+    host: true,
+    cors: {
+      origin: [
+        'https://github.com',
+        'https://*.github.com',
+        'https://*.github.app',
+        'https://*.app.github.dev'
+      ],
+      credentials: true
+    }
   }
 });

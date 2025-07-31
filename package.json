@@ -5,10 +5,6 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "proxy": "node server/spark-proxy.js",
-        "dev:spark": "concurrently \"npm run dev\" \"npm run proxy\"",
-        "spark": "npm run dev:spark",
-        "kill": "fuser -k 5000/tcp",
         "build": "tsc -b --noCheck && vite build",
         "lint": "eslint .",
         "optimize": "vite optimize",
