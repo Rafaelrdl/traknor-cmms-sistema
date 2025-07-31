@@ -1,8 +1,9 @@
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig } from "vite";
-import { resolve } from 'path'
+import { resolve } from 'path';
 import sparkVitePlugin from "@github/spark/spark-vite-plugin";
+import type { PluginOption } from 'vite';
 
 // ============================================================
 // DIRETIVA DE PROTEÇÃO DO SPARK
@@ -25,9 +26,8 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    // DO NOT REMOVE
-    createIconImportProxy() as PluginOption,
-    sparkPlugin() as PluginOption,
+    // DO NOT REMOVE - Spark plugin includes createIconImportProxy and other Spark functionality
+    sparkVitePlugin() as PluginOption,
   ],
   resolve: {
     alias: {
