@@ -21,53 +21,53 @@ import {
   MOCK_CHART_DATA
 } from '@/data/mockData';
 
-// Hooks retornando arrays tipados para compatibilidade
-export const useCompanies = (): [Company[], () => void] => {
-  return [MOCK_COMPANIES, () => {}];
+// Hooks retornando arrays tipados com assinatura compatível
+export const useCompanies = (): [Company[], (value: Company[] | ((current: Company[]) => Company[])) => void, () => void] => {
+  return [MOCK_COMPANIES, () => {}, () => {}];
 };
 
-export const useSectors = (): [Sector[], () => void] => {
-  return [MOCK_SECTORS, () => {}];
+export const useSectors = (): [Sector[], (value: Sector[] | ((current: Sector[]) => Sector[])) => void, () => void] => {
+  return [MOCK_SECTORS, () => {}, () => {}];
 };
 
-export const useSubSections = (): [SubSection[], () => void] => {
-  return [MOCK_SUBSECTIONS, () => {}];
+export const useSubSections = (): [SubSection[], (value: SubSection[] | ((current: SubSection[]) => SubSection[])) => void, () => void] => {
+  return [MOCK_SUBSECTIONS, () => {}, () => {}];
 };
 
-export const useEquipment = (): [Equipment[], () => void] => {
-  return [MOCK_EQUIPMENT, () => {}];
+export const useEquipment = (): [Equipment[], (value: Equipment[] | ((current: Equipment[]) => Equipment[])) => void, () => void] => {
+  return [MOCK_EQUIPMENT, () => {}, () => {}];
 };
 
-export const useWorkOrders = (): [WorkOrder[], () => void] => {
-  return [MOCK_WORK_ORDERS, () => {}];
+export const useWorkOrders = (): [WorkOrder[], (value: WorkOrder[] | ((current: WorkOrder[]) => WorkOrder[])) => void, () => void] => {
+  return [MOCK_WORK_ORDERS, () => {}, () => {}];
 };
 
-export const useMaintenancePlans = (): [MaintenancePlan[], () => void] => {
-  return [MOCK_MAINTENANCE_PLANS, () => {}];
+export const useMaintenancePlans = (): [MaintenancePlan[], (value: MaintenancePlan[] | ((current: MaintenancePlan[]) => MaintenancePlan[])) => void, () => void] => {
+  return [MOCK_MAINTENANCE_PLANS, () => {}, () => {}];
 };
 
-export const useStock = (): [StockItem[], () => void] => {
-  return [MOCK_STOCK_ITEMS, () => {}];
+export const useStock = (): [StockItem[], (value: StockItem[] | ((current: StockItem[]) => StockItem[])) => void, () => void] => {
+  return [MOCK_STOCK_ITEMS, () => {}, () => {}];
 };
 
-export const useDashboardKPIs = (): [DashboardKPIs, () => void] => {
-  return [MOCK_DASHBOARD_KPIS, () => {}];
+export const useDashboardKPIs = (): [DashboardKPIs, (value: DashboardKPIs | ((current: DashboardKPIs) => DashboardKPIs)) => void, () => void] => {
+  return [MOCK_DASHBOARD_KPIS, () => {}, () => {}];
 };
 
-export const useUser = (): [User, () => void] => {
+export const useUser = (): [User, (value: User | ((current: User) => User)) => void, () => void] => {
   const userData: User = {
     id: '1',
     name: 'Admin',
-    email: 'admin@climatrak.com',
+    email: 'admin@traknor.com',
     role: 'ADMIN',
     avatar: '/assets/avatar.png'
   };
-  return [userData, () => {}];
+  return [userData, () => {}, () => {}];
 };
 
 // Hook para dados de gráficos centralizados
-export const useChartData = (): [typeof MOCK_CHART_DATA, () => void] => {
-  return [MOCK_CHART_DATA, () => {}];
+export const useChartData = (): [typeof MOCK_CHART_DATA, (value: typeof MOCK_CHART_DATA | ((current: typeof MOCK_CHART_DATA) => typeof MOCK_CHART_DATA)) => void, () => void] => {
+  return [MOCK_CHART_DATA, () => {}, () => {}];
 };
 
 // Funções utilitárias para buscar dados específicos

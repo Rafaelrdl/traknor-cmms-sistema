@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar, Plus } from 'lucide-react';
-import { useMaintenancePlans } from '@/hooks/useDataTemp';
+import { useMaintenancePlans } from '@/hooks/useData';
 
 export function PlansPage() {
   const [plans] = useMaintenancePlans();
