@@ -13,15 +13,15 @@ interface KPICardProps {
 
 const variantStyles = {
   default: 'border-border',
-  success: 'border-[var(--success)]/30 bg-[var(--success)]/5',
-  warning: 'border-[var(--warning)]/30 bg-[var(--warning)]/5', 
-  danger: 'border-[var(--destructive)]/30 bg-[var(--destructive)]/5'
+  success: 'border-green-200 bg-green-50',
+  warning: 'border-yellow-200 bg-yellow-50', 
+  danger: 'border-red-200 bg-red-50'
 };
 
 const trendIcons = {
-  up: <TrendingUp className="h-4 w-4 text-[var(--success)]" />,
-  down: <TrendingDown className="h-4 w-4 text-[var(--success)]" />,
-  neutral: <Minus className="h-4 w-4 text-muted-foreground" />
+  up: <TrendingUp className="h-4 w-4 text-green-600" />,
+  down: <TrendingDown className="h-4 w-4 text-red-600" />,
+  neutral: <Minus className="h-4 w-4 text-gray-600" />
 };
 
 export function KPICard({ 

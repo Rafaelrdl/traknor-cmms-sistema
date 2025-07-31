@@ -1,8 +1,9 @@
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig } from "vite";
-import { resolve } from 'path'
-import sparkVitePlugin from "@github/spark/spark-vite-plugin";
+import { resolve } from 'path';
+import sparkVitePlugin, { createIconImportProxy } from "@github/spark/spark-vite-plugin";
+import type { PluginOption } from 'vite';
 
 // ============================================================
 // DIRETIVA DE PROTEÇÃO DO SPARK
@@ -22,20 +23,15 @@ const projectRoot = process.env.PROJECT_ROOT || import.meta.dirname
 // https://vite.dev/config/
 // Configuração específica para GitHub Spark Preview
 export default defineConfig({
-  base: "/",
   plugins: [
     react(),
     tailwindcss(),
-    sparkVitePlugin(),
+    // DO NOT REMOVE - Spark plugin includes createIconImportProxy and other Spark functionality
+    sparkVitePlugin() as PluginOption,
   ],
   resolve: {
     alias: {
-      '@': '/src'
+      '@': resolve(projectRoot, 'src')
     }
   },
-  server: {
-    port: 5002,
-    host: true,
-    port: 5000
-  }
 });

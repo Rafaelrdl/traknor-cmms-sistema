@@ -21,7 +21,7 @@ import { useUser } from '@/hooks/useDataTemp';
 import TrakNorLogoUrl from '@/assets/images/traknor-logo.svg';
 
 const navigation = [
-  { name: 'Visão Geral', href: '/dashboard', icon: Home },
+  { name: 'Visão Geral', href: '/', icon: Home },
   { name: 'Ativos', href: '/ativos', icon: Package },
   { name: 'Ordens de Serviço', href: '/work-orders', icon: ClipboardList },
   { name: 'Solicitações', href: '/requests', icon: MessageSquare },
@@ -66,8 +66,8 @@ export function Layout({ children }: LayoutProps) {
                   to={item.href}
                   className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-all ${
                     isActive
-                      ? 'bg-[var(--sidebar-active-bg)] text-[var(--sidebar-active-fg)]'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      ? "bg-[var(--chart-1)] text-white font-medium" // Cor verde-petróleo com texto branco
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >
                   <item.icon className="h-4 w-4" />
