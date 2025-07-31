@@ -66,7 +66,7 @@ export function Layout({ children }: LayoutProps) {
                   to={item.href}
                   className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-all ${
                     isActive
-                      ? 'bg-primary text-primary-foreground ring-2 ring-offset-2 ring-[var(--sidebar-active-outline)]'
+                      ? 'bg-sidebar-active-bg text-sidebar-active-fg'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                   }`}
                 >

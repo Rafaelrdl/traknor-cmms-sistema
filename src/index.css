@@ -64,6 +64,8 @@
   --sidebar-primary: #0F172A;
   --sidebar-accent: #F1F5F9;
   --sidebar-border: #E2E8F0;
+  --sidebar-active-bg: #006b76;
+  --sidebar-active-fg: #FFFFFF;
   
   /* Chart colors aligned with TrakNor brand */
   --chart-1: #38B2A4;  /* Primary brand */
@@ -123,6 +125,8 @@
   --sidebar-primary: #F8FAFC;
   --sidebar-accent: #334155;
   --sidebar-border: #334155;
+  --sidebar-active-bg: #006b76;
+  --sidebar-active-fg: #FFFFFF;
 }
 
 @keyframes accordion-down {

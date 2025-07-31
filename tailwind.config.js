@@ -135,6 +135,16 @@ const defaultTheme = {
         4: "var(--chart-4)",
         5: "var(--chart-5)",
       },
+      sidebar: {
+        DEFAULT: "var(--sidebar)",
+        primary: "var(--sidebar-primary)",
+        accent: "var(--sidebar-accent)",
+        border: "var(--sidebar-border)",
+        active: {
+          bg: "var(--sidebar-active-bg)",
+          fg: "var(--sidebar-active-fg)",
+        },
+      },
     },
     borderRadius: {
       sm: "var(--radius-sm)",
