@@ -83,7 +83,7 @@ export function InventoryPage() {
                       <div className="flex items-center gap-2">
                         {item.quantity}
                         {status === 'critical' && (
-                          <AlertTriangle className="h-4 w-4 text-red-500" />
+                          <AlertTriangle className="h-4 w-4 text-destructive" />
                         )}
                       </div>
                     </TableCell>

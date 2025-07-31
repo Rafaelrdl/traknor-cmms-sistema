@@ -1,0 +1,18 @@
+{
+  "name": "TrakNor CMMS",
+  "description": "Sistema de Gestão de Manutenção HVAC",
+  "version": "1.0.0",
+  "preview": {
+    "url": "http://localhost:5001",
+    "port": 5001
+  },
+  "server": {
+    "port": 5001,
+    "host": "0.0.0.0"
+  },
+  "spark": {
+    "enabled": true,
+    "designerPort": 4000,
+    "previewUrl": "http://localhost:5001"
+  }
+}

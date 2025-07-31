@@ -13,70 +13,120 @@
 }
 
 :root {
-  /* Light theme colors */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.4 0.15 180);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.95 0.02 180);
-  --secondary-foreground: oklch(0.145 0 0);
-  --muted: oklch(0.95 0.02 180);
-  --muted-foreground: oklch(0.45 0.02 180);
-  --accent: oklch(0.95 0.02 180);
-  --accent-foreground: oklch(0.145 0 0);
-  --destructive: oklch(0.5 0.2 0);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.9 0.02 180);
-  --input: oklch(0.9 0.02 180);
-  --ring: oklch(0.4 0.15 180);
+  /* TrakNor Official Brand Colors */
+  --brand: #38B2A4;
+  --brand-light: #B1E0DA;
+  --brand-dark: #2A8A7E;
   
-  /* Sidebar colors */
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-accent: oklch(0.95 0.02 180);
-  --sidebar-border: oklch(0.922 0 0);
+  /* Core theme colors based on TrakNor brand */
+  --background: #FFFFFF;
+  --foreground: #0F172A;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
   
-  /* Chart colors */
-  --chart-1: oklch(0.6 0.2 180);
-  --chart-2: oklch(0.7 0.15 120);
-  --chart-3: oklch(0.8 0.1 60);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.65 0.18 300);
+  /* Primary colors using TrakNor brand */
+  --primary: #38B2A4;
+  --primary-foreground: #FFFFFF;
+  --primary-50: #F0FFFE;
+  --primary-100: #CCFBF1;
+  --primary-200: #99F6E4;
+  --primary-500: #38B2A4;
+  --primary-600: #2A8A7E;
+  --primary-700: #1F6B63;
+  
+  /* Secondary and neutral colors */
+  --secondary: #F1F5F9;
+  --secondary-foreground: #0F172A;
+  --muted: #F8FAFC;
+  --muted-foreground: #64748B;
+  --accent: #F1F5F9;
+  --accent-foreground: #0F172A;
+  
+  /* State colors aligned with brand */
+  --success: #38B2A4;
+  --success-foreground: #FFFFFF;
+  --warning: #F59E0B;
+  --warning-foreground: #FFFFFF;
+  --destructive: #ff5b5b;
+  --destructive-foreground: #FFFFFF;
+  --info: #e0f3f4;
+  --info-foreground: #0F172A;
+  
+  /* UI colors */
+  --border: #E2E8F0;
+  --input: #E2E8F0;
+  --ring: #38B2A4;
+  
+  /* Sidebar colors using brand */
+  --sidebar: #FAFAFA;
+  --sidebar-primary: #0F172A;
+  --sidebar-accent: #F1F5F9;
+  --sidebar-border: #E2E8F0;
+  --sidebar-active-bg: #006b76;
+  --sidebar-active-fg: #FFFFFF;
+  
+  /* Chart colors aligned with TrakNor brand */
+  --chart-1: #006b76;  /* Completed - Dark teal */
+  --chart-2: #e0f3f4;  /* Open - Light blue */
+  --chart-3: #ff5b5b;  /* Late/Error - Red */
+  --chart-4: #F59E0B;  /* Warning - Orange */
+  --chart-5: #38B2A4;  /* Primary brand */
+  --chart-6: #64748B;  /* Neutral */
   
   --radius: 0.5rem;
 }
 
 [data-theme="dark"] {
-  /* Dark theme colors */
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.922 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.922 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.922 0 0);
-  --primary: oklch(0.6 0.15 180);
-  --primary-foreground: oklch(0.145 0 0);
-  --secondary: oklch(0.267 0 0);
-  --secondary-foreground: oklch(0.922 0 0);
-  --muted: oklch(0.267 0 0);
-  --muted-foreground: oklch(0.65 0.02 180);
-  --accent: oklch(0.267 0 0);
-  --accent-foreground: oklch(0.922 0 0);
-  --destructive: oklch(0.5 0.2 0);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.267 0 0);
-  --input: oklch(0.267 0 0);
-  --ring: oklch(0.6 0.15 180);
+  /* TrakNor Dark Theme - maintaining brand consistency */
+  --background: #0F172A;
+  --foreground: #F8FAFC;
+  --card: #1E293B;
+  --card-foreground: #F8FAFC;
+  --popover: #1E293B;
+  --popover-foreground: #F8FAFC;
   
-  /* Sidebar colors */
-  --sidebar: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.922 0 0);
-  --sidebar-accent: oklch(0.267 0 0);
-  --sidebar-border: oklch(0.267 0 0);
+  /* Primary colors - keep brand identity in dark mode */
+  --primary: #38B2A4;
+  --primary-foreground: #FFFFFF;
+  --primary-50: #F0FFFE;
+  --primary-100: #CCFBF1;
+  --primary-200: #99F6E4;
+  --primary-500: #38B2A4;
+  --primary-600: #2A8A7E;
+  --primary-700: #1F6B63;
+  
+  /* Secondary and neutral colors for dark mode */
+  --secondary: #334155;
+  --secondary-foreground: #F8FAFC;
+  --muted: #1E293B;
+  --muted-foreground: #94A3B8;
+  --accent: #334155;
+  --accent-foreground: #F8FAFC;
+  
+  /* State colors in dark mode */
+  --success: #38B2A4;
+  --success-foreground: #FFFFFF;
+  --warning: #F59E0B;
+  --warning-foreground: #FFFFFF;
+  --destructive: #ff5b5b;
+  --destructive-foreground: #FFFFFF;
+  --info: #e0f3f4;
+  --info-foreground: #0F172A;
+  
+  /* UI colors for dark mode */
+  --border: #334155;
+  --input: #334155;
+  --ring: #38B2A4;
+  
+  /* Sidebar colors for dark mode */
+  --sidebar: #0F172A;
+  --sidebar-primary: #F8FAFC;
+  --sidebar-accent: #334155;
+  --sidebar-border: #334155;
+  --sidebar-active-bg: #006b76;
+  --sidebar-active-fg: #FFFFFF;
 }
 
 @keyframes accordion-down {

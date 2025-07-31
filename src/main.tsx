@@ -4,9 +4,8 @@ import { ErrorBoundary } from "react-error-boundary";
 import App from './App.tsx'
 import { ErrorFallback } from './ErrorFallback.tsx'
 
-import "./main.css"
-import "./styles/theme.css"
-import "./index.css"
+// CSS Global - Tailwind v4 + shadcn
+import "./globals.css"
 
 // Importar e inicializar Spark Middleware - GitHub integration
 import './middleware/sparkMiddleware.ts';
