@@ -22,20 +22,16 @@ const projectRoot = process.env.PROJECT_ROOT || import.meta.dirname
 // https://vite.dev/config/
 // Configuração específica para GitHub Spark Preview
 export default defineConfig({
-  base: "/",
   plugins: [
     react(),
     tailwindcss(),
-    sparkVitePlugin(),
+    // DO NOT REMOVE
+    createIconImportProxy() as PluginOption,
+    sparkPlugin() as PluginOption,
   ],
   resolve: {
     alias: {
-      '@': '/src'
+      '@': resolve(projectRoot, 'src')
     }
   },
-  server: {
-    port: 5002,
-    host: true,
-    port: 5000
-  }
 });
