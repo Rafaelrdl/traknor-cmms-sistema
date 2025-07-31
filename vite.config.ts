@@ -9,6 +9,7 @@ const projectRoot = process.env.PROJECT_ROOT || import.meta.dirname
 // https://vite.dev/config/
 // Configuração específica para GitHub Spark Preview
 export default defineConfig({
+  base: "/",
   plugins: [
     react(),
     tailwindcss(),

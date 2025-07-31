@@ -1,4 +1,3 @@
-import './index.css';
 import { SparkBridge } from '@/components/SparkBridge';
 import { Router } from '@/Router';
 

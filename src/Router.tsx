@@ -17,7 +17,9 @@ export function Router() {
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/equipment" element={<EquipmentPage />} />
+          <Route path="/visao-geral" element={<Dashboard />} />
+          <Route path="/ativos" element={<EquipmentPage />} />
+          <Route path="/equipment" element={<Navigate to="/ativos" replace />} />
           <Route path="/inventory" element={<InventoryPage />} />
           <Route path="/metrics" element={<MetricsPage />} />
           <Route path="/plans" element={<PlansPage />} />

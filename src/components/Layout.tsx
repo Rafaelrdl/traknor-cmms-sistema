@@ -21,7 +21,7 @@ import { useUser } from '@/hooks/useDataTemp';
 import TrakNorLogoUrl from '@/assets/images/traknor-logo.svg';
 
 const navigation = [
-  { name: 'Visão Geral', href: '/', icon: Home },
+  { name: 'Visão Geral', href: '/dashboard', icon: Home },
   { name: 'Ativos', href: '/ativos', icon: Package },
   { name: 'Ordens de Serviço', href: '/work-orders', icon: ClipboardList },
   { name: 'Solicitações', href: '/requests', icon: MessageSquare },
