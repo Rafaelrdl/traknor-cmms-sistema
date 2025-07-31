@@ -49,9 +49,9 @@
   --success-foreground: #FFFFFF;
   --warning: #F59E0B;
   --warning-foreground: #FFFFFF;
-  --destructive: #EF4444;
+  --destructive: #ff5b5b;
   --destructive-foreground: #FFFFFF;
-  --info: #B1E0DA;
+  --info: #e0f3f4;
   --info-foreground: #0F172A;
   
   /* UI colors */
@@ -68,11 +68,11 @@
   --sidebar-active-fg: #FFFFFF;
   
   /* Chart colors aligned with TrakNor brand */
-  --chart-1: #38B2A4;  /* Primary brand */
-  --chart-2: #B1E0DA;  /* Light brand */
-  --chart-3: #2A8A7E;  /* Dark brand */
-  --chart-4: #EF4444;  /* Error/Late */
-  --chart-5: #F59E0B;  /* Warning */
+  --chart-1: #006b76;  /* Completed - Dark teal */
+  --chart-2: #e0f3f4;  /* Open - Light blue */
+  --chart-3: #ff5b5b;  /* Late/Error - Red */
+  --chart-4: #F59E0B;  /* Warning - Orange */
+  --chart-5: #38B2A4;  /* Primary brand */
   --chart-6: #64748B;  /* Neutral */
   
   --radius: 0.5rem;
@@ -110,9 +110,9 @@
   --success-foreground: #FFFFFF;
   --warning: #F59E0B;
   --warning-foreground: #FFFFFF;
-  --destructive: #EF4444;
+  --destructive: #ff5b5b;
   --destructive-foreground: #FFFFFF;
-  --info: #B1E0DA;
+  --info: #e0f3f4;
   --info-foreground: #0F172A;
   
   /* UI colors for dark mode */

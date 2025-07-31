@@ -87,16 +87,16 @@ export function Dashboard() {
                   <div key={day.day} className="flex flex-col items-center gap-2">
                     <div className="flex flex-col items-center gap-1">
                       <div 
-                        className="w-6 rounded-t bg-primary"
+                        className="w-6 rounded-t bg-[var(--chart-1)]"
                         style={{ height: `${day.completed * 8}px` }}
                       />
                       <div 
-                        className="w-6 rounded-t bg-destructive"
+                        className="w-6 rounded-t bg-[var(--chart-3)]"
                         style={{ height: `${day.inProgress * 8}px` }}
                       />
                       <div 
-                        className="w-6 rounded-t"
-                        style={{ height: `${day.open * 8}px`, backgroundColor: 'var(--info)' }}
+                        className="w-6 rounded-t bg-[var(--chart-2)]"
+                        style={{ height: `${day.open * 8}px` }}
                       />
                     </div>
                     <span className="text-xs text-muted-foreground">{day.day}</span>
@@ -105,15 +105,15 @@ export function Dashboard() {
               </div>
               <div className="flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded bg-primary" />
+                  <div className="w-3 h-3 rounded bg-[var(--chart-1)]" />
                   <span>Concluído</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded bg-destructive" />
+                  <div className="w-3 h-3 rounded bg-[var(--chart-3)]" />
                   <span>Em Atraso</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--info)' }} />
+                  <div className="w-3 h-3 rounded bg-[var(--chart-2)]" />
                   <span>Aberto</span>
                 </div>
               </div>
@@ -162,39 +162,39 @@ export function Dashboard() {
                           strokeWidth="10"
                         />
                         
-                        {/* Functioning segment (teal) */}
+                        {/* Functioning segment (primary) */}
                         <circle
                           cx="50"
                           cy="50"
                           r="40"
                           fill="transparent"
-                          stroke="var(--primary)"
+                          stroke="var(--chart-1)"
                           strokeWidth="10"
                           strokeDasharray={`${functioningLength} ${circumference}`}
                           strokeDashoffset="0"
                           strokeLinecap="round"
                         />
                         
-                        {/* Maintenance segment (yellow) */}
+                        {/* Maintenance segment (warning) */}
                         <circle
                           cx="50"
                           cy="50"
                           r="40"
                           fill="transparent"
-                          stroke="var(--warning)"
+                          stroke="var(--chart-4)"
                           strokeWidth="10"
                           strokeDasharray={`${maintenanceLength} ${circumference}`}
                           strokeDashoffset={-functioningLength}
                           strokeLinecap="round"
                         />
                         
-                        {/* Stopped segment (red) */}
+                        {/* Stopped segment (destructive) */}
                         <circle
                           cx="50"
                           cy="50"
                           r="40"
                           fill="transparent"
-                          stroke="var(--destructive)"
+                          stroke="var(--chart-3)"
                           strokeWidth="10"
                           strokeDasharray={`${stoppedLength} ${circumference}`}
                           strokeDashoffset={-(functioningLength + maintenanceLength)}
@@ -215,7 +215,7 @@ export function Dashboard() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-primary" />
+                    <div className="w-3 h-3 rounded bg-[var(--chart-1)]" />
                     <span className="text-sm">Funcionando</span>
                   </div>
                   <span className="text-sm font-medium">
@@ -224,7 +224,7 @@ export function Dashboard() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-yellow-500 rounded" />
+                    <div className="w-3 h-3 bg-[var(--chart-4)] rounded" />
                     <span className="text-sm">Em Manutenção</span>
                   </div>
                   <span className="text-sm font-medium">
@@ -233,7 +233,7 @@ export function Dashboard() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-destructive" />
+                    <div className="w-3 h-3 rounded bg-[var(--chart-3)]" />
                     <span className="text-sm">Parado</span>
                   </div>
                   <span className="text-sm font-medium">

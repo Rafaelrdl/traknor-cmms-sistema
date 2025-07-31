@@ -282,15 +282,15 @@ export function ProcedureViewModal({ procedure, trigger }: ProcedureViewModalPro
 
               {/* Safety Notes */}
               {procedure.safetyNotes && (
-                <Card className="border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950/10">
+                <Card className="border-[var(--warning)] bg-[var(--warning)]/10">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                    <CardTitle className="text-sm font-medium text-[var(--warning-foreground)]">
                       Notas de Segurança
                     </CardTitle>
-                    <Warning className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                    <Warning className="h-4 w-4 text-[var(--warning)]" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-sm text-yellow-800 dark:text-yellow-200 whitespace-pre-wrap">
+                    <div className="text-sm text-[var(--warning-foreground)] whitespace-pre-wrap">
                       {procedure.safetyNotes}
                     </div>
                   </CardContent>
