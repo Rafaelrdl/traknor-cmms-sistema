@@ -2,7 +2,7 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig } from "vite";
 import { resolve } from 'path';
-import sparkVitePlugin from "@github/spark/spark-vite-plugin";
+import sparkVitePlugin, { createIconImportProxy } from "@github/spark/spark-vite-plugin";
 import type { PluginOption } from 'vite';
 
 // ============================================================
