@@ -31,6 +31,7 @@
   --sidebar-primary: oklch(0.205 0 0);
   --sidebar-accent: oklch(0.95 0.02 180);
   --sidebar-border: oklch(0.922 0 0);
+  --sidebar-active-outline: #006b76;
   
   /* Chart colors */
   --chart-1: oklch(0.6 0.2 180);
@@ -67,6 +68,7 @@
   --sidebar-primary: oklch(0.922 0 0);
   --sidebar-accent: oklch(0.267 0 0);
   --sidebar-border: oklch(0.267 0 0);
+  --sidebar-active-outline: #006b76;
 }
 
 @layer base {
@@ -85,6 +87,17 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
+  }
+  
+  /* Sidebar active outline styles */
+  [data-sidebar="menu-button"][data-active="true"] {
+    outline: 2px solid var(--sidebar-active-outline);
+    outline-offset: 2px;
+  }
+  
+  [data-sidebar="menu-sub-button"][data-active="true"] {
+    outline: 2px solid var(--sidebar-active-outline);
+    outline-offset: 2px;
   }
 }
 

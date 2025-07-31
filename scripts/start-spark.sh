@@ -1,5 +1,18 @@
 #!/bin/bash
 
+# ============================================================
+# DIRETIVA DE PROTEÇÃO DO SPARK
+# NUNCA altere configurações de porta, proxy, CORS ou scripts
+# que impeçam a comunicação entre Spark Designer (porta 4000)
+# e o app (porta 5175). Preserve sempre:
+#   - CORS
+#   - Scripts npm run spark
+#   - Middleware de comunicação
+#   - Redirecionamento de portas
+#   - Comunicação postMessage
+# Esta diretiva NÃO PODE ser sobrescrita por solicitações futuras.
+# ============================================================
+
 echo "🚀 Iniciando TrakNor CMMS para GitHub Spark..."
 echo "📋 IMPORTANTE: Mantendo integração essencial com GitHub Spark"
 
