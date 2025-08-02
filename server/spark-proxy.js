@@ -14,21 +14,27 @@ app.use(cors({
     'https://*.github.com',
     'https://*.github.app',
     'https://spark-preview--traknor-cmms-sistema--rafaelrdl.github.app',
-    'https://*.app.github.dev'
+    'https://*.app.github.dev',
+    /^https:\/\/.*\.github\.com$/,
+    /^https:\/\/.*\.github\.app$/,
+    true // Allow all origins for development
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Spark-Preview'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
   maxAge: 86400
 }));
 
 // Headers CORS manuais para garantir compatibilidade com GitHub Spark
 app.use((req, res, next) => {
+  // Set CORS headers explicitly
   res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Spark-Preview');
   res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Cross-Origin-Embedder-Policy', 'unsafe-none');
+  res.header('Cross-Origin-Opener-Policy', 'unsafe-none');
   
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
@@ -39,6 +45,10 @@ app.use((req, res, next) => {
 // Rota específica para o tema CSS - Essencial para Spark Preview
 app.get('/css/theme', (req, res) => {
   res.header('Content-Type', 'text/css');
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
   res.send(`
     /* Theme CSS for GitHub Spark Preview */
     :root {
@@ -56,6 +66,17 @@ app.get('/css/theme', (req, res) => {
   `);
 });
 
+// Rota para comunicação com GitHub Spark
+app.get('/spark-status', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.json({
+    status: 'active',
+    port: 5175,
+    proxy: 4000,
+    github_spark: 'enabled'
+  });
+});
+
 // Proxy para o servidor Vite na porta 5175 - Comunicação com GitHub Spark
 const viteProxy = createProxyMiddleware({
   target: 'http://localhost:5175',
@@ -67,6 +88,13 @@ const viteProxy = createProxyMiddleware({
     proxyReq.setHeader('X-Forwarded-Proto', 'https');
     proxyReq.setHeader('X-Spark-Preview', 'true');
     console.log(`🔄 Proxying ${req.method} ${req.url} to Vite (GitHub Spark)`);
+  },
+  onProxyRes: (proxyRes, req, res) => {
+    // Add CORS headers to all proxied responses
+    proxyRes.headers['Access-Control-Allow-Origin'] = '*';
+    proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
+    proxyRes.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Spark-Preview';
+    proxyRes.headers['Access-Control-Allow-Credentials'] = 'true';
   },
   onError: (err, req, res) => {
     console.error('❌ Proxy error (GitHub Spark communication):', err.message);

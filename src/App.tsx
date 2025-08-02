@@ -1,14 +1,11 @@
 import './index.css';
-import { suppressSparkErrors } from './utils/suppressSparkErrors';
-import { setupSparkEnvironment } from './utils/sparkEnvironment';
-
-// Setup Spark environment handling
-suppressSparkErrors();
-setupSparkEnvironment();
+import { SparkBridge } from './components/SparkBridge';
 
 function App() {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      {/* Componente essencial para comunicação com GitHub Spark */}
+      <SparkBridge />
       <div className="container mx-auto px-4 py-8">
         <div className="text-center space-y-6">
           <h1 className="text-4xl font-bold text-primary">TrakNor CMMS</h1>

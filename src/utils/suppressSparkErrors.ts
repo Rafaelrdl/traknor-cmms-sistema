@@ -99,3 +99,8 @@ export function suppressSparkErrors() {
     };
   }
 }
+
+// Auto-execute in browser environment
+if (typeof window !== 'undefined') {
+  suppressSparkErrors();
+}

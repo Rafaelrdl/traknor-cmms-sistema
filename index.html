@@ -1,13 +1,47 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TrakNor CMMS - Sistema de Gestão de Manutenção HVAC</title>
+    
+    <!-- GitHub Spark Integration Meta Tags -->
+    <meta name="spark-preview" content="true" />
+    <meta name="spark-codespace-port" content="5175" />
+    <meta name="spark-communication" content="enabled" />
+    
+    <!-- CORS Configuration for GitHub Spark -->
+    <meta http-equiv="Access-Control-Allow-Origin" content="*" />
+    <meta http-equiv="Access-Control-Allow-Methods" content="GET, POST, PUT, DELETE, OPTIONS" />
+    <meta http-equiv="Access-Control-Allow-Headers" content="Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Spark-Preview" />
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter&family=Noto+Serif&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter&family+Noto+Serif&display=swap">
+    
+    <!-- GitHub Spark Communication Script -->
+    <script>
+        // Detecção do ambiente GitHub Spark Preview
+        window.isSparkPreview = window.location.hostname.includes('github.app') || 
+                               window.location.hostname.includes('github.com') ||
+                               document.querySelector('meta[name="spark-preview"]');
+        
+        if (window.isSparkPreview) {
+            console.log('🚀 GitHub Spark Preview detected - Communication enabled');
+            
+            // Comunicação inicial com GitHub Spark
+            window.addEventListener('load', () => {
+                if (window.parent !== window) {
+                    window.parent.postMessage({ 
+                        type: 'spark-app-loaded',
+                        port: 5175,
+                        status: 'ready'
+                    }, '*');
+                }
+            });
+        }
+    </script>
 </head>
 
 <body>

@@ -108,7 +108,10 @@ export class SparkMiddleware {
   private setupMessageBridge() {
     // Comunicação bidirecional com GitHub Spark
     window.addEventListener('message', (event) => {
-      if (event.origin !== 'https://github.com') return;
+      // Aceitar mensagens do GitHub e do próprio domínio para desenvolvimento
+      if (event.origin !== 'https://github.com' && 
+          !event.origin.includes('app.github.dev') &&
+          !event.origin.includes('spark-preview')) return;
       
       console.log('📨 Received message from GitHub Spark:', event.data);
       

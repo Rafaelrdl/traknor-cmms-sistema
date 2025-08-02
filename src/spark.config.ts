@@ -5,14 +5,22 @@
 export const sparkConfig = {
   // Configuração do ambiente Spark
   environment: {
-    isSparkPreview: window.location.hostname.includes('spark-preview'),
-    isCodespace: window.location.hostname.includes('app.github.dev'),
-    isGitHub: window.location.hostname === 'github.com'
+    get isSparkPreview() {
+      return typeof window !== 'undefined' && window.location.hostname.includes('spark-preview');
+    },
+    get isCodespace() {
+      return typeof window !== 'undefined' && window.location.hostname.includes('app.github.dev');
+    },
+    get isGitHub() {
+      return typeof window !== 'undefined' && window.location.hostname === 'github.com';
+    }
   },
   
   // URLs do Codespace
   codespace: {
     getUrl: () => {
+      if (typeof window === 'undefined') return null;
+      
       // Extrair o ID do codespace do hostname
       const hostname = window.location.hostname;
       const match = hostname.match(/([a-z]+-[a-z]+-[a-z0-9]+)/);
