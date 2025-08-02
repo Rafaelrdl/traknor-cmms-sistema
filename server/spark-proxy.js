@@ -66,6 +66,16 @@ app.get('/css/theme', (req, res) => {
   `);
 });
 
+// Rota catch-all para qualquer theme CSS
+app.get('*/theme*', (req, res) => {
+  res.header('Content-Type', 'text/css');
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  res.send(`/* TrakNor CMMS Theme - GitHub Spark Compatible */`);
+});
+
 // Rota para comunicação com GitHub Spark
 app.get('/spark-status', (req, res) => {
   res.header('Access-Control-Allow-Origin', '*');

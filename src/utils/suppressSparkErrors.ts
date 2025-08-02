@@ -21,7 +21,15 @@ export function suppressSparkErrors() {
       'translate_http',
       'Content Security Policy directive',
       'gstatic.com',
-      'github.githubassets.com'
+      'github.githubassets.com',
+      'redesigned-system-',
+      'kind-fog-',
+      'tunnels.api.visualstudio.com',
+      'WebSocket connection to',
+      'openConnection',
+      'index.browser.js',
+      'css/theme',
+      'wss://'
     ];
     
     // Override console.error

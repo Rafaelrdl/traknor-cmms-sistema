@@ -49,6 +49,26 @@ export class SparkMiddleware {
         });
       }
       
+      // Interceptar requisições para CSS theme - evitar CORS
+      if (url.includes('/css/theme') || url.includes('theme')) {
+        console.log('🎨 Intercepted theme CSS request:', url);
+        return new Response(`
+          /* TrakNor CMMS Theme - GitHub Spark Compatible */
+          :root {
+            --background: 0 0% 100%;
+            --foreground: 0 0% 3.9%;
+            --primary: 0 0% 9%;
+            --primary-foreground: 0 0% 98%;
+          }
+        `, {
+          status: 200,
+          headers: { 
+            'Content-Type': 'text/css',
+            'Access-Control-Allow-Origin': '*'
+          }
+        });
+      }
+      
       // Corrigir URLs do Codespace para porta correta - GitHub Spark communication
       if (url.includes('-4000.app.github.dev')) {
         const correctedUrl = url.replace('-4000.', '-5175.');
@@ -64,6 +84,17 @@ export class SparkMiddleware {
         });
       }
       
+      // Bloquear outras requisições problemáticas
+      if (url.includes('redesigned-system-') || 
+          url.includes('tunnels.api.visualstudio.com') ||
+          url.includes('github.dev') && !url.includes(window.location.hostname)) {
+        console.log('🚫 Blocked problematic request:', url);
+        return new Response('{}', {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      
       return this.originalFetch(input, init);
     };
   }
@@ -74,8 +105,10 @@ export class SparkMiddleware {
       construct: (target, args) => {
         const url = args[0] as string;
         
-        if (url.includes('tunnels.api.visualstudio.com')) {
-          console.log('🚫 Blocked WebSocket to tunnels API (GitHub Spark optimization)');
+        if (url.includes('tunnels.api.visualstudio.com') || 
+            url.includes('kind-fog-') ||
+            url.includes('redesigned-system-')) {
+          console.log('🚫 Blocked WebSocket to:', url, '(GitHub Spark optimization)');
           // Retornar mock WebSocket que não faz nada
           return {
             close: () => {},
