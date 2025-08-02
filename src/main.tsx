@@ -1,3 +1,7 @@
+// CRÍTICO: Estes imports DEVEM ser os PRIMEIROS - antes de qualquer outra coisa
+import './utils/interceptRequests';
+import './utils/patchTanStackQuery';
+
 import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from "react-error-boundary";
 

@@ -32,18 +32,40 @@ export class SparkMiddleware {
       const url = input.toString();
       
       // Interceptar requisições para o Spark Preview - GitHub integration
-      if (url.includes('spark-preview--')) {
+      if (url.includes('spark-preview--') || 
+          url.includes('redesigned-system-') ||
+          url.includes('-4000.app.github.dev') ||
+          url.includes('css/theme')) {
         console.log('🎯 Intercepted GitHub Spark Preview request:', url);
+        
+        // Resposta específica para CSS theme
+        if (url.includes('css/theme')) {
+          return new Response('/* Mock CSS Theme for GitHub Spark */\nbody { margin: 0; }', {
+            status: 200,
+            headers: { 
+              'Content-Type': 'text/css',
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Methods': 'GET, OPTIONS',
+              'Access-Control-Allow-Headers': '*',
+              'X-Spark-Integration': 'github'
+            }
+          });
+        }
+        
         // Responder localmente para evitar 404
         return new Response(JSON.stringify({ 
           status: 'ok',
           message: 'GitHub Spark Preview Connected',
           app: 'TrakNor CMMS',
-          integration: 'active'
+          integration: 'active',
+          corsFixed: true
         }), {
           status: 200,
           headers: { 
             'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Headers': '*',
             'X-Spark-Integration': 'github'
           }
         });

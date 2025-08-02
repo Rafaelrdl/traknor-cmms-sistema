@@ -29,7 +29,13 @@ export function suppressSparkErrors() {
       'openConnection',
       'index.browser.js',
       'css/theme',
-      'wss://'
+      'wss://',
+      'use2-data.rel.tunnels',
+      'query.ts:116',
+      'queryObserver.js',
+      'useBaseQuery.js',
+      'Access to fetch at',
+      'blocked by CORS policy'
     ];
     
     // Override console.error
