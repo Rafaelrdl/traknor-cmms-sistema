@@ -1,4 +1,5 @@
-// CRÍTICO: Estes imports DEVEM ser os PRIMEIROS - antes de qualquer outra coisa
+// CRÍTICO: Estes imports DEVEM ser os PRIMEIROS - antes até do React
+import './utils/patchFetchPatch';  // NOVO - Mais agressivo
 import './utils/interceptRequests';
 import './utils/patchTanStackQuery';
 
