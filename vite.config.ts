@@ -2,7 +2,6 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig } from "vite";
 import { resolve } from 'path'
-import sparkVitePlugin from "@github/spark/spark-vite-plugin";
 
 const projectRoot = process.env.PROJECT_ROOT || import.meta.dirname
 
@@ -21,6 +20,16 @@ export default defineConfig({
   server: {
     port: 5175,
     host: true,
-    port: 5000
+    port: 5175,
+    // Configuração CORS simplificada para GitHub Spark
+    cors: true,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': '*',
+    }
+  },
+  optimizeDeps: {
+    exclude: ['@github/spark']
   }
 });

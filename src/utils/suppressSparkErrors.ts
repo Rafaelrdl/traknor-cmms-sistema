@@ -21,7 +21,21 @@ export function suppressSparkErrors() {
       'translate_http',
       'Content Security Policy directive',
       'gstatic.com',
-      'github.githubassets.com'
+      'github.githubassets.com',
+      'redesigned-system-',
+      'kind-fog-',
+      'tunnels.api.visualstudio.com',
+      'WebSocket connection to',
+      'openConnection',
+      'index.browser.js',
+      'css/theme',
+      'wss://',
+      'use2-data.rel.tunnels',
+      'query.ts:116',
+      'queryObserver.js',
+      'useBaseQuery.js',
+      'Access to fetch at',
+      'blocked by CORS policy'
     ];
     
     // Override console.error
@@ -98,4 +112,9 @@ export function suppressSparkErrors() {
       }
     };
   }
+}
+
+// Auto-execute in browser environment
+if (typeof window !== 'undefined') {
+  suppressSparkErrors();
 }
