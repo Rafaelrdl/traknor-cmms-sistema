@@ -18,15 +18,23 @@ export default defineConfig({
     }
   },
   server: {
-    port: 5175,
     host: true,
     port: 5175,
-    // Configuração CORS simplificada para GitHub Spark
-    cors: true,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': '*',
+    // Proxy para redirecionar chamadas API
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    },
+    // CORS completo para Spark Preview
+    cors: {
+      origin: true,
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Spark-Preview'],
+      exposedHeaders: ['Content-Range', 'X-Content-Range']
     }
   },
   optimizeDeps: {

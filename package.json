@@ -4,15 +4,19 @@
     "version": "0.0.0",
     "type": "module",
     "scripts": {
-        "dev": "vite",
+        "dev": "vite --port 5175",
+        "dev:backend": "node server/spark-proxy.js",
+        "dev:simple": "node server/simple-proxy.js",
+        "dev:all": "concurrently \"npm run dev:simple\" \"npm run dev\"",
         "proxy": "node server/spark-proxy.js",
         "dev:spark": "concurrently \"npm run dev\" \"npm run proxy\"",
-        "spark": "npm run dev:spark",
+        "spark": "npm run dev:all",
         "kill": "fuser -k 5000/tcp",
         "build": "tsc -b --noCheck && vite build",
         "lint": "eslint .",
         "optimize": "vite optimize",
-        "preview": "vite preview"
+        "preview": "vite preview",
+        "test": "echo \"No tests specified\" && exit 0"
     },
     "dependencies": {
         "@hookform/resolvers": "^4.1.3",

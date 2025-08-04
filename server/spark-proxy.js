@@ -87,6 +87,32 @@ app.get('/spark-status', (req, res) => {
   });
 });
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.json({ 
+    status: 'ok', 
+    service: 'spark-proxy',
+    timestamp: new Date().toISOString(),
+    ports: {
+      proxy: 4000,
+      vite: 5175
+    },
+    github_spark: 'enabled'
+  });
+});
+
+// Rota para API backend (se houver)
+app.use('/api', createProxyMiddleware({
+  target: 'http://localhost:3001',  // Ajuste para seu backend real
+  changeOrigin: true,
+  onError: (err, req, res) => {
+    console.log('Backend não disponível, retornando mock');
+    res.header('Access-Control-Allow-Origin', '*');
+    res.json({ mock: true, message: 'Backend offline - usando dados mock' });
+  }
+}));
+
 // Proxy para o servidor Vite na porta 5175 - Comunicação com GitHub Spark
 const viteProxy = createProxyMiddleware({
   target: 'http://localhost:5175',

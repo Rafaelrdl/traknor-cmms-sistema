@@ -3,10 +3,9 @@
  * This file ensures proper organization and easy imports
  */
 
-export { useMobile } from './use-mobile';
-export { useData } from './useData';
-export { useDataNew } from './useDataNew';
-export { useDataTemp } from './useDataTemp';
+export { useIsMobile } from './use-mobile';
+export { useApi } from './useApi';
+export { useApiProxy } from './useApiProxy';
 
 // Re-export GitHub Spark hooks if available
 export { useKV } from '@github/spark/hooks';
