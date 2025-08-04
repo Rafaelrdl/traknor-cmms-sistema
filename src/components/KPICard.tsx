@@ -12,7 +12,7 @@ interface KPICardProps {
 }
 
 const variantStyles = {
-  default: 'border-gray-200',
+  default: 'border-border',
   success: 'border-green-200 bg-green-50',
   warning: 'border-yellow-200 bg-yellow-50', 
   danger: 'border-red-200 bg-red-50'

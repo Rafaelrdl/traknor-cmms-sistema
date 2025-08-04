@@ -7,18 +7,19 @@ import sparkVitePlugin from "@github/spark/spark-vite-plugin";
 const projectRoot = process.env.PROJECT_ROOT || import.meta.dirname
 
 // https://vite.dev/config/
+// Configuração específica para GitHub Spark Preview
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    ...sparkVitePlugin(),
   ],
   resolve: {
     alias: {
-      '@': resolve(projectRoot, 'src')
+      '@': '/src'
     }
   },
   server: {
+    port: 5175,
     host: true,
     port: 5000
   }

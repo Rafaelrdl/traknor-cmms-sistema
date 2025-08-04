@@ -17,7 +17,7 @@ export const sparkConfig = {
       const hostname = window.location.hostname;
       const match = hostname.match(/([a-z]+-[a-z]+-[a-z0-9]+)/);
       if (match) {
-        return `https://${match[1]}-5175.app.github.dev`;
+        return `https://${match[1]}-5001.app.github.dev`;
       }
       return null;
     }

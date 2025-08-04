@@ -51,7 +51,7 @@ export class SparkMiddleware {
       
       // Corrigir URLs do Codespace para porta correta - GitHub Spark communication
       if (url.includes('-4000.app.github.dev')) {
-        const correctedUrl = url.replace('-4000.', '-5175.');
+        const correctedUrl = url.replace('-4000.', '-5001.');
         console.log('🔄 Redirecting GitHub Spark request:', url, '→', correctedUrl);
         return this.originalFetch(correctedUrl, {
           ...init,
