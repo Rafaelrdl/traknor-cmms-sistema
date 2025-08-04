@@ -1,8 +1,10 @@
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react-swc";
-import { defineConfig } from "vite";
+import { defineConfig, PluginOption } from "vite";
+
+import sparkPlugin from "@github/spark/spark-vite-plugin";
+import createIconImportProxy from "@github/spark/vitePhosphorIconProxyPlugin";
 import { resolve } from 'path'
-import sparkVitePlugin from "@github/spark/spark-vite-plugin";
 
 const projectRoot = process.env.PROJECT_ROOT || import.meta.dirname
 
@@ -11,15 +13,13 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    ...sparkVitePlugin(),
+    // DO NOT REMOVE
+    createIconImportProxy() as PluginOption,
+    sparkPlugin() as PluginOption,
   ],
   resolve: {
     alias: {
       '@': resolve(projectRoot, 'src')
     }
   },
-  server: {
-    host: true,
-    port: 5000
-  }
 });
