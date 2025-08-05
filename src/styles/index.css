@@ -5,8 +5,10 @@
  * Ordem de importação otimizada para cascata CSS apropriada
  */
 
-/* 1. Importações do Tailwind CSS - usando nova sintaxe para v4 */
-@import 'tailwindcss';
+/* 1. Importações do Tailwind CSS - sintaxe correta */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* 2. Cores e variáveis CSS - base de todo o sistema */
 @import './colors.css';
