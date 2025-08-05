@@ -4,24 +4,19 @@
  * Este arquivo deve ser importado diretamente no main.tsx
  */
 
-/* 1. Importações do Tailwind CSS */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* 1. Importar o tema base do sistema GitHub Spark */
+@import './styles/theme.css';
 
-/* 2. Importar variáveis CSS personalizadas primeiro */
-@import './styles/variables.css';
-
-/* 3. Importar variáveis de cores do sistema */
+/* 2. Importar variáveis de cores do sistema TrakNor */
 @import './styles/colors.css';
 
-/* 4. Estilos base e reset */
+/* 3. Estilos base e customizações */
 @import './styles/base.css';
 
-/* 5. Animações */
+/* 4. Animações */
 @import './styles/animations.css';
 
-/* 6. Componentes customizados */
+/* 5. Componentes customizados */
 @import './styles/components.css';
 
 /* 7. Camada base do Tailwind com customizações */
