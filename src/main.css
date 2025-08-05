@@ -131,6 +131,11 @@
     background-color: var(--background);
     color: var(--foreground);
   }
+
+  #root {
+    background-color: var(--background);
+    min-height: 100vh;
+  }
 }
 
 @keyframes accordion-down {

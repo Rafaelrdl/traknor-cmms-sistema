@@ -6,7 +6,7 @@
 
 /* Tokens shadcn/ui */
 :root {
-  --background: oklch(1 0 0);
+  --background: oklch(0.982 0.006 189);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
