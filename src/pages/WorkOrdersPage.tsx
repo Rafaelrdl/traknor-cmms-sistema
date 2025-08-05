@@ -77,7 +77,6 @@ export function WorkOrdersPage() {
         } : wo
       ) || []
     );
-    setSelectedOrder(null);
   };
 
   const updateChecklistResponse = (questionId: string, response: any) => {
@@ -198,7 +197,6 @@ export function WorkOrdersPage() {
                               <Button 
                                 variant="default" 
                                 size="sm"
-                                onClick={() => setSelectedOrder(wo)}
                               >
                                 <ClipboardList className="h-4 w-4" />
                               </Button>
