@@ -1,8 +1,70 @@
 /**
- * TrakNor CMMS - Estilos Principais
- * --------------------------------
- * Importa o sistema de estilos completo e reorganizado
+ * TrakNor CMMS - Arquivo Principal de Estilos
+ * ------------------------------------------
+ * Este arquivo deve ser importado diretamente no main.tsx
  */
 
-/* Importa todo o sistema de estilos do TrakNor CMMS */
-@import './styles/index.css';
+/* 1. Importações do Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 2. Importar variáveis CSS personalizadas primeiro */
+@import './styles/variables.css';
+
+/* 3. Importar variáveis de cores do sistema */
+@import './styles/colors.css';
+
+/* 4. Estilos base e reset */
+@import './styles/base.css';
+
+/* 5. Animações */
+@import './styles/animations.css';
+
+/* 6. Componentes customizados */
+@import './styles/components.css';
+
+/* 7. Camada base do Tailwind com customizações */
+@layer base {
+  /* Aplicar estilos base no body */
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+
+  /* Garantir que as bordas usem a cor padrão */
+  *, *::before, *::after {
+    border-color: hsl(var(--border));
+  }
+}
+
+/* 8. Utilitários adicionais */
+@layer utilities {
+  /* Cores da marca */
+  .text-brand {
+    color: var(--brand);
+  }
+  
+  .bg-brand {
+    background-color: var(--brand);
+  }
+  
+  .border-brand {
+    border-color: var(--brand);
+  }
+  
+  /* Scrollbar customizada */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+  }
+  
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}

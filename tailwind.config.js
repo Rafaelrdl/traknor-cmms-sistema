@@ -18,9 +18,6 @@ const defaultTheme = {
     padding: "2rem",
   },
   extend: {
-    borderColor: {
-      DEFAULT: 'var(--color-border)',
-    },
     screens: {
       coarse: { raw: "(pointer: coarse)" },
       fine: { raw: "(pointer: fine)" },
@@ -94,7 +91,9 @@ const defaultTheme = {
         overlay: "var(--color-bg-overlay)",
       },
       "focus-ring": "var(--color-focus-ring)",
-      border: "hsl(var(--border))",
+      border: {
+        DEFAULT: "hsl(var(--border))",
+      },
       input: "hsl(var(--input))",
       ring: "hsl(var(--ring))",
       background: "hsl(var(--background))",
@@ -114,10 +113,6 @@ const defaultTheme = {
       muted: {
         DEFAULT: "hsl(var(--muted))",
         foreground: "hsl(var(--muted-foreground))",
-      },
-      accent: {
-        DEFAULT: "hsl(var(--accent))",
-        foreground: "hsl(var(--accent-foreground))",
       },
       popover: {
         DEFAULT: "hsl(var(--popover))",
