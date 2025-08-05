@@ -12,34 +12,51 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.4 0.15 180);
+  
+  /* Brand colors based on STYLE_USAGE_GUIDE.md */
+  --brand: oklch(0.67 0.09 175);          /* #38B2A4 */
+  --brand-light: oklch(0.85 0.04 175);    /* #B1E0DA */
+  --brand-dark: oklch(0.52 0.09 175);     /* #2A8A7E */
+  
+  /* Primary uses brand color */
+  --primary: oklch(0.67 0.09 175);        /* Same as --brand */
   --primary-foreground: oklch(0.985 0 0);
+  
+  /* State colors */
+  --success: oklch(0.67 0.09 175);        /* #38B2A4 - uses brand color */
+  --warning: oklch(0.72 0.15 85);         /* #F59E0B */
+  --destructive: oklch(0.68 0.18 15);     /* #ff5b5b */
+  --info: oklch(0.94 0.02 192);           /* #e0f3f4 */
+  
   --secondary: oklch(0.95 0.02 180);
   --secondary-foreground: oklch(0.145 0 0);
   --muted: oklch(0.95 0.02 180);
   --muted-foreground: oklch(0.45 0.02 180);
   --accent: oklch(0.95 0.02 180);
   --accent-foreground: oklch(0.145 0 0);
-  --destructive: oklch(0.5 0.2 0);
   --destructive-foreground: oklch(0.985 0 0);
   --border: oklch(0.9 0.02 180);
   --input: oklch(0.9 0.02 180);
-  --ring: oklch(0.4 0.15 180);
+  --ring: oklch(0.67 0.09 175);           /* Uses brand color */
   
   /* Sidebar colors */
   --sidebar: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.205 0 0);
   --sidebar-accent: oklch(0.95 0.02 180);
   --sidebar-border: oklch(0.922 0 0);
-  --sidebar-active-bg: #006b76;
-  --sidebar-active-fg: #ffffff;
   
-  /* Chart colors */
-  --chart-1: oklch(0.6 0.2 180);
-  --chart-2: oklch(0.7 0.15 120);
-  --chart-3: oklch(0.8 0.1 60);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.65 0.18 300);
+  /* Sidebar active states based on STYLE_USAGE_GUIDE.md */
+  --sidebar-active-bg: oklch(0.42 0.09 192);      /* #006b76 */
+  --sidebar-active-fg: oklch(1 0 0);              /* #FFFFFF */
+  --sidebar-active-outline: oklch(0.42 0.09 192); /* #006b76 */
+  
+  /* Chart colors based on STYLE_USAGE_GUIDE.md */
+  --chart-1: oklch(0.42 0.09 192);        /* #006b76 - Concluído/Funcionando */
+  --chart-2: oklch(0.94 0.02 192);        /* #e0f3f4 - Aberto/Pendente */
+  --chart-3: oklch(0.68 0.18 15);         /* #ff5b5b - Em Atraso/Parado */
+  --chart-4: oklch(0.72 0.15 85);         /* #F59E0B - Manutenção/Warning */
+  --chart-5: oklch(0.67 0.09 175);        /* #38B2A4 - Marca principal */
+  --chart-6: oklch(0.45 0.02 250);        /* #64748B - Neutro/cinza */
   
   --radius: 0.5rem;
 }
@@ -51,26 +68,42 @@
   --card-foreground: oklch(0.922 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.922 0 0);
-  --primary: oklch(0.6 0.15 180);
+  
+  /* Brand colors maintain consistency in dark mode */
+  --brand: oklch(0.67 0.09 175);          /* #38B2A4 */
+  --brand-light: oklch(0.85 0.04 175);    /* #B1E0DA */
+  --brand-dark: oklch(0.52 0.09 175);     /* #2A8A7E */
+  
+  /* Primary uses brand color */
+  --primary: oklch(0.67 0.09 175);        /* Same as --brand */
   --primary-foreground: oklch(0.145 0 0);
+  
+  /* State colors adjusted for dark mode */
+  --success: oklch(0.67 0.09 175);        /* #38B2A4 - brand color */
+  --warning: oklch(0.72 0.15 85);         /* #F59E0B */
+  --destructive: oklch(0.68 0.18 15);     /* #ff5b5b */
+  --info: oklch(0.94 0.02 192);           /* #e0f3f4 */
+  
   --secondary: oklch(0.267 0 0);
   --secondary-foreground: oklch(0.922 0 0);
   --muted: oklch(0.267 0 0);
   --muted-foreground: oklch(0.65 0.02 180);
   --accent: oklch(0.267 0 0);
   --accent-foreground: oklch(0.922 0 0);
-  --destructive: oklch(0.5 0.2 0);
   --destructive-foreground: oklch(0.985 0 0);
   --border: oklch(0.267 0 0);
   --input: oklch(0.267 0 0);
-  --ring: oklch(0.6 0.15 180);
+  --ring: oklch(0.67 0.09 175);           /* Brand color */
   
   --sidebar: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.922 0 0);
   --sidebar-accent: oklch(0.267 0 0);
   --sidebar-border: oklch(0.267 0 0);
-  --sidebar-active-bg: #006b76;
-  --sidebar-active-fg: #ffffff;
+  
+  /* Sidebar active states maintain brand consistency */
+  --sidebar-active-bg: oklch(0.42 0.09 192);      /* #006b76 */
+  --sidebar-active-fg: oklch(1 0 0);              /* #FFFFFF */
+  --sidebar-active-outline: oklch(0.42 0.09 192); /* #006b76 */
 }
 
 @layer base {
