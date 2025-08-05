@@ -18,6 +18,10 @@ const defaultTheme = {
     padding: "2rem",
   },
   extend: {
+    borderColor: {
+      DEFAULT: 'var(--color-border)',
+      border: 'var(--color-border)',
+    },
     screens: {
       coarse: { raw: "(pointer: coarse)" },
       fine: { raw: "(pointer: fine)" },
