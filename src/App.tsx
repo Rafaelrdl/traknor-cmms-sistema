@@ -1,4 +1,4 @@
-import './index.css';
+import './main.css';
 import { Router } from './Router';
 
 

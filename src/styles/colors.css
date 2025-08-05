@@ -1,0 +1,107 @@
+/**
+ * TrakNor CMMS - Paleta de Cores Oficial
+ * --------------------------------------
+ * Fonte única de verdade para todas as cores do sistema
+ * Baseado na documentação oficial em docs/COLOR_STANDARDS.md
+ */
+
+:root {
+  /* Cores da Marca TrakNor */
+  --brand: #38B2A4;           /* Teal primário da logo oficial */
+  --brand-light: #B1E0DA;     /* Teal claro da logo oficial */
+  --brand-dark: #2A8A7E;      /* Variação escura para contraste */
+
+  /* Cores UI Principais */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  
+  /* Cores Primárias (alinhadas com a marca) */
+  --primary: #38B2A4;             /* Idêntica à cor da marca */
+  --primary-foreground: #FFFFFF;
+  
+  /* Cores Secundárias */
+  --secondary: oklch(0.95 0.02 180);
+  --secondary-foreground: oklch(0.145 0 0);
+  --muted: oklch(0.95 0.02 180);
+  --muted-foreground: oklch(0.45 0.02 180);
+  --accent: oklch(0.95 0.02 180);
+  --accent-foreground: oklch(0.145 0 0);
+  
+  /* Cores de Estado */
+  --success: #38B2A4;         /* Usa a cor primária da marca */
+  --success-foreground: #FFFFFF;
+  --warning: #F59E0B;         /* Amber para alertas */
+  --warning-foreground: #FFFFFF;
+  --destructive: #EF4444;     /* Red para erros/atrasos */
+  --destructive-foreground: #FFFFFF;
+  --info: #B1E0DA;            /* Teal claro para informações */
+  --info-foreground: #000000;
+  
+  /* Cores de Gráficos (validadas pela documentação) */
+  --chart-1: #006b76;   /* Concluído/Funcionando - Verde petróleo escuro */
+  --chart-2: #e0f3f4;   /* Aberto/Pendente - Azul claro */
+  --chart-3: #ff5b5b;   /* Em Atraso/Parado - Vermelho */
+  --chart-4: #F59E0B;   /* Manutenção/Warning - Laranja */
+  --chart-5: #38B2A4;   /* Marca principal */
+  --chart-6: #64748B;   /* Neutro/cinza */
+  
+  /* Cores da Sidebar */
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-active-bg: #006b76;      /* Fundo do item ativo */
+  --sidebar-active-fg: #FFFFFF;      /* Texto do item ativo */
+  --sidebar-active-outline: #006b76; /* Contorno do item ativo */
+  
+  /* Utilitários */
+  --border: oklch(0.9 0.02 180);
+  --input: oklch(0.9 0.02 180);
+  --ring: #38B2A4;         /* Alinhado com a cor primária */
+  --radius: 0.5rem;
+}
+
+/* Tema Escuro */
+.dark, [data-theme="dark"] {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  
+  --primary: #38B2A4;            /* Manter consistência com a marca */
+  --primary-foreground: #FFFFFF;
+  
+  --secondary: oklch(0.267 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.267 0 0);
+  --muted-foreground: oklch(0.722 0 0);
+  --accent: oklch(0.267 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  
+  --destructive: oklch(0.446 0.183 22.045);
+  --destructive-foreground: oklch(0.985 0 0);
+  
+  --border: oklch(0.267 0 0);
+  --input: oklch(0.267 0 0);
+  --ring: #38B2A4;
+
+  /* Sidebar no tema escuro */
+  --sidebar: oklch(0.145 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.922 0 0);
+  --sidebar-primary-foreground: oklch(0.145 0 0);
+  --sidebar-accent: oklch(0.267 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.267 0 0);
+  --sidebar-active-bg: #006b76;  /* Manter consistente com tema claro */
+  --sidebar-active-fg: #FFFFFF;
+}
