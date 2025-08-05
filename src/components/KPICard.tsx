@@ -11,18 +11,17 @@ interface KPICardProps {
   variant?: 'default' | 'success' | 'warning' | 'danger';
 }
 
-
 const variantStyles = {
-  default: '',
-  success: 'border-[hsl(var(--success))] bg-[hsl(var(--success)/0.05)]',
-  warning: 'border-[hsl(var(--warning))] bg-[hsl(var(--warning)/0.05)]',
-  danger: 'border-[hsl(var(--destructive))] bg-[hsl(var(--destructive)/0.05)]'
+  default: 'border-border',
+  success: 'border-green-200 bg-green-50',
+  warning: 'border-yellow-200 bg-yellow-50', 
+  danger: 'border-red-200 bg-red-50'
 };
 
 const trendIcons = {
-  up: <TrendingUp className="h-4 w-4 text-[hsl(var(--success))]" />, 
-  down: <TrendingDown className="h-4 w-4 text-[hsl(var(--destructive))]" />, 
-  neutral: <Minus className="h-4 w-4 text-muted-foreground" />
+  up: <TrendingUp className="h-4 w-4 text-green-600" />,
+  down: <TrendingDown className="h-4 w-4 text-red-600" />,
+  neutral: <Minus className="h-4 w-4 text-gray-600" />
 };
 
 export function KPICard({ 
@@ -34,10 +33,7 @@ export function KPICard({
   variant = 'default' 
 }: KPICardProps) {
   return (
-    <Card className={cn(
-      "transition-all duration-200 hover:shadow-md border",
-      variantStyles[variant]
-    )}>
+    <Card className={cn("transition-shadow hover:shadow-md", variantStyles[variant])}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}

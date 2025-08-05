@@ -82,16 +82,16 @@ export function Dashboard() {
                   <div key={day.day} className="flex flex-col items-center gap-2">
                     <div className="flex flex-col items-center gap-1">
                       <div 
-                        className="w-6 rounded-t bg-[hsl(var(--chart-1))]"
-                        style={{ height: `${day.completed * 8}px` }}
+                        className="w-6 rounded-t"
+                        style={{ height: `${day.completed * 8}px`, backgroundColor: '#006b76' }}
                       />
                       <div 
-                        className="w-6 rounded-t bg-[hsl(var(--chart-3))]"
-                        style={{ height: `${day.inProgress * 8}px` }}
+                        className="w-6 rounded-t"
+                        style={{ height: `${day.inProgress * 8}px`, backgroundColor: '#ff5b5b' }}
                       />
                       <div 
-                        className="w-6 rounded-t bg-[hsl(var(--chart-2))]"
-                        style={{ height: `${day.open * 8}px` }}
+                        className="w-6 rounded-t"
+                        style={{ height: `${day.open * 8}px`, backgroundColor: '#e0f3f4' }}
                       />
                     </div>
                     <span className="text-xs text-muted-foreground">{day.day}</span>
@@ -100,15 +100,15 @@ export function Dashboard() {
               </div>
               <div className="flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded bg-[hsl(var(--chart-1))]" />
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: '#006b76' }} />
                   <span>Concluído</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded bg-[hsl(var(--chart-3))]" />
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: '#ff5b5b' }} />
                   <span>Em Atraso</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded bg-[hsl(var(--chart-2))]" />
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: '#e0f3f4' }} />
                   <span>Aberto</span>
                 </div>
               </div>
@@ -153,7 +153,7 @@ export function Dashboard() {
                           cy="50"
                           r="40"
                           fill="transparent"
-                          stroke="hsl(var(--muted))"
+                          stroke="rgb(229 231 235)"
                           strokeWidth="10"
                         />
                         
@@ -163,7 +163,7 @@ export function Dashboard() {
                           cy="50"
                           r="40"
                           fill="transparent"
-                          stroke="hsl(var(--chart-1))"
+                          stroke="#006b76"
                           strokeWidth="10"
                           strokeDasharray={`${functioningLength} ${circumference}`}
                           strokeDashoffset="0"
@@ -176,7 +176,7 @@ export function Dashboard() {
                           cy="50"
                           r="40"
                           fill="transparent"
-                          stroke="hsl(var(--chart-4))"
+                          stroke="rgb(234 179 8)"
                           strokeWidth="10"
                           strokeDasharray={`${maintenanceLength} ${circumference}`}
                           strokeDashoffset={-functioningLength}
@@ -189,7 +189,7 @@ export function Dashboard() {
                           cy="50"
                           r="40"
                           fill="transparent"
-                          stroke="hsl(var(--chart-3))"
+                          stroke="#ff5b5b"
                           strokeWidth="10"
                           strokeDasharray={`${stoppedLength} ${circumference}`}
                           strokeDashoffset={-(functioningLength + maintenanceLength)}
@@ -210,7 +210,7 @@ export function Dashboard() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-[hsl(var(--chart-1))]" />
+                    <div className="w-3 h-3 rounded" style={{ backgroundColor: '#006b76' }} />
                     <span className="text-sm">Funcionando</span>
                   </div>
                   <span className="text-sm font-medium">
@@ -219,7 +219,7 @@ export function Dashboard() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-[hsl(var(--chart-4))]" />
+                    <div className="w-3 h-3 bg-yellow-500 rounded" />
                     <span className="text-sm">Em Manutenção</span>
                   </div>
                   <span className="text-sm font-medium">
@@ -228,7 +228,7 @@ export function Dashboard() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-[hsl(var(--chart-3))]" />
+                    <div className="w-3 h-3 rounded" style={{ backgroundColor: '#ff5b5b' }} />
                     <span className="text-sm">Parado</span>
                   </div>
                   <span className="text-sm font-medium">
