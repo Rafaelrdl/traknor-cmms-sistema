@@ -67,7 +67,7 @@ export function Layout({ children }: LayoutProps) {
                     isActive
                       ? 'bg-primary text-primary-foreground'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                  }`}
+                  }bg-teal-950`}
                 >
                   <item.icon className="h-4 w-4" />
                   {item.name}
