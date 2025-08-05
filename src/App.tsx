@@ -1,4 +1,3 @@
-import './index.css';
 import { Router } from './Router';
 
 
