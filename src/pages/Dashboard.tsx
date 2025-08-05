@@ -3,7 +3,6 @@ import { KPICard } from '@/components/KPICard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { StatusBadge } from '@/components/StatusBadge';
 import { 
   ClipboardList, 
   AlertTriangle, 
@@ -12,14 +11,10 @@ import {
   Activity,
   TrendingUp
 } from 'lucide-react';
-import { useDashboardKPIs, useWorkOrders, useEquipment, useSectors, useCompanies, useChartData } from '@/hooks/useDataTemp';
+import { useDashboardKPIs, useChartData } from '@/hooks/useDataTemp';
 
 export function Dashboard() {
   const [kpis] = useDashboardKPIs();
-  const [workOrders] = useWorkOrders();
-  const [equipment] = useEquipment();
-  const [sectors] = useSectors();
-  const [companies] = useCompanies();
   const [chartData] = useChartData();
 
   // Dados centralizados do mock
@@ -83,7 +78,7 @@ export function Dashboard() {
             <div className="space-y-4">
               {/* Simple chart representation */}
               <div className="flex items-end justify-between h-40 border-b border-border">
-                {weeklyData.map((day, index) => (
+                {weeklyData.map((day) => (
                   <div key={day.day} className="flex flex-col items-center gap-2">
                     <div className="flex flex-col items-center gap-1">
                       <div 

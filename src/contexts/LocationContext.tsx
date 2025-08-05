@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
-import type { LocationNode, Company, Sector, SubSection } from '@/types';
+import type { LocationNode } from '@/types';
 import { MOCK_COMPANIES, MOCK_SECTORS, MOCK_SUBSECTIONS } from '@/data/mockData';
 
 interface LocationContextType {

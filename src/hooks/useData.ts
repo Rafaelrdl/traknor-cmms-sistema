@@ -1,5 +1,4 @@
 import { useKV } from '@github/spark/hooks';
-import { useState } from 'react';
 import type { 
   User, 
   Company, 
