@@ -1,4 +1,3 @@
-import { useKV } from '@github/spark/hooks';
 import type { 
   User, 
   Company, 
@@ -22,41 +21,40 @@ import {
   MOCK_CHART_DATA
 } from '@/data/mockData';
 
-
-// Hooks usando useKV para persistência de dados
-export const useCompanies = () => {
-  return useKV<Company[]>('companies', MOCK_COMPANIES);
+// Hooks retornando arrays tipados para compatibilidade
+export const useCompanies = (): [Company[], () => void] => {
+  return [MOCK_COMPANIES, () => {}];
 };
 
-export const useSectors = () => {
-  return useKV<Sector[]>('sectors', MOCK_SECTORS);
+export const useSectors = (): [Sector[], () => void] => {
+  return [MOCK_SECTORS, () => {}];
 };
 
-export const useSubSections = () => {
-  return useKV<SubSection[]>('subsections', MOCK_SUBSECTIONS);
+export const useSubSections = (): [SubSection[], () => void] => {
+  return [MOCK_SUBSECTIONS, () => {}];
 };
 
-export const useEquipment = () => {
-  return useKV<Equipment[]>('equipment', MOCK_EQUIPMENT);
+export const useEquipment = (): [Equipment[], () => void] => {
+  return [MOCK_EQUIPMENT, () => {}];
 };
 
-export const useWorkOrders = () => {
-  return useKV<WorkOrder[]>('work-orders', MOCK_WORK_ORDERS);
+export const useWorkOrders = (): [WorkOrder[], () => void] => {
+  return [MOCK_WORK_ORDERS, () => {}];
 };
 
-export const useMaintenancePlans = () => {
-  return useKV<MaintenancePlan[]>('maintenance-plans', MOCK_MAINTENANCE_PLANS);
+export const useMaintenancePlans = (): [MaintenancePlan[], () => void] => {
+  return [MOCK_MAINTENANCE_PLANS, () => {}];
 };
 
-export const useStock = () => {
-  return useKV<StockItem[]>('stock-items', MOCK_STOCK_ITEMS);
+export const useStock = (): [StockItem[], () => void] => {
+  return [MOCK_STOCK_ITEMS, () => {}];
 };
 
-export const useDashboardKPIs = () => {
-  return useKV<DashboardKPIs>('dashboard-kpis', MOCK_DASHBOARD_KPIS);
+export const useDashboardKPIs = (): [DashboardKPIs, () => void] => {
+  return [MOCK_DASHBOARD_KPIS, () => {}];
 };
 
-export const useUser = () => {
+export const useUser = (): [User, () => void] => {
   const userData: User = {
     id: '1',
     name: 'Admin',
@@ -64,12 +62,12 @@ export const useUser = () => {
     role: 'ADMIN',
     avatar: '/assets/avatar.png'
   };
-  return useKV<User>('user', userData);
+  return [userData, () => {}];
 };
 
 // Hook para dados de gráficos centralizados
-export const useChartData = () => {
-  return useKV<typeof MOCK_CHART_DATA>('chart-data', MOCK_CHART_DATA);
+export const useChartData = (): [typeof MOCK_CHART_DATA, () => void] => {
+  return [MOCK_CHART_DATA, () => {}];
 };
 
 // Funções utilitárias para buscar dados específicos
