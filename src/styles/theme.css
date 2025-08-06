@@ -238,9 +238,9 @@
     --color-fg-secondary: var(--color-neutral-a11);
 
     /* Background colors */
-    --color-bg: oklch(0.982 0.006 189);
+    --color-bg: #ffffff;
     --color-bg-inset: var(--color-neutral-2);
-    --color-bg-overlay: oklch(0.982 0.006 189);
+    --color-bg-overlay: #ffffff;
 
     /* Focus ring */
     --color-focus-ring: var(--color-accent-9);

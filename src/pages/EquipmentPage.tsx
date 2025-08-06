@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { LocationTree } from '@/components/LocationTree';
 import { LocationDetails } from '@/components/LocationDetails';
@@ -7,13 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Building2, MapPin, Users } from 'lucide-react';
+import { Plus, Building2, MapPin, Users } from 'lucide-react';
 import { useEquipment, useSectors, useSubSections, useCompanies } from '@/hooks/useDataTemp';
 import { LocationProvider, useLocation as useLocationContext } from '@/contexts/LocationContext';
 import type { Equipment, SubSection } from '@/types';
 
 function AssetsContent() {
-  const [, setEquipment] = useEquipment();
+  const [equipment, setEquipment] = useEquipment();
   const [sectors] = useSectors();
   const [subSections] = useSubSections();
   const [companies] = useCompanies();

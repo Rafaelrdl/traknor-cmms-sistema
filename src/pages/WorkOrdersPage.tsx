@@ -12,8 +12,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, ClipboardList, Play, CheckCircle, Camera } from 'lucide-react';
-import { useWorkOrders, useEquipment, useSectors } from '@/hooks/useDataTemp';
-import type { ChecklistItem } from '@/types';
+import { useWorkOrders, useEquipment, useSectors, useCompanies } from '@/hooks/useDataTemp';
+import type { WorkOrder, ChecklistItem } from '@/types';
 
 const mockChecklist: ChecklistItem[] = [
   {
@@ -47,8 +47,10 @@ export function WorkOrdersPage() {
   const [workOrders, setWorkOrders] = useWorkOrders();
   const [equipment] = useEquipment();
   const [sectors] = useSectors();
+  const [companies] = useCompanies();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [selectedOrder, setSelectedOrder] = useState<WorkOrder | null>(null);
   const [checklist, setChecklist] = useState<ChecklistItem[]>(mockChecklist);
 
   // Filter work orders
@@ -77,6 +79,7 @@ export function WorkOrdersPage() {
         } : wo
       ) || []
     );
+    setSelectedOrder(null);
   };
 
   const updateChecklistResponse = (questionId: string, response: any) => {
@@ -197,6 +200,7 @@ export function WorkOrdersPage() {
                               <Button 
                                 variant="default" 
                                 size="sm"
+                                onClick={() => setSelectedOrder(wo)}
                               >
                                 <ClipboardList className="h-4 w-4" />
                               </Button>
