@@ -26,7 +26,7 @@ export function LocationFormModal({
 }: LocationFormModalProps) {
   const [companies, setCompanies] = useCompanies();
   const [sectors, setSectors] = useSectors();
-  const [, setSubSections] = useSubSections();
+  const [subSections, setSubSections] = useSubSections();
   const { selectedNode, setSelectedNode } = useLocationContext();
 
   // Company form state
