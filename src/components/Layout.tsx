@@ -66,7 +66,7 @@ export function Layout({ children }: LayoutProps) {
                   to={item.href}
                   className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-all ${
                     isActive
-                      ? "bg-[var(--chart-1)] text-white font-medium" // Cor verde-petróleo com texto branco
+                      ? "bg-[var(--primary)] text-white font-medium" // Cor verde-petróleo com texto branco
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >
