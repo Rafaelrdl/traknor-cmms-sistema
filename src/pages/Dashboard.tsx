@@ -79,37 +79,70 @@ export function Dashboard() {
               {/* Simple chart representation */}
               <div className="flex items-end justify-between h-40 border-b border-border">
                 {weeklyData.map((day) => (
-                  <div key={day.day} className="flex flex-col items-center gap-2">
-                    <div className="flex flex-col items-center gap-1">
+                  <div key={day.day} className="flex flex-col items-center gap-2 group">
+                    <div className="flex flex-col items-center gap-1 relative">
+                      {/* Hover tooltip */}
+                      <div className="invisible group-hover:visible absolute -top-16 left-1/2 transform -translate-x-1/2 bg-popover text-popover-foreground px-3 py-2 rounded-lg shadow-lg border text-xs whitespace-nowrap z-10">
+                        <div className="font-medium mb-1">{day.day}</div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded" style={{ backgroundColor: 'var(--primary)' }}></div>
+                            <span>Concluído: {day.completed}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded" style={{ backgroundColor: 'var(--destructive)' }}></div>
+                            <span>Em Atraso: {day.inProgress}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded" style={{ backgroundColor: 'var(--secondary)' }}></div>
+                            <span>Aberto: {day.open}</span>
+                          </div>
+                        </div>
+                        {/* Arrow */}
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-popover"></div>
+                      </div>
+                      
                       <div 
-                        className="w-6 rounded-t"
-                        style={{ height: `${day.completed * 8}px`, backgroundColor: 'var(--primary)' }}
+                        className="w-6 rounded-t chart-bar"
+                        style={{ 
+                          height: `${day.completed * 8}px`, 
+                          backgroundColor: 'var(--primary)'
+                        }}
+                        title={`Concluído: ${day.completed}`}
                       />
                       <div 
-                        className="w-6 rounded-t"
-                        style={{ height: `${day.inProgress * 8}px`, backgroundColor: 'var(--destructive)' }}
+                        className="w-6 rounded-t chart-bar"
+                        style={{ 
+                          height: `${day.inProgress * 8}px`, 
+                          backgroundColor: 'var(--destructive)'
+                        }}
+                        title={`Em Atraso: ${day.inProgress}`}
                       />
                       <div 
-                        className="w-6 rounded-t"
-                        style={{ height: `${day.open * 8}px`, backgroundColor: 'var(--secondary)' }}
+                        className="w-6 rounded-t chart-bar"
+                        style={{ 
+                          height: `${day.open * 8}px`, 
+                          backgroundColor: 'var(--secondary)'
+                        }}
+                        title={`Aberto: ${day.open}`}
                       />
                     </div>
-                    <span className="text-xs text-muted-foreground">{day.day}</span>
+                    <span className="text-xs text-muted-foreground transition-colors group-hover:text-foreground">{day.day}</span>
                   </div>
                 ))}
               </div>
               <div className="flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--primary)' }} />
-                  <span>Concluído</span>
+                <div className="flex items-center gap-2 hover:bg-muted/50 rounded-lg px-2 py-1 transition-colors cursor-pointer group">
+                  <div className="w-3 h-3 rounded transition-transform group-hover:scale-110" style={{ backgroundColor: 'var(--primary)' }} />
+                  <span className="transition-colors group-hover:text-foreground">Concluído</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--destructive)' }} />
-                  <span>Em Atraso</span>
+                <div className="flex items-center gap-2 hover:bg-muted/50 rounded-lg px-2 py-1 transition-colors cursor-pointer group">
+                  <div className="w-3 h-3 rounded transition-transform group-hover:scale-110" style={{ backgroundColor: 'var(--destructive)' }} />
+                  <span className="transition-colors group-hover:text-foreground">Em Atraso</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--secondary)' }} />
-                  <span>Aberto</span>
+                <div className="flex items-center gap-2 hover:bg-muted/50 rounded-lg px-2 py-1 transition-colors cursor-pointer group">
+                  <div className="w-3 h-3 rounded transition-transform group-hover:scale-110" style={{ backgroundColor: 'var(--secondary)' }} />
+                  <span className="transition-colors group-hover:text-foreground">Aberto</span>
                 </div>
               </div>
             </div>
@@ -145,8 +178,26 @@ export function Dashboard() {
                   const stoppedLength = (stoppedPercent / 100) * circumference;
                   
                   return (
-                    <div className="relative w-32 h-32">
-                      <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 100 100">
+                    <div className="relative w-32 h-32 group">
+                      {/* Tooltip container - shown dynamically */}
+                      <div 
+                        id="donut-tooltip"
+                        className="absolute -top-16 left-1/2 transform -translate-x-1/2 bg-popover text-popover-foreground px-3 py-2 rounded-lg shadow-lg border text-xs whitespace-nowrap z-20 opacity-0 pointer-events-none transition-all duration-200"
+                      >
+                        <div className="font-medium mb-1" id="tooltip-title"></div>
+                        <div id="tooltip-content"></div>
+                        {/* Arrow */}
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-popover"></div>
+                      </div>
+
+                      <svg 
+                        className="w-32 h-32 transform -rotate-90" 
+                        viewBox="0 0 100 100"
+                        onMouseLeave={() => {
+                          const tooltip = document.getElementById('donut-tooltip');
+                          if (tooltip) tooltip.style.opacity = '0';
+                        }}
+                      >
                         {/* Background circle */}
                         <circle
                           cx="50"
@@ -168,6 +219,17 @@ export function Dashboard() {
                           strokeDasharray={`${functioningLength} ${circumference}`}
                           strokeDashoffset="0"
                           strokeLinecap="round"
+                          className="donut-segment"
+                          onMouseEnter={(e) => {
+                            const tooltip = document.getElementById('donut-tooltip');
+                            const title = document.getElementById('tooltip-title');
+                            const content = document.getElementById('tooltip-content');
+                            if (tooltip && title && content) {
+                              title.textContent = 'Funcionando';
+                              content.textContent = `${equipmentStatus.functioning} equipamentos (${functioningPercent.toFixed(1)}%)`;
+                              tooltip.style.opacity = '1';
+                            }
+                          }}
                         />
                         
                         {/* Maintenance segment (yellow) */}
@@ -181,6 +243,17 @@ export function Dashboard() {
                           strokeDasharray={`${maintenanceLength} ${circumference}`}
                           strokeDashoffset={-functioningLength}
                           strokeLinecap="round"
+                          className="donut-segment"
+                          onMouseEnter={(e) => {
+                            const tooltip = document.getElementById('donut-tooltip');
+                            const title = document.getElementById('tooltip-title');
+                            const content = document.getElementById('tooltip-content');
+                            if (tooltip && title && content) {
+                              title.textContent = 'Em Manutenção';
+                              content.textContent = `${equipmentStatus.maintenance} equipamentos (${maintenancePercent.toFixed(1)}%)`;
+                              tooltip.style.opacity = '1';
+                            }
+                          }}
                         />
                         
                         {/* Stopped segment (red) */}
@@ -189,17 +262,28 @@ export function Dashboard() {
                           cy="50"
                           r="40"
                           fill="transparent"
-                          stroke="var(--destructive)"
+                          stroke="#dc2626"
                           strokeWidth="10"
                           strokeDasharray={`${stoppedLength} ${circumference}`}
                           strokeDashoffset={-(functioningLength + maintenanceLength)}
                           strokeLinecap="round"
+                          className="donut-segment"
+                          onMouseEnter={(e) => {
+                            const tooltip = document.getElementById('donut-tooltip');
+                            const title = document.getElementById('tooltip-title');
+                            const content = document.getElementById('tooltip-content');
+                            if (tooltip && title && content) {
+                              title.textContent = 'Parado';
+                              content.textContent = `${equipmentStatus.stopped} equipamentos (${stoppedPercent.toFixed(1)}%)`;
+                              tooltip.style.opacity = '1';
+                            }
+                          }}
                         />
                       </svg>
                       
                       {/* Center number */}
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-2xl font-bold">
+                        <span className="text-2xl font-bold transition-colors group-hover:text-primary">
                           {total}
                         </span>
                       </div>
@@ -208,28 +292,28 @@ export function Dashboard() {
                 })()}
               </div>
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between hover:bg-muted/50 rounded-lg px-2 py-1 transition-colors cursor-pointer group">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--primary)' }} />
-                    <span className="text-sm">Funcionando</span>
+                    <div className="w-3 h-3 rounded transition-transform group-hover:scale-110" style={{ backgroundColor: 'var(--primary)' }} />
+                    <span className="text-sm transition-colors group-hover:text-foreground">Funcionando</span>
                   </div>
                   <span className="text-sm font-medium">
                     {chartData?.equipmentStatus?.functioning || 0}
                   </span>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between hover:bg-muted/50 rounded-lg px-2 py-1 transition-colors cursor-pointer group">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-yellow-500 rounded" />
-                    <span className="text-sm">Em Manutenção</span>
+                    <div className="w-3 h-3 bg-yellow-500 rounded transition-transform group-hover:scale-110" />
+                    <span className="text-sm transition-colors group-hover:text-foreground">Em Manutenção</span>
                   </div>
                   <span className="text-sm font-medium">
                     {chartData?.equipmentStatus?.maintenance || 0}
                   </span>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between hover:bg-muted/50 rounded-lg px-2 py-1 transition-colors cursor-pointer group">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--destructive)' }} />
-                    <span className="text-sm">Parado</span>
+                    <div className="w-3 h-3 rounded transition-transform group-hover:scale-110" style={{ backgroundColor: 'var(--destructive)' }} />
+                    <span className="text-sm transition-colors group-hover:text-foreground">Parado</span>
                   </div>
                   <span className="text-sm font-medium">
                     {chartData?.equipmentStatus?.stopped || 0}

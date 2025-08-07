@@ -88,4 +88,191 @@ body {
   .mobile-nav-item {
     @apply flex items-center gap-3 px-4 py-3 text-base font-medium rounded-lg transition-all duration-200;
   }
+
+  /* Chart hover effects */
+  .chart-tooltip {
+    @apply absolute z-20 bg-popover text-popover-foreground px-3 py-2 rounded-lg shadow-lg border text-xs whitespace-nowrap;
+    @apply invisible transition-all duration-200;
+  }
+
+  .chart-tooltip::after {
+    content: '';
+    @apply absolute top-full left-1/2 transform -translate-x-1/2;
+    @apply border-4 border-transparent border-t-popover;
+  }
+
+  .chart-segment {
+    @apply transition-all duration-300 cursor-pointer;
+    transform-origin: center center;
+  }
+
+  .chart-segment:hover {
+    filter: brightness(1.1) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.15));
+  }
+
+  /* Bar chart specific effects */
+  .chart-bar {
+    @apply transition-all duration-300 cursor-pointer;
+    transform-origin: bottom center;
+  }
+
+  .chart-bar:hover {
+    filter: brightness(1.15) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.2));
+    transform: scaleX(1.1) scaleY(1.05);
+  }
+
+  /* Donut chart specific effects */
+  .donut-segment {
+    @apply transition-all duration-300 cursor-pointer;
+    transform-origin: 50% 50%;
+  }
+
+  .donut-segment:hover {
+    filter: brightness(1.1) drop-shadow(0 0 6px rgba(0, 0, 0, 0.2));
+    transform: scale(1.03);
+  }
+
+  /* Performance chart bar effects */
+  .performance-bar {
+    @apply transition-all duration-300 cursor-pointer;
+    transform-origin: left center;
+  }
+
+  .performance-bar:hover {
+    filter: brightness(1.15);
+    transform: scaleY(1.1);
+  }
+
+  .chart-legend-item {
+    @apply hover:bg-muted/50 rounded-lg px-2 py-1 transition-colors cursor-pointer;
+  }
+
+  .chart-legend-dot {
+    @apply w-3 h-3 rounded transition-transform;
+  }
+
+  .chart-legend-item:hover .chart-legend-dot {
+    @apply scale-110;
+  }
+
+  /* Smooth animations for chart interactions */
+  @keyframes chartPulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+  }
+
+  .chart-pulse {
+    animation: chartPulse 2s ease-in-out infinite;
+  }
+
+  /* Mobile location tree animations */
+  @keyframes slideInFromTop {
+    0% {
+      transform: translateY(-10px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-in {
+    animation: slideInFromTop 0.2s ease-out;
+  }
+
+  /* Enhanced tree node hover effects */
+  .tree-node {
+    @apply relative overflow-hidden;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .tree-node::before {
+    content: '';
+    @apply absolute inset-0 bg-primary/5 rounded-md;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.2s ease-in-out;
+    z-index: -1;
+  }
+
+  .tree-node:hover::before {
+    transform: scaleX(1);
+  }
+
+  .tree-node-selected::before {
+    transform: scaleX(1);
+    @apply bg-primary/10;
+  }
+
+  /* Card hover effects */
+  .location-card {
+    @apply transition-all duration-300 hover:shadow-lg hover:shadow-primary/10;
+    transform: translateZ(0);
+  }
+
+  .location-card:hover {
+    transform: translateY(-2px);
+  }
+
+  /* Button press effects */
+  .btn-press {
+    @apply active:scale-95 transition-transform duration-100;
+  }
+
+  /* Focus ring improvements */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  }
+
+  /* Mobile modal backdrop */
+  .modal-backdrop {
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.15s ease-out;
+  }
+
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  /* Enhanced tooltip styling */
+  .tooltip {
+    @apply absolute z-50 px-3 py-2 text-xs text-popover-foreground bg-popover border rounded-md shadow-md;
+    animation: tooltipShow 0.15s ease-out;
+    pointer-events: none;
+  }
+
+  @keyframes tooltipShow {
+    0% {
+      opacity: 0;
+      transform: scale(0.95) translateY(2px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  /* Responsive text utilities */
+  @media (max-width: 640px) {
+    .mobile-text-balance {
+      text-wrap: balance;
+    }
+    
+    .mobile-truncate {
+      @apply truncate;
+      max-width: calc(100vw - 8rem);
+    }
+  }
 }

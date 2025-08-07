@@ -66,6 +66,13 @@ export interface Equipment {
   installDate: string;
   nextMaintenance: string;
   status: 'FUNCTIONING' | 'MAINTENANCE' | 'STOPPED';
+  lastMaintenance?: string;
+  totalOperatingHours?: number;
+  energyConsumption?: number;
+  warrantyExpiry?: string;
+  serialNumber?: string;
+  location?: string;
+  notes?: string;
 }
 
 export interface LocationNode {
@@ -131,4 +138,78 @@ export interface TechnicianPerformance {
   preventive: number;
   corrective: number;
   request: number;
+}
+
+export interface MaintenanceHistory {
+  id: string;
+  equipmentId: string;
+  workOrderId: string;
+  type: 'PREVENTIVE' | 'CORRECTIVE' | 'EMERGENCY';
+  performedBy: string;
+  date: string;
+  description: string;
+  partsUsed: string[];
+  cost: number;
+  duration: number; // hours
+  status: 'COMPLETED' | 'PARTIAL' | 'CANCELLED';
+  findings?: string;
+  recommendations?: string;
+}
+
+export interface MaintenanceAlert {
+  id: string;
+  equipmentId: string;
+  type: 'OVERDUE' | 'UPCOMING' | 'CRITICAL' | 'WARRANTY_EXPIRY';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  message: string;
+  dueDate: string;
+  daysOverdue?: number;
+  isAcknowledged: boolean;
+  createdAt: string;
+}
+
+export interface EquipmentFilter {
+  search?: string;
+  type?: Equipment['type'][];
+  status?: Equipment['status'][];
+  brand?: string[];
+  location?: string[];
+  maintenanceDue?: 'all' | 'upcoming' | 'overdue';
+  capacity?: {
+    min?: number;
+    max?: number;
+  };
+  installDate?: {
+    from?: string;
+    to?: string;
+  };
+}
+
+export interface AssetUtilization {
+  equipmentId: string;
+  avgOperatingHours: number;
+  utilizationRate: number; // percentage
+  energyConsumption: number; // kWh
+  maintenanceCosts: number;
+  downtimeHours: number;
+  efficiency: number; // percentage
+  lastUpdated: string;
+}
+
+export interface LocationCostAnalysis {
+  locationId: string;
+  locationName: string;
+  locationType: 'company' | 'sector' | 'subsection';
+  totalEquipment: number;
+  totalMaintenanceCosts: number;
+  avgCostPerEquipment: number;
+  preventiveCosts: number;
+  correctiveCosts: number;
+  emergencyCosts: number;
+  energyCosts: number;
+  totalDowntimeHours: number;
+  costTrends: {
+    period: string;
+    cost: number;
+  }[];
 }
