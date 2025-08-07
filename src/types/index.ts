@@ -125,3 +125,10 @@ export interface DashboardKPIs {
   mttr: number; // hours
   mtbf: number; // hours
 }
+
+export interface TechnicianPerformance {
+  name: string;
+  preventive: number;
+  corrective: number;
+  request: number;
+}

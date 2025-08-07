@@ -3,6 +3,7 @@ import { KPICard } from '@/components/KPICard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { TechnicianPerformanceChart } from '@/components/charts/TechnicianPerformanceChart';
 import { 
   ClipboardList, 
   AlertTriangle, 
@@ -25,7 +26,6 @@ export function Dashboard() {
     <div className="space-y-6">
       <PageHeader 
         title="Visão Geral" 
-        description="Dashboard do sistema de gestão de manutenção HVAC"
       />
       {/* KPI Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
@@ -240,6 +240,10 @@ export function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Technician Performance Chart */}
+      <TechnicianPerformanceChart />
+
       {/* Upcoming Maintenance Table */}
       <Card>
         <CardHeader>
