@@ -102,7 +102,7 @@ export function TechnicianPerformanceChart() {
                     {/* Preventive segment */}
                     {tech.preventive > 0 && (
                       <div
-                        className="absolute left-0 top-0 h-full rounded-l-md transition-all duration-300 hover:brightness-110 hover:scale-y-110"
+                        className="absolute left-0 top-0 h-full rounded-l-md performance-bar"
                         style={{
                           width: `${preventiveWidth}%`,
                           backgroundColor: '#00968f'
@@ -114,7 +114,7 @@ export function TechnicianPerformanceChart() {
                     {/* Corrective segment */}
                     {tech.corrective > 0 && (
                       <div
-                        className="absolute top-0 h-full transition-all duration-300 hover:brightness-110 hover:scale-y-110"
+                        className="absolute top-0 h-full performance-bar"
                         style={{
                           left: `${preventiveWidth}%`,
                           width: `${correctiveWidth}%`,
@@ -127,7 +127,7 @@ export function TechnicianPerformanceChart() {
                     {/* Request segment */}
                     {tech.request > 0 && (
                       <div
-                        className="absolute top-0 h-full rounded-r-md transition-all duration-300 hover:brightness-110 hover:scale-y-110"
+                        className="absolute top-0 h-full rounded-r-md performance-bar"
                         style={{
                           left: `${preventiveWidth + correctiveWidth}%`,
                           width: `${requestWidth}%`,

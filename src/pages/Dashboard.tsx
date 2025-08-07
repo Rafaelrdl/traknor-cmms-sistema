@@ -103,18 +103,27 @@ export function Dashboard() {
                       </div>
                       
                       <div 
-                        className="w-6 rounded-t transition-all duration-200 hover:brightness-110 cursor-pointer"
-                        style={{ height: `${day.completed * 8}px`, backgroundColor: 'var(--primary)' }}
+                        className="w-6 rounded-t chart-bar"
+                        style={{ 
+                          height: `${day.completed * 8}px`, 
+                          backgroundColor: 'var(--primary)'
+                        }}
                         title={`Concluído: ${day.completed}`}
                       />
                       <div 
-                        className="w-6 rounded-t transition-all duration-200 hover:brightness-110 cursor-pointer"
-                        style={{ height: `${day.inProgress * 8}px`, backgroundColor: 'var(--destructive)' }}
+                        className="w-6 rounded-t chart-bar"
+                        style={{ 
+                          height: `${day.inProgress * 8}px`, 
+                          backgroundColor: 'var(--destructive)'
+                        }}
                         title={`Em Atraso: ${day.inProgress}`}
                       />
                       <div 
-                        className="w-6 rounded-t transition-all duration-200 hover:brightness-110 cursor-pointer"
-                        style={{ height: `${day.open * 8}px`, backgroundColor: 'var(--secondary)' }}
+                        className="w-6 rounded-t chart-bar"
+                        style={{ 
+                          height: `${day.open * 8}px`, 
+                          backgroundColor: 'var(--secondary)'
+                        }}
                         title={`Aberto: ${day.open}`}
                       />
                     </div>
@@ -170,7 +179,25 @@ export function Dashboard() {
                   
                   return (
                     <div className="relative w-32 h-32 group">
-                      <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 100 100">
+                      {/* Tooltip container - shown dynamically */}
+                      <div 
+                        id="donut-tooltip"
+                        className="absolute -top-16 left-1/2 transform -translate-x-1/2 bg-popover text-popover-foreground px-3 py-2 rounded-lg shadow-lg border text-xs whitespace-nowrap z-20 opacity-0 pointer-events-none transition-all duration-200"
+                      >
+                        <div className="font-medium mb-1" id="tooltip-title"></div>
+                        <div id="tooltip-content"></div>
+                        {/* Arrow */}
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-popover"></div>
+                      </div>
+
+                      <svg 
+                        className="w-32 h-32 transform -rotate-90" 
+                        viewBox="0 0 100 100"
+                        onMouseLeave={() => {
+                          const tooltip = document.getElementById('donut-tooltip');
+                          if (tooltip) tooltip.style.opacity = '0';
+                        }}
+                      >
                         {/* Background circle */}
                         <circle
                           cx="50"
@@ -192,8 +219,17 @@ export function Dashboard() {
                           strokeDasharray={`${functioningLength} ${circumference}`}
                           strokeDashoffset="0"
                           strokeLinecap="round"
-                          className="transition-all duration-300 hover:stroke-[12] hover:brightness-110 cursor-pointer"
-                          data-tooltip="funcionando"
+                          className="donut-segment"
+                          onMouseEnter={(e) => {
+                            const tooltip = document.getElementById('donut-tooltip');
+                            const title = document.getElementById('tooltip-title');
+                            const content = document.getElementById('tooltip-content');
+                            if (tooltip && title && content) {
+                              title.textContent = 'Funcionando';
+                              content.textContent = `${equipmentStatus.functioning} equipamentos (${functioningPercent.toFixed(1)}%)`;
+                              tooltip.style.opacity = '1';
+                            }
+                          }}
                         />
                         
                         {/* Maintenance segment (yellow) */}
@@ -207,8 +243,17 @@ export function Dashboard() {
                           strokeDasharray={`${maintenanceLength} ${circumference}`}
                           strokeDashoffset={-functioningLength}
                           strokeLinecap="round"
-                          className="transition-all duration-300 hover:stroke-[12] hover:brightness-110 cursor-pointer"
-                          data-tooltip="manutencao"
+                          className="donut-segment"
+                          onMouseEnter={(e) => {
+                            const tooltip = document.getElementById('donut-tooltip');
+                            const title = document.getElementById('tooltip-title');
+                            const content = document.getElementById('tooltip-content');
+                            if (tooltip && title && content) {
+                              title.textContent = 'Em Manutenção';
+                              content.textContent = `${equipmentStatus.maintenance} equipamentos (${maintenancePercent.toFixed(1)}%)`;
+                              tooltip.style.opacity = '1';
+                            }
+                          }}
                         />
                         
                         {/* Stopped segment (red) */}
@@ -217,13 +262,22 @@ export function Dashboard() {
                           cy="50"
                           r="40"
                           fill="transparent"
-                          stroke="var(--destructive)"
+                          stroke="#dc2626"
                           strokeWidth="10"
                           strokeDasharray={`${stoppedLength} ${circumference}`}
                           strokeDashoffset={-(functioningLength + maintenanceLength)}
                           strokeLinecap="round"
-                          className="transition-all duration-300 hover:stroke-[12] hover:brightness-110 cursor-pointer"
-                          data-tooltip="parado"
+                          className="donut-segment"
+                          onMouseEnter={(e) => {
+                            const tooltip = document.getElementById('donut-tooltip');
+                            const title = document.getElementById('tooltip-title');
+                            const content = document.getElementById('tooltip-content');
+                            if (tooltip && title && content) {
+                              title.textContent = 'Parado';
+                              content.textContent = `${equipmentStatus.stopped} equipamentos (${stoppedPercent.toFixed(1)}%)`;
+                              tooltip.style.opacity = '1';
+                            }
+                          }}
                         />
                       </svg>
                       
@@ -232,27 +286,6 @@ export function Dashboard() {
                         <span className="text-2xl font-bold transition-colors group-hover:text-primary">
                           {total}
                         </span>
-                      </div>
-
-                      {/* Hover tooltips for each segment */}
-                      <div className="absolute inset-0 pointer-events-none">
-                        {/* Functioning tooltip */}
-                        <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 invisible group-hover:[&[data-segment='functioning']]:visible bg-popover text-popover-foreground px-3 py-2 rounded-lg shadow-lg border text-xs whitespace-nowrap z-10" data-segment="functioning">
-                          <div className="font-medium">Funcionando</div>
-                          <div>{equipmentStatus.functioning} equipamentos ({functioningPercent.toFixed(1)}%)</div>
-                        </div>
-                        
-                        {/* Maintenance tooltip */}
-                        <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 invisible group-hover:[&[data-segment='maintenance']]:visible bg-popover text-popover-foreground px-3 py-2 rounded-lg shadow-lg border text-xs whitespace-nowrap z-10" data-segment="maintenance">
-                          <div className="font-medium">Em Manutenção</div>
-                          <div>{equipmentStatus.maintenance} equipamentos ({maintenancePercent.toFixed(1)}%)</div>
-                        </div>
-                        
-                        {/* Stopped tooltip */}
-                        <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 invisible group-hover:[&[data-segment='stopped']]:visible bg-popover text-popover-foreground px-3 py-2 rounded-lg shadow-lg border text-xs whitespace-nowrap z-10" data-segment="stopped">
-                          <div className="font-medium">Parado</div>
-                          <div>{equipmentStatus.stopped} equipamentos ({stoppedPercent.toFixed(1)}%)</div>
-                        </div>
                       </div>
                     </div>
                   );

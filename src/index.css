@@ -103,11 +103,44 @@ body {
 
   .chart-segment {
     @apply transition-all duration-300 cursor-pointer;
+    transform-origin: center center;
   }
 
   .chart-segment:hover {
-    filter: brightness(1.1);
-    transform: scaleY(1.05);
+    filter: brightness(1.1) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.15));
+  }
+
+  /* Bar chart specific effects */
+  .chart-bar {
+    @apply transition-all duration-300 cursor-pointer;
+    transform-origin: bottom center;
+  }
+
+  .chart-bar:hover {
+    filter: brightness(1.15) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.2));
+    transform: scaleX(1.1) scaleY(1.05);
+  }
+
+  /* Donut chart specific effects */
+  .donut-segment {
+    @apply transition-all duration-300 cursor-pointer;
+    transform-origin: 50% 50%;
+  }
+
+  .donut-segment:hover {
+    filter: brightness(1.1) drop-shadow(0 0 6px rgba(0, 0, 0, 0.2));
+    transform: scale(1.03);
+  }
+
+  /* Performance chart bar effects */
+  .performance-bar {
+    @apply transition-all duration-300 cursor-pointer;
+    transform-origin: left center;
+  }
+
+  .performance-bar:hover {
+    filter: brightness(1.15);
+    transform: scaleY(1.1);
   }
 
   .chart-legend-item {
@@ -120,5 +153,21 @@ body {
 
   .chart-legend-item:hover .chart-legend-dot {
     @apply scale-110;
+  }
+
+  /* Smooth animations for chart interactions */
+  @keyframes chartPulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+  }
+
+  .chart-pulse {
+    animation: chartPulse 2s ease-in-out infinite;
   }
 }
