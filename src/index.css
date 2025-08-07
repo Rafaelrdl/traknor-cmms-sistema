@@ -170,4 +170,109 @@ body {
   .chart-pulse {
     animation: chartPulse 2s ease-in-out infinite;
   }
+
+  /* Mobile location tree animations */
+  @keyframes slideInFromTop {
+    0% {
+      transform: translateY(-10px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-in {
+    animation: slideInFromTop 0.2s ease-out;
+  }
+
+  /* Enhanced tree node hover effects */
+  .tree-node {
+    @apply relative overflow-hidden;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .tree-node::before {
+    content: '';
+    @apply absolute inset-0 bg-primary/5 rounded-md;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.2s ease-in-out;
+    z-index: -1;
+  }
+
+  .tree-node:hover::before {
+    transform: scaleX(1);
+  }
+
+  .tree-node-selected::before {
+    transform: scaleX(1);
+    @apply bg-primary/10;
+  }
+
+  /* Card hover effects */
+  .location-card {
+    @apply transition-all duration-300 hover:shadow-lg hover:shadow-primary/10;
+    transform: translateZ(0);
+  }
+
+  .location-card:hover {
+    transform: translateY(-2px);
+  }
+
+  /* Button press effects */
+  .btn-press {
+    @apply active:scale-95 transition-transform duration-100;
+  }
+
+  /* Focus ring improvements */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  }
+
+  /* Mobile modal backdrop */
+  .modal-backdrop {
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.15s ease-out;
+  }
+
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  /* Enhanced tooltip styling */
+  .tooltip {
+    @apply absolute z-50 px-3 py-2 text-xs text-popover-foreground bg-popover border rounded-md shadow-md;
+    animation: tooltipShow 0.15s ease-out;
+    pointer-events: none;
+  }
+
+  @keyframes tooltipShow {
+    0% {
+      opacity: 0;
+      transform: scale(0.95) translateY(2px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  /* Responsive text utilities */
+  @media (max-width: 640px) {
+    .mobile-text-balance {
+      text-wrap: balance;
+    }
+    
+    .mobile-truncate {
+      @apply truncate;
+      max-width: calc(100vw - 8rem);
+    }
+  }
 }

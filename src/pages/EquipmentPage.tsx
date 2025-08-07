@@ -84,26 +84,34 @@ function AssetsContent() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-8rem)]">
-      {/* Sidebar - Location Tree */}
-      <div className="w-80 border-r bg-card">
-        <div className="flex flex-col h-full">
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-8rem)]">
+      {/* Sidebar - Location Tree - Hidden on mobile, shown on desktop */}
+      <div className="hidden lg:flex w-80 border-r bg-card">
+        <div className="flex flex-col h-full w-full">
           <div className="flex items-center justify-between p-4 border-b">
             <h3 className="font-semibold text-lg">Locais</h3>
           </div>
           <LocationTree />
         </div>
       </div>
+      
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Action Buttons */}
-        <div className="p-6 border-b bg-background">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Gestão de Ativos</h1>
-            <div className="flex items-center gap-2">
+        <div className="p-4 lg:p-6 border-b bg-background">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <h1 className="text-xl lg:text-2xl font-bold">Gestão de Ativos</h1>
+            
+            {/* Mobile Location Tree Toggle */}
+            <div className="lg:hidden">
+              <LocationTree />
+            </div>
+            
+            <div className="flex flex-wrap items-center gap-2">
               <Button 
                 onClick={() => handleCreateLocation('company')}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 text-sm"
+                size="sm"
               >
                 <Building2 className="h-4 w-4" />
                 + Empresa
@@ -112,7 +120,8 @@ function AssetsContent() {
                 onClick={() => handleCreateLocation('sector')}
                 disabled={companies.length === 0}
                 variant="outline"
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 text-sm"
+                size="sm"
               >
                 <MapPin className="h-4 w-4" />
                 + Setor
@@ -121,7 +130,8 @@ function AssetsContent() {
                 onClick={() => handleCreateLocation('subsection')}
                 disabled={sectors.length === 0}
                 variant="outline"
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 text-sm"
+                size="sm"
               >
                 <Users className="h-4 w-4" />
                 + Subsetor
@@ -131,7 +141,7 @@ function AssetsContent() {
         </div>
 
         {/* Details Panel */}
-        <div className="flex-1 p-6 overflow-auto">
+        <div className="flex-1 p-4 lg:p-6 overflow-auto">
           <LocationDetails 
             onEdit={handleEditLocation}
             onCreateAsset={handleCreateAsset}

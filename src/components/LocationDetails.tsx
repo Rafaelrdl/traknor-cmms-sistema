@@ -49,8 +49,8 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
 
   const renderCompanyDetails = (company: Company) => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+        <Card className="location-card">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Informações Gerais</CardTitle>
           </CardHeader>
@@ -70,16 +70,16 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="location-card">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Endereço</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Endereço Completo</label>
-              <p>{company.address.fullAddress}</p>
+              <p className="break-words">{company.address.fullAddress}</p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Cidade</label>
                 <p>{company.address.city}</p>
@@ -92,7 +92,7 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="location-card">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Informações de Contato</CardTitle>
           </CardHeader>
@@ -111,17 +111,17 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Email</label>
-              <p>{company.email}</p>
+              <p className="break-all">{company.email}</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="location-card">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Dados Operacionais</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Área Total</label>
                 <p className="font-medium">{company.totalArea.toLocaleString()} m²</p>
@@ -138,7 +138,7 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
             {company.notes && (
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Observações Adicionais</label>
-                <p>{company.notes}</p>
+                <p className="break-words">{company.notes}</p>
               </div>
             )}
           </CardContent>
@@ -149,8 +149,8 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
 
   const renderSectorDetails = (sector: Sector) => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+        <Card className="location-card">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Informações de Contato</CardTitle>
           </CardHeader>
@@ -165,17 +165,17 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Email</label>
-              <p>{sector.email}</p>
+              <p className="break-all">{sector.email}</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="location-card">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Dados Operacionais</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Área</label>
                 <p className="font-medium">{sector.area.toLocaleString()} m²</p>
@@ -192,7 +192,7 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
             {sector.notes && (
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Observações Adicionais</label>
-                <p>{sector.notes}</p>
+                <p className="break-words">{sector.notes}</p>
               </div>
             )}
           </CardContent>
@@ -203,8 +203,8 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
 
   const renderSubSectionDetails = (subSection: SubSection) => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+        <Card className="location-card">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Informações de Contato</CardTitle>
           </CardHeader>
@@ -219,17 +219,17 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Email</label>
-              <p>{subSection.email}</p>
+              <p className="break-all">{subSection.email}</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="location-card">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Dados Operacionais</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Área</label>
                 <p className="font-medium">{subSection.area.toLocaleString()} m²</p>
@@ -246,7 +246,7 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
             {subSection.notes && (
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Observações Adicionais</label>
-                <p>{subSection.notes}</p>
+                <p className="break-words">{subSection.notes}</p>
               </div>
             )}
           </CardContent>
@@ -258,25 +258,39 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           {getIcon()}
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-2xl font-bold">{selectedNode.name}</h2>
+              <h2 className="text-xl lg:text-2xl font-bold">{selectedNode.name}</h2>
               <Badge variant="secondary">{getTypeLabel()}</Badge>
             </div>
           </div>
         </div>
         
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={onEdit} className="flex items-center gap-2">
+          {/* + Ativo button - Hide when company is selected */}
+          {selectedNode.type !== 'company' && (
+            <Button 
+              onClick={onCreateAsset} 
+              className="btn-press flex items-center gap-2"
+              aria-label="Adicionar novo ativo"
+            >
+              <Plus className="h-4 w-4" />
+              + Ativo
+            </Button>
+          )}
+          
+          {/* Editar button */}
+          <Button 
+            variant="outline" 
+            onClick={onEdit} 
+            className="btn-press flex items-center gap-2"
+            aria-label="Editar localização"
+          >
             <Edit className="h-4 w-4" />
             Editar
-          </Button>
-          <Button onClick={onCreateAsset} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Ativo
           </Button>
         </div>
       </div>
