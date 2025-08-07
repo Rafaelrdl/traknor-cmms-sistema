@@ -6,7 +6,8 @@ import type {
   WorkOrder, 
   MaintenancePlan, 
   StockItem,
-  DashboardKPIs 
+  DashboardKPIs,
+  TechnicianPerformance
 } from '@/types';
 
 /**
@@ -412,7 +413,16 @@ export const MOCK_CHART_DATA = {
     { month: 'Abr', efficiency: 88 },
     { month: 'Mai', efficiency: 90 },
     { month: 'Jun', efficiency: 92 }
-  ]
+  ],
+
+  // Dados para gráfico de desempenho por técnico
+  technicianPerformance: [
+    { name: 'José Silva', preventive: 12, corrective: 3, request: 2 },
+    { name: 'Carlos Pereira', preventive: 15, corrective: 2, request: 4 },
+    { name: 'Roberto Oliveira', preventive: 8, corrective: 5, request: 1 },
+    { name: 'Ana Costa', preventive: 10, corrective: 4, request: 3 },
+    { name: 'Maria Santos', preventive: 13, corrective: 1, request: 2 }
+  ] as TechnicianPerformance[]
 };
 
 // ============= FUNÇÕES GERADORAS (para compatibilidade) =============
