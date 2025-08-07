@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import ReactECharts from 'echarts-for-react';
 import { Users } from 'lucide-react';
 import { useChartData } from '@/hooks/useDataTemp';
 import type { TechnicianPerformance } from '@/types';
@@ -8,77 +7,11 @@ export function TechnicianPerformanceChart() {
   const [chartData] = useChartData();
   const technicianData = chartData?.technicianPerformance || [];
 
-  const option = {
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: {
-        type: 'shadow'
-      },
-      formatter: function (params: any) {
-        let result = `<strong>${params[0].name}</strong><br/>`;
-        let total = 0;
-        params.forEach((param: any) => {
-          result += `${param.marker} ${param.seriesName}: ${param.value}<br/>`;
-          total += param.value;
-        });
-        result += `<strong>Total: ${total}</strong>`;
-        return result;
-      }
-    },
-    legend: {
-      data: ['Preventiva', 'Corretiva', 'Solicitação'],
-      bottom: 0,
-      textStyle: {
-        fontSize: 12
-      }
-    },
-    grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '12%',
-      containLabel: true
-    },
-    xAxis: {
-      type: 'value',
-      splitLine: {
-        show: true,
-        lineStyle: {
-          color: '#f0f0f0'
-        }
-      }
-    },
-    yAxis: {
-      type: 'category',
-      data: technicianData.map(item => item.name),
-      axisLabel: {
-        fontSize: 11
-      }
-    },
-    series: [
-      {
-        name: 'Preventiva',
-        type: 'bar',
-        stack: 'total',
-        color: '#00968f',
-        data: technicianData.map(item => item.preventive),
-        barCategoryGap: '60%'
-      },
-      {
-        name: 'Corretiva',
-        type: 'bar',
-        stack: 'total',
-        color: '#ffbe0b',
-        data: technicianData.map(item => item.corrective)
-      },
-      {
-        name: 'Solicitação',
-        type: 'bar',
-        stack: 'total',
-        color: '#715aff',
-        data: technicianData.map(item => item.request)
-      }
-    ]
-  };
+  // Calculate max value for scaling bars
+  const maxValue = technicianData.reduce((max, tech) => {
+    const total = tech.preventive + tech.corrective + tech.request;
+    return Math.max(max, total);
+  }, 0);
 
   // Generate aria-label for accessibility
   const totalWorkOrders = technicianData.reduce((sum, tech) => 
@@ -117,25 +50,114 @@ export function TechnicianPerformanceChart() {
         </CardTitle>
       </CardHeader>
       <CardContent>
+        <div className="space-y-6">
+          {/* Chart bars */}
+          <div className="space-y-4">
+            {technicianData.map((tech, index) => {
+              const total = tech.preventive + tech.corrective + tech.request;
+              const preventiveWidth = maxValue > 0 ? (tech.preventive / maxValue) * 100 : 0;
+              const correctiveWidth = maxValue > 0 ? (tech.corrective / maxValue) * 100 : 0;
+              const requestWidth = maxValue > 0 ? (tech.request / maxValue) * 100 : 0;
+              
+              return (
+                <div key={tech.name} className="space-y-2">
+                  {/* Technician name and total */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground truncate">
+                      {tech.name}
+                    </span>
+                    <span className="text-xs text-muted-foreground font-medium ml-2">
+                      {total}
+                    </span>
+                  </div>
+                  
+                  {/* Stacked horizontal bar */}
+                  <div 
+                    className="relative h-6 bg-muted/30 rounded-md overflow-hidden"
+                    role="progressbar" 
+                    aria-label={`${tech.name}: ${total} ordens de serviço total`}
+                    tabIndex={0}
+                  >
+                    {/* Preventive segment */}
+                    {tech.preventive > 0 && (
+                      <div
+                        className="absolute left-0 top-0 h-full rounded-l-md transition-all duration-300"
+                        style={{
+                          width: `${preventiveWidth}%`,
+                          backgroundColor: '#00968f'
+                        }}
+                        title={`Preventiva: ${tech.preventive}`}
+                      />
+                    )}
+                    
+                    {/* Corrective segment */}
+                    {tech.corrective > 0 && (
+                      <div
+                        className="absolute top-0 h-full transition-all duration-300"
+                        style={{
+                          left: `${preventiveWidth}%`,
+                          width: `${correctiveWidth}%`,
+                          backgroundColor: '#ffbe0b'
+                        }}
+                        title={`Corretiva: ${tech.corrective}`}
+                      />
+                    )}
+                    
+                    {/* Request segment */}
+                    {tech.request > 0 && (
+                      <div
+                        className="absolute top-0 h-full rounded-r-md transition-all duration-300"
+                        style={{
+                          left: `${preventiveWidth + correctiveWidth}%`,
+                          width: `${requestWidth}%`,
+                          backgroundColor: '#715aff'
+                        }}
+                        title={`Solicitação: ${tech.request}`}
+                      />
+                    )}
+                    
+                    {/* Accessible text for screen readers */}
+                    <span className="sr-only">
+                      {tech.name}: {tech.preventive} preventivas, {tech.corrective} corretivas, {tech.request} solicitações
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          
+          {/* Legend */}
+          <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-border">
+            <div className="flex items-center gap-2">
+              <div 
+                className="w-3 h-3 rounded"
+                style={{ backgroundColor: '#00968f' }}
+              />
+              <span className="text-sm text-foreground">Preventiva</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div 
+                className="w-3 h-3 rounded"
+                style={{ backgroundColor: '#ffbe0b' }}
+              />
+              <span className="text-sm text-foreground">Corretiva</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div 
+                className="w-3 h-3 rounded"
+                style={{ backgroundColor: '#715aff' }}
+              />
+              <span className="text-sm text-foreground">Solicitação</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Hidden accessible description */}
         <div 
           role="img" 
           aria-label={ariaLabel}
-          tabIndex={0}
-          onKeyDown={(e) => {
-            // Allow keyboard navigation for accessibility
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-              e.preventDefault();
-              // Focus management could be enhanced here for full accessibility
-            }
-          }}
-        >
-          <ReactECharts 
-            option={option} 
-            style={{ height: '300px' }} 
-            opts={{ renderer: 'canvas' }}
-            lazyUpdate={true}
-          />
-        </div>
+          className="sr-only"
+        />
       </CardContent>
     </Card>
   );
