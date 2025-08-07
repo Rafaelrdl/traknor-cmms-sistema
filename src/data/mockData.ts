@@ -210,7 +210,13 @@ export const MOCK_EQUIPMENT: Equipment[] = [
     sectorId: '1',
     installDate: '2022-03-15',
     nextMaintenance: '2024-04-15',
-    status: 'FUNCTIONING'
+    status: 'FUNCTIONING',
+    serialNumber: 'CAR123456789',
+    totalOperatingHours: 15678,
+    energyConsumption: 320,
+    warrantyExpiry: '2025-03-15',
+    location: 'Casa de Máquinas - Térreo',
+    notes: 'Equipamento principal do sistema de climatização'
   },
   {
     id: '2',
@@ -222,7 +228,13 @@ export const MOCK_EQUIPMENT: Equipment[] = [
     sectorId: '2',
     installDate: '2023-01-20',
     nextMaintenance: '2024-04-20',
-    status: 'FUNCTIONING'
+    status: 'FUNCTIONING',
+    serialNumber: 'LG987654321',
+    totalOperatingHours: 8760,
+    energyConsumption: 180,
+    warrantyExpiry: '2025-01-20',
+    location: 'Sala de TI - Parede Norte',
+    notes: 'Split instalado para refrigeração específica do servidor'
   },
   {
     id: '3',
@@ -230,11 +242,72 @@ export const MOCK_EQUIPMENT: Equipment[] = [
     model: 'York YK-500',
     brand: 'Johnson Controls',
     type: 'CHILLER',
-    capacity: 500, // TR
+    capacity: 500000, // BTU/h (convertido de TR)
     sectorId: '3',
     installDate: '2021-06-10',
     nextMaintenance: '2024-04-10',
-    status: 'MAINTENANCE'
+    status: 'MAINTENANCE',
+    serialNumber: 'YRK555444333',
+    totalOperatingHours: 24000,
+    energyConsumption: 450,
+    warrantyExpiry: '2024-06-10',
+    location: 'Casa de Máquinas Industrial - 2º Andar',
+    notes: 'Chiller para resfriamento industrial, manutenção programada semestralmente'
+  },
+  {
+    id: '4',
+    tag: 'VRF-004',
+    model: 'Daikin VRV IV-S',
+    brand: 'Daikin',
+    type: 'VRF',
+    capacity: 54000,
+    sectorId: '1',
+    subSectionId: '1',
+    installDate: '2023-06-15',
+    nextMaintenance: '2024-03-15',
+    status: 'FUNCTIONING',
+    serialNumber: 'DAI111222333',
+    totalOperatingHours: 6500,
+    energyConsumption: 210,
+    warrantyExpiry: '2028-06-15',
+    location: 'Escritório Administrativo - Sala 205',
+    notes: 'Sistema VRF com 4 evaporadoras internas'
+  },
+  {
+    id: '5',
+    tag: 'SPL-005',
+    model: 'Midea Inverter 18K',
+    brand: 'Midea',
+    type: 'SPLIT',
+    capacity: 18000,
+    sectorId: '4',
+    installDate: '2023-09-10',
+    nextMaintenance: '2024-01-20',
+    status: 'STOPPED',
+    serialNumber: 'MID666777888',
+    totalOperatingHours: 3200,
+    energyConsumption: 160,
+    warrantyExpiry: '2025-09-10',
+    location: 'Linha de Montagem A - Área Central',
+    notes: 'Equipamento parado para manutenção corretiva'
+  },
+  {
+    id: '6',
+    tag: 'CLI-006',
+    model: 'Trane CRG-220',
+    brand: 'Trane',
+    type: 'CENTRAL',
+    capacity: 220000,
+    sectorId: '5',
+    installDate: '2022-11-20',
+    nextMaintenance: '2024-05-20',
+    status: 'FUNCTIONING',
+    serialNumber: 'TRA999888777',
+    totalOperatingHours: 12500,
+    energyConsumption: 380,
+    warrantyExpiry: '2025-11-20',
+    location: 'Controle de Qualidade - Casa de Máquinas',
+    notes: 'Sistema central para ambiente controlado de qualidade'
   }
 ];
 
