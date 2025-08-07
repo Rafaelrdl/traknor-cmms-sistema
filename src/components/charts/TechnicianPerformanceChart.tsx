@@ -60,28 +60,49 @@ export function TechnicianPerformanceChart() {
               const requestWidth = maxValue > 0 ? (tech.request / maxValue) * 100 : 0;
               
               return (
-                <div key={tech.name} className="space-y-2">
+                <div key={tech.name} className="space-y-2 group">
                   {/* Technician name and total */}
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-foreground truncate">
+                    <span className="text-sm font-medium text-foreground truncate transition-colors group-hover:text-primary">
                       {tech.name}
                     </span>
-                    <span className="text-xs text-muted-foreground font-medium ml-2">
+                    <span className="text-xs text-muted-foreground font-medium ml-2 transition-colors group-hover:text-foreground">
                       {total}
                     </span>
                   </div>
                   
                   {/* Stacked horizontal bar */}
                   <div 
-                    className="relative h-6 bg-muted/30 rounded-md overflow-hidden"
+                    className="relative h-6 bg-muted/30 rounded-md overflow-hidden group cursor-pointer"
                     role="progressbar" 
                     aria-label={`${tech.name}: ${total} ordens de serviço total`}
                     tabIndex={0}
                   >
+                    {/* Hover tooltip */}
+                    <div className="invisible group-hover:visible absolute -top-16 left-1/2 transform -translate-x-1/2 bg-popover text-popover-foreground px-3 py-2 rounded-lg shadow-lg border text-xs whitespace-nowrap z-20">
+                      <div className="font-medium mb-1">{tech.name}</div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded" style={{ backgroundColor: '#00968f' }}></div>
+                          <span>Preventiva: {tech.preventive}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded" style={{ backgroundColor: '#ffbe0b' }}></div>
+                          <span>Corretiva: {tech.corrective}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded" style={{ backgroundColor: '#715aff' }}></div>
+                          <span>Solicitação: {tech.request}</span>
+                        </div>
+                      </div>
+                      {/* Arrow */}
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-popover"></div>
+                    </div>
+
                     {/* Preventive segment */}
                     {tech.preventive > 0 && (
                       <div
-                        className="absolute left-0 top-0 h-full rounded-l-md transition-all duration-300"
+                        className="absolute left-0 top-0 h-full rounded-l-md transition-all duration-300 hover:brightness-110 hover:scale-y-110"
                         style={{
                           width: `${preventiveWidth}%`,
                           backgroundColor: '#00968f'
@@ -93,7 +114,7 @@ export function TechnicianPerformanceChart() {
                     {/* Corrective segment */}
                     {tech.corrective > 0 && (
                       <div
-                        className="absolute top-0 h-full transition-all duration-300"
+                        className="absolute top-0 h-full transition-all duration-300 hover:brightness-110 hover:scale-y-110"
                         style={{
                           left: `${preventiveWidth}%`,
                           width: `${correctiveWidth}%`,
@@ -106,7 +127,7 @@ export function TechnicianPerformanceChart() {
                     {/* Request segment */}
                     {tech.request > 0 && (
                       <div
-                        className="absolute top-0 h-full rounded-r-md transition-all duration-300"
+                        className="absolute top-0 h-full rounded-r-md transition-all duration-300 hover:brightness-110 hover:scale-y-110"
                         style={{
                           left: `${preventiveWidth + correctiveWidth}%`,
                           width: `${requestWidth}%`,
@@ -128,26 +149,26 @@ export function TechnicianPerformanceChart() {
           
           {/* Legend */}
           <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-border">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 hover:bg-muted/50 rounded-lg px-2 py-1 transition-colors cursor-pointer group">
               <div 
-                className="w-3 h-3 rounded"
+                className="w-3 h-3 rounded transition-transform group-hover:scale-110"
                 style={{ backgroundColor: '#00968f' }}
               />
-              <span className="text-sm text-foreground">Preventiva</span>
+              <span className="text-sm text-foreground transition-colors group-hover:text-primary">Preventiva</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 hover:bg-muted/50 rounded-lg px-2 py-1 transition-colors cursor-pointer group">
               <div 
-                className="w-3 h-3 rounded"
+                className="w-3 h-3 rounded transition-transform group-hover:scale-110"
                 style={{ backgroundColor: '#ffbe0b' }}
               />
-              <span className="text-sm text-foreground">Corretiva</span>
+              <span className="text-sm text-foreground transition-colors group-hover:text-primary">Corretiva</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 hover:bg-muted/50 rounded-lg px-2 py-1 transition-colors cursor-pointer group">
               <div 
-                className="w-3 h-3 rounded"
+                className="w-3 h-3 rounded transition-transform group-hover:scale-110"
                 style={{ backgroundColor: '#715aff' }}
               />
-              <span className="text-sm text-foreground">Solicitação</span>
+              <span className="text-sm text-foreground transition-colors group-hover:text-primary">Solicitação</span>
             </div>
           </div>
         </div>

@@ -79,37 +79,61 @@ export function Dashboard() {
               {/* Simple chart representation */}
               <div className="flex items-end justify-between h-40 border-b border-border">
                 {weeklyData.map((day) => (
-                  <div key={day.day} className="flex flex-col items-center gap-2">
-                    <div className="flex flex-col items-center gap-1">
+                  <div key={day.day} className="flex flex-col items-center gap-2 group">
+                    <div className="flex flex-col items-center gap-1 relative">
+                      {/* Hover tooltip */}
+                      <div className="invisible group-hover:visible absolute -top-16 left-1/2 transform -translate-x-1/2 bg-popover text-popover-foreground px-3 py-2 rounded-lg shadow-lg border text-xs whitespace-nowrap z-10">
+                        <div className="font-medium mb-1">{day.day}</div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded" style={{ backgroundColor: 'var(--primary)' }}></div>
+                            <span>Concluído: {day.completed}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded" style={{ backgroundColor: 'var(--destructive)' }}></div>
+                            <span>Em Atraso: {day.inProgress}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded" style={{ backgroundColor: 'var(--secondary)' }}></div>
+                            <span>Aberto: {day.open}</span>
+                          </div>
+                        </div>
+                        {/* Arrow */}
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-popover"></div>
+                      </div>
+                      
                       <div 
-                        className="w-6 rounded-t"
+                        className="w-6 rounded-t transition-all duration-200 hover:brightness-110 cursor-pointer"
                         style={{ height: `${day.completed * 8}px`, backgroundColor: 'var(--primary)' }}
+                        title={`Concluído: ${day.completed}`}
                       />
                       <div 
-                        className="w-6 rounded-t"
+                        className="w-6 rounded-t transition-all duration-200 hover:brightness-110 cursor-pointer"
                         style={{ height: `${day.inProgress * 8}px`, backgroundColor: 'var(--destructive)' }}
+                        title={`Em Atraso: ${day.inProgress}`}
                       />
                       <div 
-                        className="w-6 rounded-t"
+                        className="w-6 rounded-t transition-all duration-200 hover:brightness-110 cursor-pointer"
                         style={{ height: `${day.open * 8}px`, backgroundColor: 'var(--secondary)' }}
+                        title={`Aberto: ${day.open}`}
                       />
                     </div>
-                    <span className="text-xs text-muted-foreground">{day.day}</span>
+                    <span className="text-xs text-muted-foreground transition-colors group-hover:text-foreground">{day.day}</span>
                   </div>
                 ))}
               </div>
               <div className="flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--primary)' }} />
-                  <span>Concluído</span>
+                <div className="flex items-center gap-2 hover:bg-muted/50 rounded-lg px-2 py-1 transition-colors cursor-pointer group">
+                  <div className="w-3 h-3 rounded transition-transform group-hover:scale-110" style={{ backgroundColor: 'var(--primary)' }} />
+                  <span className="transition-colors group-hover:text-foreground">Concluído</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--destructive)' }} />
-                  <span>Em Atraso</span>
+                <div className="flex items-center gap-2 hover:bg-muted/50 rounded-lg px-2 py-1 transition-colors cursor-pointer group">
+                  <div className="w-3 h-3 rounded transition-transform group-hover:scale-110" style={{ backgroundColor: 'var(--destructive)' }} />
+                  <span className="transition-colors group-hover:text-foreground">Em Atraso</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--secondary)' }} />
-                  <span>Aberto</span>
+                <div className="flex items-center gap-2 hover:bg-muted/50 rounded-lg px-2 py-1 transition-colors cursor-pointer group">
+                  <div className="w-3 h-3 rounded transition-transform group-hover:scale-110" style={{ backgroundColor: 'var(--secondary)' }} />
+                  <span className="transition-colors group-hover:text-foreground">Aberto</span>
                 </div>
               </div>
             </div>
@@ -145,7 +169,7 @@ export function Dashboard() {
                   const stoppedLength = (stoppedPercent / 100) * circumference;
                   
                   return (
-                    <div className="relative w-32 h-32">
+                    <div className="relative w-32 h-32 group">
                       <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 100 100">
                         {/* Background circle */}
                         <circle
@@ -168,6 +192,8 @@ export function Dashboard() {
                           strokeDasharray={`${functioningLength} ${circumference}`}
                           strokeDashoffset="0"
                           strokeLinecap="round"
+                          className="transition-all duration-300 hover:stroke-[12] hover:brightness-110 cursor-pointer"
+                          data-tooltip="funcionando"
                         />
                         
                         {/* Maintenance segment (yellow) */}
@@ -181,6 +207,8 @@ export function Dashboard() {
                           strokeDasharray={`${maintenanceLength} ${circumference}`}
                           strokeDashoffset={-functioningLength}
                           strokeLinecap="round"
+                          className="transition-all duration-300 hover:stroke-[12] hover:brightness-110 cursor-pointer"
+                          data-tooltip="manutencao"
                         />
                         
                         {/* Stopped segment (red) */}
@@ -194,42 +222,65 @@ export function Dashboard() {
                           strokeDasharray={`${stoppedLength} ${circumference}`}
                           strokeDashoffset={-(functioningLength + maintenanceLength)}
                           strokeLinecap="round"
+                          className="transition-all duration-300 hover:stroke-[12] hover:brightness-110 cursor-pointer"
+                          data-tooltip="parado"
                         />
                       </svg>
                       
                       {/* Center number */}
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-2xl font-bold">
+                        <span className="text-2xl font-bold transition-colors group-hover:text-primary">
                           {total}
                         </span>
+                      </div>
+
+                      {/* Hover tooltips for each segment */}
+                      <div className="absolute inset-0 pointer-events-none">
+                        {/* Functioning tooltip */}
+                        <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 invisible group-hover:[&[data-segment='functioning']]:visible bg-popover text-popover-foreground px-3 py-2 rounded-lg shadow-lg border text-xs whitespace-nowrap z-10" data-segment="functioning">
+                          <div className="font-medium">Funcionando</div>
+                          <div>{equipmentStatus.functioning} equipamentos ({functioningPercent.toFixed(1)}%)</div>
+                        </div>
+                        
+                        {/* Maintenance tooltip */}
+                        <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 invisible group-hover:[&[data-segment='maintenance']]:visible bg-popover text-popover-foreground px-3 py-2 rounded-lg shadow-lg border text-xs whitespace-nowrap z-10" data-segment="maintenance">
+                          <div className="font-medium">Em Manutenção</div>
+                          <div>{equipmentStatus.maintenance} equipamentos ({maintenancePercent.toFixed(1)}%)</div>
+                        </div>
+                        
+                        {/* Stopped tooltip */}
+                        <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 invisible group-hover:[&[data-segment='stopped']]:visible bg-popover text-popover-foreground px-3 py-2 rounded-lg shadow-lg border text-xs whitespace-nowrap z-10" data-segment="stopped">
+                          <div className="font-medium">Parado</div>
+                          <div>{equipmentStatus.stopped} equipamentos ({stoppedPercent.toFixed(1)}%)</div>
+                        </div>
                       </div>
                     </div>
                   );
                 })()}
               </div>
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between hover:bg-muted/50 rounded-lg px-2 py-1 transition-colors cursor-pointer group">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--primary)' }} />
-                    <span className="text-sm">Funcionando</span>
+                    <div className="w-3 h-3 rounded transition-transform group-hover:scale-110" style={{ backgroundColor: 'var(--primary)' }} />
+                    <span className="text-sm transition-colors group-hover:text-foreground">Funcionando</span>
                   </div>
                   <span className="text-sm font-medium">
                     {chartData?.equipmentStatus?.functioning || 0}
                   </span>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between hover:bg-muted/50 rounded-lg px-2 py-1 transition-colors cursor-pointer group">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-yellow-500 rounded" />
-                    <span className="text-sm">Em Manutenção</span>
+                    <div className="w-3 h-3 bg-yellow-500 rounded transition-transform group-hover:scale-110" />
+                    <span className="text-sm transition-colors group-hover:text-foreground">Em Manutenção</span>
                   </div>
                   <span className="text-sm font-medium">
                     {chartData?.equipmentStatus?.maintenance || 0}
                   </span>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between hover:bg-muted/50 rounded-lg px-2 py-1 transition-colors cursor-pointer group">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--destructive)' }} />
-                    <span className="text-sm">Parado</span>
+                    <div className="w-3 h-3 rounded transition-transform group-hover:scale-110" style={{ backgroundColor: 'var(--destructive)' }} />
+                    <span className="text-sm transition-colors group-hover:text-foreground">Parado</span>
                   </div>
                   <span className="text-sm font-medium">
                     {chartData?.equipmentStatus?.stopped || 0}
