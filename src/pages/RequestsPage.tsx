@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { MessageSquare, Users, Calendar, ExternalLink } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { SolicitationsDrawer } from '@/components/SolicitationsDrawer';
+import { SolicitationFilters, type SolicitationFilters as SolicitationFiltersType } from '@/components/SolicitationFilters';
 import { toast } from 'sonner';
 import {
   useSolicitations,
@@ -13,6 +14,7 @@ import {
   useStockItems,
   convertSolicitationToWorkOrder
 } from '@/hooks/useDataTemp';
+import { filterSolicitations, getFilterOptions } from '@/utils/solicitationFilters';
 import type { Solicitation } from '@/types';
 
 export function RequestsPage() {
@@ -20,6 +22,16 @@ export function RequestsPage() {
   const [workOrders, setWorkOrders] = useWorkOrders();
   const [stockItems] = useStockItems();
   const [selectedSolicitation, setSelectedSolicitation] = useState<Solicitation | null>(null);
+  const [filters, setFilters] = useState<SolicitationFiltersType>({});
+
+  // Get filter options from all solicitations
+  const filterOptions = useMemo(() => getFilterOptions(solicitations), [solicitations]);
+
+  // Apply filters to solicitations
+  const filteredSolicitations = useMemo(() => 
+    filterSolicitations(solicitations, filters), 
+    [solicitations, filters]
+  );
 
   const handleRowClick = (solicitation: Solicitation) => {
     setSelectedSolicitation(solicitation);
@@ -77,13 +89,16 @@ export function RequestsPage() {
     return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
   };
 
-  // Statistics
+  // Statistics - use filtered data for more accurate stats
   const stats = {
-    total: solicitations.length,
-    nova: solicitations.filter(s => s.status === 'Nova').length,
-    triagem: solicitations.filter(s => s.status === 'Em triagem').length,
-    convertida: solicitations.filter(s => s.status === 'Convertida em OS').length
+    total: filteredSolicitations.length,
+    nova: filteredSolicitations.filter(s => s.status === 'Nova').length,
+    triagem: filteredSolicitations.filter(s => s.status === 'Em triagem').length,
+    convertida: filteredSolicitations.filter(s => s.status === 'Convertida em OS').length
   };
+
+  // Show total vs filtered count
+  const showingFiltered = filteredSolicitations.length !== solicitations.length;
 
   return (
     <div className="space-y-6">
@@ -96,7 +111,9 @@ export function RequestsPage() {
             <div className="flex items-center">
               <MessageSquare className="h-8 w-8 text-muted-foreground" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Total</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total {showingFiltered && `(${solicitations.length})`}
+                </p>
                 <div className="text-2xl font-bold">{stats.total}</div>
               </div>
             </div>
@@ -146,16 +163,30 @@ export function RequestsPage() {
         </Card>
       </div>
 
+      {/* Filters */}
+      <SolicitationFilters
+        filters={filters}
+        onFiltersChange={setFilters}
+        equipmentOptions={filterOptions.equipmentOptions}
+        locationOptions={filterOptions.locationOptions}
+        requesterOptions={filterOptions.requesterOptions}
+      />
+
       {/* Main Table */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5" />
             Lista de Solicitações
+            {showingFiltered && (
+              <Badge variant="secondary" className="ml-2">
+                {stats.total} de {solicitations.length}
+              </Badge>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {solicitations.length > 0 ? (
+          {filteredSolicitations.length > 0 ? (
             <div className="overflow-x-auto">
               <table 
                 className="w-full" 
@@ -182,7 +213,7 @@ export function RequestsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {solicitations.map((solicitation) => (
+                  {filteredSolicitations.map((solicitation) => (
                     <tr
                       key={solicitation.id}
                       className="border-b hover:bg-muted/50 cursor-pointer transition-colors"
@@ -246,10 +277,25 @@ export function RequestsPage() {
           ) : (
             <div className="text-center py-12">
               <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-              <h3 className="text-lg font-medium mb-2">Nenhuma solicitação encontrada</h3>
+              <h3 className="text-lg font-medium mb-2">
+                {showingFiltered ? 'Nenhuma solicitação encontrada com os filtros aplicados' : 'Nenhuma solicitação encontrada'}
+              </h3>
               <p className="text-muted-foreground">
-                Não há solicitações cadastradas no sistema.
+                {showingFiltered 
+                  ? 'Tente ajustar os filtros ou limpe-os para ver todas as solicitações.'
+                  : 'Não há solicitações cadastradas no sistema.'
+                }
               </p>
+              {showingFiltered && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-4"
+                  onClick={() => setFilters({})}
+                >
+                  Limpar Filtros
+                </Button>
+              )}
             </div>
           )}
         </CardContent>
