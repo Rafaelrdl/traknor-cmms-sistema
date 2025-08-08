@@ -69,14 +69,21 @@ export const useEquipment = (): [Equipment[], (value: Equipment[] | ((current: E
 };
 
 export const useWorkOrders = (): [WorkOrder[], (value: WorkOrder[] | ((current: WorkOrder[]) => WorkOrder[])) => void, () => void] => {
-  const [data] = useState<WorkOrder[]>(MOCK_WORK_ORDERS);
-  const setData = (value: WorkOrder[] | ((current: WorkOrder[]) => WorkOrder[])) => {
-    console.log('WorkOrders updated:', value);
+  const [data, setData] = useState<WorkOrder[]>(MOCK_WORK_ORDERS);
+  
+  const updateData = (value: WorkOrder[] | ((current: WorkOrder[]) => WorkOrder[])) => {
+    if (typeof value === 'function') {
+      setData(current => value(current));
+    } else {
+      setData(value);
+    }
   };
+
   const deleteData = () => {
-    console.log('WorkOrders deleted');
+    setData([]);
   };
-  return [data, setData, deleteData];
+  
+  return [data, updateData, deleteData];
 };
 
 export const useMaintenancePlans = (): [MaintenancePlan[], (value: MaintenancePlan[] | ((current: MaintenancePlan[]) => MaintenancePlan[])) => void, () => void] => {
@@ -100,6 +107,9 @@ export const useStock = (): [StockItem[], (value: StockItem[] | ((current: Stock
   };
   return [data, setData, deleteData];
 };
+
+// Alias for useStock to match component expectations
+export const useStockItems = useStock;
 
 export const useDashboardKPIs = (): [DashboardKPIs, (value: DashboardKPIs | ((current: DashboardKPIs) => DashboardKPIs)) => void, () => void] => {
   const [data] = useState<DashboardKPIs>(MOCK_DASHBOARD_KPIS);

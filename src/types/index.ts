@@ -103,7 +103,18 @@ export interface WorkOrder {
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   description: string;
   completedAt?: string;
+  stockItems?: WorkOrderStockItem[];
 }
+
+export interface WorkOrderStockItem {
+  id: string;
+  workOrderId: string;
+  stockItemId: string;
+  quantity: number;
+  stockItem?: StockItem;
+}
+
+export type WorkOrderView = 'list' | 'kanban' | 'panel';
 
 export interface ChecklistItem {
   id: string;

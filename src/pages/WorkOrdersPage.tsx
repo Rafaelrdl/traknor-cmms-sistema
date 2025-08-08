@@ -3,7 +3,6 @@ import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -12,7 +11,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, ClipboardList, Play, CheckCircle, Camera } from 'lucide-react';
+import { ViewToggle } from '@/components/ViewToggle';
+import { WorkOrderList } from '@/components/WorkOrderList';
+import { WorkOrderKanban } from '@/components/WorkOrderKanban';
+import { WorkOrderPanel } from '@/components/WorkOrderPanel';
+import { EditWorkOrderDrawer } from '@/components/EditWorkOrderDrawer';
+import { WorkOrderModal } from '@/components/WorkOrderModal';
 import { useWorkOrders, useEquipment, useSectors, useCompanies } from '@/hooks/useDataTemp';
+import { useWorkOrderView } from '@/hooks/useWorkOrderView';
 import type { WorkOrder, ChecklistItem } from '@/types';
 
 const mockChecklist: ChecklistItem[] = [
@@ -48,9 +54,12 @@ export function WorkOrdersPage() {
   const [equipment] = useEquipment();
   const [sectors] = useSectors();
   const [companies] = useCompanies();
+  const [view, setView] = useWorkOrderView();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [selectedOrder, setSelectedOrder] = useState<WorkOrder | null>(null);
+  const [editingOrder, setEditingOrder] = useState<WorkOrder | null>(null);
+  const [showNewOrderModal, setShowNewOrderModal] = useState(false);
   const [checklist, setChecklist] = useState<ChecklistItem[]>(mockChecklist);
 
   // Filter work orders
@@ -82,6 +91,36 @@ export function WorkOrdersPage() {
     setSelectedOrder(null);
   };
 
+  const updateWorkOrder = (id: string, updates: Partial<WorkOrder>) => {
+    setWorkOrders((current) =>
+      current?.map(wo => 
+        wo.id === id ? { ...wo, ...updates } : wo
+      ) || []
+    );
+  };
+
+  const handleSaveWorkOrder = (workOrder: WorkOrder) => {
+    setWorkOrders((current) =>
+      current?.map(wo => 
+        wo.id === workOrder.id ? workOrder : wo
+      ) || []
+    );
+  };
+
+  const handleCreateWorkOrder = (newWorkOrderData: Omit<WorkOrder, 'id' | 'number'>) => {
+    const newWorkOrder: WorkOrder = {
+      ...newWorkOrderData,
+      id: `wo-${Date.now()}`,
+      number: `OS-${String(Date.now()).slice(-6)}`
+    };
+
+    setWorkOrders((current) => [newWorkOrder, ...(current || [])]);
+  };
+
+  const handleExecuteWorkOrder = (wo: WorkOrder) => {
+    setSelectedOrder(wo);
+  };
+
   const updateChecklistResponse = (questionId: string, response: any) => {
     setChecklist(current =>
       current.map(item =>
@@ -100,11 +139,11 @@ export function WorkOrdersPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title="Ordens de Serviço" 
-        description="Gestão e execução de ordens de manutenção"
-      >
-        <Button className="flex items-center gap-2">
+      <PageHeader title="Ordens de Serviço">
+        <Button 
+          className="flex items-center gap-2"
+          onClick={() => setShowNewOrderModal(true)}
+        >
           <Plus className="h-4 w-4" />
           Nova OS
         </Button>
@@ -118,6 +157,7 @@ export function WorkOrdersPage() {
               Ordens de Serviço
             </CardTitle>
             <div className="flex items-center gap-4">
+              <ViewToggle view={view} onViewChange={setView} />
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -142,221 +182,199 @@ export function WorkOrdersPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Número</TableHead>
-                <TableHead>Equipamento</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Prioridade</TableHead>
-                <TableHead>Data Agendada</TableHead>
-                <TableHead>Responsável</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredOrders.map((wo) => {
-                const eq = equipment.find(e => e.id === wo.equipmentId);
-                const sector = sectors.find(s => s.id === eq?.sectorId);
-                
-                return (
-                  <TableRow key={wo.id}>
-                    <TableCell className="font-medium">{wo.number}</TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{eq?.tag}</div>
-                        <div className="text-sm text-muted-foreground">{eq?.brand} {eq?.model}</div>
-                        <div className="text-sm text-muted-foreground">{sector?.name}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge status={wo.type} />
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge status={wo.priority} />
-                    </TableCell>
-                    <TableCell>
-                      {new Date(wo.scheduledDate).toLocaleDateString('pt-BR')}
-                    </TableCell>
-                    <TableCell>{wo.assignedTo || '-'}</TableCell>
-                    <TableCell>
-                      <StatusBadge status={wo.status} />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {wo.status === 'OPEN' && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => startWorkOrder(wo.id)}
-                          >
-                            <Play className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {wo.status === 'IN_PROGRESS' && (
-                          <Sheet>
-                            <SheetTrigger asChild>
-                              <Button 
-                                variant="default" 
-                                size="sm"
-                                onClick={() => setSelectedOrder(wo)}
-                              >
-                                <ClipboardList className="h-4 w-4" />
-                              </Button>
-                            </SheetTrigger>
-                            <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-                              <SheetHeader>
-                                <SheetTitle>Executar OS: {wo.number}</SheetTitle>
-                                <SheetDescription>
-                                  Preencha o checklist de manutenção
-                                </SheetDescription>
-                              </SheetHeader>
-                              
-                              <div className="mt-6 space-y-6">
-                                {/* Equipment Info */}
-                                <div className="p-4 bg-muted rounded-lg">
-                                  <h4 className="font-medium mb-2">Informações do Equipamento</h4>
-                                  <div className="text-sm space-y-1">
-                                    <div><strong>Tag:</strong> {eq?.tag}</div>
-                                    <div><strong>Modelo:</strong> {eq?.brand} {eq?.model}</div>
-                                    <div><strong>Tipo:</strong> {eq?.type}</div>
-                                    <div><strong>Capacidade:</strong> {eq?.capacity.toLocaleString()} BTUs</div>
-                                  </div>
-                                </div>
-
-                                <Separator />
-
-                                {/* Checklist */}
-                                <div className="space-y-4">
-                                  <h4 className="font-medium">Checklist de Manutenção</h4>
-                                  
-                                  {checklist.map((item, index) => (
-                                    <div key={item.id} className="space-y-3 p-4 border rounded-lg">
-                                      <div className="flex items-start justify-between">
-                                        <div className="flex-1">
-                                          <div className="flex items-center gap-2">
-                                            <span className="text-sm font-medium">
-                                              {index + 1}. {item.question}
-                                            </span>
-                                            {item.required && (
-                                              <Badge variant="destructive" className="text-xs">
-                                                Obrigatório
-                                              </Badge>
-                                            )}
-                                          </div>
-                                        </div>
-                                      </div>
-
-                                      {/* Response Input */}
-                                      <div className="space-y-2">
-                                        {item.type === 'BOOLEAN' && (
-                                          <div className="flex items-center space-x-2">
-                                            <Checkbox 
-                                              id={item.id}
-                                              checked={item.response === true}
-                                              onCheckedChange={(checked) => 
-                                                updateChecklistResponse(item.id, checked === true)
-                                              }
-                                            />
-                                            <label htmlFor={item.id} className="text-sm">
-                                              Conforme
-                                            </label>
-                                          </div>
-                                        )}
-
-                                        {item.type === 'NUMBER' && (
-                                          <Input
-                                            type="number"
-                                            placeholder="Digite o valor"
-                                            value={typeof item.response === 'number' ? item.response.toString() : ''}
-                                            onChange={(e) => 
-                                              updateChecklistResponse(item.id, parseFloat(e.target.value))
-                                            }
-                                          />
-                                        )}
-
-                                        {item.type === 'TEXT' && (
-                                          <Textarea
-                                            placeholder="Digite suas observações"
-                                            value={typeof item.response === 'string' ? item.response : ''}
-                                            onChange={(e) => 
-                                              updateChecklistResponse(item.id, e.target.value)
-                                            }
-                                          />
-                                        )}
-
-                                        {item.type === 'MULTIPLE_CHOICE' && (
-                                          <Select 
-                                            value={item.response as string || ''} 
-                                            onValueChange={(value) => 
-                                              updateChecklistResponse(item.id, value)
-                                            }
-                                          >
-                                            <SelectTrigger>
-                                              <SelectValue placeholder="Selecione uma opção" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              {item.options?.map((option) => (
-                                                <SelectItem key={option} value={option}>
-                                                  {option}
-                                                </SelectItem>
-                                              ))}
-                                            </SelectContent>
-                                          </Select>
-                                        )}
-
-                                        {/* Observations */}
-                                        <Textarea
-                                          placeholder="Observações adicionais (opcional)"
-                                          value={item.observations || ''}
-                                          onChange={(e) => 
-                                            updateChecklistObservations(item.id, e.target.value)
-                                          }
-                                          className="mt-2"
-                                        />
-
-                                        {/* Photo Upload */}
-                                        <Button variant="outline" size="sm" className="mt-2">
-                                          <Camera className="h-4 w-4 mr-2" />
-                                          Adicionar Foto
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-
-                                <Separator />
-
-                                {/* Complete Button */}
-                                <Button 
-                                  onClick={() => completeWorkOrder(wo.id)}
-                                  className="w-full"
-                                  size="lg"
-                                >
-                                  <CheckCircle className="h-4 w-4 mr-2" />
-                                  Concluir OS
-                                </Button>
-                              </div>
-                            </SheetContent>
-                          </Sheet>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-              {filteredOrders.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                    Nenhuma ordem de serviço encontrada
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          {view === 'list' && (
+            <WorkOrderList
+              workOrders={filteredOrders}
+              onStartWorkOrder={startWorkOrder}
+              onExecuteWorkOrder={handleExecuteWorkOrder}
+              onEditWorkOrder={setEditingOrder}
+            />
+          )}
+          
+          {view === 'kanban' && (
+            <WorkOrderKanban
+              workOrders={filteredOrders}
+              onUpdateWorkOrder={updateWorkOrder}
+              onStartWorkOrder={startWorkOrder}
+              onExecuteWorkOrder={handleExecuteWorkOrder}
+              onEditWorkOrder={setEditingOrder}
+            />
+          )}
+          
+          {view === 'panel' && (
+            <WorkOrderPanel
+              workOrders={filteredOrders}
+              onStartWorkOrder={startWorkOrder}
+              onExecuteWorkOrder={handleExecuteWorkOrder}
+              onEditWorkOrder={setEditingOrder}
+            />
+          )}
         </CardContent>
       </Card>
+
+      {/* Execution Sheet */}
+      <Sheet open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
+        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+          {selectedOrder && (
+            <>
+              <SheetHeader>
+                <SheetTitle>Executar OS: {selectedOrder.number}</SheetTitle>
+                <SheetDescription>
+                  Preencha o checklist de manutenção
+                </SheetDescription>
+              </SheetHeader>
+              
+              <div className="mt-6 space-y-6">
+                {/* Equipment Info */}
+                <div className="p-4 bg-muted rounded-lg">
+                  <h4 className="font-medium mb-2">Informações do Equipamento</h4>
+                  <div className="text-sm space-y-1">
+                    {(() => {
+                      const eq = equipment.find(e => e.id === selectedOrder.equipmentId);
+                      return (
+                        <>
+                          <div><strong>Tag:</strong> {eq?.tag}</div>
+                          <div><strong>Modelo:</strong> {eq?.brand} {eq?.model}</div>
+                          <div><strong>Tipo:</strong> {eq?.type}</div>
+                          <div><strong>Capacidade:</strong> {eq?.capacity.toLocaleString()} BTUs</div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Checklist */}
+                <div className="space-y-4">
+                  <h4 className="font-medium">Checklist de Manutenção</h4>
+                  
+                  {checklist.map((item, index) => (
+                    <div key={item.id} className="space-y-3 p-4 border rounded-lg">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">
+                              {index + 1}. {item.question}
+                            </span>
+                            {item.required && (
+                              <Badge variant="destructive" className="text-xs">
+                                Obrigatório
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Response Input */}
+                      <div className="space-y-2">
+                        {item.type === 'BOOLEAN' && (
+                          <div className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={item.id}
+                              checked={item.response === true}
+                              onCheckedChange={(checked) => 
+                                updateChecklistResponse(item.id, checked === true)
+                              }
+                            />
+                            <label htmlFor={item.id} className="text-sm">
+                              Conforme
+                            </label>
+                          </div>
+                        )}
+
+                        {item.type === 'NUMBER' && (
+                          <Input
+                            type="number"
+                            placeholder="Digite o valor"
+                            value={typeof item.response === 'number' ? item.response.toString() : ''}
+                            onChange={(e) => 
+                              updateChecklistResponse(item.id, parseFloat(e.target.value))
+                            }
+                          />
+                        )}
+
+                        {item.type === 'TEXT' && (
+                          <Textarea
+                            placeholder="Digite suas observações"
+                            value={typeof item.response === 'string' ? item.response : ''}
+                            onChange={(e) => 
+                              updateChecklistResponse(item.id, e.target.value)
+                            }
+                          />
+                        )}
+
+                        {item.type === 'MULTIPLE_CHOICE' && (
+                          <Select 
+                            value={item.response as string || ''} 
+                            onValueChange={(value) => 
+                              updateChecklistResponse(item.id, value)
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione uma opção" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {item.options?.map((option) => (
+                                <SelectItem key={option} value={option}>
+                                  {option}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+
+                        {/* Observations */}
+                        <Textarea
+                          placeholder="Observações adicionais (opcional)"
+                          value={item.observations || ''}
+                          onChange={(e) => 
+                            updateChecklistObservations(item.id, e.target.value)
+                          }
+                          className="mt-2"
+                        />
+
+                        {/* Photo Upload */}
+                        <Button variant="outline" size="sm" className="mt-2">
+                          <Camera className="h-4 w-4 mr-2" />
+                          Adicionar Foto
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <Separator />
+
+                {/* Complete Button */}
+                <Button 
+                  onClick={() => completeWorkOrder(selectedOrder.id)}
+                  className="w-full"
+                  size="lg"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Concluir OS
+                </Button>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Edit Work Order Drawer */}
+      <EditWorkOrderDrawer
+        workOrder={editingOrder}
+        isOpen={!!editingOrder}
+        onClose={() => setEditingOrder(null)}
+        onSave={handleSaveWorkOrder}
+      />
+
+      {/* New Work Order Modal */}
+      <WorkOrderModal
+        isOpen={showNewOrderModal}
+        onClose={() => setShowNewOrderModal(false)}
+        onSave={handleCreateWorkOrder}
+      />
     </div>
   );
 }
