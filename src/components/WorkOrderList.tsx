@@ -130,6 +130,8 @@ export function WorkOrderList({
 
   // Regular table mode
   return (
+  // Regular table mode
+  return (
     <Table>
       <TableHeader>
         <TableRow>
