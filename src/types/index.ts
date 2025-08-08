@@ -224,3 +224,35 @@ export interface LocationCostAnalysis {
     cost: number;
   }[];
 }
+
+export type SolicitationStatus = 'Nova' | 'Em triagem' | 'Convertida em OS';
+
+export interface SolicitationItem {
+  id: string;
+  stock_item_id: string;
+  stock_item_name: string;
+  unit?: string;
+  qty: number;
+}
+
+export interface SolicitationStatusHistory {
+  from?: SolicitationStatus;
+  to: SolicitationStatus;
+  at: string;
+}
+
+export interface Solicitation {
+  id: string;
+  location_id: string;
+  location_name: string;
+  equipment_id: string;
+  equipment_name: string;
+  requester_user_id: string;
+  requester_user_name: string;
+  note?: string;
+  status: SolicitationStatus;
+  status_history: SolicitationStatusHistory[];
+  items: SolicitationItem[];
+  created_at: string;
+  updated_at: string;
+}

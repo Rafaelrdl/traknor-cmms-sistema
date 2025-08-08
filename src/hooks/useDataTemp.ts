@@ -8,7 +8,8 @@ import type {
   WorkOrder, 
   MaintenancePlan, 
   StockItem,
-  DashboardKPIs 
+  DashboardKPIs,
+  Solicitation
 } from '@/types';
 import { 
   MOCK_COMPANIES,
@@ -19,7 +20,8 @@ import {
   MOCK_MAINTENANCE_PLANS,
   MOCK_STOCK_ITEMS,
   MOCK_DASHBOARD_KPIS,
-  MOCK_CHART_DATA
+  MOCK_CHART_DATA,
+  MOCK_SOLICITATIONS
 } from '@/data/mockData';
 
 // Temporary hooks using useState instead of useKV to fix loading issues
@@ -170,6 +172,48 @@ export const findWorkOrderById = (id: string) => {
   return MOCK_WORK_ORDERS.find(workOrder => workOrder.id === id);
 };
 
+export const useSolicitations = (): [Solicitation[], (value: Solicitation[] | ((current: Solicitation[]) => Solicitation[])) => void, () => void] => {
+  const [data, setData] = useState<Solicitation[]>(() => {
+    // Try to load from localStorage first
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('traknor-solicitations');
+      if (stored) {
+        try {
+          return JSON.parse(stored);
+        } catch (e) {
+          console.warn('Error parsing stored solicitations:', e);
+        }
+      }
+    }
+    return MOCK_SOLICITATIONS;
+  });
+  
+  const updateData = (value: Solicitation[] | ((current: Solicitation[]) => Solicitation[])) => {
+    let newData: Solicitation[];
+    if (typeof value === 'function') {
+      newData = value(data);
+      setData(newData);
+    } else {
+      newData = value;
+      setData(newData);
+    }
+    
+    // Save to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('traknor-solicitations', JSON.stringify(newData));
+    }
+  };
+
+  const deleteData = () => {
+    setData([]);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('traknor-solicitations');
+    }
+  };
+  
+  return [data, updateData, deleteData];
+};
+
 // Hook utilitário para buscar qualquer item por ID
 export const useFindById = <T extends { id: string }>(
   collection: T[],
@@ -177,4 +221,147 @@ export const useFindById = <T extends { id: string }>(
 ) => {
   if (!id) return null;
   return collection.find(item => item.id === id) || null;
+};
+
+export const findSolicitationById = (id: string) => {
+  if (typeof window !== 'undefined') {
+    const stored = localStorage.getItem('traknor-solicitations');
+    if (stored) {
+      try {
+        const solicitations: Solicitation[] = JSON.parse(stored);
+        return solicitations.find(solicitation => solicitation.id === id);
+      } catch (e) {
+        console.warn('Error parsing stored solicitations:', e);
+      }
+    }
+  }
+  return MOCK_SOLICITATIONS.find(solicitation => solicitation.id === id);
+};
+
+// Utility functions for solicitations business logic
+export const canAdvanceStatus = (solicitation: Solicitation): boolean => {
+  switch (solicitation.status) {
+    case 'Nova':
+      return true; // Can go to 'Em triagem'
+    case 'Em triagem':
+      return true; // Can go to 'Convertida em OS'
+    case 'Convertida em OS':
+      return false; // Final status
+    default:
+      return false;
+  }
+};
+
+export const getNextStatus = (currentStatus: Solicitation['status']): Solicitation['status'] | null => {
+  switch (currentStatus) {
+    case 'Nova':
+      return 'Em triagem';
+    case 'Em triagem':
+      return 'Convertida em OS';
+    default:
+      return null;
+  }
+};
+
+export const advanceSolicitationStatus = (solicitation: Solicitation): Solicitation | null => {
+  if (!canAdvanceStatus(solicitation)) {
+    return null;
+  }
+
+  const nextStatus = getNextStatus(solicitation.status);
+  if (!nextStatus) {
+    return null;
+  }
+
+  return {
+    ...solicitation,
+    status: nextStatus,
+    status_history: [
+      ...solicitation.status_history,
+      {
+        from: solicitation.status,
+        to: nextStatus,
+        at: new Date().toISOString()
+      }
+    ],
+    updated_at: new Date().toISOString()
+  };
+};
+
+export const addSolicitationItem = (
+  solicitation: Solicitation, 
+  stockItemId: string, 
+  stockItemName: string,
+  unit: string,
+  qty: number
+): Solicitation => {
+  // Check if item already exists
+  const existingItemIndex = solicitation.items.findIndex(item => item.stock_item_id === stockItemId);
+  
+  let updatedItems: typeof solicitation.items;
+  
+  if (existingItemIndex >= 0) {
+    // Sum quantities if item exists
+    updatedItems = solicitation.items.map((item, index) =>
+      index === existingItemIndex
+        ? { ...item, qty: item.qty + qty }
+        : item
+    );
+  } else {
+    // Add new item
+    updatedItems = [
+      ...solicitation.items,
+      {
+        id: `item-${Date.now()}`,
+        stock_item_id: stockItemId,
+        stock_item_name: stockItemName,
+        unit,
+        qty
+      }
+    ];
+  }
+
+  return {
+    ...solicitation,
+    items: updatedItems,
+    updated_at: new Date().toISOString()
+  };
+};
+
+export const removeSolicitationItem = (solicitation: Solicitation, itemId: string): Solicitation => {
+  return {
+    ...solicitation,
+    items: solicitation.items.filter(item => item.id !== itemId),
+    updated_at: new Date().toISOString()
+  };
+};
+
+export const convertSolicitationToWorkOrder = (solicitation: Solicitation): WorkOrder => {
+  const workOrderNumber = `OS-${String(Date.now()).slice(-6)}`;
+  
+  return {
+    id: `wo-${Date.now()}`,
+    number: workOrderNumber,
+    equipmentId: solicitation.equipment_id,
+    type: 'CORRECTIVE',
+    status: 'OPEN',
+    scheduledDate: new Date().toISOString(),
+    priority: 'MEDIUM',
+    description: `Convertida da solicitação: ${solicitation.note || 'Sem observações'}`,
+    stockItems: solicitation.items.map(item => ({
+      id: `wosi-${Date.now()}-${item.id}`,
+      workOrderId: `wo-${Date.now()}`,
+      stockItemId: item.stock_item_id,
+      quantity: item.qty,
+      stockItem: {
+        id: item.stock_item_id,
+        code: item.stock_item_id,
+        description: item.stock_item_name,
+        unit: item.unit || 'un',
+        quantity: item.qty,
+        minimum: 0,
+        maximum: 100
+      }
+    }))
+  };
 };

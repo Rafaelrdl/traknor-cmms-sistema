@@ -26,7 +26,12 @@ const statusConfig = {
   
   // Work Order types
   PREVENTIVE: { label: 'Preventiva', variant: 'outline' as const },
-  CORRECTIVE: { label: 'Corretiva', variant: 'secondary' as const }
+  CORRECTIVE: { label: 'Corretiva', variant: 'secondary' as const },
+  
+  // Solicitation statuses
+  'Nova': { label: 'Nova', variant: 'secondary' as const },
+  'Em triagem': { label: 'Em triagem', variant: 'default' as const },
+  'Convertida em OS': { label: 'Convertida em OS', variant: 'outline' as const }
 };
 
 export function StatusBadge({ status, variant, className }: StatusBadgeProps) {
