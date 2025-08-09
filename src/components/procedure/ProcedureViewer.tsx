@@ -475,7 +475,6 @@ export function ProcedureViewer({
                               workerSrc: pdfjs.GlobalWorkerOptions.workerSrc,
                             }}
                           >
-                          >
                             <Page 
                               pageNumber={pageNumber}
                               scale={scale}
