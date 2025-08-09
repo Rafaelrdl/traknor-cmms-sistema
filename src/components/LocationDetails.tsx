@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Building2, MapPin, Users, Edit, Plus } from 'lucide-react';
 import { useLocation as useLocationContext } from '@/contexts/LocationContext';
+import { IfCan, IfCanCreate, IfCanEdit } from '@/components/auth/IfCan';
 import type { Company, Sector, SubSection } from '@/types';
 
 interface LocationDetailsProps {
@@ -272,26 +273,32 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
         <div className="flex items-center gap-2">
           {/* + Ativo button - Hide when company is selected */}
           {selectedNode.type !== 'company' && (
-            <Button 
-              onClick={onCreateAsset} 
-              className="btn-press flex items-center gap-2"
-              aria-label="Adicionar novo ativo"
-            >
-              <Plus className="h-4 w-4" />
-              + Ativo
-            </Button>
+            <IfCanCreate subject="asset">
+              <Button 
+                onClick={onCreateAsset} 
+                className="btn-press flex items-center gap-2"
+                aria-label="Adicionar novo ativo"
+                data-testid="asset-create"
+              >
+                <Plus className="h-4 w-4" />
+                + Ativo
+              </Button>
+            </IfCanCreate>
           )}
           
           {/* Editar button */}
-          <Button 
-            variant="outline" 
-            onClick={onEdit} 
-            className="btn-press flex items-center gap-2"
-            aria-label="Editar localização"
-          >
-            <Edit className="h-4 w-4" />
-            Editar
-          </Button>
+          <IfCanEdit subject="asset">
+            <Button 
+              variant="outline" 
+              onClick={onEdit} 
+              className="btn-press flex items-center gap-2"
+              aria-label="Editar localização"
+              data-testid="asset-edit"
+            >
+              <Edit className="h-4 w-4" />
+              Editar
+            </Button>
+          </IfCanEdit>
         </div>
       </div>
 

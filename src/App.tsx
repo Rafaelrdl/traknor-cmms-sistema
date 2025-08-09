@@ -11,6 +11,7 @@ import { InventoryPage } from '@/pages/InventoryPage';
 import { ProceduresPage } from '@/pages/ProceduresPage';
 import { ReportsPage } from '@/pages/ReportsPage';
 import { Toaster } from '@/components/ui/sonner';
+import { RoleSwitcher } from '@/components/auth/RoleSwitcher';
 
 // Initialize PDF.js configuration BEFORE any PDF components load
 import { configurePDFWorker } from '@/utils/pdfConfig';
@@ -45,6 +46,7 @@ function App() {
           </Routes>
         </Layout>
         <Toaster />
+        <RoleSwitcher />
       </Router>
     </QueryClientProvider>
   );

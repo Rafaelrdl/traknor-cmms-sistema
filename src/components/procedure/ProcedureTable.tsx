@@ -36,6 +36,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { IfCan, IfCanEdit, IfCanDelete } from '@/components/auth/IfCan';
+import { useAbility } from '@/hooks/useAbility';
 import { Procedure, ProcedureCategory, ProcedureStatus } from '@/models/procedure';
 import { updateProcedure, deleteProcedure } from '@/data/proceduresStore';
 import { toast } from 'sonner';
@@ -55,6 +57,7 @@ export function ProcedureTable({
   onEdit,
   onUpdate,
 }: ProcedureTableProps) {
+  const { canEdit, canDelete } = useAbility();
   const [deleteDialog, setDeleteDialog] = useState<{
     isOpen: boolean;
     procedure?: Procedure;
@@ -238,24 +241,32 @@ export function ProcedureTable({
                   </TableCell>
                   
                   <TableCell>
-                    <Select
-                      value={procedure.status}
-                      onValueChange={(value) =>
-                        handleStatusChange(procedure, value as ProcedureStatus)
-                      }
-                    >
-                      <SelectTrigger className="w-[100px] h-8">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Ativo">
-                          <Badge variant="default">Ativo</Badge>
-                        </SelectItem>
-                        <SelectItem value="Inativo">
-                          <Badge variant="secondary">Inativo</Badge>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <IfCan action="edit" subject="procedure">
+                      <Select
+                        value={procedure.status}
+                        onValueChange={(value) =>
+                          handleStatusChange(procedure, value as ProcedureStatus)
+                        }
+                      >
+                        <SelectTrigger className="w-[100px] h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Ativo">
+                            <Badge variant="default">Ativo</Badge>
+                          </SelectItem>
+                          <SelectItem value="Inativo">
+                            <Badge variant="secondary">Inativo</Badge>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </IfCan>
+                    <IfCan action="view" subject="procedure" fallback={
+                      <Badge variant={procedure.status === 'Ativo' ? "default" : "secondary"}>
+                        {procedure.status}
+                      </Badge>
+                    }>
+                    </IfCan>
                   </TableCell>
                   
                   <TableCell>
@@ -277,35 +288,44 @@ export function ProcedureTable({
                         size="sm"
                         onClick={() => onView(procedure)}
                         aria-label={`Visualizar ${procedure.title}`}
+                        data-testid="procedure-view"
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
                       
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            aria-label={`Mais ações para ${procedure.title}`}
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => onEdit(procedure)}>
-                            <Edit2 className="h-4 w-4 mr-2" />
-                            Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => setDeleteDialog({ isOpen: true, procedure })}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Excluir
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {(canEdit('procedure') || canDelete('procedure')) && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              aria-label={`Mais ações para ${procedure.title}`}
+                              data-testid="procedure-actions"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <IfCanEdit subject="procedure">
+                              <DropdownMenuItem onClick={() => onEdit(procedure)} data-testid="procedure-edit">
+                                <Edit2 className="h-4 w-4 mr-2" />
+                                Editar
+                              </DropdownMenuItem>
+                            </IfCanEdit>
+                            {(canEdit('procedure') && canDelete('procedure')) && <DropdownMenuSeparator />}
+                            <IfCanDelete subject="procedure">
+                              <DropdownMenuItem
+                                onClick={() => setDeleteDialog({ isOpen: true, procedure })}
+                                className="text-destructive"
+                                data-testid="procedure-delete"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Excluir
+                              </DropdownMenuItem>
+                            </IfCanDelete>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Plus, Trash2, ArrowRight, PlayCircle, CheckCircle } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { toast } from 'sonner';
+import { IfCan } from '@/components/auth/IfCan';
 import type { Solicitation, SolicitationItem, StockItem } from '@/types';
 import {
   canAdvanceStatus,
@@ -178,14 +179,17 @@ export function SolicitationsDrawer({
                   <StatusBadge status={solicitation.status} />
                 </div>
                 {canAdvance && (
-                  <Button
-                    onClick={handleAdvanceStatus}
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    {getStatusIcon(nextStatus!)}
-                    {getActionButtonText()}
-                  </Button>
+                  <IfCan action="convert" subject="solicitation">
+                    <Button
+                      onClick={handleAdvanceStatus}
+                      size="sm"
+                      className="flex items-center gap-2"
+                      data-testid="solicitation-advance"
+                    >
+                      {getStatusIcon(nextStatus!)}
+                      {getActionButtonText()}
+                    </Button>
+                  </IfCan>
                 )}
               </div>
 
@@ -261,43 +265,46 @@ export function SolicitationsDrawer({
 
             {/* Add Item Form */}
             {solicitation.status !== 'Convertida em OS' && (
-              <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
-                <h5 className="text-sm font-medium">Adicionar Item</h5>
-                <div className="space-y-3">
-                  <Select value={selectedStockItemId} onValueChange={setSelectedStockItemId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um item" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {stockItems.map((item) => (
-                        <SelectItem key={item.id} value={item.id}>
-                          {item.description} ({item.unit})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  
-                  <div className="flex gap-2">
-                    <Input
-                      type="number"
-                      placeholder="Quantidade"
-                      value={quantity}
-                      onChange={(e) => setQuantity(e.target.value)}
-                      min="0.1"
-                      step="0.1"
-                      className="flex-1"
-                    />
-                    <Button
-                      onClick={handleAddItem}
-                      size="sm"
-                      className="flex items-center gap-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Adicionar
-                    </Button>
+              <IfCan action="edit" subject="solicitation">
+                <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
+                  <h5 className="text-sm font-medium">Adicionar Item</h5>
+                  <div className="space-y-3">
+                    <Select value={selectedStockItemId} onValueChange={setSelectedStockItemId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um item" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {stockItems.map((item) => (
+                          <SelectItem key={item.id} value={item.id}>
+                            {item.description} ({item.unit})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    <div className="flex gap-2">
+                      <Input
+                        type="number"
+                        placeholder="Quantidade"
+                        value={quantity}
+                        onChange={(e) => setQuantity(e.target.value)}
+                        min="0.1"
+                        step="0.1"
+                        className="flex-1"
+                      />
+                      <Button
+                        onClick={handleAddItem}
+                        size="sm"
+                        className="flex items-center gap-2"
+                        data-testid="solicitation-add-item"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Adicionar
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </IfCan>
             )}
 
             {/* Items List */}
@@ -315,14 +322,17 @@ export function SolicitationsDrawer({
                       </p>
                     </div>
                     {solicitation.status !== 'Convertida em OS' && (
-                      <Button
-                        onClick={() => handleRemoveItem(item.id)}
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <IfCan action="edit" subject="solicitation">
+                        <Button
+                          onClick={() => handleRemoveItem(item.id)}
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          data-testid="solicitation-remove-item"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </IfCan>
                     )}
                   </div>
                 ))}

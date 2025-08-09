@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, Plus, Edit, Eye } from 'lucide-react';
 import { PlanFormModal } from '@/components/PlanFormModal';
 import { useMaintenancePlansNew, updatePlanInList } from '@/hooks/useMaintenancePlans';
+import { IfCanCreate, IfCanEdit } from '@/components/auth/IfCan';
 import type { MaintenancePlan } from '@/models/plan';
 
 export function PlansPage() {
@@ -51,10 +52,12 @@ export function PlansPage() {
         title="Planos de Manutenção" 
         description="Planejamento de manutenções preventivas"
       >
-        <Button onClick={handleNewPlan} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Novo Plano
-        </Button>
+        <IfCanCreate subject="plan">
+          <Button onClick={handleNewPlan} className="flex items-center gap-2" data-testid="plan-create">
+            <Plus className="h-4 w-4" />
+            Novo Plano
+          </Button>
+        </IfCanCreate>
       </PageHeader>
       
       <Card>
@@ -82,14 +85,17 @@ export function PlansPage() {
                     <div className="flex flex-col items-center space-y-2">
                       <Calendar className="h-8 w-8 opacity-50" />
                       <span>Nenhum plano de manutenção cadastrado.</span>
-                      <Button
-                        variant="outline"
-                        onClick={handleNewPlan}
-                        className="mt-2"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Criar Primeiro Plano
-                      </Button>
+                      <IfCanCreate subject="plan">
+                        <Button
+                          variant="outline"
+                          onClick={handleNewPlan}
+                          className="mt-2"
+                          data-testid="plan-create-empty"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Criar Primeiro Plano
+                        </Button>
+                      </IfCanCreate>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -118,16 +124,19 @@ export function PlansPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleEditPlan(plan)}
-                        className="flex items-center gap-1"
-                        aria-label={`Editar plano ${plan.name}`}
-                      >
-                        <Edit className="h-3 w-3" />
-                        Editar
-                      </Button>
+                      <IfCanEdit subject="plan">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleEditPlan(plan)}
+                          className="flex items-center gap-1"
+                          aria-label={`Editar plano ${plan.name}`}
+                          data-testid="plan-edit"
+                        >
+                          <Edit className="h-3 w-3" />
+                          Editar
+                        </Button>
+                      </IfCanEdit>
                     </TableCell>
                   </TableRow>
                 ))

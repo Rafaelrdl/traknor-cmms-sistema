@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Search, Warehouse } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Search, Warehouse, Plus, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { InventoryTabs } from '@/components/inventory/InventoryTabs';
 import { InventoryTable } from '@/components/inventory/InventoryTable';
@@ -13,17 +15,36 @@ import { InventoryAnalysis } from '@/components/inventory/InventoryAnalysis';
 import { NewItemModal } from '@/components/inventory/NewItemModal';
 import { EditItemModal } from '@/components/inventory/EditItemModal';
 import { MoveItemModal } from '@/components/inventory/MoveItemModal';
+import { IfCan } from '@/components/auth/IfCan';
+import { useRoleBasedData, DataFilterInfo } from '@/components/data/FilteredDataProvider';
+import { useAbility } from '@/hooks/useAbility';
 import type { InventoryItem, InventoryCategory } from '@/models/inventory';
 import { loadItems, loadCategories, searchItems, deleteItem } from '@/data/inventoryStore';
 
 export function InventoryPage() {
+  const { role } = useAbility();
+  
   // State
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [categories, setCategories] = useState<InventoryCategory[]>([]);
-  const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showActiveOnly, setShowActiveOnly] = useState<boolean>(true);
+  
+  // Memoize the filter options to prevent infinite re-renders
+  const filterOptions = useMemo(() => ({
+    includeInactive: role === 'admin' || role === 'technician',
+    onlyOwned: role === 'requester' // Requesters see limited inventory
+  }), [role]);
+
+  // Apply role-based filtering to inventory items
+  const { data: filteredInventoryData, stats: inventoryFilterStats } = useRoleBasedData(
+    items, 
+    'inventory',
+    filterOptions
+  );
+  
+  const [filteredItems, setFilteredItems] = useState<InventoryItem[]>(filteredInventoryData);
   
   // Modal states
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
@@ -38,14 +59,20 @@ export function InventoryPage() {
     setCategories(loadedCategories);
   }, []);
 
-  // Filter items when search/filters change
+  // Update filtered items when role-based data changes
   useEffect(() => {
+    setFilteredItems(filteredInventoryData);
+  }, [filteredInventoryData]);
+
+  // Filter items when search/filters change (applied to already role-filtered data)
+  useEffect(() => {
+    const baseData = filteredInventoryData;
     const filtered = searchItems(searchQuery, {
       category_id: selectedCategory === 'all' ? undefined : selectedCategory,
       active: showActiveOnly
-    });
+    }, baseData); // Pass the role-filtered data as the base
     setFilteredItems(filtered);
-  }, [items, searchQuery, selectedCategory, showActiveOnly]);
+  }, [filteredInventoryData, searchQuery, selectedCategory, showActiveOnly]);
 
   // Handlers
   const handleItemCreated = (newItem: InventoryItem) => {
@@ -130,11 +157,46 @@ export function InventoryPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Controle de Estoque">
-        <NewItemModal
-          categories={categories}
-          onItemCreated={handleItemCreated}
-        />
+        <IfCan action="create" subject="inventory">
+          <NewItemModal
+            categories={categories}
+            onItemCreated={handleItemCreated}
+            trigger={
+              <Button className="flex items-center gap-2" data-testid="inventory-create">
+                <Plus className="h-4 w-4" />
+                Novo Item
+              </Button>
+            }
+          />
+        </IfCan>
       </PageHeader>
+      
+      {/* Role-based data filtering info */}
+      {inventoryFilterStats.filtered > 0 && (
+        <DataFilterInfo
+          filterStats={inventoryFilterStats}
+          dataType="inventory"
+          canViewAll={role === 'admin'}
+        />
+      )}
+
+      {/* Special notice for requesters */}
+      {role === 'requester' && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 text-blue-600 mt-0.5" />
+              <div className="text-sm text-blue-800">
+                <p className="font-medium">Visualização limitada do estoque</p>
+                <p className="mt-1">
+                  Como solicitante, você pode ver os itens básicos do estoque mas não as quantidades detalhadas. 
+                  Entre em contato com um técnico ou administrador para informações específicas.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
       
       <Card>
         <CardHeader>
@@ -142,6 +204,16 @@ export function InventoryPage() {
             <CardTitle className="flex items-center gap-2">
               <Warehouse className="h-5 w-5" />
               Itens de Estoque
+              {role !== 'admin' && (
+                <Badge variant="outline" className="ml-2 text-xs">
+                  {role === 'requester' ? 'Vista limitada' : 'Filtrado'}
+                </Badge>
+              )}
+              {filteredItems.length !== items.length && (
+                <Badge variant="secondary" className="ml-1 text-xs">
+                  {filteredItems.length} de {items.length}
+                </Badge>
+              )}
             </CardTitle>
             
             {/* Filters */}

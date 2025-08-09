@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Edit, Package, Trash2 } from 'lucide-react';
+import { IfCan, IfCanEdit, IfCanDelete, IfCanMove } from '@/components/auth/IfCan';
 import type { InventoryItem, InventoryCategory } from '@/models/inventory';
 
 interface InventoryTableProps {
@@ -158,31 +159,40 @@ export function InventoryTable({ items, categories, onEdit, onMove, onDelete }: 
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex items-center justify-end gap-1">
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => onMove(item)}
-                    aria-label={`Movimentar ${item.name}`}
-                  >
-                    <Package className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => onEdit(item)}
-                    aria-label={`Editar ${item.name}`}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => onDelete(item)}
-                    aria-label={`Excluir ${item.name}`}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <IfCanMove subject="inventory">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => onMove(item)}
+                      aria-label={`Movimentar ${item.name}`}
+                      data-testid="inventory-move"
+                    >
+                      <Package className="h-4 w-4" />
+                    </Button>
+                  </IfCanMove>
+                  <IfCanEdit subject="inventory">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => onEdit(item)}
+                      aria-label={`Editar ${item.name}`}
+                      data-testid="inventory-edit"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </IfCanEdit>
+                  <IfCanDelete subject="inventory">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => onDelete(item)}
+                      aria-label={`Excluir ${item.name}`}
+                      className="text-destructive hover:text-destructive"
+                      data-testid="inventory-delete"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </IfCanDelete>
                 </div>
               </TableCell>
             </TableRow>

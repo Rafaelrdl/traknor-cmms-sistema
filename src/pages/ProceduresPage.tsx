@@ -7,6 +7,7 @@ import { ProcedureFilters } from '@/components/procedure/ProcedureFilters';
 import { ProcedureTable } from '@/components/procedure/ProcedureTable';
 import { ProcedureModal } from '@/components/procedure/ProcedureModal';
 import { ProcedureViewer } from '@/components/procedure/ProcedureViewer';
+import { IfCanCreate } from '@/components/auth/IfCan';
 import { 
   listProcedures, 
   listCategories, 
@@ -114,10 +115,12 @@ export function ProceduresPage() {
           <h1 className="text-3xl font-bold tracking-tight">Procedimentos</h1>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => setModals(prev => ({ ...prev, create: true }))}>
-            <Plus className="mr-2 h-4 w-4" />
-            Novo Procedimento
-          </Button>
+          <IfCanCreate subject="procedure">
+            <Button onClick={() => setModals(prev => ({ ...prev, create: true }))} data-testid="procedure-create">
+              <Plus className="mr-2 h-4 w-4" />
+              Novo Procedimento
+            </Button>
+          </IfCanCreate>
         </div>
       </div>
 
