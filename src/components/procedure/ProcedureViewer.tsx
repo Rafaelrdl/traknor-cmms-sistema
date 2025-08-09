@@ -13,7 +13,9 @@ import {
   X,
   History,
   FileText,
-  GitCompare
+  GitCompare,
+  MessageSquare,
+  Highlighter
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,12 +29,27 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Procedure, ProcedureCategory } from '@/models/procedure';
-import { getFileBlob, listVersions } from '@/data/proceduresStore';
+import { Procedure, ProcedureCategory, DocumentAnnotation, Comment, AnnotationType } from '@/models/procedure';
+import { 
+  getFileBlob, 
+  listVersions,
+  listAnnotations,
+  listComments,
+  createAnnotation,
+  updateAnnotation,
+  deleteAnnotation,
+  createComment,
+  updateComment,
+  deleteComment,
+  getProcedureWithAnnotations
+} from '@/data/proceduresStore';
 import { VersionHistory } from '@/components/procedure/VersionHistory';
 import { VersionComparison } from '@/components/procedure/VersionComparison';
 import { PDFViewerFallback } from '@/components/procedure/PDFViewerFallback';
 import { PDFErrorBoundary } from '@/components/ui/pdf-error-boundary';
+import { AnnotationPanel } from '@/components/procedure/AnnotationPanel';
+import { AnnotationOverlay } from '@/components/procedure/AnnotationOverlay';
+import { AnnotationToolbar } from '@/components/procedure/AnnotationToolbar';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -75,7 +92,19 @@ export function ProcedureViewer({
   const [comparisonVersions, setComparisonVersions] = useState({ from: '', to: '' });
   const [activeTab, setActiveTab] = useState('document');
   
+  // Annotation state
+  const [annotations, setAnnotations] = useState<DocumentAnnotation[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [isAnnotationMode, setIsAnnotationMode] = useState(false);
+  const [selectedAnnotationType, setSelectedAnnotationType] = useState<AnnotationType>('note');
+  const [visibleAnnotationTypes, setVisibleAnnotationTypes] = useState<Set<AnnotationType>>(
+    new Set(['highlight', 'note', 'question', 'correction', 'warning'])
+  );
+  const [showResolved, setShowResolved] = useState(true);
+  const [isCreatingAnnotation, setIsCreatingAnnotation] = useState(false);
+  
   const viewerRef = useRef<HTMLDivElement>(null);
+  const documentRef = useRef<HTMLDivElement>(null);
 
   const category = procedure?.category_id 
     ? categories.find(cat => cat.id === procedure.category_id) 
@@ -84,6 +113,7 @@ export function ProcedureViewer({
   useEffect(() => {
     if (procedure && isOpen) {
       loadFile();
+      loadAnnotations();
       setVersions(listVersions(procedure.id));
     }
     return () => {
@@ -95,6 +125,10 @@ export function ProcedureViewer({
       setNumPages(null);
       setActiveTab('document');
       setUseFallbackViewer(false);
+      setAnnotations([]);
+      setComments([]);
+      setIsAnnotationMode(false);
+      setIsCreatingAnnotation(false);
     };
   }, [procedure, isOpen]);
 
@@ -123,6 +157,167 @@ export function ProcedureViewer({
       setError('Erro ao carregar arquivo');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadAnnotations = () => {
+    if (!procedure) return;
+    
+    const procedureAnnotations = listAnnotations(procedure.id, procedure.version);
+    const procedureComments = listComments(undefined, procedure.id);
+    
+    setAnnotations(procedureAnnotations);
+    setComments(procedureComments);
+  };
+
+  // Annotation handlers
+  const handleCreateAnnotation = (annotation: Omit<DocumentAnnotation, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const newAnnotation = createAnnotation(annotation);
+      setAnnotations(prev => [...prev, newAnnotation]);
+      setIsCreatingAnnotation(false);
+      toast.success('Anotação criada com sucesso');
+    } catch (error) {
+      console.error('Error creating annotation:', error);
+      toast.error('Erro ao criar anotação');
+    }
+  };
+
+  const handleUpdateAnnotation = (id: string, updates: Partial<DocumentAnnotation>) => {
+    try {
+      const updatedAnnotation = updateAnnotation(id, updates);
+      if (updatedAnnotation) {
+        setAnnotations(prev => prev.map(a => a.id === id ? updatedAnnotation : a));
+        toast.success('Anotação atualizada');
+      }
+    } catch (error) {
+      console.error('Error updating annotation:', error);
+      toast.error('Erro ao atualizar anotação');
+    }
+  };
+
+  const handleDeleteAnnotation = (id: string) => {
+    try {
+      const success = deleteAnnotation(id);
+      if (success) {
+        setAnnotations(prev => prev.filter(a => a.id !== id));
+        setComments(prev => prev.filter(c => c.annotation_id !== id));
+        toast.success('Anotação excluída');
+      }
+    } catch (error) {
+      console.error('Error deleting annotation:', error);
+      toast.error('Erro ao excluir anotação');
+    }
+  };
+
+  const handleCreateComment = (comment: Omit<Comment, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const newComment = createComment(comment);
+      setComments(prev => [...prev, newComment]);
+      toast.success('Comentário adicionado');
+    } catch (error) {
+      console.error('Error creating comment:', error);
+      toast.error('Erro ao criar comentário');
+    }
+  };
+
+  const handleUpdateComment = (id: string, updates: Partial<Comment>) => {
+    try {
+      const updatedComment = updateComment(id, updates);
+      if (updatedComment) {
+        setComments(prev => prev.map(c => c.id === id ? updatedComment : c));
+        toast.success('Comentário atualizado');
+      }
+    } catch (error) {
+      console.error('Error updating comment:', error);
+      toast.error('Erro ao atualizar comentário');
+    }
+  };
+
+  const handleDeleteComment = (id: string) => {
+    try {
+      const success = deleteComment(id);
+      if (success) {
+        setComments(prev => prev.filter(c => c.id !== id));
+        toast.success('Comentário excluído');
+      }
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      toast.error('Erro ao excluir comentário');
+    }
+  };
+
+  const handleAnnotationClick = (annotation: DocumentAnnotation) => {
+    // Switch to annotations tab and focus the clicked annotation
+    setActiveTab('annotations');
+    
+    // Scroll to annotation if on PDF
+    if (annotation.position.pageNumber && procedure?.file.type === 'pdf') {
+      setPageNumber(annotation.position.pageNumber);
+    }
+    
+    toast.info(`Anotação: ${annotation.content}`, { duration: 3000 });
+  };
+
+  const handleToggleAnnotationType = (type: AnnotationType) => {
+    setVisibleAnnotationTypes(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(type)) {
+        newSet.delete(type);
+      } else {
+        newSet.add(type);
+      }
+      return newSet;
+    });
+  };
+
+  const handleExportAnnotations = () => {
+    if (!procedure) return;
+    
+    try {
+      const exportData = {
+        procedure: procedure.title,
+        version: procedure.version,
+        annotations: annotations,
+        comments: comments,
+        export_date: new Date().toISOString()
+      };
+      
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `anotacoes-${procedure.title.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast.success('Anotações exportadas');
+    } catch (error) {
+      console.error('Error exporting annotations:', error);
+      toast.error('Erro ao exportar anotações');
+    }
+  };
+
+  const handleShareAnnotations = () => {
+    if (!procedure) return;
+    
+    const shareUrl = `${window.location.origin}/procedures/${procedure.id}?version=${procedure.version}&annotations=true`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: `Anotações - ${procedure.title}`,
+        text: 'Compartilhar anotações do procedimento',
+        url: shareUrl
+      }).catch(console.error);
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        toast.success('Link copiado para a área de transferência');
+      }).catch(() => {
+        toast.error('Erro ao copiar link');
+      });
     }
   };
 
@@ -285,99 +480,126 @@ export function ProcedureViewer({
         </SheetHeader>
 
         {/* Toolbar */}
-        <div className="flex items-center gap-2 px-6 py-3 border-b bg-muted/30">
+        <div className="border-b bg-muted/30">
           {activeTab === 'document' && (
             <>
-              <div className="flex items-center gap-1">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleZoomOut}
-                  disabled={!isPDF || scale <= 0.5 || useFallbackViewer}
-                  aria-label="Diminuir zoom"
-                >
-                  <ZoomOut className="h-4 w-4" />
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleZoomIn}
-                  disabled={!isPDF || scale >= 3.0 || useFallbackViewer}
-                  aria-label="Aumentar zoom"
-                >
-                  <ZoomIn className="h-4 w-4" />
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleResetZoom}
-                  disabled={!isPDF || scale === 1.0 || useFallbackViewer}
-                  aria-label="Resetar zoom"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <Separator orientation="vertical" className="h-6" />
-
-              {isPDF && numPages && !useFallbackViewer && (
+              <AnnotationToolbar
+                isAnnotationMode={isAnnotationMode}
+                onToggleAnnotationMode={() => {
+                  setIsAnnotationMode(!isAnnotationMode);
+                  if (isAnnotationMode) {
+                    setIsCreatingAnnotation(false);
+                  }
+                }}
+                selectedAnnotationType={selectedAnnotationType}
+                onAnnotationTypeChange={setSelectedAnnotationType}
+                visibleAnnotationTypes={visibleAnnotationTypes}
+                onToggleAnnotationType={handleToggleAnnotationType}
+                showResolved={showResolved}
+                onToggleShowResolved={() => setShowResolved(!showResolved)}
+                totalAnnotations={annotations.length}
+                unresolvedAnnotations={annotations.filter(a => !a.is_resolved).length}
+                onExportAnnotations={handleExportAnnotations}
+                onShareAnnotations={handleShareAnnotations}
+              />
+              
+              <div className="flex items-center gap-2 px-6 py-3">
                 <div className="flex items-center gap-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handlePrevPage}
-                    disabled={pageNumber <= 1}
-                    aria-label="Página anterior"
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleZoomOut}
+                    disabled={!isPDF || scale <= 0.5 || useFallbackViewer}
+                    aria-label="Diminuir zoom"
                   >
-                    <ChevronLeft className="h-4 w-4" />
+                    <ZoomOut className="h-4 w-4" />
                   </Button>
                   
-                  <span 
-                    className="text-sm px-3 py-1 bg-background rounded border"
-                    aria-live="polite"
-                    aria-label={`Página ${pageNumber} de ${numPages}`}
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleZoomIn}
+                    disabled={!isPDF || scale >= 3.0 || useFallbackViewer}
+                    aria-label="Aumentar zoom"
                   >
-                    {pageNumber} de {numPages}
-                  </span>
+                    <ZoomIn className="h-4 w-4" />
+                  </Button>
                   
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleNextPage}
-                    disabled={pageNumber >= numPages}
-                    aria-label="Próxima página"
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleResetZoom}
+                    disabled={!isPDF || scale === 1.0 || useFallbackViewer}
+                    aria-label="Resetar zoom"
                   >
-                    <ChevronRight className="h-4 w-4" />
+                    <RotateCcw className="h-4 w-4" />
                   </Button>
                 </div>
-              )}
 
-              {isPDF && useFallbackViewer && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    Visualizador alternativo
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setUseFallbackViewer(false);
-                      loadFile(); // Retry with react-pdf
-                    }}
-                  >
-                    Tentar visualizador avançado
+                <Separator orientation="vertical" className="h-6" />
+
+                {isPDF && numPages && !useFallbackViewer && (
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePrevPage}
+                      disabled={pageNumber <= 1}
+                      aria-label="Página anterior"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    
+                    <span 
+                      className="text-sm px-3 py-1 bg-background rounded border"
+                      aria-live="polite"
+                      aria-label={`Página ${pageNumber} de ${numPages}`}
+                    >
+                      {pageNumber} de {numPages}
+                    </span>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleNextPage}
+                      disabled={pageNumber >= numPages}
+                      aria-label="Próxima página"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+
+                {isPDF && useFallbackViewer && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      Visualizador alternativo
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setUseFallbackViewer(false);
+                        loadFile(); // Retry with react-pdf
+                      }}
+                    >
+                      Tentar visualizador avançado
+                    </Button>
+                  </div>
+                )}
+
+                <div className="ml-auto">
+                  <Button variant="outline" size="sm" onClick={handleDownload}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Baixar
                   </Button>
                 </div>
-              )}
-
-              <Separator orientation="vertical" className="h-6" />
+              </div>
             </>
           )}
 
           {activeTab === 'versions' && versions.length >= 2 && (
-            <>
+            <div className="flex items-center gap-2 px-6 py-3">
               <Button
                 variant="outline"
                 size="sm"
@@ -391,25 +613,21 @@ export function ProcedureViewer({
                 <GitCompare className="h-4 w-4 mr-2" />
                 Comparar Versões
               </Button>
-              <Separator orientation="vertical" className="h-6" />
-            </>
+            </div>
           )}
-
-          <div className="ml-auto">
-            <Button variant="outline" size="sm" onClick={handleDownload}>
-              <Download className="h-4 w-4 mr-2" />
-              Baixar
-            </Button>
-          </div>
         </div>
 
         {/* Tabs */}
         <div className="border-b">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="px-6">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="document" className="flex items-center gap-2">
                 <FileText className="w-4 h-4" />
                 Documento
+              </TabsTrigger>
+              <TabsTrigger value="annotations" className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4" />
+                Anotações ({annotations.length})
               </TabsTrigger>
               <TabsTrigger value="versions" className="flex items-center gap-2">
                 <History className="w-4 h-4" />
@@ -424,7 +642,11 @@ export function ProcedureViewer({
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsContent value="document" className="h-full m-0">
               <ScrollArea className="h-full">
-                <div ref={viewerRef} className="p-6">
+                <div 
+                  ref={documentRef} 
+                  className="p-6 relative"
+                  style={{ userSelect: isAnnotationMode ? 'text' : 'auto' }}
+                >
                   {isLoading && (
                     <div className="flex items-center justify-center h-64">
                       <div className="text-muted-foreground">Carregando arquivo...</div>
@@ -462,7 +684,7 @@ export function ProcedureViewer({
                               onDownload={handleDownload}
                               fallbackMessage="Não foi possível exibir este PDF devido a restrições de rede ou problemas de compatibilidade."
                             >
-                              <div className="flex justify-center">
+                              <div className="flex justify-center relative">
                                 <Document
                                   file={fileBlob}
                                   onLoadSuccess={({ numPages }) => {
@@ -551,6 +773,23 @@ export function ProcedureViewer({
                                     renderAnnotationLayer={false}
                                   />
                                 </Document>
+
+                                {/* Annotation Overlay for PDF */}
+                                <AnnotationOverlay
+                                  annotations={annotations.filter(a => 
+                                    visibleAnnotationTypes.has(a.type) && 
+                                    (showResolved || !a.is_resolved)
+                                  )}
+                                  onAnnotationClick={handleAnnotationClick}
+                                  onCreateAnnotation={handleCreateAnnotation}
+                                  procedureId={procedure.id}
+                                  versionNumber={procedure.version}
+                                  containerRef={documentRef}
+                                  isCreatingAnnotation={isCreatingAnnotation}
+                                  onCancelCreate={() => setIsCreatingAnnotation(false)}
+                                  fileType="pdf"
+                                  currentPage={pageNumber}
+                                />
                               </div>
                             </PDFErrorBoundary>
                           )}
@@ -558,7 +797,7 @@ export function ProcedureViewer({
                       )}
 
                       {!isPDF && fileContent && (
-                        <div className="prose prose-slate dark:prose-invert max-w-none">
+                        <div className="prose prose-slate dark:prose-invert max-w-none relative">
                           <ReactMarkdown
                             components={{
                               // Disable HTML rendering for security
@@ -579,12 +818,53 @@ export function ProcedureViewer({
                           >
                             {fileContent}
                           </ReactMarkdown>
+
+                          {/* Annotation Overlay for Markdown */}
+                          <AnnotationOverlay
+                            annotations={annotations.filter(a => 
+                              visibleAnnotationTypes.has(a.type) && 
+                              (showResolved || !a.is_resolved)
+                            )}
+                            onAnnotationClick={handleAnnotationClick}
+                            onCreateAnnotation={handleCreateAnnotation}
+                            procedureId={procedure.id}
+                            versionNumber={procedure.version}
+                            containerRef={documentRef}
+                            isCreatingAnnotation={isCreatingAnnotation}
+                            onCancelCreate={() => setIsCreatingAnnotation(false)}
+                            fileType="md"
+                          />
                         </div>
                       )}
                     </>
                   )}
                 </div>
               </ScrollArea>
+            </TabsContent>
+
+            <TabsContent value="annotations" className="h-full m-0">
+              <div className="h-full">
+                <AnnotationPanel
+                  procedureId={procedure.id}
+                  versionNumber={procedure.version}
+                  annotations={annotations.filter(a => 
+                    visibleAnnotationTypes.has(a.type) && 
+                    (showResolved || !a.is_resolved)
+                  )}
+                  comments={comments}
+                  onCreateAnnotation={handleCreateAnnotation}
+                  onUpdateAnnotation={handleUpdateAnnotation}
+                  onDeleteAnnotation={handleDeleteAnnotation}
+                  onCreateComment={handleCreateComment}
+                  onUpdateComment={handleUpdateComment}
+                  onDeleteComment={handleDeleteComment}
+                  onAnnotationClick={(annotation) => {
+                    // Switch to document tab and highlight annotation
+                    setActiveTab('document');
+                    handleAnnotationClick(annotation);
+                  }}
+                />
+              </div>
             </TabsContent>
 
             <TabsContent value="versions" className="h-full m-0">

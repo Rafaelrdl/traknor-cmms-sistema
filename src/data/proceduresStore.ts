@@ -7,14 +7,24 @@ import {
   ProcedureVersion,
   VersionChangeType,
   ProcedureDiff,
-  VersionComparison
+  VersionComparison,
+  DocumentAnnotation,
+  Comment,
+  AnnotationThread,
+  ProcedureWithAnnotations,
+  AnnotationType,
+  CommentStatus
 } from '@/models/procedure';
 import proceduresData from '@/mocks/procedures.json';
 import categoriesData from '@/mocks/procedure_categories.json';
+import annotationsData from '@/mocks/procedure_annotations.json';
+import commentsData from '@/mocks/procedure_comments.json';
 
 const PROCEDURES_KEY = 'procedures:db';
 const CATEGORIES_KEY = 'procedure_categories:db';
 const VERSIONS_KEY = 'procedure_versions:db';
+const ANNOTATIONS_KEY = 'procedure_annotations:db';
+const COMMENTS_KEY = 'procedure_comments:db';
 const DB_NAME = 'ProceduresDB';
 const DB_VERSION = 2;
 const FILE_STORE_NAME = 'files';
@@ -444,7 +454,7 @@ export async function deleteFile(fileId: string): Promise<void> {
 
 // Initialize storage on first load
 export function initializeStorage(): void {
-  // Ensure categories, procedures, and versions are loaded with defaults
+  // Ensure categories, procedures, versions, annotations, and comments are loaded with defaults
   if (!localStorage.getItem(CATEGORIES_KEY)) {
     save(CATEGORIES_KEY, categoriesData as ProcedureCategory[]);
   }
@@ -453,6 +463,12 @@ export function initializeStorage(): void {
   }
   if (!localStorage.getItem(VERSIONS_KEY)) {
     save(VERSIONS_KEY, [] as ProcedureVersion[]);
+  }
+  if (!localStorage.getItem(ANNOTATIONS_KEY)) {
+    save(ANNOTATIONS_KEY, annotationsData as DocumentAnnotation[]);
+  }
+  if (!localStorage.getItem(COMMENTS_KEY)) {
+    save(COMMENTS_KEY, commentsData as Comment[]);
   }
 }
 
@@ -521,4 +537,248 @@ Após concluir todos os passos, registre a execução no sistema.
       console.warn(`Failed to create sample file for procedure ${procedure.id}:`, error);
     }
   }
+}
+
+// ============================================================================
+// ANNOTATION AND COMMENT FUNCTIONS
+// ============================================================================
+
+// Annotations
+export function listAnnotations(procedureId?: string, versionNumber?: number): DocumentAnnotation[] {
+  const annotations = load(ANNOTATIONS_KEY, [] as DocumentAnnotation[]);
+  
+  if (procedureId && versionNumber) {
+    return annotations.filter(a => a.procedure_id === procedureId && a.version_number === versionNumber);
+  }
+  
+  if (procedureId) {
+    return annotations.filter(a => a.procedure_id === procedureId);
+  }
+  
+  return annotations;
+}
+
+export function createAnnotation(
+  data: Omit<DocumentAnnotation, 'id' | 'created_at' | 'updated_at'>
+): DocumentAnnotation {
+  const annotations = listAnnotations();
+  const now = new Date().toISOString();
+  
+  const newAnnotation: DocumentAnnotation = {
+    ...data,
+    id: uuidv4(),
+    created_at: now,
+    updated_at: now,
+  };
+  
+  annotations.push(newAnnotation);
+  save(ANNOTATIONS_KEY, annotations);
+  
+  return newAnnotation;
+}
+
+export function updateAnnotation(
+  id: string, 
+  updates: Partial<Omit<DocumentAnnotation, 'id' | 'created_at' | 'updated_at'>>
+): DocumentAnnotation | null {
+  const annotations = listAnnotations();
+  const index = annotations.findIndex(a => a.id === id);
+  
+  if (index === -1) {
+    return null;
+  }
+  
+  const updatedAnnotation = {
+    ...annotations[index],
+    ...updates,
+    updated_at: new Date().toISOString(),
+  };
+  
+  annotations[index] = updatedAnnotation;
+  save(ANNOTATIONS_KEY, annotations);
+  
+  return updatedAnnotation;
+}
+
+export function deleteAnnotation(id: string): boolean {
+  const annotations = listAnnotations();
+  const filtered = annotations.filter(a => a.id !== id);
+  
+  if (filtered.length === annotations.length) {
+    return false; // Not found
+  }
+  
+  save(ANNOTATIONS_KEY, filtered);
+  
+  // Also delete related comments
+  const comments = listComments();
+  const filteredComments = comments.filter(c => c.annotation_id !== id);
+  save(COMMENTS_KEY, filteredComments);
+  
+  return true;
+}
+
+// Comments
+export function listComments(annotationId?: string, procedureId?: string): Comment[] {
+  const comments = load(COMMENTS_KEY, [] as Comment[]);
+  
+  if (annotationId) {
+    return comments.filter(c => c.annotation_id === annotationId);
+  }
+  
+  if (procedureId) {
+    return comments.filter(c => c.procedure_id === procedureId);
+  }
+  
+  return comments;
+}
+
+export function createComment(
+  data: Omit<Comment, 'id' | 'created_at' | 'updated_at'>
+): Comment {
+  const comments = listComments();
+  const now = new Date().toISOString();
+  
+  const newComment: Comment = {
+    ...data,
+    id: uuidv4(),
+    created_at: now,
+    updated_at: now,
+  };
+  
+  comments.push(newComment);
+  save(COMMENTS_KEY, comments);
+  
+  return newComment;
+}
+
+export function updateComment(
+  id: string, 
+  updates: Partial<Omit<Comment, 'id' | 'created_at' | 'updated_at'>>
+): Comment | null {
+  const comments = listComments();
+  const index = comments.findIndex(c => c.id === id);
+  
+  if (index === -1) {
+    return null;
+  }
+  
+  const updatedComment = {
+    ...comments[index],
+    ...updates,
+    updated_at: new Date().toISOString(),
+  };
+  
+  comments[index] = updatedComment;
+  save(COMMENTS_KEY, comments);
+  
+  return updatedComment;
+}
+
+export function deleteComment(id: string): boolean {
+  const comments = listComments();
+  const filtered = comments.filter(c => c.id !== id);
+  
+  if (filtered.length === comments.length) {
+    return false; // Not found
+  }
+  
+  save(COMMENTS_KEY, filtered);
+  return true;
+}
+
+// Utility functions
+export function getProcedureWithAnnotations(procedureId: string, versionNumber?: number): ProcedureWithAnnotations | null {
+  const procedure = listProcedures().find(p => p.id === procedureId);
+  if (!procedure) {
+    return null;
+  }
+  
+  const version = versionNumber || procedure.version;
+  const annotations = listAnnotations(procedureId, version);
+  const allComments = listComments(undefined, procedureId);
+  
+  // Group comments by annotation
+  const annotationThreads: AnnotationThread[] = annotations.map(annotation => {
+    const comments = allComments
+      .filter(c => c.annotation_id === annotation.id)
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    
+    return {
+      annotation,
+      comments,
+      unread_count: 0 // TODO: Implement read tracking
+    };
+  });
+  
+  return {
+    ...procedure,
+    annotations,
+    annotation_threads: annotationThreads,
+    total_comments: allComments.filter(c => c.procedure_id === procedureId).length,
+    unresolved_annotations: annotations.filter(a => !a.is_resolved).length
+  };
+}
+
+export function exportAnnotations(procedureId: string, versionNumber?: number): {
+  procedure: Procedure;
+  annotations: DocumentAnnotation[];
+  comments: Comment[];
+  export_date: string;
+} {
+  const procedure = listProcedures().find(p => p.id === procedureId);
+  if (!procedure) {
+    throw new Error('Procedure not found');
+  }
+  
+  const version = versionNumber || procedure.version;
+  const annotations = listAnnotations(procedureId, version);
+  const comments = listComments(undefined, procedureId);
+  
+  return {
+    procedure,
+    annotations,
+    comments,
+    export_date: new Date().toISOString()
+  };
+}
+
+export function getAnnotationStats(procedureId?: string): {
+  total: number;
+  by_type: Record<AnnotationType, number>;
+  resolved: number;
+  unresolved: number;
+  with_comments: number;
+  total_comments: number;
+} {
+  const annotations = procedureId ? listAnnotations(procedureId) : listAnnotations();
+  const comments = procedureId ? listComments(undefined, procedureId) : listComments();
+  
+  const by_type: Record<AnnotationType, number> = {
+    highlight: 0,
+    note: 0,
+    question: 0,
+    correction: 0,
+    warning: 0
+  };
+  
+  let resolved = 0;
+  let with_comments = 0;
+  
+  annotations.forEach(annotation => {
+    by_type[annotation.type]++;
+    if (annotation.is_resolved) resolved++;
+    
+    const hasComments = comments.some(c => c.annotation_id === annotation.id);
+    if (hasComments) with_comments++;
+  });
+  
+  return {
+    total: annotations.length,
+    by_type,
+    resolved,
+    unresolved: annotations.length - resolved,
+    with_comments,
+    total_comments: comments.length
+  };
 }
