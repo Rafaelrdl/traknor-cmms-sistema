@@ -171,7 +171,7 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
   };
 
   const handleLocationChange = (locationId: string) => {
-    if (locationId === "none") {
+    if (locationId === "no-location") {
       setFormData(prev => ({
         ...prev,
         scope: {
@@ -204,7 +204,7 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
   };
 
   const handleEquipmentChange = (equipmentId: string) => {
-    if (equipmentId === "none") {
+    if (equipmentId === "no-equipment") {
       setFormData(prev => ({
         ...prev,
         scope: {
@@ -380,14 +380,14 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
               <div className="space-y-2">
                 <Label>Localização (Opcional)</Label>
                 <Select
-                  value={formData.scope.location_id || "none"}
+                  value={formData.scope.location_id || "no-location"}
                   onValueChange={handleLocationChange}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione uma localização" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Nenhuma selecionada</SelectItem>
+                    <SelectItem value="no-location">Nenhuma selecionada</SelectItem>
                     {companies.map((company) => (
                       <SelectItem key={company.id} value={company.id}>
                         {company.name}
@@ -405,14 +405,14 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
               <div className="space-y-2">
                 <Label>Equipamento (Opcional)</Label>
                 <Select
-                  value={formData.scope.equipment_id || "none"}
+                  value={formData.scope.equipment_id || "no-equipment"}
                   onValueChange={handleEquipmentChange}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um equipamento" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Nenhum selecionado</SelectItem>
+                    <SelectItem value="no-equipment">Nenhum selecionado</SelectItem>
                     {equipment.map((eq) => (
                       <SelectItem key={eq.id} value={eq.id}>
                         {eq.tag} - {eq.model}

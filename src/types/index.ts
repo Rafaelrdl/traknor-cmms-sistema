@@ -256,3 +256,13 @@ export interface Solicitation {
   created_at: string;
   updated_at: string;
 }
+
+// Re-export inventory types for convenience
+export type { 
+  InventoryItem, 
+  InventoryCategory, 
+  InventoryMovement, 
+  ConsumptionByCategory, 
+  AnalysisRange,
+  MovementType 
+} from '@/models/inventory';
