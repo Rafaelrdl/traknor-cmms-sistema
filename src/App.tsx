@@ -10,6 +10,8 @@ import { MetricsPage } from '@/pages/MetricsPage';
 import { InventoryPage } from '@/pages/InventoryPage';
 import { ProceduresPage } from '@/pages/ProceduresPage';
 import { ReportsPage } from '@/pages/ReportsPage';
+import { ProfilePage } from '@/pages/ProfilePage';
+import { TeamPage } from '@/pages/TeamPage';
 import { Toaster } from '@/components/ui/sonner';
 import { RoleSwitcher } from '@/components/auth/RoleSwitcher';
 
@@ -43,6 +45,8 @@ function App() {
             <Route path="/inventory" element={<InventoryPage />} />
             <Route path="/procedures" element={<ProceduresPage />} />
             <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/admin/team" element={<TeamPage />} />
           </Routes>
         </Layout>
         <Toaster />
