@@ -219,17 +219,17 @@ export function SolicitationFilters({
                   Equipamento
                 </Label>
                 <Select
-                  value={filters.equipment || ''}
+                  value={filters.equipment || 'all'}
                   onValueChange={(value) => onFiltersChange({
                     ...filters,
-                    equipment: value || undefined
+                    equipment: value === 'all' ? undefined : value
                   })}
                 >
                   <SelectTrigger id="equipment-filter" className="h-9">
                     <SelectValue placeholder="Todos os equipamentos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos os equipamentos</SelectItem>
+                    <SelectItem value="all">Todos os equipamentos</SelectItem>
                     {equipmentOptions.map((equipment) => (
                       <SelectItem key={equipment.id} value={equipment.id}>
                         {equipment.name}
@@ -245,17 +245,17 @@ export function SolicitationFilters({
                   Localização
                 </Label>
                 <Select
-                  value={filters.location || ''}
+                  value={filters.location || 'all'}
                   onValueChange={(value) => onFiltersChange({
                     ...filters,
-                    location: value || undefined
+                    location: value === 'all' ? undefined : value
                   })}
                 >
                   <SelectTrigger id="location-filter" className="h-9">
                     <SelectValue placeholder="Todas as localizações" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas as localizações</SelectItem>
+                    <SelectItem value="all">Todas as localizações</SelectItem>
                     {locationOptions.map((location) => (
                       <SelectItem key={location.id} value={location.id}>
                         {location.name}
@@ -271,17 +271,17 @@ export function SolicitationFilters({
                   Solicitante
                 </Label>
                 <Select
-                  value={filters.requester || ''}
+                  value={filters.requester || 'all'}
                   onValueChange={(value) => onFiltersChange({
                     ...filters,
-                    requester: value || undefined
+                    requester: value === 'all' ? undefined : value
                   })}
                 >
                   <SelectTrigger id="requester-filter" className="h-9">
                     <SelectValue placeholder="Todos os solicitantes" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos os solicitantes</SelectItem>
+                    <SelectItem value="all">Todos os solicitantes</SelectItem>
                     {requesterOptions.map((requester) => (
                       <SelectItem key={requester.id} value={requester.id}>
                         {requester.name}

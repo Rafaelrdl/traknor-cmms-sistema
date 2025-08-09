@@ -53,7 +53,7 @@ export function LocationFormModal({
   // Sector form state
   const [sectorForm, setSectorForm] = useState<Partial<Sector>>({
     name: '',
-    companyId: '',
+    companyId: 'none',
     responsible: '',
     phone: '',
     email: '',
@@ -66,7 +66,7 @@ export function LocationFormModal({
   // Sub-section form state
   const [subSectionForm, setSubSectionForm] = useState<Partial<SubSection>>({
     name: '',
-    sectorId: '',
+    sectorId: 'none',
     responsible: '',
     phone: '',
     email: '',
@@ -105,7 +105,7 @@ export function LocationFormModal({
         });
         setSectorForm({
           name: '',
-          companyId: '',
+          companyId: 'none',
           responsible: '',
           phone: '',
           email: '',
@@ -116,7 +116,7 @@ export function LocationFormModal({
         });
         setSubSectionForm({
           name: '',
-          sectorId: '',
+          sectorId: 'none',
           responsible: '',
           phone: '',
           email: '',
@@ -146,6 +146,11 @@ export function LocationFormModal({
         setCompanies((current) => [...(current || []), newCompany]);
       }
     } else if (type === 'sector') {
+      // Don't allow saving if no company is selected
+      if (!sectorForm.companyId || sectorForm.companyId === 'none') {
+        return;
+      }
+      
       const newSector: Sector = {
         ...(sectorForm as Omit<Sector, 'id'>),
         id: mode === 'edit' ? (initialData as Sector).id : Date.now().toString()
@@ -160,6 +165,11 @@ export function LocationFormModal({
         setSectors((current) => [...(current || []), newSector]);
       }
     } else if (type === 'subsection') {
+      // Don't allow saving if no sector is selected
+      if (!subSectionForm.sectorId || subSectionForm.sectorId === 'none') {
+        return;
+      }
+      
       const newSubSection: SubSection = {
         ...(subSectionForm as Omit<SubSection, 'id'>),
         id: mode === 'edit' ? (initialData as SubSection).id : Date.now().toString()
@@ -377,6 +387,7 @@ export function LocationFormModal({
             <SelectValue placeholder="Selecionar empresa" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="none">Selecionar empresa</SelectItem>
             {(companies || []).map(company => (
               <SelectItem key={company.id} value={company.id}>
                 {company.name}
@@ -497,12 +508,12 @@ export function LocationFormModal({
           <Select 
             value={
               subSectionForm.sectorId 
-                ? sectors.find(s => s.id === subSectionForm.sectorId)?.companyId || ''
-                : ''
+                ? sectors.find(s => s.id === subSectionForm.sectorId)?.companyId || 'none'
+                : 'none'
             }
             onValueChange={(companyId) => {
               // Reset sector when company changes
-              setSubSectionForm(prev => ({ ...prev, sectorId: '' }));
+              setSubSectionForm(prev => ({ ...prev, sectorId: 'none' }));
               // Store company in temporary state for filtering
               setSectorForm(prev => ({ ...prev, companyId }));
             }}
@@ -511,6 +522,7 @@ export function LocationFormModal({
               <SelectValue placeholder="Selecionar empresa" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="none">Selecionar empresa</SelectItem>
               {companies.map(company => (
                 <SelectItem key={company.id} value={company.id}>
                   {company.name}
@@ -525,12 +537,13 @@ export function LocationFormModal({
           <Select 
             value={subSectionForm.sectorId} 
             onValueChange={(value) => setSubSectionForm(prev => ({ ...prev, sectorId: value }))}
-            disabled={!sectorForm.companyId}
+            disabled={!sectorForm.companyId || sectorForm.companyId === 'none'}
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecionar setor" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="none">Selecionar setor</SelectItem>
               {availableSectors.map(sector => (
                 <SelectItem key={sector.id} value={sector.id}>
                   {sector.name}
