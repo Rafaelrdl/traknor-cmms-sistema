@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import ReactMarkdown from 'react-markdown';
+// Import PDF configuration utility
+import '@/utils/pdfConfig';
 import { 
   ZoomIn, 
   ZoomOut, 
@@ -33,8 +35,7 @@ import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-// Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+
 
 interface ProcedureViewerProps {
   isOpen: boolean;
@@ -415,17 +416,44 @@ export function ProcedureViewer({
                         <div className="flex justify-center">
                           <Document
                             file={fileBlob}
-                            onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+                            onLoadSuccess={({ numPages }) => {
+                              console.log('PDF loaded successfully with', numPages, 'pages');
+                              setNumPages(numPages);
+                              setError(null); // Clear any previous errors
+                            }}
                             onLoadError={(error) => {
                               console.error('PDF load error:', error);
-                              setError('Erro ao carregar PDF');
+                              setError(`Erro ao carregar PDF: ${error?.message || 'Erro desconhecido'}`);
                             }}
-                            loading={<div>Carregando PDF...</div>}
+                            loading={
+                              <div className="flex items-center justify-center py-12">
+                                <div className="text-center">
+                                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                                  <div className="text-muted-foreground">Carregando PDF...</div>
+                                </div>
+                              </div>
+                            }
+                            error={
+                              <div className="text-center py-12">
+                                <div className="text-destructive mb-4">
+                                  Erro ao carregar PDF. Verifique se o arquivo é um PDF válido.
+                                </div>
+                                <Button onClick={handleDownload} variant="outline">
+                                  <Download className="mr-2 h-4 w-4" />
+                                  Baixar arquivo
+                                </Button>
+                              </div>
+                            }
+                            options={{
+                              // Disable worker in development to avoid CORS issues
+                              disableWorker: import.meta.env.DEV,
+                            }}
                           >
                             <Page 
                               pageNumber={pageNumber}
                               scale={scale}
                               loading={<div>Carregando página...</div>}
+                              error={<div className="text-destructive">Erro ao renderizar página</div>}
                               renderTextLayer={false}
                               renderAnnotationLayer={false}
                             />

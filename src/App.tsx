@@ -17,6 +17,9 @@ if (import.meta.env.DEV) {
   import('@/utils/proceduresDevUtils');
 }
 
+// Initialize PDF.js configuration early
+import '@/utils/pdfConfig';
+
 const queryClient = new QueryClient();
 
 function App() {
