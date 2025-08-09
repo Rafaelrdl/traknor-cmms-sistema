@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import ReactMarkdown from 'react-markdown';
 // Import PDF configuration utility
-import { configurePDFWorker, checkPDFWorkerStatus } from '@/utils/pdfConfig';
+import { configurePDFWorker, configurePDFWorkerWithFallback } from '@/utils/pdfConfig';
 import { 
   ZoomIn, 
   ZoomOut, 
@@ -31,6 +31,8 @@ import { Procedure, ProcedureCategory } from '@/models/procedure';
 import { getFileBlob, listVersions } from '@/data/proceduresStore';
 import { VersionHistory } from '@/components/procedure/VersionHistory';
 import { VersionComparison } from '@/components/procedure/VersionComparison';
+import { PDFViewerFallback } from '@/components/procedure/PDFViewerFallback';
+import { PDFErrorBoundary } from '@/components/ui/pdf-error-boundary';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -38,7 +40,7 @@ import { ptBR } from 'date-fns/locale';
 // Ensure PDF worker is configured and log status
 configurePDFWorker();
 if (import.meta.env.DEV) {
-  checkPDFWorkerStatus();
+  console.log('PDF.js worker configured for development:', pdfjs.GlobalWorkerOptions.workerSrc);
 }
 
 
@@ -65,6 +67,7 @@ export function ProcedureViewer({
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [scale, setScale] = useState(1.0);
+  const [useFallbackViewer, setUseFallbackViewer] = useState(false);
   
   // Version management state
   const [versions, setVersions] = useState(listVersions(procedure?.id));
@@ -91,6 +94,7 @@ export function ProcedureViewer({
       setScale(1.0);
       setNumPages(null);
       setActiveTab('document');
+      setUseFallbackViewer(false);
     };
   }, [procedure, isOpen]);
 
@@ -289,7 +293,7 @@ export function ProcedureViewer({
                   variant="outline" 
                   size="sm" 
                   onClick={handleZoomOut}
-                  disabled={!isPDF || scale <= 0.5}
+                  disabled={!isPDF || scale <= 0.5 || useFallbackViewer}
                   aria-label="Diminuir zoom"
                 >
                   <ZoomOut className="h-4 w-4" />
@@ -299,7 +303,7 @@ export function ProcedureViewer({
                   variant="outline" 
                   size="sm" 
                   onClick={handleZoomIn}
-                  disabled={!isPDF || scale >= 3.0}
+                  disabled={!isPDF || scale >= 3.0 || useFallbackViewer}
                   aria-label="Aumentar zoom"
                 >
                   <ZoomIn className="h-4 w-4" />
@@ -309,7 +313,7 @@ export function ProcedureViewer({
                   variant="outline" 
                   size="sm" 
                   onClick={handleResetZoom}
-                  disabled={!isPDF || scale === 1.0}
+                  disabled={!isPDF || scale === 1.0 || useFallbackViewer}
                   aria-label="Resetar zoom"
                 >
                   <RotateCcw className="h-4 w-4" />
@@ -318,7 +322,7 @@ export function ProcedureViewer({
 
               <Separator orientation="vertical" className="h-6" />
 
-              {isPDF && numPages && (
+              {isPDF && numPages && !useFallbackViewer && (
                 <div className="flex items-center gap-1">
                   <Button
                     variant="outline"
@@ -346,6 +350,24 @@ export function ProcedureViewer({
                     aria-label="Próxima página"
                   >
                     <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+
+              {isPDF && useFallbackViewer && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    Visualizador alternativo
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setUseFallbackViewer(false);
+                      loadFile(); // Retry with react-pdf
+                    }}
+                  >
+                    Tentar visualizador avançado
                   </Button>
                 </div>
               )}
@@ -412,79 +434,127 @@ export function ProcedureViewer({
                   {error && (
                     <div className="text-center py-12">
                       <div className="text-destructive mb-4">{error}</div>
-                      <Button onClick={loadFile}>Tentar novamente</Button>
+                      <div className="space-y-2">
+                        <Button onClick={loadFile} variant="outline">
+                          Tentar novamente
+                        </Button>
+                        <Button onClick={handleDownload} variant="outline">
+                          <Download className="mr-2 h-4 w-4" />
+                          Baixar arquivo
+                        </Button>
+                      </div>
                     </div>
                   )}
 
                   {!isLoading && !error && (
                     <>
                       {isPDF && fileBlob && (
-                        <div className="flex justify-center">
-                          <Document
-                            file={fileBlob}
-                            onLoadSuccess={({ numPages }) => {
-                              console.log('PDF loaded successfully with', numPages, 'pages');
-                              setNumPages(numPages);
-                              setError(null); // Clear any previous errors
-                            }}
-                            onLoadError={(error) => {
-                              console.error('PDF load error:', error);
-                              
-                              // If it's a worker error, try to reconfigure
-                              if (error?.message?.includes('workerSrc') || 
-                                  error?.message?.includes('GlobalWorkerOptions') ||
-                                  error?.message?.includes('No "GlobalWorkerOptions.workerSrc" specified')) {
-                                console.log('Attempting to reconfigure PDF.js worker...');
-                                const workerSrc = configurePDFWorker();
-                                console.log('New worker source:', workerSrc);
-                              }
-                              
-                              // Provide more helpful error messages
-                              let errorMessage = 'Erro desconhecido';
-                              if (error?.message?.includes('workerSrc')) {
-                                errorMessage = 'Erro de configuração do PDF.js. Tente recarregar a página.';
-                              } else if (error?.message?.includes('Invalid PDF')) {
-                                errorMessage = 'O arquivo não é um PDF válido.';
-                              } else if (error?.message) {
-                                errorMessage = error.message;
-                              }
-                              
-                              setError(`Erro ao carregar PDF: ${errorMessage}`);
-                            }}
-                            loading={
-                              <div className="flex items-center justify-center py-12">
-                                <div className="text-center">
-                                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                                  <div className="text-muted-foreground">Carregando PDF...</div>
-                                </div>
-                              </div>
-                            }
-                            error={
-                              <div className="text-center py-12">
-                                <div className="text-destructive mb-4">
-                                  Erro ao carregar PDF. Verifique se o arquivo é um PDF válido.
-                                </div>
-                                <Button onClick={handleDownload} variant="outline">
-                                  <Download className="mr-2 h-4 w-4" />
-                                  Baixar arquivo
-                                </Button>
-                              </div>
-                            }
-                            options={{
-                              // Ensure worker is configured
-                              workerSrc: pdfjs.GlobalWorkerOptions.workerSrc,
-                            }}
-                          >
-                            <Page 
-                              pageNumber={pageNumber}
-                              scale={scale}
-                              loading={<div>Carregando página...</div>}
-                              error={<div className="text-destructive">Erro ao renderizar página</div>}
-                              renderTextLayer={false}
-                              renderAnnotationLayer={false}
+                        <>
+                          {useFallbackViewer ? (
+                            <PDFViewerFallback
+                              fileBlob={fileBlob}
+                              fileName={procedure.file.name}
+                              onDownload={handleDownload}
                             />
-                          </Document>
-                        </div>
+                          ) : (
+                            <PDFErrorBoundary 
+                              onRetry={loadFile} 
+                              onDownload={handleDownload}
+                              fallbackMessage="Não foi possível exibir este PDF devido a restrições de rede ou problemas de compatibilidade."
+                            >
+                              <div className="flex justify-center">
+                                <Document
+                                  file={fileBlob}
+                                  onLoadSuccess={({ numPages }) => {
+                                    console.log('PDF loaded successfully with', numPages, 'pages');
+                                    setNumPages(numPages);
+                                    setError(null); // Clear any previous errors
+                                  }}
+                                  onLoadError={(error) => {
+                                    console.error('PDF load error:', error);
+                                    
+                                    // If it's a worker error, try to reconfigure with fallback
+                                    if (error?.message?.includes('workerSrc') || 
+                                        error?.message?.includes('GlobalWorkerOptions') ||
+                                        error?.message?.includes('No "GlobalWorkerOptions.workerSrc" specified') ||
+                                        error?.message?.includes('Failed to fetch dynamically imported module')) {
+                                      console.log('PDF.js worker failed, trying fallback approach...');
+                                      
+                                      try {
+                                        const workerSrc = configurePDFWorkerWithFallback();
+                                        console.log('Reconfigured worker source:', workerSrc);
+                                        
+                                        // Give a moment for the worker to be ready, then retry
+                                        setTimeout(() => {
+                                          loadFile();
+                                        }, 1000);
+                                        return; // Don't set error yet, let retry happen
+                                      } catch (configError) {
+                                        console.error('Worker reconfiguration failed, switching to fallback viewer');
+                                        setUseFallbackViewer(true);
+                                        return;
+                                      }
+                                    }
+                                    
+                                    // Provide more helpful error messages
+                                    let errorMessage = 'Erro desconhecido';
+                                    if (error?.message?.includes('workerSrc') || error?.message?.includes('Failed to fetch dynamically imported module')) {
+                                      errorMessage = 'Erro ao carregar o processador de PDF. A conexão com a internet pode estar instável. Tente baixar o arquivo.';
+                                    } else if (error?.message?.includes('Invalid PDF')) {
+                                      errorMessage = 'O arquivo não é um PDF válido.';
+                                    } else if (error?.message?.includes('Loading task cancelled')) {
+                                      errorMessage = 'Carregamento cancelado. Tente novamente.';
+                                    } else if (error?.message) {
+                                      errorMessage = error.message;
+                                    }
+                                    
+                                    setError(`Erro ao carregar PDF: ${errorMessage}`);
+                                  }}
+                                  loading={
+                                    <div className="flex items-center justify-center py-12">
+                                      <div className="text-center">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                                        <div className="text-muted-foreground">Carregando PDF...</div>
+                                      </div>
+                                    </div>
+                                  }
+                                  error={
+                                    <div className="text-center py-12">
+                                      <div className="text-destructive mb-4">
+                                        Não foi possível exibir o PDF no navegador.
+                                      </div>
+                                      <div className="text-sm text-muted-foreground mb-4">
+                                        Isso pode acontecer devido a restrições de rede ou problemas de compatibilidade.
+                                      </div>
+                                      <div className="space-y-2">
+                                        <Button onClick={() => setUseFallbackViewer(true)} variant="outline">
+                                          Usar visualizador alternativo
+                                        </Button>
+                                        <Button onClick={handleDownload} variant="default">
+                                          <Download className="mr-2 h-4 w-4" />
+                                          Baixar PDF
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  }
+                                  options={{
+                                    // Ensure worker is configured
+                                    workerSrc: pdfjs.GlobalWorkerOptions.workerSrc,
+                                  }}
+                                >
+                                  <Page 
+                                    pageNumber={pageNumber}
+                                    scale={scale}
+                                    loading={<div>Carregando página...</div>}
+                                    error={<div className="text-destructive">Erro ao renderizar página</div>}
+                                    renderTextLayer={false}
+                                    renderAnnotationLayer={false}
+                                  />
+                                </Document>
+                              </div>
+                            </PDFErrorBoundary>
+                          )}
+                        </>
                       )}
 
                       {!isPDF && fileContent && (
