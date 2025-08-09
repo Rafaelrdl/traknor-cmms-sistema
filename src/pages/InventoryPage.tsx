@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -31,14 +31,17 @@ export function InventoryPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showActiveOnly, setShowActiveOnly] = useState<boolean>(true);
   
+  // Memoize the filter options to prevent infinite re-renders
+  const filterOptions = useMemo(() => ({
+    includeInactive: role === 'admin' || role === 'technician',
+    onlyOwned: role === 'requester' // Requesters see limited inventory
+  }), [role]);
+
   // Apply role-based filtering to inventory items
   const { data: filteredInventoryData, stats: inventoryFilterStats } = useRoleBasedData(
     items, 
     'inventory',
-    { 
-      includeInactive: role === 'admin' || role === 'technician',
-      onlyOwned: role === 'requester' // Requesters see limited inventory
-    }
+    filterOptions
   );
   
   const [filteredItems, setFilteredItems] = useState<InventoryItem[]>(filteredInventoryData);

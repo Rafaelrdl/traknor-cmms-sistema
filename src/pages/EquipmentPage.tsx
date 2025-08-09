@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { LocationTree } from '@/components/LocationTree';
@@ -28,11 +28,16 @@ function AssetsContent() {
   const { selectedNode } = useLocationContext();
   const { role } = useAbility();
   
+  // Memoize the filter options to prevent infinite re-renders
+  const filterOptions = useMemo(() => ({
+    includeInactive: role === 'admin' // Only admin can see inactive assets
+  }), [role]);
+
   // Apply role-based filtering to equipment data
   const { data: filteredEquipmentData, stats: equipmentFilterStats } = useRoleBasedData(
     equipment || [], 
     'asset',
-    { includeInactive: role === 'admin' } // Only admin can see inactive assets
+    filterOptions
   );
   
   const [isEquipmentDialogOpen, setIsEquipmentDialogOpen] = useState(false);
@@ -45,7 +50,7 @@ function AssetsContent() {
   const [isStatusTrackingOpen, setIsStatusTrackingOpen] = useState(false);
 
   // Update filtered equipment when role-based data changes
-  useState(() => {
+  useEffect(() => {
     setFilteredEquipment(filteredEquipmentData);
   }, [filteredEquipmentData]);
 

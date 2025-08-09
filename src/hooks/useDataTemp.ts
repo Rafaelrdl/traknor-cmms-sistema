@@ -189,18 +189,21 @@ export const useSolicitations = (): [Solicitation[], (value: Solicitation[] | ((
   });
   
   const updateData = (value: Solicitation[] | ((current: Solicitation[]) => Solicitation[])) => {
-    let newData: Solicitation[];
     if (typeof value === 'function') {
-      newData = value(data);
-      setData(newData);
+      setData(currentData => {
+        const newData = value(currentData);
+        // Save to localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('traknor-solicitations', JSON.stringify(newData));
+        }
+        return newData;
+      });
     } else {
-      newData = value;
-      setData(newData);
-    }
-    
-    // Save to localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('traknor-solicitations', JSON.stringify(newData));
+      setData(value);
+      // Save to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('traknor-solicitations', JSON.stringify(value));
+      }
     }
   };
 

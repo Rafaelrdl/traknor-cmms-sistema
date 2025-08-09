@@ -90,7 +90,20 @@ export function FilteredDataProvider({
     onDataFiltered?.(filtered);
 
     return filtered;
-  }, [data, dataType, filterOptions, role]);
+  }, [
+    data, 
+    dataType, 
+    filterOptions, 
+    role,
+    filterWorkOrders,
+    filterAssets,
+    filterInventoryItems,
+    filterMaintenancePlans,
+    filterProcedures,
+    filterMetricsData,
+    maskSensitiveData,
+    onDataFiltered
+  ]);
 
   const canViewAll = can('manage', dataType as any) || role === 'admin';
 
@@ -235,5 +248,5 @@ export function useRoleBasedData<T>(
     };
 
     return { data: filtered, stats, role };
-  }, [data, dataType, options, role]);
+  }, [data, dataType, options, role, filtering]);
 }
