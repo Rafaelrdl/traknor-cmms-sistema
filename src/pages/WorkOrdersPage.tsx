@@ -306,7 +306,7 @@ export function WorkOrdersPage() {
 
                         {item.type === 'MULTIPLE_CHOICE' && (
                           <Select 
-                            value={item.response as string || ''} 
+                            value={item.response as string || undefined} 
                             onValueChange={(value) => 
                               updateChecklistResponse(item.id, value)
                             }

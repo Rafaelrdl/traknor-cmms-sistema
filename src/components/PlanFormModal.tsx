@@ -171,6 +171,18 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
   };
 
   const handleLocationChange = (locationId: string) => {
+    if (locationId === "none") {
+      setFormData(prev => ({
+        ...prev,
+        scope: {
+          ...prev.scope,
+          location_id: '',
+          location_name: ''
+        }
+      }));
+      return;
+    }
+
     const company = companies.find(c => c.id === locationId);
     const sector = sectors.find(s => s.id === locationId);
     
@@ -192,6 +204,18 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
   };
 
   const handleEquipmentChange = (equipmentId: string) => {
+    if (equipmentId === "none") {
+      setFormData(prev => ({
+        ...prev,
+        scope: {
+          ...prev.scope,
+          equipment_id: '',
+          equipment_name: ''
+        }
+      }));
+      return;
+    }
+
     const selectedEquipment = equipment.find(eq => eq.id === equipmentId);
     
     setFormData(prev => ({
@@ -312,7 +336,7 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
             <div className="space-y-2">
               <Label htmlFor="frequency">Frequência *</Label>
               <Select
-                value={formData.frequency}
+                value={formData.frequency || undefined}
                 onValueChange={(value) => setFormData(prev => ({ 
                   ...prev, 
                   frequency: value as MaintenancePlan['frequency']
@@ -356,14 +380,14 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
               <div className="space-y-2">
                 <Label>Localização (Opcional)</Label>
                 <Select
-                  value={formData.scope.location_id}
+                  value={formData.scope.location_id || "none"}
                   onValueChange={handleLocationChange}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione uma localização" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhuma selecionada</SelectItem>
+                    <SelectItem value="none">Nenhuma selecionada</SelectItem>
                     {companies.map((company) => (
                       <SelectItem key={company.id} value={company.id}>
                         {company.name}
@@ -381,14 +405,14 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
               <div className="space-y-2">
                 <Label>Equipamento (Opcional)</Label>
                 <Select
-                  value={formData.scope.equipment_id}
+                  value={formData.scope.equipment_id || "none"}
                   onValueChange={handleEquipmentChange}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um equipamento" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhum selecionado</SelectItem>
+                    <SelectItem value="none">Nenhum selecionado</SelectItem>
                     {equipment.map((eq) => (
                       <SelectItem key={eq.id} value={eq.id}>
                         {eq.tag} - {eq.model}
