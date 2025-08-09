@@ -1,13 +1,33 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Procedure, ProcedureCategory, ProcedureFileRef, ProcedureStatus } from '@/models/procedure';
+import { 
+  Procedure, 
+  ProcedureCategory, 
+  ProcedureFileRef, 
+  ProcedureStatus, 
+  ProcedureVersion,
+  VersionChangeType,
+  ProcedureDiff,
+  VersionComparison
+} from '@/models/procedure';
 import proceduresData from '@/mocks/procedures.json';
 import categoriesData from '@/mocks/procedure_categories.json';
 
 const PROCEDURES_KEY = 'procedures:db';
 const CATEGORIES_KEY = 'procedure_categories:db';
+const VERSIONS_KEY = 'procedure_versions:db';
 const DB_NAME = 'ProceduresDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const FILE_STORE_NAME = 'files';
+
+// Simple checksum function for file comparison
+function calculateChecksum(content: ArrayBuffer): string {
+  const view = new Uint8Array(content);
+  let hash = 0;
+  for (let i = 0; i < view.length; i++) {
+    hash = ((hash << 5) - hash + view[i]) & 0xffffffff;
+  }
+  return hash.toString(16);
+}
 
 // IndexedDB for file storage
 class FileStorage {
@@ -36,11 +56,15 @@ class FileStorage {
     if (!this.db) await this.init();
     
     const fileId = uuidv4();
+    const buffer = await file.arrayBuffer();
+    const checksum = calculateChecksum(buffer);
+    
     const fileRef: ProcedureFileRef = {
       id: fileId,
       name: file.name,
       type: file.name.endsWith('.pdf') ? 'pdf' : 'md',
-      size: file.size
+      size: file.size,
+      checksum
     };
 
     return new Promise((resolve, reject) => {
@@ -115,6 +139,185 @@ export function getCategoryById(id: string): ProcedureCategory | null {
   return categories.find(cat => cat.id === id) || null;
 }
 
+// Versions
+export function listVersions(procedureId?: string): ProcedureVersion[] {
+  const versions = load(VERSIONS_KEY, [] as ProcedureVersion[]);
+  return procedureId 
+    ? versions.filter(v => v.procedure_id === procedureId).sort((a, b) => b.version_number - a.version_number)
+    : versions;
+}
+
+export function createVersion(
+  procedure: Procedure, 
+  changeType: VersionChangeType,
+  changeSummary?: string
+): ProcedureVersion {
+  const versions = load(VERSIONS_KEY, [] as ProcedureVersion[]);
+  
+  const version: ProcedureVersion = {
+    id: uuidv4(),
+    procedure_id: procedure.id,
+    version_number: procedure.version,
+    title: procedure.title,
+    description: procedure.description,
+    category_id: procedure.category_id,
+    status: procedure.status,
+    tags: procedure.tags,
+    file: procedure.file,
+    change_type: changeType,
+    change_summary: changeSummary,
+    created_at: new Date().toISOString()
+  };
+  
+  versions.push(version);
+  save(VERSIONS_KEY, versions);
+  return version;
+}
+
+export function getVersionById(versionId: string): ProcedureVersion | null {
+  const versions = listVersions();
+  return versions.find(v => v.id === versionId) || null;
+}
+
+// Compare two versions and return differences
+export function compareVersions(
+  fromVersionId: string, 
+  toVersionId: string
+): VersionComparison | null {
+  const fromVersion = getVersionById(fromVersionId);
+  const toVersion = getVersionById(toVersionId);
+  
+  if (!fromVersion || !toVersion) {
+    return null;
+  }
+  
+  const diffs: ProcedureDiff[] = [];
+  
+  // Compare title
+  if (fromVersion.title !== toVersion.title) {
+    diffs.push({
+      field: 'title',
+      label: 'Título',
+      oldValue: fromVersion.title,
+      newValue: toVersion.title,
+      changeType: 'modified'
+    });
+  }
+  
+  // Compare description
+  if (fromVersion.description !== toVersion.description) {
+    diffs.push({
+      field: 'description',
+      label: 'Descrição',
+      oldValue: fromVersion.description || '',
+      newValue: toVersion.description || '',
+      changeType: fromVersion.description && toVersion.description ? 'modified' :
+                  fromVersion.description ? 'removed' : 'added'
+    });
+  }
+  
+  // Compare category
+  if (fromVersion.category_id !== toVersion.category_id) {
+    const fromCategory = fromVersion.category_id ? getCategoryById(fromVersion.category_id) : null;
+    const toCategory = toVersion.category_id ? getCategoryById(toVersion.category_id) : null;
+    
+    diffs.push({
+      field: 'category_id',
+      label: 'Categoria',
+      oldValue: fromCategory?.name || 'Nenhuma',
+      newValue: toCategory?.name || 'Nenhuma',
+      changeType: 'modified'
+    });
+  }
+  
+  // Compare status
+  if (fromVersion.status !== toVersion.status) {
+    diffs.push({
+      field: 'status',
+      label: 'Status',
+      oldValue: fromVersion.status,
+      newValue: toVersion.status,
+      changeType: 'modified'
+    });
+  }
+  
+  // Compare tags
+  const fromTags = fromVersion.tags || [];
+  const toTags = toVersion.tags || [];
+  const tagsChanged = JSON.stringify(fromTags.sort()) !== JSON.stringify(toTags.sort());
+  
+  if (tagsChanged) {
+    diffs.push({
+      field: 'tags',
+      label: 'Tags',
+      oldValue: fromTags.join(', ') || 'Nenhuma',
+      newValue: toTags.join(', ') || 'Nenhuma',
+      changeType: 'modified'
+    });
+  }
+  
+  // Compare file (based on checksum if available)
+  const hasFileChanges = fromVersion.file.checksum !== toVersion.file.checksum ||
+                        fromVersion.file.name !== toVersion.file.name ||
+                        fromVersion.file.size !== toVersion.file.size;
+  
+  if (hasFileChanges) {
+    diffs.push({
+      field: 'file',
+      label: 'Arquivo',
+      oldValue: `${fromVersion.file.name} (${(fromVersion.file.size / 1024).toFixed(1)} KB)`,
+      newValue: `${toVersion.file.name} (${(toVersion.file.size / 1024).toFixed(1)} KB)`,
+      changeType: 'modified'
+    });
+  }
+  
+  return {
+    fromVersion,
+    toVersion,
+    diffs,
+    hasFileChanges
+  };
+}
+
+// Rollback procedure to a specific version
+export async function rollbackToVersion(procedureId: string, versionId: string): Promise<Procedure | null> {
+  const version = getVersionById(versionId);
+  if (!version || version.procedure_id !== procedureId) {
+    return null;
+  }
+  
+  const procedures = listProcedures();
+  const procedureIndex = procedures.findIndex(p => p.id === procedureId);
+  
+  if (procedureIndex === -1) {
+    return null;
+  }
+  
+  // Create new version for current state before rollback
+  const currentProcedure = procedures[procedureIndex];
+  createVersion(currentProcedure, 'updated', `Rollback para versão ${version.version_number}`);
+  
+  // Update procedure with version data
+  const updatedProcedure: Procedure = {
+    ...currentProcedure,
+    title: version.title,
+    description: version.description,
+    category_id: version.category_id,
+    status: version.status,
+    tags: version.tags,
+    file: version.file,
+    version: currentProcedure.version + 1,
+    updated_at: new Date().toISOString()
+  };
+  
+  procedures[procedureIndex] = updatedProcedure;
+  save(PROCEDURES_KEY, procedures);
+  
+  // Create rollback version entry
+  createVersion(updatedProcedure, 'updated', `Restaurado da versão ${version.version_number}`);
+  
+  return updatedProcedure;
+}
 // Procedures
 export function listProcedures(): Procedure[] {
   return load(PROCEDURES_KEY, proceduresData as Procedure[]);
@@ -136,10 +339,18 @@ export function createProcedure(
   
   procedures.push(newProcedure);
   save(PROCEDURES_KEY, procedures);
+  
+  // Create initial version
+  createVersion(newProcedure, 'created', 'Criação inicial do procedimento');
+  
   return newProcedure;
 }
 
-export function updateProcedure(procedure: Procedure): Procedure {
+export function updateProcedure(
+  procedure: Procedure, 
+  changeType: VersionChangeType = 'updated',
+  changeSummary?: string
+): Procedure {
   const procedures = listProcedures();
   const index = procedures.findIndex(p => p.id === procedure.id);
   
@@ -154,6 +365,10 @@ export function updateProcedure(procedure: Procedure): Procedure {
   
   procedures[index] = updatedProcedure;
   save(PROCEDURES_KEY, procedures);
+  
+  // Create version entry
+  createVersion(updatedProcedure, changeType, changeSummary);
+  
   return updatedProcedure;
 }
 
@@ -171,11 +386,11 @@ export function deleteProcedure(id: string): void {
   }
 }
 
-export function bumpVersion(procedure: Procedure): Procedure {
+export function bumpVersion(procedure: Procedure, changeSummary?: string): Procedure {
   return updateProcedure({
     ...procedure,
     version: procedure.version + 1,
-  });
+  }, 'file_updated', changeSummary || 'Arquivo atualizado');
 }
 
 export function filterProcedures(filters: {
@@ -229,12 +444,15 @@ export async function deleteFile(fileId: string): Promise<void> {
 
 // Initialize storage on first load
 export function initializeStorage(): void {
-  // Ensure categories and procedures are loaded with defaults
+  // Ensure categories, procedures, and versions are loaded with defaults
   if (!localStorage.getItem(CATEGORIES_KEY)) {
     save(CATEGORIES_KEY, categoriesData as ProcedureCategory[]);
   }
   if (!localStorage.getItem(PROCEDURES_KEY)) {
     save(PROCEDURES_KEY, proceduresData as Procedure[]);
+  }
+  if (!localStorage.getItem(VERSIONS_KEY)) {
+    save(VERSIONS_KEY, [] as ProcedureVersion[]);
   }
 }
 

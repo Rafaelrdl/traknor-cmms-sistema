@@ -8,7 +8,10 @@ import {
   ChevronLeft, 
   ChevronRight, 
   Download,
-  X
+  X,
+  History,
+  FileText,
+  GitCompare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,11 +21,14 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Procedure, ProcedureCategory } from '@/models/procedure';
-import { getFileBlob } from '@/data/proceduresStore';
+import { getFileBlob, listVersions } from '@/data/proceduresStore';
+import { VersionHistory } from '@/components/procedure/VersionHistory';
+import { VersionComparison } from '@/components/procedure/VersionComparison';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -53,6 +59,12 @@ export function ProcedureViewer({
   const [pageNumber, setPageNumber] = useState(1);
   const [scale, setScale] = useState(1.0);
   
+  // Version management state
+  const [versions, setVersions] = useState(listVersions(procedure?.id));
+  const [showVersionComparison, setShowVersionComparison] = useState(false);
+  const [comparisonVersions, setComparisonVersions] = useState({ from: '', to: '' });
+  const [activeTab, setActiveTab] = useState('document');
+  
   const viewerRef = useRef<HTMLDivElement>(null);
 
   const category = procedure?.category_id 
@@ -62,6 +74,7 @@ export function ProcedureViewer({
   useEffect(() => {
     if (procedure && isOpen) {
       loadFile();
+      setVersions(listVersions(procedure.id));
     }
     return () => {
       setFileContent(null);
@@ -70,6 +83,7 @@ export function ProcedureViewer({
       setPageNumber(1);
       setScale(1.0);
       setNumPages(null);
+      setActiveTab('document');
     };
   }, [procedure, isOpen]);
 
@@ -146,31 +160,40 @@ export function ProcedureViewer({
         onClose();
         break;
       case 'ArrowLeft':
-        handlePrevPage();
+        if (activeTab === 'document') handlePrevPage();
         break;
       case 'ArrowRight':
-        handleNextPage();
+        if (activeTab === 'document') handleNextPage();
         break;
       case '+':
       case '=':
         if (e.ctrlKey || e.metaKey) {
           e.preventDefault();
-          handleZoomIn();
+          if (activeTab === 'document') handleZoomIn();
         }
         break;
       case '-':
         if (e.ctrlKey || e.metaKey) {
           e.preventDefault();
-          handleZoomOut();
+          if (activeTab === 'document') handleZoomOut();
         }
         break;
       case '0':
         if (e.ctrlKey || e.metaKey) {
           e.preventDefault();
-          handleResetZoom();
+          if (activeTab === 'document') handleResetZoom();
         }
         break;
     }
+  };
+
+  const handleVersionCompare = (fromVersionId: string, toVersionId: string) => {
+    setComparisonVersions({ from: fromVersionId, to: toVersionId });
+    setShowVersionComparison(true);
+  };
+
+  const handleProcedureUpdate = () => {
+    setVersions(listVersions(procedure?.id));
   };
 
   useEffect(() => {
@@ -252,70 +275,95 @@ export function ProcedureViewer({
 
         {/* Toolbar */}
         <div className="flex items-center gap-2 px-6 py-3 border-b bg-muted/30">
-          <div className="flex items-center gap-1">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleZoomOut}
-              disabled={!isPDF || scale <= 0.5}
-              aria-label="Diminuir zoom"
-            >
-              <ZoomOut className="h-4 w-4" />
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleZoomIn}
-              disabled={!isPDF || scale >= 3.0}
-              aria-label="Aumentar zoom"
-            >
-              <ZoomIn className="h-4 w-4" />
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleResetZoom}
-              disabled={!isPDF || scale === 1.0}
-              aria-label="Resetar zoom"
-            >
-              <RotateCcw className="h-4 w-4" />
-            </Button>
-          </div>
+          {activeTab === 'document' && (
+            <>
+              <div className="flex items-center gap-1">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleZoomOut}
+                  disabled={!isPDF || scale <= 0.5}
+                  aria-label="Diminuir zoom"
+                >
+                  <ZoomOut className="h-4 w-4" />
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleZoomIn}
+                  disabled={!isPDF || scale >= 3.0}
+                  aria-label="Aumentar zoom"
+                >
+                  <ZoomIn className="h-4 w-4" />
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleResetZoom}
+                  disabled={!isPDF || scale === 1.0}
+                  aria-label="Resetar zoom"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              </div>
 
-          <Separator orientation="vertical" className="h-6" />
+              <Separator orientation="vertical" className="h-6" />
 
-          {isPDF && numPages && (
-            <div className="flex items-center gap-1">
+              {isPDF && numPages && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePrevPage}
+                    disabled={pageNumber <= 1}
+                    aria-label="Página anterior"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  
+                  <span 
+                    className="text-sm px-3 py-1 bg-background rounded border"
+                    aria-live="polite"
+                    aria-label={`Página ${pageNumber} de ${numPages}`}
+                  >
+                    {pageNumber} de {numPages}
+                  </span>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleNextPage}
+                    disabled={pageNumber >= numPages}
+                    aria-label="Próxima página"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+
+              <Separator orientation="vertical" className="h-6" />
+            </>
+          )}
+
+          {activeTab === 'versions' && versions.length >= 2 && (
+            <>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handlePrevPage}
-                disabled={pageNumber <= 1}
-                aria-label="Página anterior"
+                onClick={() => {
+                  if (versions.length >= 2) {
+                    setComparisonVersions({ from: versions[1].id, to: versions[0].id });
+                    setShowVersionComparison(true);
+                  }
+                }}
               >
-                <ChevronLeft className="h-4 w-4" />
+                <GitCompare className="h-4 w-4 mr-2" />
+                Comparar Versões
               </Button>
-              
-              <span 
-                className="text-sm px-3 py-1 bg-background rounded border"
-                aria-live="polite"
-                aria-label={`Página ${pageNumber} de ${numPages}`}
-              >
-                {pageNumber} de {numPages}
-              </span>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleNextPage}
-                disabled={pageNumber >= numPages}
-                aria-label="Próxima página"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
+              <Separator orientation="vertical" className="h-6" />
+            </>
           )}
 
           <div className="ml-auto">
@@ -326,87 +374,135 @@ export function ProcedureViewer({
           </div>
         </div>
 
+        {/* Tabs */}
+        <div className="border-b">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="px-6">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="document" className="flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Documento
+              </TabsTrigger>
+              <TabsTrigger value="versions" className="flex items-center gap-2">
+                <History className="w-4 h-4" />
+                Histórico ({versions.length})
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
         {/* Content Area */}
         <div className="flex-1 overflow-hidden">
-          <ScrollArea className="h-full">
-            <div ref={viewerRef} className="p-6">
-              {isLoading && (
-                <div className="flex items-center justify-center h-64">
-                  <div className="text-muted-foreground">Carregando arquivo...</div>
-                </div>
-              )}
-
-              {error && (
-                <div className="text-center py-12">
-                  <div className="text-destructive mb-4">{error}</div>
-                  <Button onClick={loadFile}>Tentar novamente</Button>
-                </div>
-              )}
-
-              {!isLoading && !error && (
-                <>
-                  {isPDF && fileBlob && (
-                    <div className="flex justify-center">
-                      <Document
-                        file={fileBlob}
-                        onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-                        onLoadError={(error) => {
-                          console.error('PDF load error:', error);
-                          setError('Erro ao carregar PDF');
-                        }}
-                        loading={<div>Carregando PDF...</div>}
-                      >
-                        <Page 
-                          pageNumber={pageNumber}
-                          scale={scale}
-                          loading={<div>Carregando página...</div>}
-                          renderTextLayer={false}
-                          renderAnnotationLayer={false}
-                        />
-                      </Document>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsContent value="document" className="h-full m-0">
+              <ScrollArea className="h-full">
+                <div ref={viewerRef} className="p-6">
+                  {isLoading && (
+                    <div className="flex items-center justify-center h-64">
+                      <div className="text-muted-foreground">Carregando arquivo...</div>
                     </div>
                   )}
 
-                  {!isPDF && fileContent && (
-                    <div className="prose prose-slate dark:prose-invert max-w-none">
-                      <ReactMarkdown
-                        components={{
-                          // Disable HTML rendering for security
-                          html: () => null,
-                          // Custom link handling
-                          a: ({ href, children, ...props }) => (
-                            <a 
-                              href={href} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-primary underline hover:no-underline"
-                              {...props}
-                            >
-                              {children}
-                            </a>
-                          ),
-                        }}
-                      >
-                        {fileContent}
-                      </ReactMarkdown>
+                  {error && (
+                    <div className="text-center py-12">
+                      <div className="text-destructive mb-4">{error}</div>
+                      <Button onClick={loadFile}>Tentar novamente</Button>
                     </div>
                   )}
-                </>
-              )}
-            </div>
-          </ScrollArea>
+
+                  {!isLoading && !error && (
+                    <>
+                      {isPDF && fileBlob && (
+                        <div className="flex justify-center">
+                          <Document
+                            file={fileBlob}
+                            onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+                            onLoadError={(error) => {
+                              console.error('PDF load error:', error);
+                              setError('Erro ao carregar PDF');
+                            }}
+                            loading={<div>Carregando PDF...</div>}
+                          >
+                            <Page 
+                              pageNumber={pageNumber}
+                              scale={scale}
+                              loading={<div>Carregando página...</div>}
+                              renderTextLayer={false}
+                              renderAnnotationLayer={false}
+                            />
+                          </Document>
+                        </div>
+                      )}
+
+                      {!isPDF && fileContent && (
+                        <div className="prose prose-slate dark:prose-invert max-w-none">
+                          <ReactMarkdown
+                            components={{
+                              // Disable HTML rendering for security
+                              html: () => null,
+                              // Custom link handling
+                              a: ({ href, children, ...props }) => (
+                                <a 
+                                  href={href} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-primary underline hover:no-underline"
+                                  {...props}
+                                >
+                                  {children}
+                                </a>
+                              ),
+                            }}
+                          >
+                            {fileContent}
+                          </ReactMarkdown>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+
+            <TabsContent value="versions" className="h-full m-0">
+              <ScrollArea className="h-full">
+                <div className="p-6">
+                  <VersionHistory
+                    versions={versions}
+                    currentVersion={procedure.version}
+                    onVersionCompare={(fromVersionId, toVersionId) => {
+                      setComparisonVersions({ from: fromVersionId, to: toVersionId });
+                      setShowVersionComparison(true);
+                    }}
+                    onProcedureUpdate={() => {
+                      setVersions(listVersions(procedure.id));
+                    }}
+                  />
+                </div>
+              </ScrollArea>
+            </TabsContent>
+          </Tabs>
         </div>
 
         {/* Footer with keyboard shortcuts */}
         <div className="border-t px-6 py-3 bg-muted/30">
           <div className="text-xs text-muted-foreground">
             <strong>Atalhos:</strong> 
-            {isPDF && ' ← → (navegar páginas) •'}
-            {isPDF && ' Ctrl/Cmd + - (zoom) •'}
+            {activeTab === 'document' && isPDF && ' ← → (navegar páginas) •'}
+            {activeTab === 'document' && isPDF && ' Ctrl/Cmd + - (zoom) •'}
             {' '}Esc (fechar)
           </div>
         </div>
       </SheetContent>
+
+      {/* Version Comparison Dialog */}
+      {procedure && showVersionComparison && (
+        <VersionComparison
+          procedureId={procedure.id}
+          isOpen={showVersionComparison}
+          onClose={() => setShowVersionComparison(false)}
+          onProcedureUpdate={handleProcedureUpdate}
+        />
+      )}
     </Sheet>
   );
 }

@@ -91,6 +91,12 @@ export function ProceduresPage() {
     setSelectedProcedure(undefined);
   };
 
+  const handleViewerClose = () => {
+    setModals(prev => ({ ...prev, view: false }));
+    // Refresh procedures when viewer closes to catch any version changes
+    refreshProcedures();
+  };
+
   // Calculate statistics
   const stats = {
     total: procedures.length,
@@ -227,7 +233,7 @@ export function ProceduresPage() {
 
       <ProcedureViewer
         isOpen={modals.view}
-        onClose={() => handleCloseModal('view')}
+        onClose={handleViewerClose}
         procedure={selectedProcedure}
         categories={categories}
       />
