@@ -1,48 +1,110 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Plus, Search, Download, Eye } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { BookOpen, Plus, FileText, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { ProcedureFilters } from '@/components/procedure/ProcedureFilters';
+import { ProcedureTable } from '@/components/procedure/ProcedureTable';
+import { ProcedureModal } from '@/components/procedure/ProcedureModal';
+import { ProcedureViewer } from '@/components/procedure/ProcedureViewer';
+import { 
+  listProcedures, 
+  listCategories, 
+  filterProcedures,
+  initializeStorage,
+  createSampleFiles
+} from '@/data/proceduresStore';
+import { Procedure, ProcedureStatus } from '@/models/procedure';
 
 export function ProceduresPage() {
-  const procedures = [
-    {
-      id: 1,
-      title: 'Procedimento de Limpeza de Filtros HVAC',
-      category: 'Manutenção Preventiva',
-      version: '2.1',
-      status: 'Ativo',
-      lastUpdated: '2024-01-15',
-      description: 'Procedimento padrão para limpeza e substituição de filtros em sistemas de ar condicionado.',
-    },
-    {
-      id: 2,
-      title: 'Inspeção de Compressores',
-      category: 'Manutenção Preventiva',
-      version: '1.3',
-      status: 'Ativo',
-      lastUpdated: '2024-01-10',
-      description: 'Checklist completo para inspeção de compressores e identificação de problemas.',
-    },
-    {
-      id: 3,
-      title: 'Manutenção Corretiva - Vazamentos',
-      category: 'Manutenção Corretiva',
-      version: '1.0',
-      status: 'Em Revisão',
-      lastUpdated: '2024-01-08',
-      description: 'Procedimentos para identificação e reparo de vazamentos em sistemas HVAC.',
-    },
-    {
-      id: 4,
-      title: 'Calibração de Termostatos',
-      category: 'Manutenção Preventiva',
-      version: '1.2',
-      status: 'Ativo',
-      lastUpdated: '2024-01-05',
-      description: 'Procedimento para calibração e ajuste de termostatos digitais e analógicos.',
-    },
-  ];
+  const [procedures, setProcedures] = useState(listProcedures());
+  const [filteredProcedures, setFilteredProcedures] = useState(procedures);
+  const [categories] = useState(listCategories());
+  
+  const [filters, setFilters] = useState({
+    category_id: null as string | null,
+    status: 'Todos' as ProcedureStatus | 'Todos',
+    q: '',
+  });
+  
+  const [modals, setModals] = useState({
+    create: false,
+    edit: false,
+    view: false,
+  });
+  
+  const [selectedProcedure, setSelectedProcedure] = useState<Procedure | undefined>();
+
+  // Initialize storage and load procedures
+  useEffect(() => {
+    initializeStorage();
+    createSampleFiles().catch(console.warn); // Create sample files for demo
+    refreshProcedures();
+  }, []);
+
+  // Apply filters when they change
+  useEffect(() => {
+    const filtered = filterProcedures({
+      category_id: filters.category_id,
+      status: filters.status === 'Todos' ? undefined : filters.status,
+      q: filters.q,
+    });
+    setFilteredProcedures(filtered);
+  }, [procedures, filters]);
+
+  const refreshProcedures = () => {
+    setProcedures(listProcedures());
+  };
+
+  const handleFilterChange = (newFilters: Partial<typeof filters>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
+  };
+
+  const handleResetFilters = () => {
+    setFilters({
+      category_id: null,
+      status: 'Todos',
+      q: '',
+    });
+  };
+
+  const handleViewProcedure = (procedure: Procedure) => {
+    setSelectedProcedure(procedure);
+    setModals(prev => ({ ...prev, view: true }));
+  };
+
+  const handleEditProcedure = (procedure: Procedure) => {
+    setSelectedProcedure(procedure);
+    setModals(prev => ({ ...prev, edit: true }));
+  };
+
+  const handleCloseModal = (type: keyof typeof modals) => {
+    setModals(prev => ({ ...prev, [type]: false }));
+    if (type !== 'view') {
+      setSelectedProcedure(undefined);
+    }
+  };
+
+  const handleModalSuccess = () => {
+    refreshProcedures();
+    setModals({ create: false, edit: false, view: false });
+    setSelectedProcedure(undefined);
+  };
+
+  const handleViewerClose = () => {
+    setModals(prev => ({ ...prev, view: false }));
+    // Refresh procedures when viewer closes to catch any version changes
+    refreshProcedures();
+  };
+
+  // Calculate statistics
+  const stats = {
+    total: procedures.length,
+    active: procedures.filter(p => p.status === 'Ativo').length,
+    inactive: procedures.filter(p => p.status === 'Inativo').length,
+    pdf: procedures.filter(p => p.file.type === 'pdf').length,
+    md: procedures.filter(p => p.file.type === 'md').length,
+  };
 
   return (
     <div className="space-y-6">
@@ -50,38 +112,28 @@ export function ProceduresPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Procedimentos</h1>
-          <p className="text-muted-foreground">
-            Gerencie e acesse procedimentos operacionais padronizados
-          </p>
         </div>
         <div className="flex gap-2">
-          <Button>
+          <Button onClick={() => setModals(prev => ({ ...prev, create: true }))}>
             <Plus className="mr-2 h-4 w-4" />
             Novo Procedimento
           </Button>
         </div>
       </div>
 
-      {/* Search and Filters */}
+      {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Buscar procedimentos..."
-                className="pl-10"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                Categoria
-              </Button>
-              <Button variant="outline" size="sm">
-                Status
-              </Button>
-            </div>
-          </div>
+          <ProcedureFilters
+            categories={categories}
+            selectedCategory={filters.category_id}
+            selectedStatus={filters.status}
+            searchQuery={filters.q}
+            onCategoryChange={(categoryId) => handleFilterChange({ category_id: categoryId })}
+            onStatusChange={(status) => handleFilterChange({ status })}
+            onSearchChange={(q) => handleFilterChange({ q })}
+            onReset={handleResetFilters}
+          />
         </CardContent>
       </Card>
 
@@ -89,93 +141,102 @@ export function ProceduresPage() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Procedimentos</CardTitle>
+            <CardTitle className="text-sm font-medium">Total</CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24</div>
+            <div className="text-2xl font-bold">{stats.total}</div>
             <p className="text-xs text-muted-foreground">
-              +2 este mês
+              {stats.pdf} PDF • {stats.md} Markdown
             </p>
           </CardContent>
         </Card>
+        
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Ativos</CardTitle>
-            <Badge variant="secondary" className="h-4 w-4 p-0" />
+            <div className="w-4 h-4 rounded-full bg-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">20</div>
+            <div className="text-2xl font-bold">{stats.active}</div>
             <p className="text-xs text-muted-foreground">
-              83% do total
+              {stats.total > 0 ? Math.round((stats.active / stats.total) * 100) : 0}% do total
             </p>
           </CardContent>
         </Card>
+        
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Em Revisão</CardTitle>
-            <Badge variant="outline" className="h-4 w-4 p-0" />
+            <CardTitle className="text-sm font-medium">Inativos</CardTitle>
+            <div className="w-4 h-4 rounded-full bg-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3</div>
+            <div className="text-2xl font-bold">{stats.inactive}</div>
             <p className="text-xs text-muted-foreground">
-              Pendente aprovação
+              {stats.inactive > 0 ? 'Requer revisão' : 'Nenhum inativo'}
             </p>
           </CardContent>
         </Card>
+        
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Obsoletos</CardTitle>
-            <Badge variant="destructive" className="h-4 w-4 p-0" />
+            <CardTitle className="text-sm font-medium">Categorias</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1</div>
+            <div className="text-2xl font-bold">{categories.length}</div>
             <p className="text-xs text-muted-foreground">
-              Requer atualização
+              Disponíveis
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Procedures List */}
-      <div className="grid gap-4">
-        {procedures.map((procedure) => (
-          <Card key={procedure.id} className="hover:shadow-md transition-shadow">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <CardTitle className="text-lg">{procedure.title}</CardTitle>
-                  <CardDescription>{procedure.description}</CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    <Eye className="mr-2 h-4 w-4" />
-                    Visualizar
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Download className="mr-2 h-4 w-4" />
-                    Download
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span>Categoria: {procedure.category}</span>
-                  <span>Versão: {procedure.version}</span>
-                  <span>Atualizado: {procedure.lastUpdated}</span>
-                </div>
-                <Badge 
-                  variant={procedure.status === 'Ativo' ? 'default' : procedure.status === 'Em Revisão' ? 'secondary' : 'destructive'}
-                >
-                  {procedure.status}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* Results Summary */}
+      {filteredProcedures.length !== procedures.length && (
+        <div className="flex items-center gap-2 px-4 py-3 bg-muted/50 rounded-lg">
+          <AlertCircle className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm">
+            Exibindo {filteredProcedures.length} de {procedures.length} procedimentos
+          </span>
+        </div>
+      )}
+
+      {/* Procedures Table */}
+      <Card>
+        <CardContent className="p-0">
+          <ProcedureTable
+            procedures={filteredProcedures}
+            categories={categories}
+            onView={handleViewProcedure}
+            onEdit={handleEditProcedure}
+            onUpdate={refreshProcedures}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Modals */}
+      <ProcedureModal
+        isOpen={modals.create}
+        onClose={() => handleCloseModal('create')}
+        onSuccess={handleModalSuccess}
+        categories={categories}
+      />
+      
+      <ProcedureModal
+        isOpen={modals.edit}
+        onClose={() => handleCloseModal('edit')}
+        onSuccess={handleModalSuccess}
+        categories={categories}
+        procedure={selectedProcedure}
+      />
+
+      <ProcedureViewer
+        isOpen={modals.view}
+        onClose={handleViewerClose}
+        procedure={selectedProcedure}
+        categories={categories}
+      />
     </div>
   );
 }

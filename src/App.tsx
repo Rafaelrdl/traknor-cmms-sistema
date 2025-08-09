@@ -12,6 +12,19 @@ import { ProceduresPage } from '@/pages/ProceduresPage';
 import { ReportsPage } from '@/pages/ReportsPage';
 import { Toaster } from '@/components/ui/sonner';
 
+// Initialize PDF.js configuration BEFORE any PDF components load
+import { configurePDFWorker } from '@/utils/pdfConfig';
+
+// Initialize procedures module in development
+if (import.meta.env.DEV) {
+  import('@/utils/proceduresDevUtils');
+  // Import PDF debug utilities in development
+  import('@/utils/pdfDebug');
+}
+
+// Configure PDF worker immediately
+configurePDFWorker();
+
 const queryClient = new QueryClient();
 
 function App() {

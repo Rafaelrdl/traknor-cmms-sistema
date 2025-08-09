@@ -22,4 +22,18 @@ export default defineConfig({
       '@': resolve(projectRoot, 'src')
     }
   },
+  optimizeDeps: {
+    include: ['react-pdf', 'pdfjs-dist']
+  },
+  build: {
+    rollupOptions: {
+      external: (id) => {
+        // Don't bundle PDF worker files
+        if (id.includes('pdf.worker')) {
+          return true;
+        }
+        return false;
+      }
+    }
+  }
 });
