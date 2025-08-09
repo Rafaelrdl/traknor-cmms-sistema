@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { LogOut, User, Settings } from 'lucide-react';
-import { useUser } from '@/hooks/useDataTemp';
+import { LogOut, User, Settings, Users } from 'lucide-react';
+import { useUsers } from '@/data/usersStore';
+import { IfCan } from '@/components/auth/IfCan';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileNavbar, DesktopNavbar } from '@/components/Navbar';
 import TrakNorLogoUrl from '@/assets/images/traknor-logo.svg';
@@ -14,9 +15,18 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  const [user] = useUser();
+  const { getCurrentUser } = useUsers();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+
+  const user = getCurrentUser();
+
+  const handleLogout = () => {
+    // Em um app real, aqui faria logout no servidor
+    // Por enquanto, apenas redireciona para home
+    navigate('/');
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -58,6 +68,9 @@ export function Layout({ children }: LayoutProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
+                    {user.avatar_url && (
+                      <AvatarImage src={user.avatar_url} alt={user.name} />
+                    )}
                     <AvatarFallback className="bg-primary text-primary-foreground">
                       {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                     </AvatarFallback>
@@ -74,16 +87,22 @@ export function Layout({ children }: LayoutProps) {
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Perfil</span>
+                <DropdownMenuItem asChild>
+                  <Link to="/profile" className="w-full">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Perfil</span>
+                  </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Configurações</span>
-                </DropdownMenuItem>
+                <IfCan action="manage" subject="user">
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin/team" className="w-full">
+                      <Users className="mr-2 h-4 w-4" />
+                      <span>Equipe</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </IfCan>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Sair</span>
                 </DropdownMenuItem>
