@@ -12,6 +12,11 @@ import { ProceduresPage } from '@/pages/ProceduresPage';
 import { ReportsPage } from '@/pages/ReportsPage';
 import { Toaster } from '@/components/ui/sonner';
 
+// Initialize procedures module in development
+if (import.meta.env.DEV) {
+  import('@/utils/proceduresDevUtils');
+}
+
 const queryClient = new QueryClient();
 
 function App() {
