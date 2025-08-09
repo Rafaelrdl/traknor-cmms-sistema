@@ -4,74 +4,197 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { TechnicianPerformanceChart } from '@/components/charts/TechnicianPerformanceChart';
+import { DataFilterInfo } from '@/components/data/FilteredDataProvider';
 import { 
   ClipboardList, 
   AlertTriangle, 
   AlertCircle, 
   Clock, 
   Activity,
-  TrendingUp
+  TrendingUp,
+  User,
+  FileText,
+  Shield
 } from 'lucide-react';
 import { useDashboardKPIs, useChartData } from '@/hooks/useDataTemp';
+import { useDashboardFiltering } from '@/hooks/useDashboardFiltering';
+import { useAbility } from '@/hooks/useAbility';
+import { useMemo } from 'react';
 
 export function Dashboard() {
   const [kpis] = useDashboardKPIs();
   const [chartData] = useChartData();
+  const { role } = useAbility();
+  const {
+    filterDashboard,
+    getDashboardConfig,
+    getDashboardDescription,
+    getAvailableWidgets
+  } = useDashboardFiltering();
 
-  // Dados centralizados do mock
-  const weeklyData = chartData?.workOrderEvolution || [];
-  const upcomingMaintenance = chartData?.upcomingMaintenance || [];
+  // Get dashboard configuration based on role
+  const dashboardConfig = getDashboardConfig();
+  const availableWidgets = getAvailableWidgets();
+
+  // Create mock dashboard data and apply role-based filtering
+  const dashboardData = useMemo(() => {
+    const mockData = {
+      kpis: [
+        { key: 'openWorkOrders', value: kpis?.openWorkOrders || 0, label: 'OS em Aberto', sensitive: false },
+        { key: 'overdueWorkOrders', value: kpis?.overdueWorkOrders || 0, label: 'OS em Atraso', sensitive: false },
+        { key: 'criticalEquipment', value: kpis?.criticalEquipment || 0, label: 'Equipamentos Críticos', sensitive: false },
+        { key: 'mttr', value: kpis?.mttr || 0, label: 'MTTR', sensitive: false },
+        { key: 'mtbf', value: kpis?.mtbf || 0, label: 'MTBF', sensitive: false },
+        // Role-specific KPIs
+        ...(role === 'admin' ? [
+          { key: 'totalCost', value: 25000, label: 'Custo Total', sensitive: true },
+          { key: 'budgetUtilization', value: 78, label: 'Utilização do Orçamento (%)', sensitive: true }
+        ] : []),
+        ...(role === 'technician' ? [
+          { key: 'myAssignedWork', value: 8, label: 'Minhas OS', sensitive: false },
+          { key: 'completedThisWeek', value: 12, label: 'Concluídas esta semana', sensitive: false }
+        ] : []),
+        ...(role === 'requester' ? [
+          { key: 'myRequests', value: 3, label: 'Minhas Solicitações', sensitive: false },
+          { key: 'pendingApprovals', value: 1, label: 'Aguardando Aprovação', sensitive: false }
+        ] : [])
+      ],
+      workOrdersOverTime: chartData?.workOrderEvolution?.map((item: any) => ({
+        label: item.day,
+        value: item.completed + item.inProgress + item.open,
+        category: 'workorders'
+      })) || [],
+      assetStatus: [
+        { label: 'Funcionando', value: chartData?.equipmentStatus?.functioning || 0, category: 'assets' },
+        { label: 'Em Manutenção', value: chartData?.equipmentStatus?.maintenance || 0, category: 'assets' },
+        { label: 'Parado', value: chartData?.equipmentStatus?.stopped || 0, category: 'assets' }
+      ],
+      upcomingMaintenance: chartData?.upcomingMaintenance || [],
+      recentActivity: [] // Would be populated with actual data
+    };
+
+    return filterDashboard(mockData);
+  }, [kpis, chartData, role, filterDashboard]);
+
+  // Dados centralizados do mock (filtered)
+  const weeklyData = dashboardData.workOrdersOverTime || [];
+  const upcomingMaintenance = dashboardData.upcomingMaintenance || [];
+  const filteredKPIs = dashboardData.kpis || [];
+
+  // Calculate filter stats for display
+  const filterStats = {
+    total: (kpis?.openWorkOrders || 0) + (chartData?.upcomingMaintenance?.length || 0),
+    visible: upcomingMaintenance.length + (filteredKPIs.length || 0),
+    filtered: 0
+  };
+
+  const getRoleIcon = () => {
+    switch (role) {
+      case 'admin': return <Shield className="h-4 w-4" />;
+      case 'technician': return <User className="h-4 w-4" />;
+      case 'requester': return <FileText className="h-4 w-4" />;
+      default: return <User className="h-4 w-4" />;
+    }
+  };
 
   return (
     <div className="space-y-6">
       <PageHeader 
-        title="Visão Geral" 
+        title={dashboardConfig.title}
+        description={getDashboardDescription()}
+        icon={getRoleIcon()}
       />
-      {/* KPI Cards */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
-        <KPICard
-          title="OS em Aberto"
-          value={kpis?.openWorkOrders || 0}
-          icon={<ClipboardList className="h-4 w-4" />}
-          variant="default"
+      
+      {/* Role-based data filtering info */}
+      {role !== 'admin' && (
+        <DataFilterInfo
+          filterStats={filterStats}
+          dataType="dashboard"
+          canViewAll={false}
+          className="mb-4"
         />
-        <KPICard
-          title="OS em Atraso"
-          value={kpis?.overdueWorkOrders || 0}
-          icon={<AlertTriangle className="h-4 w-4" />}
-          variant={(kpis?.overdueWorkOrders || 0) > 0 ? "danger" : "success"}
-        />
-        <KPICard
-          title="Equipamentos Críticos"
-          value={kpis?.criticalEquipment || 0}
-          icon={<AlertCircle className="h-4 w-4" />}
-          variant={(kpis?.criticalEquipment || 0) > 0 ? "warning" : "success"}
-        />
-        <KPICard
-          title="MTTR"
-          value={`${kpis?.mttr || 0}h`}
-          icon={<Clock className="h-4 w-4" />}
-          trend="down"
-          trendValue="2h menos que o mês anterior"
-          variant="success"
-        />
-        <KPICard
-          title="MTBF"
-          value={`${kpis?.mtbf || 0}h`}
-          icon={<Activity className="h-4 w-4" />}
-          trend="up"
-          trendValue="5h mais que o mês anterior"
-          variant="success"
-        />
+      )}
+
+      {/* KPI Cards - filtered based on role */}
+      {availableWidgets.includes('kpis') && (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+        {/* Render KPI cards based on filtered data */}
+        {filteredKPIs.map((kpi) => {
+          // Determine appropriate icon and variant based on KPI
+          let icon = <Activity className="h-4 w-4" />;
+          let variant: "default" | "success" | "warning" | "danger" = "default";
+          let trend: "up" | "down" | undefined;
+          let trendValue: string | undefined;
+
+          switch (kpi.key) {
+            case 'openWorkOrders':
+              icon = <ClipboardList className="h-4 w-4" />;
+              break;
+            case 'overdueWorkOrders':
+              icon = <AlertTriangle className="h-4 w-4" />;
+              variant = kpi.value > 0 ? "danger" : "success";
+              break;
+            case 'criticalEquipment':
+              icon = <AlertCircle className="h-4 w-4" />;
+              variant = kpi.value > 0 ? "warning" : "success";
+              break;
+            case 'mttr':
+              icon = <Clock className="h-4 w-4" />;
+              variant = "success";
+              trend = "down";
+              trendValue = "2h menos que o mês anterior";
+              break;
+            case 'mtbf':
+              icon = <Activity className="h-4 w-4" />;
+              variant = "success";
+              trend = "up";
+              trendValue = "5h mais que o mês anterior";
+              break;
+            case 'myAssignedWork':
+            case 'myRequests':
+              icon = <User className="h-4 w-4" />;
+              break;
+            case 'totalCost':
+              icon = <TrendingUp className="h-4 w-4" />;
+              variant = "warning";
+              break;
+          }
+
+          return (
+            <KPICard
+              key={kpi.key}
+              title={kpi.label}
+              value={typeof kpi.value === 'number' && kpi.key.includes('Cost') ? 
+                `R$ ${kpi.value.toLocaleString()}` : 
+                typeof kpi.value === 'number' && kpi.key.includes('Percent') ? 
+                  `${kpi.value}%` : 
+                  kpi.key.includes('mttr') || kpi.key.includes('mtbf') ? 
+                    `${kpi.value}h` : 
+                    kpi.value.toString()
+              }
+              icon={icon}
+              variant={variant}
+              trend={trend}
+              trendValue={trendValue}
+            />
+          );
+        })}
       </div>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* OS Evolution Chart */}
-        <Card
-          className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+        {/* OS Evolution Chart - only for admin/technician */}
+        {availableWidgets.includes('workOrdersChart') && (
+        <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
               Evolução de OS por Dia
+              {role !== 'admin' && (
+                <Badge variant="outline" className="ml-2 text-xs">
+                  Filtrado
+                </Badge>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -147,12 +270,20 @@ export function Dashboard() {
               </div>
             </div>
           </CardContent>
-        </Card>
+        )}
 
-        {/* Equipment Status */}
+        {/* Equipment Status - available for all roles but with different data */}
+        {availableWidgets.includes('assetStatusChart') && (
         <Card>
           <CardHeader>
-            <CardTitle>Status dos Ativos</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              Status dos Ativos
+              {role === 'requester' && (
+                <Badge variant="outline" className="ml-2 text-xs">
+                  Limitado
+                </Badge>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -323,54 +454,74 @@ export function Dashboard() {
             </div>
           </CardContent>
         </Card>
+        )}
       </div>
 
-      {/* Technician Performance Chart */}
-      <TechnicianPerformanceChart />
+      {/* Technician Performance Chart - only for admin/technician */}
+      {availableWidgets.includes('technicianPerformanceChart') && (
+        <TechnicianPerformanceChart />
+      )}
 
-      {/* Upcoming Maintenance Table */}
+      {/* Upcoming Maintenance Table - filtered based on role */}
+      {availableWidgets.includes('upcomingMaintenance') && (
       <Card>
         <CardHeader>
-          <CardTitle>Próximas Manutenções (7 dias)</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            {role === 'requester' ? 'Minhas Solicitações Programadas' : 'Próximas Manutenções (7 dias)'}
+            {role !== 'admin' && (
+              <Badge variant="outline" className="ml-2 text-xs">
+                {role === 'technician' ? 'Minhas' : 'Limitado'}
+              </Badge>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tag</TableHead>
-                <TableHead>Equipamento</TableHead>
-                <TableHead>Setor</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {upcomingMaintenance.map((maintenance) => (
-                <TableRow key={maintenance.id}>
-                  <TableCell className="font-medium">{maintenance.equipmentName}</TableCell>
-                  <TableCell>{maintenance.type}</TableCell>
-                  <TableCell>Setor Principal</TableCell>
-                  <TableCell>
-                    {new Date(maintenance.scheduledDate).toLocaleDateString('pt-BR')}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={maintenance.priority === 'HIGH' ? 'destructive' : 'secondary'}>
-                      {maintenance.priority === 'HIGH' ? 'Alta' : 'Média'}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {upcomingMaintenance.length === 0 && (
+          {upcomingMaintenance.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              {role === 'requester' 
+                ? 'Nenhuma solicitação programada' 
+                : role === 'technician' 
+                  ? 'Nenhuma manutenção atribuída para os próximos 7 dias'
+                  : 'Nenhuma manutenção programada para os próximos 7 dias'
+              }
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                    Nenhuma manutenção programada para os próximos 7 dias
-                  </TableCell>
+                  <TableHead>Tag</TableHead>
+                  <TableHead>
+                    {role === 'requester' ? 'Tipo de Solicitação' : 'Equipamento'}
+                  </TableHead>
+                  <TableHead>Setor</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {upcomingMaintenance.map((maintenance) => (
+                  <TableRow key={maintenance.id}>
+                    <TableCell className="font-medium">{maintenance.equipmentName}</TableCell>
+                    <TableCell>{maintenance.type}</TableCell>
+                    <TableCell>
+                      {role === 'admin' ? 'Setor Principal' : 'Meu Setor'}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(maintenance.scheduledDate).toLocaleDateString('pt-BR')}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={maintenance.priority === 'HIGH' ? 'destructive' : 'secondary'}>
+                        {maintenance.priority === 'HIGH' ? 'Alta' : 'Média'}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }

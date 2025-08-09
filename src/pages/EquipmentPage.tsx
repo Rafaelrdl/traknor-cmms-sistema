@@ -15,7 +15,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Building2, MapPin, Users, Search, BarChart3, Activity } from 'lucide-react';
 import { useEquipment, useSectors, useSubSections, useCompanies } from '@/hooks/useDataTemp';
 import { LocationProvider, useLocation as useLocationContext } from '@/contexts/LocationContext';
-import { IfCanCreate } from '@/components/auth/IfCan';
+import { IfCan } from '@/components/auth/IfCan';
+import { useRoleBasedData, DataFilterInfo } from '@/components/data/FilteredDataProvider';
+import { useAbility } from '@/hooks/useAbility';
 import type { Equipment, SubSection } from '@/types';
 
 function AssetsContent() {
@@ -24,15 +26,28 @@ function AssetsContent() {
   const [subSections] = useSubSections();
   const [companies] = useCompanies();
   const { selectedNode } = useLocationContext();
+  const { role } = useAbility();
+  
+  // Apply role-based filtering to equipment data
+  const { data: filteredEquipmentData, stats: equipmentFilterStats } = useRoleBasedData(
+    equipment || [], 
+    'asset',
+    { includeInactive: role === 'admin' } // Only admin can see inactive assets
+  );
   
   const [isEquipmentDialogOpen, setIsEquipmentDialogOpen] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [locationModalMode, setLocationModalMode] = useState<'create' | 'edit'>('create');
   const [locationModalType, setLocationModalType] = useState<'company' | 'sector' | 'subsection'>('company');
   const [activeTab, setActiveTab] = useState('search');
-  const [filteredEquipment, setFilteredEquipment] = useState<Equipment[]>(equipment || []);
+  const [filteredEquipment, setFilteredEquipment] = useState<Equipment[]>(filteredEquipmentData);
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
   const [isStatusTrackingOpen, setIsStatusTrackingOpen] = useState(false);
+
+  // Update filtered equipment when role-based data changes
+  useState(() => {
+    setFilteredEquipment(filteredEquipmentData);
+  }, [filteredEquipmentData]);
 
   // New equipment form state
   const [newEquipment, setNewEquipment] = useState({
@@ -130,13 +145,23 @@ function AssetsContent() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <h1 className="text-xl lg:text-2xl font-bold">Gestão de Ativos</h1>
             
+            {/* Data filtering info */}
+            {equipmentFilterStats.filtered > 0 && (
+              <DataFilterInfo
+                filterStats={equipmentFilterStats}
+                dataType="asset"
+                canViewAll={role === 'admin'}
+                className="lg:max-w-md"
+              />
+            )}
+            
             {/* Mobile Location Tree Toggle */}
             <div className="lg:hidden">
               <LocationTree />
             </div>
             
             <div className="flex flex-wrap items-center gap-2">
-              <IfCanCreate subject="asset">
+              <IfCan action="create" subject="asset">
                 <Button 
                   onClick={() => handleCreateLocation('company')}
                   className="flex items-center gap-2 text-sm"
@@ -146,8 +171,8 @@ function AssetsContent() {
                   <Building2 className="h-4 w-4" />
                   + Empresa
                 </Button>
-              </IfCanCreate>
-              <IfCanCreate subject="asset">
+              </IfCan>
+              <IfCan action="create" subject="asset">
                 <Button 
                   onClick={() => handleCreateLocation('sector')}
                   disabled={companies.length === 0}
@@ -159,8 +184,8 @@ function AssetsContent() {
                   <MapPin className="h-4 w-4" />
                   + Setor
                 </Button>
-              </IfCanCreate>
-              <IfCanCreate subject="asset">
+              </IfCan>
+              <IfCan action="create" subject="asset">
                 <Button 
                   onClick={() => handleCreateLocation('subsection')}
                   disabled={sectors.length === 0}
@@ -172,7 +197,7 @@ function AssetsContent() {
                   <Users className="h-4 w-4" />
                   + Subsetor
                 </Button>
-              </IfCanCreate>
+              </IfCan>
             </div>
           </div>
         </div>
@@ -200,7 +225,7 @@ function AssetsContent() {
             <div className="flex-1 overflow-auto">
               <TabsContent value="search" className="h-full p-4 lg:p-6 m-0">
                 <EquipmentSearch
-                  equipment={equipment || []}
+                  equipment={filteredEquipmentData}
                   selectedLocation={selectedNode?.id}
                   onFilteredResults={handleFilteredResults}
                   onEquipmentSelect={handleEquipmentSelect}
