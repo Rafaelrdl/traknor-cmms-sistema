@@ -280,4 +280,61 @@ body {
       max-width: calc(100vw - 8rem);
     }
   }
+
+  /* Print styles for PDF export */
+  @media print {
+    body.printing {
+      @apply bg-white text-black;
+    }
+
+    body.printing * {
+      @apply shadow-none;
+    }
+
+    .no-print {
+      display: none !important;
+    }
+
+    .print-full-width {
+      width: 100% !important;
+      max-width: none !important;
+    }
+
+    .print-break-after {
+      break-after: page;
+    }
+
+    /* Hide navigation and non-essential elements */
+    nav, .nav, header .toolbar, .sidebar {
+      display: none !important;
+    }
+
+    /* Ensure charts and content are visible */
+    .chart-container, .kpi-card, .metrics-content {
+      @apply border border-gray-300;
+      break-inside: avoid;
+      margin-bottom: 1rem;
+    }
+
+    /* Typography adjustments for print */
+    body.printing {
+      font-size: 12pt;
+      line-height: 1.4;
+    }
+
+    body.printing h1 {
+      font-size: 18pt;
+      margin-bottom: 0.5rem;
+    }
+
+    body.printing h2 {
+      font-size: 16pt;
+      margin-bottom: 0.4rem;
+    }
+
+    body.printing h3 {
+      font-size: 14pt;
+      margin-bottom: 0.3rem;
+    }
+  }
 }
