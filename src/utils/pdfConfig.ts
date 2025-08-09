@@ -1,30 +1,52 @@
 // PDF.js worker configuration utility
 import { pdfjs } from 'react-pdf';
 
-let isConfigured = false;
-
-export function configurePDFWorker() {
-  if (isConfigured) return;
-
-  try {
-    // For development/local environments, disable worker to avoid CORS issues
-    if (import.meta.env.DEV) {
-      pdfjs.GlobalWorkerOptions.workerSrc = '';
-      console.log('PDF.js worker disabled for development environment');
-    } else {
-      // For production, try to use CDN worker
-      pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
-      console.log('PDF.js worker configured for production');
+// Configure PDF.js worker for react-pdf version 10.x
+if (typeof window !== 'undefined') {
+  // For react-pdf v10.x, we need to set the worker source explicitly
+  const pdfjsVersion = pdfjs.version || '3.11.174';
+  
+  // Try multiple CDN sources for reliability
+  const workerUrls = [
+    `https://unpkg.com/pdfjs-dist@${pdfjsVersion}/build/pdf.worker.min.js`,
+    `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsVersion}/build/pdf.worker.min.js`,
+    'https://unpkg.com/pdfjs-dist/build/pdf.worker.min.js',
+  ];
+  
+  let workerConfigured = false;
+  
+  for (const url of workerUrls) {
+    try {
+      pdfjs.GlobalWorkerOptions.workerSrc = url;
+      console.log(`PDF.js worker configured with URL: ${url}`);
+      workerConfigured = true;
+      break;
+    } catch (error) {
+      console.warn(`Failed to configure PDF.js worker with URL: ${url}`, error);
     }
-    
-    isConfigured = true;
-  } catch (error) {
-    console.warn('Failed to configure PDF.js worker:', error);
-    // Fallback to no worker (main thread processing)
-    pdfjs.GlobalWorkerOptions.workerSrc = '';
-    isConfigured = true;
+  }
+  
+  if (!workerConfigured) {
+    console.warn('Could not configure PDF.js worker with any URL, PDF functionality may be impaired');
   }
 }
 
-// Auto-configure when module is imported
-configurePDFWorker();
+export function configurePDFWorker() {
+  // Function for manual configuration if needed
+  if (typeof window === 'undefined') return;
+  
+  if (!pdfjs.GlobalWorkerOptions.workerSrc) {
+    const pdfjsVersion = pdfjs.version || '3.11.174';
+    pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsVersion}/build/pdf.worker.min.js`;
+    console.log('PDF.js worker manually configured');
+  }
+  
+  return pdfjs.GlobalWorkerOptions.workerSrc;
+}
+
+// Debugging helper
+export function checkPDFWorkerStatus() {
+  console.log('PDF.js version:', pdfjs.version);
+  console.log('Worker source:', pdfjs.GlobalWorkerOptions.workerSrc);
+  console.log('Worker configured:', !!pdfjs.GlobalWorkerOptions.workerSrc);
+}

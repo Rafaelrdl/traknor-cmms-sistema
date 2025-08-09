@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import ReactMarkdown from 'react-markdown';
 // Import PDF configuration utility
-import '@/utils/pdfConfig';
+import { configurePDFWorker, checkPDFWorkerStatus } from '@/utils/pdfConfig';
 import { 
   ZoomIn, 
   ZoomOut, 
@@ -34,6 +34,12 @@ import { VersionComparison } from '@/components/procedure/VersionComparison';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
+// Ensure PDF worker is configured and log status
+configurePDFWorker();
+if (import.meta.env.DEV) {
+  checkPDFWorkerStatus();
+}
 
 
 
@@ -423,7 +429,27 @@ export function ProcedureViewer({
                             }}
                             onLoadError={(error) => {
                               console.error('PDF load error:', error);
-                              setError(`Erro ao carregar PDF: ${error?.message || 'Erro desconhecido'}`);
+                              
+                              // If it's a worker error, try to reconfigure
+                              if (error?.message?.includes('workerSrc') || 
+                                  error?.message?.includes('GlobalWorkerOptions') ||
+                                  error?.message?.includes('No "GlobalWorkerOptions.workerSrc" specified')) {
+                                console.log('Attempting to reconfigure PDF.js worker...');
+                                const workerSrc = configurePDFWorker();
+                                console.log('New worker source:', workerSrc);
+                              }
+                              
+                              // Provide more helpful error messages
+                              let errorMessage = 'Erro desconhecido';
+                              if (error?.message?.includes('workerSrc')) {
+                                errorMessage = 'Erro de configuração do PDF.js. Tente recarregar a página.';
+                              } else if (error?.message?.includes('Invalid PDF')) {
+                                errorMessage = 'O arquivo não é um PDF válido.';
+                              } else if (error?.message) {
+                                errorMessage = error.message;
+                              }
+                              
+                              setError(`Erro ao carregar PDF: ${errorMessage}`);
                             }}
                             loading={
                               <div className="flex items-center justify-center py-12">
@@ -445,9 +471,10 @@ export function ProcedureViewer({
                               </div>
                             }
                             options={{
-                              // Disable worker in development to avoid CORS issues
-                              disableWorker: import.meta.env.DEV,
+                              // Ensure worker is configured
+                              workerSrc: pdfjs.GlobalWorkerOptions.workerSrc,
                             }}
+                          >
                           >
                             <Page 
                               pageNumber={pageNumber}
