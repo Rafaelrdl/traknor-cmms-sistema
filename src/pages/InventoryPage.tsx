@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Search, Warehouse } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Search, Warehouse, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { InventoryTabs } from '@/components/inventory/InventoryTabs';
 import { InventoryTable } from '@/components/inventory/InventoryTable';
@@ -13,6 +14,7 @@ import { InventoryAnalysis } from '@/components/inventory/InventoryAnalysis';
 import { NewItemModal } from '@/components/inventory/NewItemModal';
 import { EditItemModal } from '@/components/inventory/EditItemModal';
 import { MoveItemModal } from '@/components/inventory/MoveItemModal';
+import { IfCanCreate } from '@/components/auth/IfCan';
 import type { InventoryItem, InventoryCategory } from '@/models/inventory';
 import { loadItems, loadCategories, searchItems, deleteItem } from '@/data/inventoryStore';
 
@@ -130,10 +132,18 @@ export function InventoryPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Controle de Estoque">
-        <NewItemModal
-          categories={categories}
-          onItemCreated={handleItemCreated}
-        />
+        <IfCanCreate subject="inventory">
+          <NewItemModal
+            categories={categories}
+            onItemCreated={handleItemCreated}
+            trigger={
+              <Button className="flex items-center gap-2" data-testid="inventory-create">
+                <Plus className="h-4 w-4" />
+                Novo Item
+              </Button>
+            }
+          />
+        </IfCanCreate>
       </PageHeader>
       
       <Card>

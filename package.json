@@ -9,7 +9,10 @@
         "build": "tsc -b --noCheck && vite build",
         "lint": "eslint .",
         "optimize": "vite optimize",
-        "preview": "vite preview"
+        "preview": "vite preview",
+        "cy:open": "cypress open",
+        "cy:run": "cypress run",
+        "cy:run-acl": "cypress run --spec 'cypress/e2e/acl/**/*.cy.ts'"
     },
     "dependencies": {
         "@dnd-kit/core": "^6.3.1",
@@ -92,6 +95,7 @@
         "@vitejs/plugin-react": "^4.3.4",
         "@vitejs/plugin-react-swc": "^3.10.1",
         "autoprefixer": "^10.4.21",
+        "cypress": "^13.16.3",
         "eslint": "^9.28.0",
         "eslint-plugin-react-hooks": "^5.2.0",
         "eslint-plugin-react-refresh": "^0.4.19",

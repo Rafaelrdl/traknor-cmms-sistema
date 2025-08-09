@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Building2, MapPin, Users, Search, BarChart3, Activity } from 'lucide-react';
 import { useEquipment, useSectors, useSubSections, useCompanies } from '@/hooks/useDataTemp';
 import { LocationProvider, useLocation as useLocationContext } from '@/contexts/LocationContext';
+import { IfCanCreate } from '@/components/auth/IfCan';
 import type { Equipment, SubSection } from '@/types';
 
 function AssetsContent() {
@@ -135,34 +136,43 @@ function AssetsContent() {
             </div>
             
             <div className="flex flex-wrap items-center gap-2">
-              <Button 
-                onClick={() => handleCreateLocation('company')}
-                className="flex items-center gap-2 text-sm"
-                size="sm"
-              >
-                <Building2 className="h-4 w-4" />
-                + Empresa
-              </Button>
-              <Button 
-                onClick={() => handleCreateLocation('sector')}
-                disabled={companies.length === 0}
-                variant="outline"
-                className="flex items-center gap-2 text-sm"
-                size="sm"
-              >
-                <MapPin className="h-4 w-4" />
-                + Setor
-              </Button>
-              <Button 
-                onClick={() => handleCreateLocation('subsection')}
-                disabled={sectors.length === 0}
-                variant="outline"
-                className="flex items-center gap-2 text-sm"
-                size="sm"
-              >
-                <Users className="h-4 w-4" />
-                + Subsetor
-              </Button>
+              <IfCanCreate subject="asset">
+                <Button 
+                  onClick={() => handleCreateLocation('company')}
+                  className="flex items-center gap-2 text-sm"
+                  size="sm"
+                  data-testid="company-create"
+                >
+                  <Building2 className="h-4 w-4" />
+                  + Empresa
+                </Button>
+              </IfCanCreate>
+              <IfCanCreate subject="asset">
+                <Button 
+                  onClick={() => handleCreateLocation('sector')}
+                  disabled={companies.length === 0}
+                  variant="outline"
+                  className="flex items-center gap-2 text-sm"
+                  size="sm"
+                  data-testid="sector-create"
+                >
+                  <MapPin className="h-4 w-4" />
+                  + Setor
+                </Button>
+              </IfCanCreate>
+              <IfCanCreate subject="asset">
+                <Button 
+                  onClick={() => handleCreateLocation('subsection')}
+                  disabled={sectors.length === 0}
+                  variant="outline"
+                  className="flex items-center gap-2 text-sm"
+                  size="sm"
+                  data-testid="subsection-create"
+                >
+                  <Users className="h-4 w-4" />
+                  + Subsetor
+                </Button>
+              </IfCanCreate>
             </div>
           </div>
         </div>
