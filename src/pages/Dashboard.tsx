@@ -270,6 +270,7 @@ export function Dashboard() {
               </div>
             </div>
           </CardContent>
+        </Card>
         )}
 
         {/* Equipment Status - available for all roles but with different data */}
