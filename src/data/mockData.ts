@@ -7,7 +7,8 @@ import type {
   MaintenancePlan, 
   StockItem,
   DashboardKPIs,
-  TechnicianPerformance
+  TechnicianPerformance,
+  Solicitation
 } from '@/types';
 
 /**
@@ -498,6 +499,161 @@ export const MOCK_CHART_DATA = {
   ] as TechnicianPerformance[]
 };
 
+// ============= SOLICITAÇÕES =============
+export const MOCK_SOLICITATIONS: Solicitation[] = [
+  {
+    id: '1',
+    location_id: '1',
+    location_name: 'TechCorp Industrial / Bloco A',
+    equipment_id: '1',
+    equipment_name: 'Climatizador Central CLI-001',
+    requester_user_id: '1',
+    requester_user_name: 'João Silva',
+    note: 'Ar condicionado fazendo ruído excessivo durante funcionamento. Necessita verificação urgente.',
+    status: 'Nova',
+    status_history: [
+      {
+        to: 'Nova',
+        at: '2024-01-20T08:30:00.000Z'
+      }
+    ],
+    items: [],
+    created_at: '2024-01-20T08:30:00.000Z',
+    updated_at: '2024-01-20T08:30:00.000Z'
+  },
+  {
+    id: '2', 
+    location_id: '2',
+    location_name: 'Industrial Corp / Área de Produção',
+    equipment_id: '3',
+    equipment_name: 'Chiller Industrial CHI-003',
+    requester_user_id: '2',
+    requester_user_name: 'Maria Santos',
+    note: 'Sistema não está atingindo a temperatura desejada. Possível problema no compressor.',
+    status: 'Em triagem',
+    status_history: [
+      {
+        to: 'Nova',
+        at: '2024-01-18T10:15:00.000Z'
+      },
+      {
+        from: 'Nova',
+        to: 'Em triagem',
+        at: '2024-01-18T14:22:00.000Z'
+      }
+    ],
+    items: [
+      {
+        id: '1',
+        stock_item_id: '1',
+        stock_item_name: 'Filtro de Ar 24x24',
+        unit: 'un',
+        qty: 2
+      },
+      {
+        id: '2',
+        stock_item_id: '5',
+        stock_item_name: 'Óleo Lubrificante 10W30',
+        unit: 'L',
+        qty: 5
+      }
+    ],
+    created_at: '2024-01-18T10:15:00.000Z',
+    updated_at: '2024-01-18T14:22:00.000Z'
+  },
+  {
+    id: '3',
+    location_id: '1', 
+    location_name: 'TechCorp Industrial / Sala TI',
+    equipment_id: '2',
+    equipment_name: 'Split Sala TI SPL-002',
+    requester_user_id: '3',
+    requester_user_name: 'Carlos Pereira',
+    note: 'Vazamento de água do equipamento. Está molhando o piso e pode causar acidentes.',
+    status: 'Convertida em OS',
+    status_history: [
+      {
+        to: 'Nova',
+        at: '2024-01-15T09:45:00.000Z'
+      },
+      {
+        from: 'Nova',
+        to: 'Em triagem',
+        at: '2024-01-15T11:30:00.000Z'
+      },
+      {
+        from: 'Em triagem',
+        to: 'Convertida em OS',
+        at: '2024-01-16T08:15:00.000Z'
+      }
+    ],
+    items: [
+      {
+        id: '3',
+        stock_item_id: '3',
+        stock_item_name: 'Vedante de Borracha',
+        unit: 'm',
+        qty: 3
+      }
+    ],
+    created_at: '2024-01-15T09:45:00.000Z',
+    updated_at: '2024-01-16T08:15:00.000Z'
+  },
+  {
+    id: '4',
+    location_id: '3',
+    location_name: 'Marketplace Solutions / Setor Administrativo',
+    equipment_id: '4',
+    equipment_name: 'VRF Sistema VRF-004',
+    requester_user_id: '4',
+    requester_user_name: 'Ana Costa',
+    note: 'Controle remoto não está funcionando. Não conseguimos ajustar a temperatura.',
+    status: 'Nova',
+    status_history: [
+      {
+        to: 'Nova',
+        at: '2024-01-22T16:00:00.000Z'
+      }
+    ],
+    items: [],
+    created_at: '2024-01-22T16:00:00.000Z',
+    updated_at: '2024-01-22T16:00:00.000Z'
+  },
+  {
+    id: '5',
+    location_id: '2',
+    location_name: 'Industrial Corp / Área de Produção',
+    equipment_id: '5',
+    equipment_name: 'Split Industrial SPL-005',
+    requester_user_id: '5',
+    requester_user_name: 'Roberto Lima',
+    note: 'Equipamento não está ligando. Display não acende, pode ser problema elétrico.',
+    status: 'Em triagem',
+    status_history: [
+      {
+        to: 'Nova',
+        at: '2024-01-19T07:30:00.000Z'
+      },
+      {
+        from: 'Nova',
+        to: 'Em triagem',
+        at: '2024-01-19T09:15:00.000Z'
+      }
+    ],
+    items: [
+      {
+        id: '4',
+        stock_item_id: '7',
+        stock_item_name: 'Fusível 15A',
+        unit: 'un',
+        qty: 10
+      }
+    ],
+    created_at: '2024-01-19T07:30:00.000Z',
+    updated_at: '2024-01-19T09:15:00.000Z'
+  }
+];
+
 // ============= FUNÇÕES GERADORAS (para compatibilidade) =============
 export const generateMockCompanies = (): Company[] => MOCK_COMPANIES;
 export const generateMockSectors = (): Sector[] => MOCK_SECTORS;
@@ -507,3 +663,4 @@ export const generateMockWorkOrders = (): WorkOrder[] => MOCK_WORK_ORDERS;
 export const generateMockPlans = (): MaintenancePlan[] => MOCK_MAINTENANCE_PLANS;
 export const generateMockStock = (): StockItem[] => MOCK_STOCK_ITEMS;
 export const generateMockDashboardKPIs = (): DashboardKPIs => MOCK_DASHBOARD_KPIS;
+export const generateMockSolicitations = (): Solicitation[] => MOCK_SOLICITATIONS;
