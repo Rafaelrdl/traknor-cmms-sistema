@@ -23,7 +23,7 @@ export function NewItemModal({ categories, onItemCreated, trigger }: NewItemModa
   const [formData, setFormData] = useState({
     name: '',
     sku: '',
-    category_id: '',
+    category_id: 'uncategorized',
     unit: 'un',
     photo_url: '',
     location_name: '',
@@ -63,7 +63,7 @@ export function NewItemModal({ categories, onItemCreated, trigger }: NewItemModa
       const newItem = createItem({
         name: formData.name.trim(),
         sku: formData.sku.trim() || undefined,
-        category_id: formData.category_id || undefined,
+        category_id: formData.category_id === 'uncategorized' ? undefined : formData.category_id,
         unit: formData.unit,
         photo_url: formData.photo_url.trim() || undefined,
         location_name: formData.location_name.trim() || undefined,
@@ -83,7 +83,7 @@ export function NewItemModal({ categories, onItemCreated, trigger }: NewItemModa
       setFormData({
         name: '',
         sku: '',
-        category_id: '',
+        category_id: 'uncategorized',
         unit: 'un',
         photo_url: '',
         location_name: '',
@@ -155,7 +155,7 @@ export function NewItemModal({ categories, onItemCreated, trigger }: NewItemModa
                   <SelectValue placeholder="Selecione uma categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Sem categoria</SelectItem>
+                  <SelectItem value="uncategorized">Sem categoria</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}

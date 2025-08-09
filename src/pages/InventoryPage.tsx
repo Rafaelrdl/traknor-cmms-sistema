@@ -22,7 +22,7 @@ export function InventoryPage() {
   const [categories, setCategories] = useState<InventoryCategory[]>([]);
   const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showActiveOnly, setShowActiveOnly] = useState<boolean>(true);
   
   // Modal states
@@ -41,7 +41,7 @@ export function InventoryPage() {
   // Filter items when search/filters change
   useEffect(() => {
     const filtered = searchItems(searchQuery, {
-      category_id: selectedCategory || undefined,
+      category_id: selectedCategory === 'all' ? undefined : selectedCategory,
       active: showActiveOnly
     });
     setFilteredItems(filtered);
@@ -163,7 +163,7 @@ export function InventoryPage() {
                   <SelectValue placeholder="Todas categorias" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas</SelectItem>
+                  <SelectItem value="all">Todas</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}

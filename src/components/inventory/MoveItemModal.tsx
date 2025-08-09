@@ -24,7 +24,7 @@ export function MoveItemModal({ item, open, onOpenChange, onItemMoved }: MoveIte
     qty: 1,
     date: '',
     note: '',
-    reference_type: '',
+    reference_type: 'none-reference',
     reference_id: '',
     unit_cost: undefined as number | undefined
   });
@@ -38,7 +38,7 @@ export function MoveItemModal({ item, open, onOpenChange, onItemMoved }: MoveIte
         qty: 1,
         date: today,
         note: '',
-        reference_type: '',
+        reference_type: 'none-reference',
         reference_id: '',
         unit_cost: undefined
       });
@@ -74,7 +74,7 @@ export function MoveItemModal({ item, open, onOpenChange, onItemMoved }: MoveIte
         qty: formData.qty,
         date: new Date(formData.date + 'T00:00:00.000Z').toISOString(),
         note: formData.note.trim() || undefined,
-        reference_type: formData.reference_type || undefined,
+        reference_type: formData.reference_type === 'none-reference' ? undefined : formData.reference_type,
         reference_id: formData.reference_id.trim() || undefined,
         unit_cost: formData.unit_cost
       });
@@ -215,7 +215,7 @@ export function MoveItemModal({ item, open, onOpenChange, onItemMoved }: MoveIte
                 <SelectValue placeholder="Selecione (opcional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Nenhum</SelectItem>
+                <SelectItem value="none-reference">Nenhum</SelectItem>
                 <SelectItem value="os">Ordem de Serviço</SelectItem>
                 <SelectItem value="solicitation">Solicitação</SelectItem>
                 <SelectItem value="adjustment">Ajuste de Estoque</SelectItem>

@@ -22,7 +22,7 @@ export function EditItemModal({ item, categories, open, onOpenChange, onItemUpda
   const [formData, setFormData] = useState({
     name: '',
     sku: '',
-    category_id: '',
+    category_id: 'uncategorized',
     unit: 'un',
     photo_url: '',
     location_name: '',
@@ -39,7 +39,7 @@ export function EditItemModal({ item, categories, open, onOpenChange, onItemUpda
       setFormData({
         name: item.name,
         sku: item.sku || '',
-        category_id: item.category_id || '',
+        category_id: item.category_id || 'uncategorized',
         unit: item.unit || 'un',
         photo_url: item.photo_url || '',
         location_name: item.location_name || '',
@@ -84,7 +84,7 @@ export function EditItemModal({ item, categories, open, onOpenChange, onItemUpda
         ...item,
         name: formData.name.trim(),
         sku: formData.sku.trim() || undefined,
-        category_id: formData.category_id || undefined,
+        category_id: formData.category_id === 'uncategorized' ? undefined : formData.category_id,
         unit: formData.unit,
         photo_url: formData.photo_url.trim() || undefined,
         location_name: formData.location_name.trim() || undefined,
@@ -152,7 +152,7 @@ export function EditItemModal({ item, categories, open, onOpenChange, onItemUpda
                   <SelectValue placeholder="Selecione uma categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Sem categoria</SelectItem>
+                  <SelectItem value="uncategorized">Sem categoria</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
