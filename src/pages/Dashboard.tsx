@@ -12,9 +12,7 @@ import {
   Clock, 
   Activity,
   TrendingUp,
-  User,
-  FileText,
-  Shield
+  User
 } from 'lucide-react';
 import { useDashboardKPIs, useChartData } from '@/hooks/useDataTemp';
 import { useDashboardFiltering } from '@/hooks/useDashboardFiltering';
@@ -69,6 +67,17 @@ export function Dashboard() {
         { label: 'Em Manutenção', value: chartData?.equipmentStatus?.maintenance || 0, category: 'assets' },
         { label: 'Parado', value: chartData?.equipmentStatus?.stopped || 0, category: 'assets' }
       ],
+      technicianPerformance: [], // Empty for now
+      maintenanceMetrics: {
+        mttr: kpis?.mttr || 0,
+        mtbf: kpis?.mtbf || 0,
+        uptime: 95.5,
+        costMetrics: role === 'admin' ? {
+          totalCost: 25000,
+          costPerWorkOrder: 780,
+          budgetUtilization: 78
+        } : undefined
+      },
       upcomingMaintenance: chartData?.upcomingMaintenance || [],
       recentActivity: [] // Would be populated with actual data
     };
@@ -77,7 +86,7 @@ export function Dashboard() {
   }, [kpis, chartData, role, filterDashboard]);
 
   // Dados centralizados do mock (filtered)
-  const weeklyData = dashboardData.workOrdersOverTime || [];
+  const weeklyData = chartData?.workOrderEvolution || [];
   const upcomingMaintenance = dashboardData.upcomingMaintenance || [];
   const filteredKPIs = dashboardData.kpis || [];
 
@@ -88,21 +97,11 @@ export function Dashboard() {
     filtered: 0
   };
 
-  const getRoleIcon = () => {
-    switch (role) {
-      case 'admin': return <Shield className="h-4 w-4" />;
-      case 'technician': return <User className="h-4 w-4" />;
-      case 'requester': return <FileText className="h-4 w-4" />;
-      default: return <User className="h-4 w-4" />;
-    }
-  };
-
   return (
     <div className="space-y-6">
       <PageHeader 
         title={dashboardConfig.title}
         description={getDashboardDescription()}
-        icon={getRoleIcon()}
       />
       
       {/* Role-based data filtering info */}
@@ -132,11 +131,11 @@ export function Dashboard() {
               break;
             case 'overdueWorkOrders':
               icon = <AlertTriangle className="h-4 w-4" />;
-              variant = kpi.value > 0 ? "danger" : "success";
+              variant = typeof kpi.value === 'number' && kpi.value > 0 ? "danger" : "success";
               break;
             case 'criticalEquipment':
               icon = <AlertCircle className="h-4 w-4" />;
-              variant = kpi.value > 0 ? "warning" : "success";
+              variant = typeof kpi.value === 'number' && kpi.value > 0 ? "warning" : "success";
               break;
             case 'mttr':
               icon = <Clock className="h-4 w-4" />;
@@ -352,7 +351,7 @@ export function Dashboard() {
                           strokeDashoffset="0"
                           strokeLinecap="round"
                           className="donut-segment"
-                          onMouseEnter={(e) => {
+                          onMouseEnter={() => {
                             const tooltip = document.getElementById('donut-tooltip');
                             const title = document.getElementById('tooltip-title');
                             const content = document.getElementById('tooltip-content');
@@ -376,7 +375,7 @@ export function Dashboard() {
                           strokeDashoffset={-functioningLength}
                           strokeLinecap="round"
                           className="donut-segment"
-                          onMouseEnter={(e) => {
+                          onMouseEnter={() => {
                             const tooltip = document.getElementById('donut-tooltip');
                             const title = document.getElementById('tooltip-title');
                             const content = document.getElementById('tooltip-content');
@@ -400,7 +399,7 @@ export function Dashboard() {
                           strokeDashoffset={-(functioningLength + maintenanceLength)}
                           strokeLinecap="round"
                           className="donut-segment"
-                          onMouseEnter={(e) => {
+                          onMouseEnter={() => {
                             const tooltip = document.getElementById('donut-tooltip');
                             const title = document.getElementById('tooltip-title');
                             const content = document.getElementById('tooltip-content');
