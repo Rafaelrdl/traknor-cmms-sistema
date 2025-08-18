@@ -22,10 +22,18 @@ export function Layout({ children }: LayoutProps) {
 
   const user = getCurrentUser();
 
+  // If no user is authenticated, don't render layout
+  // AuthProvider will handle redirect to login
+  if (!user) {
+    return null;
+  }
+
   const handleLogout = () => {
-    // Em um app real, aqui faria logout no servidor
-    // Por enquanto, apenas redireciona para home
-    navigate('/');
+    // Clear authentication data
+    localStorage.removeItem('auth:user');
+    localStorage.removeItem('auth:role');
+    // Redirect to login page
+    navigate('/login');
   };
 
   return (

@@ -39,30 +39,20 @@ class UsersStore {
     return [...this.users];
   }
 
-  getCurrentUser(): User {
-    // Por simplicidade, retorna o primeiro admin como usuário atual
-    // Em um cenário real, seria baseado em autenticação
-    const currentUserId = localStorage.getItem(CURRENT_USER_KEY);
-    if (currentUserId) {
-      const user = this.users.find(u => u.id === currentUserId);
-      if (user) return { ...user };
+  getCurrentUser(): User | null {
+    // Check if user is authenticated via login
+    const authUser = localStorage.getItem('auth:user');
+    if (authUser) {
+      try {
+        return JSON.parse(authUser);
+      } catch {
+        // Clear invalid auth data
+        localStorage.removeItem('auth:user');
+        localStorage.removeItem('auth:role');
+      }
     }
     
-    // Fallback para o primeiro admin
-    const adminUser = this.users.find(u => u.role === 'admin' && u.status === 'active');
-    if (adminUser) {
-      localStorage.setItem(CURRENT_USER_KEY, adminUser.id);
-      return { ...adminUser };
-    }
-    
-    // Se não houver admin ativo, retorna o primeiro usuário ativo
-    const activeUser = this.users.find(u => u.status === 'active');
-    if (activeUser) {
-      localStorage.setItem(CURRENT_USER_KEY, activeUser.id);
-      return { ...activeUser };
-    }
-    
-    throw new Error('Nenhum usuário ativo encontrado');
+    return null;
   }
 
   setCurrentUser(userId: string): void {
@@ -76,6 +66,10 @@ class UsersStore {
 
   updateCurrentUser(partial: Partial<User>): User {
     const currentUser = this.getCurrentUser();
+    if (!currentUser) {
+      throw new Error('Nenhum usuário autenticado');
+    }
+    
     const updatedUser = {
       ...currentUser,
       ...partial,
@@ -84,19 +78,8 @@ class UsersStore {
       updated_at: new Date().toISOString(),
     };
 
-    // Garantir que preferências e segurança tenham valores padrão
-    if (!updatedUser.preferences) {
-      updatedUser.preferences = { ...defaultPreferences };
-    }
-    if (!updatedUser.security) {
-      updatedUser.security = { ...defaultSecurity };
-    }
-
-    const userIndex = this.users.findIndex(u => u.id === currentUser.id);
-    if (userIndex >= 0) {
-      this.users[userIndex] = updatedUser;
-      this.saveUsers();
-    }
+    // Update in auth storage
+    localStorage.setItem('auth:user', JSON.stringify(updatedUser));
 
     return { ...updatedUser };
   }
