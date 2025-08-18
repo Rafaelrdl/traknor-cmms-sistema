@@ -4,8 +4,10 @@
     "version": "0.0.0",
     "type": "module",
     "scripts": {
+        "predev": "bash ./scripts/check-deps.sh",
         "dev": "vite",
         "kill": "fuser -k 5000/tcp",
+        "clean": "bash ./scripts/clean-install.sh",
         "build": "tsc -b --noCheck && vite build",
         "lint": "eslint .",
         "optimize": "vite optimize",
