@@ -173,3 +173,12 @@ export function useUsers() {
     generateRecoveryCodes: () => usersStore.generateRecoveryCodes(),
   };
 }
+
+// Individual hooks for convenience
+export function useCurrentUser(): User | null {
+  return usersStore.getCurrentUser();
+}
+
+export function useUpdateCurrentUser() {
+  return (partial: Partial<User>) => usersStore.updateCurrentUser(partial);
+}

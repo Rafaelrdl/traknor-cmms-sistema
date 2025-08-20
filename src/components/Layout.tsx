@@ -8,6 +8,7 @@ import { useUsers } from '@/data/usersStore';
 import { IfCan } from '@/components/auth/IfCan';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileNavbar, DesktopNavbar } from '@/components/Navbar';
+import { FirstTimeGuide, useFirstTimeGuide } from '@/components/onboarding/FirstTimeGuide';
 import TrakNorLogoUrl from '@/assets/images/traknor-logo.svg';
 
 interface LayoutProps {
@@ -19,6 +20,7 @@ export function Layout({ children }: LayoutProps) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const { shouldShow, handleComplete, handleSkip } = useFirstTimeGuide();
 
   const user = getCurrentUser();
 
@@ -46,6 +48,7 @@ export function Layout({ children }: LayoutProps) {
             to="/" 
             className="flex items-center hover:opacity-80 transition-opacity flex-shrink-0" 
             aria-label="Página inicial"
+            data-tour="logo"
           >
             <img 
               src={TrakNorLogoUrl} 
@@ -59,7 +62,7 @@ export function Layout({ children }: LayoutProps) {
           </Link>
 
           {/* Desktop Navigation */}
-          <DesktopNavbar className="flex-1 mx-8" />
+          <DesktopNavbar className="flex-1 mx-8" data-tour="navigation" />
 
           {/* Right Side: Mobile Menu + User Menu */}
           <div className="flex items-center space-x-2">
@@ -67,13 +70,14 @@ export function Layout({ children }: LayoutProps) {
             {isMobile && (
               <MobileNavbar 
                 isOpen={isMobileNavOpen} 
-                onOpenChange={setIsMobileNavOpen} 
+                onOpenChange={setIsMobileNavOpen}
+                data-tour="mobile-menu"
               />
             )}
 
             {/* User Menu */}
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+              <DropdownMenuTrigger asChild data-tour="user-menu">
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
                     {user.avatar_url && (
@@ -124,6 +128,11 @@ export function Layout({ children }: LayoutProps) {
       <main className="p-4 sm:p-6">
         {children}
       </main>
+      
+      {/* First Time Guide */}
+      {shouldShow && (
+        <FirstTimeGuide onComplete={handleComplete} onSkip={handleSkip} />
+      )}
     </div>
   );
 }

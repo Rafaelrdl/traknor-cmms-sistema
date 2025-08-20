@@ -2,6 +2,9 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Layout } from '@/components/Layout';
 import { LoginPage } from '@/pages/LoginPage';
+import { OnboardingPage } from '@/pages/OnboardingPage';
+import { QuickSetupPage } from '@/pages/QuickSetupPage';
+import { WelcomeTourPage } from '@/pages/WelcomeTourPage';
 import { Dashboard } from '@/pages/Dashboard';
 import { EquipmentPage } from '@/pages/EquipmentPage';
 import { WorkOrdersPage } from '@/pages/WorkOrdersPage';
@@ -16,6 +19,7 @@ import { TeamPage } from '@/pages/TeamPage';
 import { Toaster } from '@/components/ui/sonner';
 import { RoleSwitcher } from '@/components/auth/RoleSwitcher';
 import { AuthProvider } from '@/components/auth/AuthProvider';
+import { OnboardingManager } from '@/hooks/useOnboardingFlow';
 
 // Initialize PDF.js configuration BEFORE any PDF components load
 import { configurePDFWorker } from '@/utils/pdfConfig';
@@ -37,26 +41,31 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/*" element={
-              <Layout>
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/ativos" element={<EquipmentPage />} />
-                  <Route path="/work-orders" element={<WorkOrdersPage />} />
-                  <Route path="/requests" element={<RequestsPage />} />
-                  <Route path="/plans" element={<PlansPage />} />
-                  <Route path="/metrics" element={<MetricsPage />} />
-                  <Route path="/inventory" element={<InventoryPage />} />
-                  <Route path="/procedures" element={<ProceduresPage />} />
-                  <Route path="/reports" element={<ReportsPage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
-                  <Route path="/admin/team" element={<TeamPage />} />
-                </Routes>
-              </Layout>
-            } />
-          </Routes>
+          <OnboardingManager>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/onboarding/accept" element={<OnboardingPage />} />
+              <Route path="/quick-setup" element={<QuickSetupPage />} />
+              <Route path="/welcome-tour" element={<WelcomeTourPage />} />
+              <Route path="/*" element={
+                <Layout>
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/ativos" element={<EquipmentPage />} />
+                    <Route path="/work-orders" element={<WorkOrdersPage />} />
+                    <Route path="/requests" element={<RequestsPage />} />
+                    <Route path="/plans" element={<PlansPage />} />
+                    <Route path="/metrics" element={<MetricsPage />} />
+                    <Route path="/inventory" element={<InventoryPage />} />
+                    <Route path="/procedures" element={<ProceduresPage />} />
+                    <Route path="/reports" element={<ReportsPage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/admin/team" element={<TeamPage />} />
+                  </Routes>
+                </Layout>
+              } />
+            </Routes>
+          </OnboardingManager>
           <Toaster />
           <RoleSwitcher />
         </AuthProvider>

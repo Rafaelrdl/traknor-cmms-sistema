@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { TechnicianPerformanceChart } from '@/components/charts/TechnicianPerformanceChart';
 import { DataFilterInfo } from '@/components/data/FilteredDataProvider';
+import { OnboardingProgressCard } from '@/components/onboarding/OnboardingProgressCard';
 import { 
   ClipboardList, 
   AlertTriangle, 
@@ -114,9 +115,12 @@ export function Dashboard() {
         />
       )}
 
+      {/* Onboarding Progress Card for new users */}
+      <OnboardingProgressCard />
+
       {/* KPI Cards - filtered based on role */}
       {availableWidgets.includes('kpis') && (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5" data-tour="dashboard-kpis">
         {/* Render KPI cards based on filtered data */}
         {filteredKPIs.map((kpi) => {
           // Determine appropriate icon and variant based on KPI
@@ -181,7 +185,7 @@ export function Dashboard() {
       </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2" data-tour="dashboard-charts">
         {/* OS Evolution Chart - only for admin/technician */}
         {availableWidgets.includes('workOrdersChart') && (
         <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
@@ -464,7 +468,7 @@ export function Dashboard() {
 
       {/* Upcoming Maintenance Table - filtered based on role */}
       {availableWidgets.includes('upcomingMaintenance') && (
-      <Card>
+      <Card data-tour="next-maintenances">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             {role === 'requester' ? 'Minhas Solicitações Programadas' : 'Próximas Manutenções (7 dias)'}
