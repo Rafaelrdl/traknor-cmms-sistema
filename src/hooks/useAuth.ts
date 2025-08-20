@@ -20,8 +20,18 @@ export function useAuth() {
       }
     };
 
+    // Listen for custom auth change events
+    const handleAuthChange = () => {
+      checkAuth();
+    };
+
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('authChange', handleAuthChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('authChange', handleAuthChange);
+    };
   }, []);
 
   return { isAuthenticated, isLoading };

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,7 +7,6 @@ import { AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function LoginPage() {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -58,8 +56,16 @@ export function LoginPage() {
           email: formData.email,
           role: 'admin'
         }));
+        
+        // Dispara evento customizado para notificar mudança na autenticação
+        window.dispatchEvent(new Event('authChange'));
+        
         toast.success('Login realizado com sucesso!');
-        navigate('/');
+        
+        // Forçar redirecionamento com window.location para garantir a navegação
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 300);
       } else if (formData.email === 'tecnico@traknor.com' && formData.password === 'tecnico123') {
         localStorage.setItem('auth:role', 'technician');
         localStorage.setItem('auth:user', JSON.stringify({
@@ -68,12 +74,20 @@ export function LoginPage() {
           email: formData.email,
           role: 'technician'
         }));
+        
+        // Dispara evento customizado para notificar mudança na autenticação
+        window.dispatchEvent(new Event('authChange'));
+        
         toast.success('Login realizado com sucesso!');
-        navigate('/');
+        
+        // Forçar redirecionamento com window.location para garantir a navegação
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 300);
       } else {
         toast.error('E-mail ou senha incorretos');
       }
-    } catch (error) {
+    } catch {
       toast.error('Erro ao fazer login. Tente novamente.');
     } finally {
       setIsLoading(false);
