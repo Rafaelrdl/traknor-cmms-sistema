@@ -257,7 +257,7 @@ export function LoginPage() {
                   <path d="M 75 55 A 10 10 0 0 1 85 45" stroke="#06b6d4" stroke-width="3" fill="none"/>
                 </g>
               </svg>
-            `)}`)"
+            `)}`
           }}
         />
         
