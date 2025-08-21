@@ -11,7 +11,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { 
   ChevronLeft, 
   ChevronRight, 
-  User, 
+  User as UserIcon, 
   Settings, 
   Bell, 
   CheckCircle,
@@ -46,7 +46,7 @@ const setupSteps = [
     id: 'profile',
     title: 'Perfil',
     description: 'Complete suas informações pessoais',
-    icon: User
+    icon: UserIcon
   },
   {
     id: 'preferences',
@@ -142,6 +142,7 @@ export function QuickSetupPage() {
       toast.success('Configuração concluída com sucesso!');
       navigate('/welcome-tour');
     } catch (error) {
+      console.error('Erro ao salvar configurações:', error);
       toast.error('Erro ao salvar configurações');
     } finally {
       setLoading(false);
@@ -151,14 +152,6 @@ export function QuickSetupPage() {
   const handleSkipSetup = () => {
     localStorage.setItem('onboarding:setupCompleted', 'true');
     navigate('/welcome-tour');
-  };
-
-  const getThemeIcon = (theme: string) => {
-    switch (theme) {
-      case 'light': return Sun;
-      case 'dark': return Moon;
-      default: return Monitor;
-    }
   };
 
   const renderProfileStep = () => (
