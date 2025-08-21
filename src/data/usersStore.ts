@@ -1,4 +1,5 @@
-import type { User, UserStatus, defaultPreferences, defaultSecurity } from '@/models/user';
+import type { User, UserStatus } from '@/models/user';
+import { defaultPreferences, defaultSecurity } from '@/models/user';
 import mockUsers from '@/mocks/users.json';
 
 const USERS_KEY = 'users:db';
@@ -147,7 +148,7 @@ class UsersStore {
 
   // Método para gerar códigos de recuperação 2FA
   generateRecoveryCodes(): string[] {
-    const codes = [];
+    const codes: string[] = [];
     for (let i = 0; i < 8; i++) {
       const code = Math.random().toString(36).substr(2, 6).toUpperCase();
       codes.push(code);

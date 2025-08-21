@@ -10,6 +10,7 @@ export interface User {
   avatar_url?: string;        // base64 ou URL local
   phone?: string;
   created_at: string;         // ISO
+  updated_at?: string;        // ISO
   last_login_at?: string;     // ISO
   // Preferências
   preferences?: {
@@ -42,5 +43,5 @@ export const defaultPreferences = {
 
 export const defaultSecurity = {
   two_factor_enabled: false,
-  recovery_codes: [],
+  recovery_codes: [] as string[],
 };
