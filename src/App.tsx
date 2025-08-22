@@ -16,6 +16,8 @@ import { ProceduresPage } from '@/pages/ProceduresPage';
 import { ReportsPage } from '@/pages/ReportsPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { TeamPage } from '@/pages/TeamPage';
+import { HelpCenterPage } from '@/pages/HelpCenterPage';
+import { HelpContentViewPage } from '@/pages/HelpContentViewPage';
 import { Toaster } from '@/components/ui/sonner';
 import { RoleSwitcher } from '@/components/auth/RoleSwitcher';
 import { AuthProvider } from '@/components/auth/AuthProvider';
@@ -61,6 +63,8 @@ function App() {
                     <Route path="/reports" element={<ReportsPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/admin/team" element={<TeamPage />} />
+                    <Route path="/help" element={<HelpCenterPage />} />
+                    <Route path="/help/:contentId" element={<HelpContentViewPage />} />
                   </Routes>
                 </Layout>
               } />

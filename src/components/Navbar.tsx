@@ -14,6 +14,7 @@ import {
   Warehouse,
   BookOpen,
   FileText,
+  HelpCircle,
   Menu,
   MoreHorizontal
 } from 'lucide-react';
@@ -30,6 +31,7 @@ const navigation = [
   { name: 'Estoque', href: '/inventory', icon: Warehouse },
   { name: 'Procedimentos', href: '/procedures', icon: BookOpen },
   { name: 'Relatórios', href: '/reports', icon: FileText },
+  { name: 'Ajuda', href: '/help', icon: HelpCircle },
 ];
 
 interface MobileNavbarProps {

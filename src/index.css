@@ -337,4 +337,31 @@ body {
       margin-bottom: 0.3rem;
     }
   }
+
+  /* Help Center Tour Styles */
+  .tour-highlight {
+    position: relative;
+    z-index: 51;
+  }
+  
+  .tour-highlight::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    background: rgba(59, 130, 246, 0.3);
+    border-radius: 8px;
+    pointer-events: none;
+    animation: tour-pulse 2s ease-in-out infinite;
+  }
+  
+  @keyframes tour-pulse {
+    0%, 100% {
+      opacity: 0.3;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.6;
+      transform: scale(1.02);
+    }
+  }
 }
