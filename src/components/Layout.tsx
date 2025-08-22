@@ -9,6 +9,7 @@ import { IfCan } from '@/components/auth/IfCan';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileNavbar, DesktopNavbar } from '@/components/Navbar';
 import { FirstTimeGuide, useFirstTimeGuide } from '@/components/onboarding/FirstTimeGuide';
+import { TourHint } from '@/components/tour/TourHint';
 import TrakNorLogoUrl from '@/assets/images/traknor-logo.svg';
 
 interface LayoutProps {
@@ -133,6 +134,9 @@ export function Layout({ children }: LayoutProps) {
       {shouldShow && (
         <FirstTimeGuide onComplete={handleComplete} onSkip={handleSkip} />
       )}
+      
+      {/* Tour Hint - contextual help */}
+      <TourHint />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { TechnicianPerformanceChart } from '@/components/charts/TechnicianPerformanceChart';
 import { DataFilterInfo } from '@/components/data/FilteredDataProvider';
 import { OnboardingProgressCard } from '@/components/onboarding/OnboardingProgressCard';
+import { WelcomeGuide } from '@/components/tour/WelcomeGuide';
 import { 
   ClipboardList, 
   AlertTriangle, 
@@ -526,6 +527,9 @@ export function Dashboard() {
         </CardContent>
       </Card>
       )}
+      
+      {/* Welcome Guide - appears after tour completion */}
+      <WelcomeGuide />
     </div>
   );
 }

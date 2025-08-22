@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -17,7 +18,9 @@ import {
   FileText,
   Download,
   CheckCircle,
-  Sparkles
+  Sparkles,
+  Play,
+  Pause
 } from 'lucide-react';
 import { useCurrentRole } from '@/data/authStore';
 import type { UserRole } from '@/models/user';
@@ -166,6 +169,7 @@ export function WelcomeTourPage() {
   const [currentRole] = useCurrentRole();
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
 
   // Filter steps based on user role
   const availableSteps = tourSteps.filter(step => 
@@ -184,6 +188,49 @@ export function WelcomeTourPage() {
 
     return () => clearTimeout(timer);
   }, [currentStep]);
+
+  // Auto-play functionality
+  useEffect(() => {
+    if (!isAutoPlaying || isLastStep) return;
+
+    const autoTimer = setTimeout(() => {
+      setCurrentStep(prev => prev + 1);
+    }, 5000);
+
+    return () => clearTimeout(autoTimer);
+  }, [currentStep, isAutoPlaying, isLastStep]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return; // Don't interfere with form inputs
+      }
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          if (!isFirstStep) handlePrevious();
+          break;
+        case 'ArrowRight':
+        case ' ':
+          e.preventDefault();
+          handleNext();
+          break;
+        case 'Escape':
+          e.preventDefault();
+          handleSkipTour();
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (currentStepData.route) handleVisitPage();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentStep, isFirstStep, isLastStep, currentStepData]);
 
   const handleNext = () => {
     if (isLastStep) {
@@ -213,12 +260,26 @@ export function WelcomeTourPage() {
   const handleFinishTour = () => {
     // Mark tour as completed in localStorage
     localStorage.setItem('onboarding:tourCompleted', 'true');
+    
+    // Show completion toast
+    toast.success('🎉 Tour finalizado!', {
+      description: 'Bem-vindo ao TrakNor CMMS. Você agora está pronto para começar!',
+      duration: 4000,
+    });
+    
+    // Show completion message
+    const event = new CustomEvent('tourCompleted', { detail: { completed: true } });
+    window.dispatchEvent(event);
     navigate('/');
   };
 
   const handleSkipTour = () => {
     localStorage.setItem('onboarding:tourCompleted', 'true');
     navigate('/');
+  };
+
+  const toggleAutoPlay = () => {
+    setIsAutoPlaying(prev => !prev);
   };
 
   const getRoleDisplayName = (role: UserRole) => {
@@ -254,6 +315,19 @@ export function WelcomeTourPage() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={toggleAutoPlay}
+                className="flex items-center space-x-2"
+              >
+                {isAutoPlaying ? (
+                  <Pause className="w-4 h-4" />
+                ) : (
+                  <Play className="w-4 h-4" />
+                )}
+                <span>{isAutoPlaying ? 'Pausar' : 'Auto'}</span>
+              </Button>
               <Progress value={progress} className="w-32" />
               <span className="text-sm text-muted-foreground">
                 {currentStep + 1} de {availableSteps.length}
@@ -285,26 +359,38 @@ export function WelcomeTourPage() {
                 <CardContent>
                   <div className="space-y-6">
                     <div>
-                      <h3 className="font-medium mb-3">Principais funcionalidades:</h3>
-                      <ul className="space-y-2">
+                      <h3 className="font-medium mb-4 text-lg">Principais funcionalidades:</h3>
+                      <div className="grid grid-cols-1 gap-3">
                         {currentStepData.features.map((feature, index) => (
-                          <li key={index} className="flex items-start space-x-2">
-                            <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                            <span className="text-sm">{feature}</span>
-                          </li>
+                          <div 
+                            key={index} 
+                            className="flex items-start space-x-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                          >
+                            <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                            <span className="text-sm leading-relaxed">{feature}</span>
+                          </div>
                         ))}
-                      </ul>
+                      </div>
                     </div>
 
                     {currentStepData.route && (
-                      <div className="pt-4 border-t">
-                        <Button 
-                          variant="outline" 
-                          onClick={handleVisitPage}
-                          className="w-full sm:w-auto"
-                        >
-                          Visitar Página
-                        </Button>
+                      <div className="pt-6 border-t">
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <Button 
+                            onClick={handleVisitPage}
+                            className="flex-1 sm:flex-none bg-primary hover:bg-primary/90"
+                          >
+                            <currentStepData.icon className="w-4 h-4 mr-2" />
+                            Visitar {currentStepData.title}
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            onClick={() => window.open(currentStepData.route, '_blank')}
+                            className="flex-1 sm:flex-none"
+                          >
+                            Abrir em Nova Aba
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -316,7 +402,14 @@ export function WelcomeTourPage() {
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Progresso do Tour</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">Progresso do Tour</CardTitle>
+                    {isAutoPlaying && (
+                      <Badge variant="secondary" className="animate-pulse">
+                        Auto
+                      </Badge>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
@@ -375,18 +468,44 @@ export function WelcomeTourPage() {
 
               <Card>
                 <CardContent className="pt-6">
-                  <div className="text-center space-y-3">
-                    <p className="text-sm text-muted-foreground">
-                      Você pode pular o tour a qualquer momento
-                    </p>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={handleSkipTour}
-                      className="w-full"
-                    >
-                      Pular Tour
-                    </Button>
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Você pode pular o tour a qualquer momento
+                      </p>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={handleSkipTour}
+                        className="w-full"
+                      >
+                        Pular Tour
+                      </Button>
+                    </div>
+                    
+                    <div className="border-t pt-4">
+                      <p className="text-xs text-muted-foreground text-center mb-2">
+                        Navegação por teclado:
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                        <div className="flex items-center justify-center">
+                          <kbd className="px-1 py-0.5 bg-muted rounded text-xs">←→</kbd>
+                          <span className="ml-1">Navegar</span>
+                        </div>
+                        <div className="flex items-center justify-center">
+                          <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Enter</kbd>
+                          <span className="ml-1">Visitar</span>
+                        </div>
+                        <div className="flex items-center justify-center">
+                          <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Space</kbd>
+                          <span className="ml-1">Próximo</span>
+                        </div>
+                        <div className="flex items-center justify-center">
+                          <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Esc</kbd>
+                          <span className="ml-1">Sair</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -423,7 +542,7 @@ export function WelcomeTourPage() {
               onClick={handleNext}
               className="flex items-center space-x-2"
             >
-              <span>{isLastStep ? 'Finalizar Tour' : 'Próximo'}</span>
+              <span>{isLastStep ? 'Finalizar Tour 🎉' : 'Próximo'}</span>
               {!isLastStep && <ChevronRight className="w-4 h-4" />}
             </Button>
           </div>
