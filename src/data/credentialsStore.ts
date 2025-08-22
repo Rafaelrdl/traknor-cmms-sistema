@@ -34,11 +34,59 @@ class CredentialsStore {
   constructor() {
     this.credentials = load(CREDENTIALS_KEY, []);
     // Inicializar com credenciais padrão se necessário
-    this.initializeDefaultCredentials();
+    this.ensureDemoCredentials();
   }
 
   private saveCredentials(): void {
     save(CREDENTIALS_KEY, this.credentials);
+  }
+
+  ensureDemoCredentials(usersStore?: any): void {
+    // Se não for passado o usersStore, apenas inicializa as credenciais básicas
+    if (!usersStore) {
+      this.initializeDefaultCredentials();
+      return;
+    }
+    
+    // Garantir que as credenciais de demonstração existam
+    const demoCredentials = [
+      {
+        userId: 'user-admin-001',
+        email: 'admin@traknor.com',
+        password: 'admin123',
+        role: 'admin'
+      },
+      {
+        userId: 'user-tech-002',
+        email: 'tecnico@traknor.com',
+        password: 'tecnico123',
+        role: 'technician'
+      }
+    ];
+
+    // Garantir que os usuários existam
+    demoCredentials.forEach(demo => {
+      // Verificar se o usuário existe
+      const user = usersStore.getUserByEmail(demo.email);
+      
+      // Se não existir, criar o usuário
+      if (!user) {
+        usersStore.addUser({
+          id: demo.userId,
+          name: demo.email.split('@')[0],
+          email: demo.email,
+          role: demo.role,
+          status: 'active'
+        });
+      } 
+      // Se existir mas estiver inativo, ativar
+      else if (user.status !== 'active') {
+        usersStore.setUserStatus(user.id, 'active');
+      }
+
+      // Garantir que as credenciais existam
+      this.addCredentials(demo.userId, demo.email, demo.password);
+    });
   }
 
   private initializeDefaultCredentials(): void {
