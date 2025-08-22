@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste do Sistema de Convites</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        .success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Teste do Sistema de Convites - TrakNor CMMS</h1>
+    
+    <div class="test-section">
+        <h2>1. Criar Convite</h2>
+        <input type="email" id="inviteEmail" placeholder="E-mail do convidado" value="teste@exemplo.com">
+        <select id="inviteRole">
+            <option value="requester">Solicitante</option>
+            <option value="technician">Técnico</option>
+            <option value="admin">Administrador</option>
+        </select>
+        <button onclick="createInvite()">Criar Convite</button>
+        <div id="inviteResult" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Aceitar Convite (Simular)</h2>
+        <input type="text" id="acceptToken" placeholder="Token do convite">
+        <input type="text" id="acceptName" placeholder="Nome completo" value="João Teste">
+        <input type="password" id="acceptPassword" placeholder="Senha" value="MinhaSenh@123">
+        <button onclick="acceptInvite()">Aceitar Convite</button>
+        <div id="acceptResult" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Testar Login</h2>
+        <input type="email" id="loginEmail" placeholder="E-mail" value="teste@exemplo.com">
+        <input type="password" id="loginPassword" placeholder="Senha" value="MinhaSenh@123">
+        <button onclick="testLogin()">Testar Login</button>
+        <div id="loginResult" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Estado Atual</h2>
+        <button onclick="checkState()">Verificar Estado dos Stores</button>
+        <div id="stateResult" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Simulação dos stores para teste
+        const INVITES_KEY = 'invites:db';
+        const USERS_KEY = 'users:db';
+        const CREDENTIALS_KEY = 'credentials:db';
+
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        function createInvite() {
+            const email = document.getElementById('inviteEmail').value;
+            const role = document.getElementById('inviteRole').value;
+            const resultDiv = document.getElementById('inviteResult');
+
+            try {
+                const invites = JSON.parse(localStorage.getItem(INVITES_KEY) || '[]');
+                const token = generateUUID();
+                const now = new Date();
+                const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+                const invite = {
+                    id: generateUUID(),
+                    email: email,
+                    role: role,
+                    invited_by_user_id: 'user-admin-001',
+                    token: token,
+                    url: `${window.location.origin}/onboarding/accept?token=${token}`,
+                    status: 'pending',
+                    sent_at: now.toISOString(),
+                    expires_at: expiresAt.toISOString(),
+                };
+
+                invites.push(invite);
+                localStorage.setItem(INVITES_KEY, JSON.stringify(invites));
+
+                document.getElementById('acceptToken').value = token;
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `✅ Convite criado com sucesso!<br>Token: ${token}`;
+                resultDiv.style.display = 'block';
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ Erro: ${error.message}`;
+                resultDiv.style.display = 'block';
+            }
+        }
+
+        function acceptInvite() {
+            const token = document.getElementById('acceptToken').value;
+            const name = document.getElementById('acceptName').value;
+            const password = document.getElementById('acceptPassword').value;
+            const resultDiv = document.getElementById('acceptResult');
+
+            try {
+                // Buscar convite
+                const invites = JSON.parse(localStorage.getItem(INVITES_KEY) || '[]');
+                const invite = invites.find(i => i.token === token && i.status === 'pending');
+                
+                if (!invite) {
+                    throw new Error('Token de convite inválido ou expirado');
+                }
+
+                // Criar usuário
+                const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
+                const newUser = {
+                    id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                    name: name,
+                    email: invite.email,
+                    role: invite.role,
+                    status: 'active',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                    preferences: {
+                        theme: 'system',
+                        language: 'pt-BR',
+                        date_format: 'DD/MM/YYYY',
+                        time_format: '24h',
+                        notifications: { email: true, push: true }
+                    },
+                    security: {
+                        two_factor_enabled: false,
+                        recovery_codes: []
+                    }
+                };
+
+                users.push(newUser);
+                localStorage.setItem(USERS_KEY, JSON.stringify(users));
+
+                // Criar credenciais
+                const credentials = JSON.parse(localStorage.getItem(CREDENTIALS_KEY) || '[]');
+                credentials.push({
+                    userId: newUser.id,
+                    email: newUser.email,
+                    password: password,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                });
+                localStorage.setItem(CREDENTIALS_KEY, JSON.stringify(credentials));
+
+                // Marcar convite como aceito
+                const inviteIndex = invites.findIndex(i => i.id === invite.id);
+                invites[inviteIndex].status = 'accepted';
+                localStorage.setItem(INVITES_KEY, JSON.stringify(invites));
+
+                document.getElementById('loginEmail').value = newUser.email;
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `✅ Convite aceito com sucesso!<br>Usuário criado: ${newUser.name} (${newUser.email})`;
+                resultDiv.style.display = 'block';
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ Erro: ${error.message}`;
+                resultDiv.style.display = 'block';
+            }
+        }
+
+        function testLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const resultDiv = document.getElementById('loginResult');
+
+            try {
+                // Verificar credenciais
+                const credentials = JSON.parse(localStorage.getItem(CREDENTIALS_KEY) || '[]');
+                const userCredential = credentials.find(c => c.email === email);
+                
+                if (!userCredential) {
+                    throw new Error('Usuário não encontrado');
+                }
+
+                if (userCredential.password !== password) {
+                    throw new Error('Senha incorreta');
+                }
+
+                // Buscar dados do usuário
+                const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
+                const user = users.find(u => u.email === email);
+
+                if (!user) {
+                    throw new Error('Dados do usuário não encontrados');
+                }
+
+                if (user.status !== 'active') {
+                    throw new Error('Usuário inativo');
+                }
+
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `✅ Login realizado com sucesso!<br>Usuário: ${user.name}<br>Papel: ${user.role}`;
+                resultDiv.style.display = 'block';
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ Erro no login: ${error.message}`;
+                resultDiv.style.display = 'block';
+            }
+        }
+
+        function checkState() {
+            const resultDiv = document.getElementById('stateResult');
+            
+            const invites = JSON.parse(localStorage.getItem(INVITES_KEY) || '[]');
+            const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
+            const credentials = JSON.parse(localStorage.getItem(CREDENTIALS_KEY) || '[]');
+
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = `
+                <h4>Estado dos Stores:</h4>
+                <p><strong>Convites:</strong> ${invites.length} convites</p>
+                <p><strong>Usuários:</strong> ${users.length} usuários</p>
+                <p><strong>Credenciais:</strong> ${credentials.length} credenciais</p>
+                <details>
+                    <summary>Ver detalhes</summary>
+                    <pre>${JSON.stringify({invites, users, credentials}, null, 2)}</pre>
+                </details>
+            `;
+            resultDiv.style.display = 'block';
+        }
+
+        // Inicializar com dados padrão
+        window.onload = function() {
+            // Verificar se já existem dados, se não, criar dados padrão
+            const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
+            const credentials = JSON.parse(localStorage.getItem(CREDENTIALS_KEY) || '[]');
+            
+            if (users.length === 0) {
+                // Carregar dados padrão de exemplo
+                fetch('/src/mocks/users.json')
+                    .then(r => r.json())
+                    .then(mockUsers => {
+                        localStorage.setItem(USERS_KEY, JSON.stringify(mockUsers));
+                    })
+                    .catch(() => {
+                        console.log('Não foi possível carregar dados mock');
+                    });
+            }
+            
+            if (credentials.length === 0) {
+                // Criar credenciais padrão
+                const defaultCredentials = [
+                    {
+                        userId: 'user-admin-001',
+                        email: 'admin@traknor.com',
+                        password: 'admin123',
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    },
+                    {
+                        userId: 'user-tech-002',
+                        email: 'tecnico@traknor.com',
+                        password: 'tecnico123',
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    }
+                ];
+                localStorage.setItem(CREDENTIALS_KEY, JSON.stringify(defaultCredentials));
+            }
+        };
+    </script>
+</body>
+</html>

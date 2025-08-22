@@ -48,7 +48,7 @@ class CredentialsStore {
 
     if (!adminExists) {
       this.credentials.push({
-        userId: 'user-admin-001',
+        userId: 'user-admin-001', // ID correspondente ao mock
         email: 'admin@traknor.com',
         password: 'admin123',
         createdAt: new Date().toISOString(),
@@ -58,7 +58,7 @@ class CredentialsStore {
 
     if (!techExists) {
       this.credentials.push({
-        userId: 'user-tech-002',
+        userId: 'user-tech-002', // ID correspondente ao mock
         email: 'tecnico@traknor.com',
         password: 'tecnico123',
         createdAt: new Date().toISOString(),
