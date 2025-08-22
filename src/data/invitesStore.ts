@@ -1,6 +1,7 @@
 import type { Invite } from '@/models/invite';
 import type { UserRole, User } from '@/models/user';
 import { usersStore } from './usersStore';
+import { credentialsStore } from './credentialsStore';
 
 const INVITES_KEY = 'invites:db';
 
@@ -47,13 +48,7 @@ class InvitesStore {
 
   private cleanExpiredInvites(): void {
     const now = new Date();
-    const validInvites = this.invites.filter(invite => {
-      if (invite.status === 'pending') {
-        return new Date(invite.expires_at) > now;
-      }
-      return true; // Manter convites accepted/revoked para histórico
-    });
-
+    
     // Marcar como expirados os pendentes que passaram do prazo
     this.invites.forEach(invite => {
       if (invite.status === 'pending' && new Date(invite.expires_at) <= now) {
@@ -175,13 +170,16 @@ class InvitesStore {
       throw new Error('Token de convite inválido ou expirado');
     }
 
-    // Criar o usuário
+    // Criar o usuário (sem password na interface User)
     const newUser = usersStore.addUser({
       name: userData.name,
       email: invite.email,
       role: invite.role,
       status: 'active',
     });
+
+    // Salvar credenciais separadamente
+    credentialsStore.addCredentials(newUser.id, newUser.email, userData.password);
 
     // Marcar convite como aceito
     const inviteIndex = this.invites.findIndex(i => i.id === invite.id);
