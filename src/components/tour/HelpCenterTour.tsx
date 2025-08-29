@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   X, 
   ArrowRight, 
@@ -75,7 +76,6 @@ interface HelpCenterTourProps {
 
 export function HelpCenterTour({ isOpen, onClose, onComplete }: HelpCenterTourProps) {
   const [currentStep, setCurrentStep] = useState(0);
-  const [targetElement, setTargetElement] = useState<HTMLElement | null>(null);
   const [tourPosition, setTourPosition] = useState({ top: 0, left: 0 });
 
   useEffect(() => {
@@ -86,7 +86,6 @@ export function HelpCenterTour({ isOpen, onClose, onComplete }: HelpCenterTourPr
       const element = document.querySelector(step.target) as HTMLElement;
       
       if (element) {
-        setTargetElement(element);
         const rect = element.getBoundingClientRect();
         const scrollY = window.scrollY;
         const scrollX = window.scrollX;
@@ -222,6 +221,7 @@ export function HelpCenterTour({ isOpen, onClose, onComplete }: HelpCenterTourPr
                   size="sm"
                   onClick={skipTour}
                   className="h-8 w-8 p-0"
+                  aria-label="Fechar tour"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -300,31 +300,6 @@ export function HelpCenterTour({ isOpen, onClose, onComplete }: HelpCenterTourPr
           />
         </motion.div>
       </AnimatePresence>
-
-      {/* Quick start guide - shown on first step */}
-      {currentStep === 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="fixed bottom-6 right-6 z-[60] max-w-xs"
-        >
-          <Card className="shadow-lg">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Play className="h-4 w-4" />
-                Início Rápido
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-xs space-y-2">
-              <p>• Assista ao vídeo de introdução</p>
-              <p>• Explore as categorias de conteúdo</p>
-              <p>• Marque artigos como favoritos</p>
-              <p>• Acompanhe seu progresso</p>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
     </>
   );
 }
@@ -396,5 +371,151 @@ export function useHelpCenterTour() {
     closeTour,
     completeTour,
     resetTour
+  };
+}
+
+// Quick Start Card component
+const QUICKSTART_DISMISSED_KEY = 'help:quickstart-dismissed';
+
+interface QuickStartCardProps {
+  onStartTour: () => void;
+}
+
+export function QuickStartCard({ onStartTour }: QuickStartCardProps) {
+  const [isOpen, setIsOpen] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(QUICKSTART_DISMISSED_KEY) !== 'true';
+    } catch {
+      return true;
+    }
+  });
+
+  // Close with Esc key (accessibility)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
+  const dismiss = useCallback(() => {
+    setIsOpen(false);
+  }, []);
+
+  const dismissPermanently = useCallback(() => {
+    setIsOpen(false);
+    try {
+      localStorage.setItem(QUICKSTART_DISMISSED_KEY, 'true');
+    } catch (error) {
+      console.warn('Failed to save quick start preference:', error);
+    }
+  }, []);
+
+  const handleStartTour = useCallback(() => {
+    onStartTour();
+    setIsOpen(false);
+  }, [onStartTour]);
+
+  if (!isOpen) {
+    return null;
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 20, scale: 0.9 }}
+      transition={{ type: "spring", damping: 20, stiffness: 300 }}
+      className="fixed bottom-6 right-6 z-[60] max-w-xs"
+      onMouseDown={(e) => e.stopPropagation()}
+      role="dialog"
+      aria-labelledby="quickstart-title"
+      aria-describedby="quickstart-description"
+    >
+      <Card className="shadow-lg border-2 border-primary/20">
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <CardTitle id="quickstart-title" className="text-sm flex items-center gap-2">
+              <Play className="h-4 w-4" />
+              Início Rápido
+            </CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={dismiss}
+              className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+              aria-label="Fechar guia de início rápido"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div id="quickstart-description" className="text-xs space-y-2">
+            <p>• Assista ao vídeo de introdução</p>
+            <p>• Explore as categorias de conteúdo</p>
+            <p>• Marque artigos como favoritos</p>
+            <p>• Acompanhe seu progresso</p>
+          </div>
+          
+          <div className="flex flex-col gap-2">
+            <Button
+              size="sm"
+              onClick={handleStartTour}
+              className="w-full text-xs"
+            >
+              <Play className="h-3 w-3 mr-1" />
+              Iniciar Tour
+            </Button>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="dont-show-again"
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    dismissPermanently();
+                  }
+                }}
+              />
+              <label
+                htmlFor="dont-show-again"
+                className="text-xs text-muted-foreground cursor-pointer"
+              >
+                Não mostrar novamente
+              </label>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
+// Hook for managing quick start state
+export function useQuickStart() {
+  const [isDismissed, setIsDismissed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(QUICKSTART_DISMISSED_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const resetQuickStart = useCallback(() => {
+    setIsDismissed(false);
+    try {
+      localStorage.removeItem(QUICKSTART_DISMISSED_KEY);
+    } catch (error) {
+      console.warn('Failed to reset quick start preference:', error);
+    }
+  }, []);
+
+  return {
+    isDismissed,
+    resetQuickStart
   };
 }
