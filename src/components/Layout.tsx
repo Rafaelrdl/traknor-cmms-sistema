@@ -10,6 +10,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileNavbar, DesktopNavbar } from '@/components/Navbar';
 import { FirstTimeGuide, useFirstTimeGuide } from '@/components/onboarding/FirstTimeGuide';
 import { TourHint } from '@/components/tour/TourHint';
+import { useAutomaticWorkOrderGeneration } from '@/hooks/useWorkOrderGeneration';
 import TrakNorLogoUrl from '@/assets/images/traknor-logo.svg';
 
 interface LayoutProps {
@@ -22,6 +23,9 @@ export function Layout({ children }: LayoutProps) {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { shouldShow, handleComplete, handleSkip } = useFirstTimeGuide();
+  
+  // Initialize automatic work order generation
+  useAutomaticWorkOrderGeneration();
 
   const user = getCurrentUser();
 

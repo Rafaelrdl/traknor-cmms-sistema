@@ -14,12 +14,14 @@ export interface MaintenancePlan {
   scope: {
     location_id?: string;
     location_name?: string;
-    equipment_id?: string;
-    equipment_name?: string;
+    equipment_ids: string[];    // Múltiplos equipamentos
+    equipment_names: string[];  // Nomes dos equipamentos para exibição
   };
   tasks: PlanTask[];
   status: PlanStatus;
   start_date?: string;         // ISO
+  next_execution_date?: string; // Próxima data de execução automática
+  auto_generate: boolean;      // Se deve gerar OSs automaticamente
   created_at: string;          // ISO
   updated_at: string;          // ISO
 }

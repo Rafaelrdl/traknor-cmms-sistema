@@ -1,4 +1,5 @@
 import type { MaintenancePlan } from '@/models/plan';
+import { calculateNextExecutionDate } from './workOrdersStore';
 
 const STORAGE_KEY = 'traknor-maintenance-plans';
 
@@ -11,7 +12,9 @@ export const MOCK_PLANS: MaintenancePlan[] = [
     frequency: 'Mensal',
     scope: {
       location_id: '1',
-      location_name: 'Setor Administrativo'
+      location_name: 'Setor Administrativo',
+      equipment_ids: ['eq-1', 'eq-2'],
+      equipment_names: ['Climatizador Central 01', 'Climatizador Central 02']
     },
     tasks: [
       {
@@ -27,6 +30,8 @@ export const MOCK_PLANS: MaintenancePlan[] = [
     ],
     status: 'Ativo',
     start_date: '2024-01-01',
+    next_execution_date: '2024-03-01',
+    auto_generate: true,
     created_at: '2024-01-15T10:00:00Z',
     updated_at: '2024-01-15T10:00:00Z'
   },
@@ -36,8 +41,10 @@ export const MOCK_PLANS: MaintenancePlan[] = [
     description: 'Manutenção preventiva trimestral para aparelhos split',
     frequency: 'Trimestral',
     scope: {
-      equipment_id: 'eq-1',
-      equipment_name: 'Split LG 12.000 BTUs'
+      location_id: '2',
+      location_name: 'Departamento de TI',
+      equipment_ids: ['eq-3', 'eq-4', 'eq-5'],
+      equipment_names: ['Split LG 12.000 BTUs - Sala 1', 'Split Samsung 18.000 BTUs - Sala 2', 'Split Carrier 24.000 BTUs - Sala 3']
     },
     tasks: [
       {
@@ -47,6 +54,8 @@ export const MOCK_PLANS: MaintenancePlan[] = [
       }
     ],
     status: 'Ativo',
+    next_execution_date: '2024-04-01',
+    auto_generate: false,
     created_at: '2024-01-10T15:30:00Z',
     updated_at: '2024-01-10T15:30:00Z'
   },
@@ -56,10 +65,10 @@ export const MOCK_PLANS: MaintenancePlan[] = [
     description: 'Manutenção preventiva semestral para chillers industriais',
     frequency: 'Semestral',
     scope: {
-      location_id: '2',
-      location_name: 'Departamento de TI',
-      equipment_id: 'eq-2',
-      equipment_name: 'Chiller Industrial 500TR'
+      location_id: '3',
+      location_name: 'Data Center',
+      equipment_ids: ['eq-6'],
+      equipment_names: ['Chiller Industrial 500TR']
     },
     tasks: [
       {
@@ -73,6 +82,7 @@ export const MOCK_PLANS: MaintenancePlan[] = [
       }
     ],
     status: 'Inativo',
+    auto_generate: false,
     created_at: '2024-01-05T09:15:00Z',
     updated_at: '2024-01-05T09:15:00Z'
   }
@@ -109,6 +119,8 @@ export const createPlan = (plan: Omit<MaintenancePlan, 'id' | 'created_at' | 'up
   const newPlan: MaintenancePlan = {
     ...plan,
     id: `plan-${Date.now()}`,
+    auto_generate: plan.auto_generate ?? false,
+    next_execution_date: plan.start_date ? calculateNextExecutionDate(plan.start_date, plan.frequency) : undefined,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
@@ -128,8 +140,15 @@ export const updatePlan = (updatedPlan: MaintenancePlan): MaintenancePlan => {
     throw new Error(`Plan with id ${updatedPlan.id} not found`);
   }
   
+  // Update next execution date if start date or frequency changed
+  let nextExecutionDate = updatedPlan.next_execution_date;
+  if (updatedPlan.start_date) {
+    nextExecutionDate = calculateNextExecutionDate(updatedPlan.start_date, updatedPlan.frequency);
+  }
+  
   const planWithUpdatedDate = {
     ...updatedPlan,
+    next_execution_date: nextExecutionDate,
     updated_at: new Date().toISOString()
   };
   
@@ -137,6 +156,34 @@ export const updatePlan = (updatedPlan: MaintenancePlan): MaintenancePlan => {
   savePlans(plans);
   
   return planWithUpdatedDate;
+};
+
+// Update plan's next execution date after work orders are generated
+export const updatePlanNextExecution = (planId: string): MaintenancePlan | null => {
+  const plans = loadPlans();
+  const index = plans.findIndex(plan => plan.id === planId);
+  
+  if (index === -1) {
+    return null;
+  }
+  
+  const plan = plans[index];
+  if (!plan.next_execution_date) {
+    return plan;
+  }
+  
+  const nextDate = calculateNextExecutionDate(plan.next_execution_date, plan.frequency);
+  
+  const updatedPlan = {
+    ...plan,
+    next_execution_date: nextDate,
+    updated_at: new Date().toISOString()
+  };
+  
+  plans[index] = updatedPlan;
+  savePlans(plans);
+  
+  return updatedPlan;
 };
 
 export const findPlanById = (id: string): MaintenancePlan | undefined => {

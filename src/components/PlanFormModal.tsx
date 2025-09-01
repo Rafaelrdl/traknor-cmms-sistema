@@ -34,12 +34,13 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
     scope: {
       location_id: string;
       location_name: string;
-      equipment_id: string;
-      equipment_name: string;
+      equipment_ids: string[];
+      equipment_names: string[];
     };
     tasks: PlanTask[];
     status: MaintenancePlan['status'];
     start_date: string;
+    auto_generate: boolean;
   }>({
     name: '',
     description: '',
@@ -47,12 +48,13 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
     scope: {
       location_id: '',
       location_name: '',
-      equipment_id: '',
-      equipment_name: ''
+      equipment_ids: [],
+      equipment_names: []
     },
     tasks: [],
     status: 'Ativo',
-    start_date: ''
+    start_date: '',
+    auto_generate: false
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -68,12 +70,13 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
         scope: plan.scope || {
           location_id: '',
           location_name: '',
-          equipment_id: '',
-          equipment_name: ''
+          equipment_ids: [],
+          equipment_names: []
         },
         tasks: plan.tasks || [],
         status: plan.status,
-        start_date: plan.start_date || ''
+        start_date: plan.start_date || '',
+        auto_generate: plan.auto_generate || false
       });
     } else {
       // Reset form for new plan
@@ -84,12 +87,13 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
         scope: {
           location_id: '',
           location_name: '',
-          equipment_id: '',
-          equipment_name: ''
+          equipment_ids: [],
+          equipment_names: []
         },
         tasks: [],
         status: 'Ativo',
-        start_date: ''
+        start_date: '',
+        auto_generate: false
       });
     }
     setErrors({});
@@ -106,6 +110,11 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
 
     if (!formData.frequency) {
       newErrors.frequency = 'Frequência é obrigatória';
+    }
+
+    // Validate equipment selection
+    if (formData.scope.equipment_ids.length === 0) {
+      newErrors.equipment = 'Pelo menos um equipamento deve ser selecionado';
     }
 
     // Validate tasks
@@ -142,7 +151,8 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
           scope: formData.scope,
           tasks: formData.tasks,
           status: formData.status,
-          start_date: formData.start_date
+          start_date: formData.start_date,
+          auto_generate: formData.auto_generate
         });
         toast.success('Plano atualizado com sucesso.');
       } else {
@@ -154,7 +164,8 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
           scope: formData.scope,
           tasks: formData.tasks,
           status: formData.status,
-          start_date: formData.start_date
+          start_date: formData.start_date,
+          auto_generate: formData.auto_generate
         });
         toast.success('Plano criado com sucesso.');
       }
@@ -204,26 +215,48 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
   };
 
   const handleEquipmentChange = (equipmentId: string) => {
-    if (equipmentId === "no-equipment") {
-      setFormData(prev => ({
-        ...prev,
-        scope: {
-          ...prev.scope,
-          equipment_id: '',
-          equipment_name: ''
-        }
-      }));
-      return;
-    }
-
     const selectedEquipment = equipment.find(eq => eq.id === equipmentId);
-    
+    if (!selectedEquipment) return;
+
+    setFormData(prev => {
+      const isAlreadySelected = prev.scope.equipment_ids.includes(equipmentId);
+      
+      if (isAlreadySelected) {
+        // Remove equipment
+        const newIds = prev.scope.equipment_ids.filter(id => id !== equipmentId);
+        const newNames = prev.scope.equipment_names.filter((_, index) => 
+          prev.scope.equipment_ids[index] !== equipmentId
+        );
+        
+        return {
+          ...prev,
+          scope: {
+            ...prev.scope,
+            equipment_ids: newIds,
+            equipment_names: newNames
+          }
+        };
+      } else {
+        // Add equipment
+        return {
+          ...prev,
+          scope: {
+            ...prev.scope,
+            equipment_ids: [...prev.scope.equipment_ids, equipmentId],
+            equipment_names: [...prev.scope.equipment_names, selectedEquipment.tag || selectedEquipment.model || `Equipment ${equipmentId}`]
+          }
+        };
+      }
+    });
+  };
+
+  const removeEquipment = (index: number) => {
     setFormData(prev => ({
       ...prev,
       scope: {
         ...prev.scope,
-        equipment_id: equipmentId,
-        equipment_name: selectedEquipment?.tag || ''
+        equipment_ids: prev.scope.equipment_ids.filter((_, i) => i !== index),
+        equipment_names: prev.scope.equipment_names.filter((_, i) => i !== index)
       }
     }));
   };
@@ -385,7 +418,7 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
               <h3 className="text-lg font-medium text-foreground border-b border-border pb-2">
                 Escopo
               </h3>
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
+              <div className="grid grid-cols-1 gap-6">
                 <div className="space-y-2">
                   <Label>Localização (Opcional)</Label>
                   <Select
@@ -411,24 +444,60 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
                   </Select>
                 </div>
                 
-                <div className="space-y-2">
-                  <Label>Equipamento (Opcional)</Label>
-                  <Select
-                    value={formData.scope.equipment_id || "no-equipment"}
-                    onValueChange={handleEquipmentChange}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Selecione um equipamento" />
-                    </SelectTrigger>
-                    <SelectContent className="max-w-[300px] lg:max-w-none">
-                      <SelectItem value="no-equipment">Nenhum selecionado</SelectItem>
-                      {equipment.map((eq) => (
-                        <SelectItem key={eq.id} value={eq.id}>
-                          <span className="block truncate">{eq.tag} - {eq.model}</span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Equipamentos *</Label>
+                    <Select onValueChange={handleEquipmentChange}>
+                      <SelectTrigger className={`w-full ${errors.equipment ? 'border-red-500' : ''}`}>
+                        <SelectValue placeholder="Selecione equipamentos para o plano" />
+                      </SelectTrigger>
+                      <SelectContent className="max-w-[400px] lg:max-w-none">
+                        {equipment.map((eq) => (
+                          <SelectItem 
+                            key={eq.id} 
+                            value={eq.id}
+                            disabled={formData.scope.equipment_ids.includes(eq.id)}
+                          >
+                            <div className="flex items-center gap-2">
+                              {formData.scope.equipment_ids.includes(eq.id) && (
+                                <span className="text-primary">✓</span>
+                              )}
+                              <span className="block truncate">{eq.tag} - {eq.model}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.equipment && (
+                      <p className="text-sm text-red-600" role="alert">
+                        {errors.equipment}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Selected Equipment Display */}
+                  {formData.scope.equipment_ids.length > 0 && (
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Equipamentos Selecionados ({formData.scope.equipment_ids.length})</Label>
+                      <div className="space-y-2 max-h-32 overflow-y-auto border border-border rounded-md p-3 bg-muted/20">
+                        {formData.scope.equipment_names.map((name, index) => (
+                          <div key={index} className="flex items-center justify-between bg-background rounded-md px-3 py-2 border border-border">
+                            <span className="text-sm font-medium truncate flex-1 mr-2">{name}</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeEquipment(index)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 shrink-0 h-6 w-6 p-0"
+                              aria-label={`Remover ${name}`}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </section>
@@ -459,13 +528,35 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="start-date">Data de Início (Opcional)</Label>
+                  <Label htmlFor="start-date">Data de Início *</Label>
                   <Input
                     id="start-date"
                     type="date"
                     value={formData.start_date}
                     onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
+                    className={!formData.start_date ? 'border-yellow-400' : ''}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Define quando as ordens de serviço começarão a ser geradas
+                  </p>
+                </div>
+                
+                <div className="lg:col-span-2 space-y-3">
+                  <div className="flex items-center space-x-3">
+                    <input
+                      id="auto-generate"
+                      type="checkbox"
+                      checked={formData.auto_generate}
+                      onChange={(e) => setFormData(prev => ({ ...prev, auto_generate: e.target.checked }))}
+                      className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-ring focus:ring-2"
+                    />
+                    <Label htmlFor="auto-generate" className="text-sm font-medium cursor-pointer">
+                      Gerar ordens de serviço automaticamente
+                    </Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground pl-7">
+                    Quando ativado, as ordens de serviço serão criadas automaticamente nas datas programadas conforme a frequência definida
+                  </p>
                 </div>
               </div>
             </section>
