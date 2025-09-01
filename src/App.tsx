@@ -19,7 +19,7 @@ import { TeamPage } from '@/pages/TeamPage';
 import { HelpCenterPage } from '@/pages/HelpCenterPage';
 import { HelpContentViewPage } from '@/pages/HelpContentViewPage';
 import { Toaster } from '@/components/ui/sonner';
-import { RoleSwitcher } from '@/components/auth/RoleSwitcher';
+// import { RoleSwitcher } from '@/components/auth/RoleSwitcher';
 import { AuthProvider } from '@/components/auth/AuthProvider';
 import { OnboardingManager } from '@/hooks/useOnboardingFlow';
 
@@ -71,7 +71,7 @@ function App() {
             </Routes>
           </OnboardingManager>
           <Toaster />
-          <RoleSwitcher />
+          {/* <RoleSwitcher /> */}
         </AuthProvider>
       </Router>
     </QueryClientProvider>
