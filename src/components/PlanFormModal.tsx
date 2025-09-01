@@ -306,21 +306,21 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-5xl h-[90vh] max-h-[90vh] overflow-hidden flex flex-col p-0">
-        <DialogHeader className="px-6 py-4 border-b border-border">
+      <DialogContent className="w-[96vw] max-w-6xl h-[92vh] max-h-[92vh] overflow-hidden flex flex-col p-0 sm:w-[90vw] lg:w-[85vw] xl:w-[80vw]">
+        <DialogHeader className="px-6 py-4 border-b border-border shrink-0">
           <DialogTitle className="text-xl font-semibold focus:outline-none" tabIndex={-1}>
             {modalTitle}
           </DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4">
-          <div className="space-y-8">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
+          <div className="px-6 py-4 space-y-8">
             {/* Basic Information */}
             <section className="space-y-4">
               <h3 className="text-lg font-medium text-foreground border-b border-border pb-2">
                 Informações Básicas
               </h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome do Plano *</Label>
                   <Input
@@ -385,17 +385,17 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
               <h3 className="text-lg font-medium text-foreground border-b border-border pb-2">
                 Escopo
               </h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
                 <div className="space-y-2">
                   <Label>Localização (Opcional)</Label>
                   <Select
                     value={formData.scope.location_id || "no-location"}
                     onValueChange={handleLocationChange}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Selecione uma localização" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-w-[300px] lg:max-w-none">
                       <SelectItem value="no-location">Nenhuma selecionada</SelectItem>
                       {companies.map((company) => (
                         <SelectItem key={company.id} value={company.id}>
@@ -417,14 +417,14 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
                     value={formData.scope.equipment_id || "no-equipment"}
                     onValueChange={handleEquipmentChange}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Selecione um equipamento" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-w-[300px] lg:max-w-none">
                       <SelectItem value="no-equipment">Nenhum selecionado</SelectItem>
                       {equipment.map((eq) => (
                         <SelectItem key={eq.id} value={eq.id}>
-                          {eq.tag} - {eq.model}
+                          <span className="block truncate">{eq.tag} - {eq.model}</span>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -438,7 +438,7 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
               <h3 className="text-lg font-medium text-foreground border-b border-border pb-2">
                 Configurações Gerais
               </h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
                 <div className="space-y-2">
                   <Label>Status</Label>
                   <Select
@@ -566,7 +566,7 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => removeChecklistItem(taskIndex, itemIndex)}
-                                  className="text-red-600 hover:text-red-700 hover:bg-red-50 w-full sm:w-auto"
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50 w-full sm:w-auto shrink-0"
                                   aria-label={`Remover item ${itemIndex + 1} do checklist`}
                                 >
                                   <Trash2 className="h-3 w-3" />
@@ -585,7 +585,7 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
           </div>
         </form>
 
-        <DialogFooter className="border-t border-border bg-muted/30 px-6 py-4">
+        <DialogFooter className="border-t border-border bg-muted/30 px-6 py-4 shrink-0">
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto sm:ml-auto">
             <Button
               type="button"
