@@ -126,7 +126,8 @@ export function createWorkOrder(data: WorkOrderCreationData): WorkOrder {
 
 // Generate work orders from maintenance plan
 export function generateWorkOrdersFromPlan(plan: MaintenancePlan, scheduledDate?: string): WorkOrder[] {
-  if (!plan.scope.equipment_ids || plan.scope.equipment_ids.length === 0) {
+  const equipmentIds = plan.scope.equipment_ids || [];
+  if (equipmentIds.length === 0) {
     throw new Error('Plano deve ter pelo menos um equipamento selecionado');
   }
   
@@ -135,8 +136,11 @@ export function generateWorkOrdersFromPlan(plan: MaintenancePlan, scheduledDate?
   // Create one work order per equipment
   const workOrders: WorkOrder[] = [];
   
-  for (const equipmentId of plan.scope.equipment_ids) {
-    const equipmentName = plan.scope.equipment_names[plan.scope.equipment_ids.indexOf(equipmentId)] || `Equipment ${equipmentId}`;
+  const equipmentNames = plan.scope.equipment_names || [];
+  
+  for (const equipmentId of equipmentIds) {
+    const equipmentIndex = equipmentIds.indexOf(equipmentId);
+    const equipmentName = equipmentNames[equipmentIndex] || `Equipment ${equipmentId}`;
     
     const workOrder = createWorkOrder({
       plan_id: plan.id,

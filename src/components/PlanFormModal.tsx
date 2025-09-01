@@ -67,11 +67,11 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
         name: plan.name,
         description: plan.description || '',
         frequency: plan.frequency,
-        scope: plan.scope || {
-          location_id: '',
-          location_name: '',
-          equipment_ids: [],
-          equipment_names: []
+        scope: {
+          location_id: plan.scope?.location_id || '',
+          location_name: plan.scope?.location_name || '',
+          equipment_ids: plan.scope?.equipment_ids || [],
+          equipment_names: plan.scope?.equipment_names || []
         },
         tasks: plan.tasks || [],
         status: plan.status,
@@ -118,7 +118,7 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
     }
 
     // Validate equipment selection
-    if (formData.scope.equipment_ids.length === 0) {
+    if ((formData.scope.equipment_ids || []).length === 0) {
       if (!formData.scope.location_id) {
         newErrors.equipment = 'Primeiro selecione uma empresa ou setor';
       } else {
@@ -234,13 +234,17 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
     if (!selectedEquipment) return;
 
     setFormData(prev => {
-      const isAlreadySelected = prev.scope.equipment_ids.includes(equipmentId);
+      // Ensure equipment_ids is always an array
+      const currentEquipmentIds = prev.scope.equipment_ids || [];
+      const currentEquipmentNames = prev.scope.equipment_names || [];
+      
+      const isAlreadySelected = currentEquipmentIds.includes(equipmentId);
       
       if (isAlreadySelected) {
         // Remove equipment
-        const newIds = prev.scope.equipment_ids.filter(id => id !== equipmentId);
-        const newNames = prev.scope.equipment_names.filter((_, index) => 
-          prev.scope.equipment_ids[index] !== equipmentId
+        const newIds = currentEquipmentIds.filter(id => id !== equipmentId);
+        const newNames = currentEquipmentNames.filter((_, index) => 
+          currentEquipmentIds[index] !== equipmentId
         );
         
         return {
@@ -257,8 +261,8 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
           ...prev,
           scope: {
             ...prev.scope,
-            equipment_ids: [...prev.scope.equipment_ids, equipmentId],
-            equipment_names: [...prev.scope.equipment_names, selectedEquipment.tag || selectedEquipment.model || `Equipment ${equipmentId}`]
+            equipment_ids: [...currentEquipmentIds, equipmentId],
+            equipment_names: [...currentEquipmentNames, selectedEquipment.tag || selectedEquipment.model || `Equipment ${equipmentId}`]
           }
         };
       }
@@ -270,8 +274,8 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
       ...prev,
       scope: {
         ...prev.scope,
-        equipment_ids: prev.scope.equipment_ids.filter((_, i) => i !== index),
-        equipment_names: prev.scope.equipment_names.filter((_, i) => i !== index)
+        equipment_ids: (prev.scope.equipment_ids || []).filter((_, i) => i !== index),
+        equipment_names: (prev.scope.equipment_names || []).filter((_, i) => i !== index)
       }
     }));
   };
@@ -382,7 +386,7 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[96vw] max-w-6xl h-[92vh] max-h-[92vh] overflow-hidden flex flex-col p-0 sm:w-[90vw] lg:w-[85vw] xl:w-[80vw]">
+      <DialogContent className="w-[98vw] max-w-7xl h-[95vh] max-h-[95vh] overflow-hidden flex flex-col p-0 sm:w-[95vw] lg:w-[90vw] xl:w-[85vw]">
         <DialogHeader className="px-6 py-4 border-b border-border shrink-0">
           <DialogTitle className="text-xl font-semibold focus:outline-none" tabIndex={-1}>
             {modalTitle}
@@ -457,59 +461,61 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
             </section>
 
             {/* Scope Configuration */}
-            <section className="space-y-4">
+            <section className="space-y-6">
               <h3 className="text-lg font-medium text-foreground border-b border-border pb-2">
                 Escopo
               </h3>
-              <div className="grid grid-cols-1 gap-6">
-                <div className="space-y-2">
-                  <Label>Empresa/Localização *</Label>
-                  <Select
-                    value={formData.scope.location_id || "no-location"}
-                    onValueChange={handleLocationChange}
-                  >
-                    <SelectTrigger className={`w-full ${errors.location ? 'border-red-500' : ''}`}>
-                      <SelectValue placeholder="Selecione uma empresa ou setor" />
-                    </SelectTrigger>
-                    <SelectContent className="max-w-[300px] lg:max-w-none">
-                      <SelectItem value="no-location">Nenhuma selecionada</SelectItem>
-                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                        Empresas
-                      </div>
-                      {companies.map((company) => (
-                        <SelectItem key={company.id} value={company.id}>
-                          <div className="flex flex-col items-start">
-                            <span className="font-medium">{company.name}</span>
-                            <span className="text-xs text-muted-foreground">{company.segment}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t">
-                        Setores
-                      </div>
-                      {sectors.map((sector) => {
-                        const company = companies.find(c => c.id === sector.companyId);
-                        return (
-                          <SelectItem key={sector.id} value={sector.id}>
-                            <div className="flex flex-col items-start">
-                              <span className="font-medium">{sector.name}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {company?.name || 'Empresa não encontrada'}
-                              </span>
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Empresa/Localização *</Label>
+                    <Select
+                      value={formData.scope.location_id || "no-location"}
+                      onValueChange={handleLocationChange}
+                    >
+                      <SelectTrigger className={`w-full ${errors.location ? 'border-red-500' : ''}`}>
+                        <SelectValue placeholder="Selecione uma empresa ou setor" />
+                      </SelectTrigger>
+                      <SelectContent className="max-w-[350px] lg:max-w-[500px]">
+                        <SelectItem value="no-location">Nenhuma selecionada</SelectItem>
+                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                          Empresas
+                        </div>
+                        {companies.map((company) => (
+                          <SelectItem key={company.id} value={company.id}>
+                            <div className="flex flex-col items-start min-w-0">
+                              <span className="font-medium truncate">{company.name}</span>
+                              <span className="text-xs text-muted-foreground truncate">{company.segment}</span>
                             </div>
                           </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                  {errors.location && (
-                    <p className="text-sm text-red-600" role="alert">
-                      {errors.location}
+                        ))}
+                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t">
+                          Setores
+                        </div>
+                        {sectors.map((sector) => {
+                          const company = companies.find(c => c.id === sector.companyId);
+                          return (
+                            <SelectItem key={sector.id} value={sector.id}>
+                              <div className="flex flex-col items-start min-w-0">
+                                <span className="font-medium truncate">{sector.name}</span>
+                                <span className="text-xs text-muted-foreground truncate">
+                                  {company?.name || 'Empresa não encontrada'}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                    {errors.location && (
+                      <p className="text-sm text-red-600" role="alert">
+                        {errors.location}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Selecione uma empresa para ver todos os equipamentos ou um setor específico para filtrar
                     </p>
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    Selecione uma empresa para ver todos os equipamentos ou um setor específico para filtrar
-                  </p>
+                  </div>
                 </div>
                 
                 <div className="space-y-4">
@@ -530,20 +536,20 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
                           } 
                         />
                       </SelectTrigger>
-                      <SelectContent className="max-w-[400px] lg:max-w-none">
+                      <SelectContent className="max-w-[450px] lg:max-w-[600px]">
                         {getFilteredEquipment().map((eq) => (
                           <SelectItem 
                             key={eq.id} 
                             value={eq.id}
-                            disabled={formData.scope.equipment_ids.includes(eq.id)}
+                            disabled={(formData.scope.equipment_ids || []).includes(eq.id)}
                           >
-                            <div className="flex items-center gap-2">
-                              {formData.scope.equipment_ids.includes(eq.id) && (
-                                <span className="text-primary">✓</span>
+                            <div className="flex items-center gap-2 min-w-0">
+                              {(formData.scope.equipment_ids || []).includes(eq.id) && (
+                                <span className="text-primary shrink-0">✓</span>
                               )}
-                              <div className="flex flex-col items-start">
+                              <div className="flex flex-col items-start min-w-0">
                                 <span className="block truncate font-medium">{eq.tag} - {eq.model}</span>
-                                <span className="text-xs text-muted-foreground">{eq.brand} | {eq.type}</span>
+                                <span className="text-xs text-muted-foreground truncate">{eq.brand} | {eq.type}</span>
                               </div>
                             </div>
                           </SelectItem>
@@ -568,50 +574,50 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
                       </p>
                     )}
                   </div>
-
-                  {/* Selected Equipment Display */}
-                  {formData.scope.equipment_ids.length > 0 && (
-                    <div className="space-y-3">
-                      <Label className="text-sm font-medium">Equipamentos Selecionados ({formData.scope.equipment_ids.length})</Label>
-                      <div className="space-y-2 max-h-32 overflow-y-auto border border-border rounded-md p-3 bg-muted/20">
-                        {formData.scope.equipment_ids.map((equipmentId, index) => {
-                          const equipmentData = equipment.find(eq => eq.id === equipmentId);
-                          const sectorData = sectors.find(s => s.id === equipmentData?.sectorId);
-                          const companyData = companies.find(c => c.id === sectorData?.companyId);
-                          
-                          return (
-                            <div key={index} className="flex items-center justify-between bg-background rounded-md px-3 py-2 border border-border">
-                              <div className="flex-1 mr-2">
-                                <span className="text-sm font-medium truncate block">{formData.scope.equipment_names[index]}</span>
-                                {equipmentData && (
-                                  <span className="text-xs text-muted-foreground">
-                                    {equipmentData.brand} • {equipmentData.type} • {companyData?.name || sectorData?.name || 'Local não identificado'}
-                                  </span>
-                                )}
-                              </div>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeEquipment(index)}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50 shrink-0 h-6 w-6 p-0"
-                                aria-label={`Remover ${formData.scope.equipment_names[index]}`}
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      {formData.scope.location_id && (
-                        <p className="text-xs text-muted-foreground">
-                          Mostrando equipamentos de: <span className="font-medium">{formData.scope.location_name}</span>
-                        </p>
-                      )}
-                    </div>
-                  )}
                 </div>
               </div>
+
+              {/* Selected Equipment Display - Full Width */}
+              {(formData.scope.equipment_ids || []).length > 0 && (
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Equipamentos Selecionados ({(formData.scope.equipment_ids || []).length})</Label>
+                  <div className="space-y-2 max-h-40 overflow-y-auto border border-border rounded-md p-4 bg-muted/20">
+                    {(formData.scope.equipment_ids || []).map((equipmentId, index) => {
+                      const equipmentData = equipment.find(eq => eq.id === equipmentId);
+                      const sectorData = sectors.find(s => s.id === equipmentData?.sectorId);
+                      const companyData = companies.find(c => c.id === sectorData?.companyId);
+                      
+                      return (
+                        <div key={index} className="flex items-center justify-between bg-background rounded-md px-4 py-3 border border-border">
+                          <div className="flex-1 mr-3 min-w-0">
+                            <span className="text-sm font-medium truncate block">{(formData.scope.equipment_names || [])[index]}</span>
+                            {equipmentData && (
+                              <span className="text-xs text-muted-foreground truncate block">
+                                {equipmentData.brand} • {equipmentData.type} • {companyData?.name || sectorData?.name || 'Local não identificado'}
+                              </span>
+                            )}
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeEquipment(index)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 shrink-0 h-8 w-8 p-0"
+                            aria-label={`Remover ${(formData.scope.equipment_names || [])[index]}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {formData.scope.location_id && (
+                    <p className="text-xs text-muted-foreground">
+                      Mostrando equipamentos de: <span className="font-medium">{formData.scope.location_name}</span>
+                    </p>
+                  )}
+                </div>
+              )}
             </section>
 
             {/* Status and Date */}

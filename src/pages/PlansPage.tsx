@@ -40,7 +40,8 @@ export function PlansPage() {
 
   const handleGenerateWorkOrders = async (plan: MaintenancePlan) => {
     try {
-      if (!plan.scope.equipment_ids || plan.scope.equipment_ids.length === 0) {
+      const equipmentIds = plan.scope.equipment_ids || [];
+      if (equipmentIds.length === 0) {
         toast.error('Este plano não possui equipamentos selecionados.');
         return;
       }
@@ -77,11 +78,12 @@ export function PlansPage() {
     
     const parts = [];
     if (scope.location_name) parts.push(scope.location_name);
-    if (scope.equipment_names && scope.equipment_names.length > 0) {
-      if (scope.equipment_names.length === 1) {
-        parts.push(scope.equipment_names[0]);
+    const equipmentNames = scope.equipment_names || [];
+    if (equipmentNames.length > 0) {
+      if (equipmentNames.length === 1) {
+        parts.push(equipmentNames[0]);
       } else {
-        parts.push(`${scope.equipment_names.length} equipamentos`);
+        parts.push(`${equipmentNames.length} equipamentos`);
       }
     }
     
@@ -206,7 +208,7 @@ export function PlansPage() {
                           </Button>
                         </IfCanEdit>
                         
-                        {plan.status === 'Ativo' && plan.scope.equipment_ids && plan.scope.equipment_ids.length > 0 && (
+                        {plan.status === 'Ativo' && (plan.scope.equipment_ids || []).length > 0 && (
                           <Button 
                             variant="default" 
                             size="sm"
