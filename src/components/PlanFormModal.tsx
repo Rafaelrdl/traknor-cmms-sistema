@@ -306,282 +306,305 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+      <DialogContent className="w-[95vw] max-w-5xl h-[90vh] max-h-[90vh] overflow-hidden flex flex-col p-0">
+        <DialogHeader className="px-6 py-4 border-b border-border">
           <DialogTitle className="text-xl font-semibold focus:outline-none" tabIndex={-1}>
             {modalTitle}
           </DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-6 pr-2">
-          {/* Basic Information */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome do Plano *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Ex: Plano Mensal - Climatizadores"
-                className={errors.name ? 'border-red-500' : ''}
-                aria-describedby={errors.name ? 'name-error' : undefined}
-              />
-              {errors.name && (
-                <p id="name-error" className="text-sm text-red-600">
-                  {errors.name}
-                </p>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="frequency">Frequência *</Label>
-              <Select
-                value={formData.frequency || undefined}
-                onValueChange={(value) => setFormData(prev => ({ 
-                  ...prev, 
-                  frequency: value as MaintenancePlan['frequency']
-                }))}
-              >
-                <SelectTrigger className={errors.frequency ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="Selecione a frequência" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Semanal">Semanal</SelectItem>
-                  <SelectItem value="Mensal">Mensal</SelectItem>
-                  <SelectItem value="Bimestral">Bimestral</SelectItem>
-                  <SelectItem value="Trimestral">Trimestral</SelectItem>
-                  <SelectItem value="Semestral">Semestral</SelectItem>
-                  <SelectItem value="Anual">Anual</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.frequency && (
-                <p className="text-sm text-red-600">
-                  {errors.frequency}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Descrição</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Descrição detalhada do plano de manutenção"
-              rows={3}
-            />
-          </div>
-
-          {/* Scope Configuration */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Escopo</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Localização (Opcional)</Label>
-                <Select
-                  value={formData.scope.location_id || "no-location"}
-                  onValueChange={handleLocationChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma localização" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="no-location">Nenhuma selecionada</SelectItem>
-                    {companies.map((company) => (
-                      <SelectItem key={company.id} value={company.id}>
-                        {company.name}
-                      </SelectItem>
-                    ))}
-                    {sectors.map((sector) => (
-                      <SelectItem key={sector.id} value={sector.id}>
-                        {sector.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4">
+          <div className="space-y-8">
+            {/* Basic Information */}
+            <section className="space-y-4">
+              <h3 className="text-lg font-medium text-foreground border-b border-border pb-2">
+                Informações Básicas
+              </h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nome do Plano *</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Ex: Plano Mensal - Climatizadores"
+                    className={errors.name ? 'border-red-500' : ''}
+                    aria-describedby={errors.name ? 'name-error' : undefined}
+                  />
+                  {errors.name && (
+                    <p id="name-error" className="text-sm text-red-600" role="alert">
+                      {errors.name}
+                    </p>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="frequency">Frequência *</Label>
+                  <Select
+                    value={formData.frequency || undefined}
+                    onValueChange={(value) => setFormData(prev => ({ 
+                      ...prev, 
+                      frequency: value as MaintenancePlan['frequency']
+                    }))}
+                  >
+                    <SelectTrigger className={errors.frequency ? 'border-red-500' : ''}>
+                      <SelectValue placeholder="Selecione a frequência" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Semanal">Semanal</SelectItem>
+                      <SelectItem value="Mensal">Mensal</SelectItem>
+                      <SelectItem value="Bimestral">Bimestral</SelectItem>
+                      <SelectItem value="Trimestral">Trimestral</SelectItem>
+                      <SelectItem value="Semestral">Semestral</SelectItem>
+                      <SelectItem value="Anual">Anual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.frequency && (
+                    <p className="text-sm text-red-600" role="alert">
+                      {errors.frequency}
+                    </p>
+                  )}
+                </div>
               </div>
-              
+
               <div className="space-y-2">
-                <Label>Equipamento (Opcional)</Label>
-                <Select
-                  value={formData.scope.equipment_id || "no-equipment"}
-                  onValueChange={handleEquipmentChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um equipamento" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="no-equipment">Nenhum selecionado</SelectItem>
-                    {equipment.map((eq) => (
-                      <SelectItem key={eq.id} value={eq.id}>
-                        {eq.tag} - {eq.model}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="description">Descrição</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Descrição detalhada do plano de manutenção"
+                  rows={3}
+                  className="resize-none"
+                />
               </div>
-            </div>
-          </div>
+            </section>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) => setFormData(prev => ({ 
-                  ...prev, 
-                  status: value as MaintenancePlan['status']
-                }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Ativo">Ativo</SelectItem>
-                  <SelectItem value="Inativo">Inativo</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="start-date">Data de Início (Opcional)</Label>
-              <Input
-                id="start-date"
-                type="date"
-                value={formData.start_date}
-                onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
-              />
-            </div>
-          </div>
+            {/* Scope Configuration */}
+            <section className="space-y-4">
+              <h3 className="text-lg font-medium text-foreground border-b border-border pb-2">
+                Escopo
+              </h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label>Localização (Opcional)</Label>
+                  <Select
+                    value={formData.scope.location_id || "no-location"}
+                    onValueChange={handleLocationChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma localização" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="no-location">Nenhuma selecionada</SelectItem>
+                      {companies.map((company) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.name}
+                        </SelectItem>
+                      ))}
+                      {sectors.map((sector) => (
+                        <SelectItem key={sector.id} value={sector.id}>
+                          {sector.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Equipamento (Opcional)</Label>
+                  <Select
+                    value={formData.scope.equipment_id || "no-equipment"}
+                    onValueChange={handleEquipmentChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um equipamento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="no-equipment">Nenhum selecionado</SelectItem>
+                      {equipment.map((eq) => (
+                        <SelectItem key={eq.id} value={eq.id}>
+                          {eq.tag} - {eq.model}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </section>
 
-          <Separator />
+            {/* Status and Date */}
+            <section className="space-y-4">
+              <h3 className="text-lg font-medium text-foreground border-b border-border pb-2">
+                Configurações Gerais
+              </h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(value) => setFormData(prev => ({ 
+                      ...prev, 
+                      status: value as MaintenancePlan['status']
+                    }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Ativo">Ativo</SelectItem>
+                      <SelectItem value="Inativo">Inativo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="start-date">Data de Início (Opcional)</Label>
+                  <Input
+                    id="start-date"
+                    type="date"
+                    value={formData.start_date}
+                    onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
+                  />
+                </div>
+              </div>
+            </section>
 
-          {/* Tasks Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium">Tarefas</h3>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addTask}
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Adicionar Tarefa
-              </Button>
-            </div>
+            {/* Tasks Section */}
+            <section className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border pb-2">
+                <h3 className="text-lg font-medium text-foreground">Tarefas</h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addTask}
+                  className="flex items-center gap-2 w-full sm:w-auto"
+                >
+                  <Plus className="h-4 w-4" />
+                  Adicionar Tarefa
+                </Button>
+              </div>
 
-            {formData.tasks.length === 0 && (
-              <Card>
-                <CardContent className="flex items-center justify-center py-8">
-                  <div className="text-center text-muted-foreground">
-                    <CheckSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>Nenhuma tarefa definida</p>
-                    <p className="text-sm">Clique em "Adicionar Tarefa" para começar</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {formData.tasks.map((task, taskIndex) => (
-              <Card key={task.id}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">Tarefa {taskIndex + 1}</CardTitle>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeTask(taskIndex)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      aria-label={`Remover tarefa ${taskIndex + 1}`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor={`task-name-${taskIndex}`}>Nome da Tarefa *</Label>
-                    <Input
-                      id={`task-name-${taskIndex}`}
-                      value={task.name}
-                      onChange={(e) => updateTask(taskIndex, { name: e.target.value })}
-                      placeholder="Ex: Limpeza de filtros"
-                      className={errors[`task-${taskIndex}`] ? 'border-red-500' : ''}
-                    />
-                    {errors[`task-${taskIndex}`] && (
-                      <p className="text-sm text-red-600">
-                        {errors[`task-${taskIndex}`]}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label>Checklist (Opcional)</Label>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => addChecklistItem(taskIndex)}
-                        className="flex items-center gap-1"
-                      >
-                        <Plus className="h-3 w-3" />
-                        Adicionar Item
-                      </Button>
+              {formData.tasks.length === 0 && (
+                <Card className="border-dashed">
+                  <CardContent className="flex items-center justify-center py-12">
+                    <div className="text-center text-muted-foreground max-w-md">
+                      <CheckSquare className="h-12 w-12 mx-auto mb-3 opacity-40" />
+                      <p className="text-base font-medium mb-1">Nenhuma tarefa definida</p>
+                      <p className="text-sm">Clique em "Adicionar Tarefa" para começar a criar as atividades do plano</p>
                     </div>
-                    
-                    {task.checklist && task.checklist.length > 0 && (
-                      <div className="space-y-2 pl-4 border-l-2 border-muted">
-                        {task.checklist.map((item, itemIndex) => (
-                          <div key={itemIndex} className="flex items-center gap-2">
-                            <Input
-                              value={item}
-                              onChange={(e) => updateChecklistItem(taskIndex, itemIndex, e.target.value)}
-                              placeholder="Item do checklist"
-                              className="flex-1"
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeChecklistItem(taskIndex, itemIndex)}
-                              className="text-red-600 hover:text-red-700"
-                              aria-label={`Remover item ${itemIndex + 1} do checklist`}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              <div className="space-y-4">
+                {formData.tasks.map((task, taskIndex) => (
+                  <Card key={task.id} className="border border-border">
+                    <CardHeader className="pb-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <CardTitle className="text-base font-semibold">
+                          Tarefa {taskIndex + 1}
+                        </CardTitle>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeTask(taskIndex)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 self-start sm:self-center"
+                          aria-label={`Remover tarefa ${taskIndex + 1}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="ml-1 sm:hidden">Remover</span>
+                        </Button>
                       </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="space-y-2">
+                        <Label htmlFor={`task-name-${taskIndex}`}>Nome da Tarefa *</Label>
+                        <Input
+                          id={`task-name-${taskIndex}`}
+                          value={task.name}
+                          onChange={(e) => updateTask(taskIndex, { name: e.target.value })}
+                          placeholder="Ex: Limpeza de filtros"
+                          className={errors[`task-${taskIndex}`] ? 'border-red-500' : ''}
+                        />
+                        {errors[`task-${taskIndex}`] && (
+                          <p className="text-sm text-red-600" role="alert">
+                            {errors[`task-${taskIndex}`]}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                          <Label>Checklist (Opcional)</Label>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => addChecklistItem(taskIndex)}
+                            className="flex items-center gap-1 w-full sm:w-auto"
+                          >
+                            <Plus className="h-3 w-3" />
+                            Adicionar Item
+                          </Button>
+                        </div>
+                        
+                        {task.checklist && task.checklist.length > 0 && (
+                          <div className="space-y-3 pl-4 border-l-2 border-muted bg-muted/20 rounded-r-lg py-3 pr-3">
+                            {task.checklist.map((item, itemIndex) => (
+                              <div key={itemIndex} className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                                <Input
+                                  value={item}
+                                  onChange={(e) => updateChecklistItem(taskIndex, itemIndex, e.target.value)}
+                                  placeholder="Item do checklist"
+                                  className="flex-1"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeChecklistItem(taskIndex, itemIndex)}
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50 w-full sm:w-auto"
+                                  aria-label={`Remover item ${itemIndex + 1} do checklist`}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                  <span className="ml-1 sm:hidden">Remover Item</span>
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </section>
           </div>
         </form>
 
-        <DialogFooter className="border-t pt-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            onClick={handleSubmit}
-            className="min-w-[120px]"
-          >
-            {isSubmitting ? 'Salvando...' : isEditing ? 'Atualizar' : 'Salvar'}
-          </Button>
+        <DialogFooter className="border-t border-border bg-muted/30 px-6 py-4">
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto sm:ml-auto">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
+              className="w-full sm:w-auto order-2 sm:order-1"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              onClick={handleSubmit}
+              className="w-full sm:w-auto min-w-[120px] order-1 sm:order-2"
+            >
+              {isSubmitting ? 'Salvando...' : isEditing ? 'Atualizar' : 'Salvar'}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
