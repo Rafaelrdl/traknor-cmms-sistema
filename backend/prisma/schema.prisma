@@ -1,0 +1,486 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String    @id @default(uuid())
+  name        String
+  email       String    @unique
+  password    String
+  role        UserRole  @default(TECHNICIAN)
+  status      UserStatus @default(ACTIVE)
+  avatar_url  String?
+  phone       String?
+  department  String?
+  position    String?
+  
+  // Preferences (JSON)
+  preferences Json?
+  
+  // Security settings
+  two_factor_enabled Boolean   @default(false)
+  recovery_codes     String[]  @default([])
+  last_password_change DateTime?
+  sessions_count     Int       @default(0)
+  
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  last_login_at DateTime?
+  
+  // Relations
+  created_work_orders     WorkOrder[] @relation("WorkOrderCreator")
+  assigned_work_orders    WorkOrder[] @relation("WorkOrderAssignee")
+  created_plans           MaintenancePlan[] @relation("PlanCreator")
+  created_invites         Invite[] @relation("InviteCreator")
+  created_solicitations   Solicitation[] @relation("SolicitationCreator")
+  
+  @@map("users")
+}
+
+model Company {
+  id          String   @id @default(uuid())
+  name        String
+  segment     String?
+  cnpj        String?   @unique
+  address     Json?     // {zip, city, state, fullAddress}
+  responsible String?
+  role        String?
+  phone       String?
+  email       String?
+  total_area  Int?
+  occupants   Int?
+  hvac_units  Int?
+  
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  
+  // Relations
+  sectors     Sector[]
+  equipment   Equipment[]
+  work_orders WorkOrder[]
+  plans       MaintenancePlan[]
+  
+  @@map("companies")
+}
+
+model Sector {
+  id          String   @id @default(uuid())
+  name        String
+  company_id  String
+  description String?
+  
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  
+  // Relations
+  company     Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  sub_sections SubSection[]
+  equipment   Equipment[]
+  work_orders WorkOrder[]
+  plans       MaintenancePlan[]
+  
+  @@map("sectors")
+}
+
+model SubSection {
+  id          String   @id @default(uuid())
+  name        String
+  sector_id   String
+  description String?
+  
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  
+  // Relations
+  sector      Sector @relation(fields: [sector_id], references: [id], onDelete: Cascade)
+  equipment   Equipment[]
+  
+  @@map("sub_sections")
+}
+
+model Equipment {
+  id              String   @id @default(uuid())
+  code            String   @unique
+  name            String
+  type            String
+  manufacturer    String?
+  model           String?
+  serial_number   String?
+  company_id      String
+  sector_id       String
+  sub_section_id  String?
+  location        String?
+  status          EquipmentStatus @default(OPERATIONAL)
+  criticality     EquipmentCriticality @default(MEDIUM)
+  installation_date DateTime?
+  warranty_expires  DateTime?
+  specifications    Json?
+  
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  
+  // Relations
+  company         Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  sector          Sector @relation(fields: [sector_id], references: [id], onDelete: Cascade)
+  sub_section     SubSection? @relation(fields: [sub_section_id], references: [id])
+  work_orders     WorkOrderEquipment[]
+  plan_equipments PlanEquipment[]
+  
+  @@map("equipment")
+}
+
+model MaintenancePlan {
+  id                  String   @id @default(uuid())
+  name                String
+  description         String?
+  frequency           PlanFrequency
+  company_id          String
+  sector_id           String?
+  tasks               Json     // Array of tasks with checklist
+  auto_generate       Boolean  @default(true)
+  next_execution_date DateTime?
+  status              PlanStatus @default(ACTIVE)
+  start_date          DateTime?
+  
+  created_by          String
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+  
+  // Relations
+  company             Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  sector              Sector? @relation(fields: [sector_id], references: [id])
+  creator             User @relation("PlanCreator", fields: [created_by], references: [id])
+  equipment           PlanEquipment[]
+  work_orders         WorkOrder[]
+  
+  @@map("maintenance_plans")
+}
+
+model PlanEquipment {
+  id           String @id @default(uuid())
+  plan_id      String
+  equipment_id String
+  
+  // Relations
+  plan         MaintenancePlan @relation(fields: [plan_id], references: [id], onDelete: Cascade)
+  equipment    Equipment @relation(fields: [equipment_id], references: [id], onDelete: Cascade)
+  
+  @@unique([plan_id, equipment_id])
+  @@map("plan_equipment")
+}
+
+model WorkOrder {
+  id              String   @id @default(uuid())
+  code            String   @unique
+  title           String
+  description     String?
+  type            WorkOrderType
+  priority        WorkOrderPriority @default(MEDIUM)
+  status          WorkOrderStatus @default(PENDING)
+  
+  company_id      String
+  sector_id       String?
+  plan_id         String?
+  assigned_to     String?
+  
+  scheduled_date  DateTime?
+  due_date        DateTime?
+  started_at      DateTime?
+  completed_at    DateTime?
+  estimated_hours Float?
+  actual_hours    Float?
+  
+  tasks           Json     // Array of tasks with checklist
+  notes           String?
+  completion_notes String?
+  
+  created_by      String
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  
+  // Relations
+  company         Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  sector          Sector? @relation(fields: [sector_id], references: [id])
+  plan            MaintenancePlan? @relation(fields: [plan_id], references: [id])
+  creator         User @relation("WorkOrderCreator", fields: [created_by], references: [id])
+  assignee        User? @relation("WorkOrderAssignee", fields: [assigned_to], references: [id])
+  equipment       WorkOrderEquipment[]
+  attachments     WorkOrderAttachment[]
+  
+  @@map("work_orders")
+}
+
+model WorkOrderEquipment {
+  id              String @id @default(uuid())
+  work_order_id   String
+  equipment_id    String
+  
+  // Relations
+  work_order      WorkOrder @relation(fields: [work_order_id], references: [id], onDelete: Cascade)
+  equipment       Equipment @relation(fields: [equipment_id], references: [id], onDelete: Cascade)
+  
+  @@unique([work_order_id, equipment_id])
+  @@map("work_order_equipment")
+}
+
+model WorkOrderAttachment {
+  id              String @id @default(uuid())
+  work_order_id   String
+  filename        String
+  original_name   String
+  mime_type       String
+  size            Int
+  file_path       String
+  
+  uploaded_at     DateTime @default(now())
+  
+  // Relations
+  work_order      WorkOrder @relation(fields: [work_order_id], references: [id], onDelete: Cascade)
+  
+  @@map("work_order_attachments")
+}
+
+model StockItem {
+  id              String   @id @default(uuid())
+  code            String   @unique
+  name            String
+  description     String?
+  category        String?
+  unit            String   // unidade de medida
+  current_stock   Float    @default(0)
+  minimum_stock   Float    @default(0)
+  maximum_stock   Float?
+  unit_price      Float?
+  location        String?
+  supplier        String?
+  
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  
+  // Relations
+  movements       StockMovement[]
+  requisition_items StockRequisitionItem[]
+  
+  @@map("stock_items")
+}
+
+model StockMovement {
+  id              String   @id @default(uuid())
+  stock_item_id   String
+  type            MovementType
+  quantity        Float
+  unit_price      Float?
+  reference       String?  // OS, Requisição, etc
+  notes           String?
+  
+  created_at      DateTime @default(now())
+  
+  // Relations
+  stock_item      StockItem @relation(fields: [stock_item_id], references: [id], onDelete: Cascade)
+  
+  @@map("stock_movements")
+}
+
+model StockRequisition {
+  id              String   @id @default(uuid())
+  code            String   @unique
+  description     String?
+  status          RequisitionStatus @default(PENDING)
+  priority        RequisitionPriority @default(NORMAL)
+  requested_by    String
+  requested_at    DateTime @default(now())
+  approved_by     String?
+  approved_at     DateTime?
+  delivered_by    String?
+  delivered_at    DateTime?
+  
+  // Relations
+  requester       User @relation(fields: [requested_by], references: [id])
+  items           StockRequisitionItem[]
+  
+  @@map("stock_requisitions")
+}
+
+model StockRequisitionItem {
+  id                  String @id @default(uuid())
+  requisition_id      String
+  stock_item_id       String
+  requested_quantity  Float
+  approved_quantity   Float?
+  delivered_quantity  Float?
+  unit_price          Float?
+  notes               String?
+  
+  // Relations
+  requisition         StockRequisition @relation(fields: [requisition_id], references: [id], onDelete: Cascade)
+  stock_item          StockItem @relation(fields: [stock_item_id], references: [id], onDelete: Cascade)
+  
+  @@map("stock_requisition_items")
+}
+
+model Invite {
+  id          String   @id @default(uuid())
+  token       String   @unique
+  email       String
+  role        UserRole
+  status      InviteStatus @default(PENDING)
+  expires_at  DateTime
+  
+  created_by  String
+  created_at  DateTime @default(now())
+  accepted_at DateTime?
+  
+  // Relations
+  creator     User @relation("InviteCreator", fields: [created_by], references: [id])
+  
+  @@map("invites")
+}
+
+model Solicitation {
+  id              String   @id @default(uuid())
+  code            String   @unique
+  title           String
+  description     String?
+  status          SolicitationStatus @default(NOVA)
+  priority        SolicitationPriority @default(NORMAL)
+  location        String?
+  equipment_info  String?
+  
+  created_by      String
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  
+  status_history  Json     // Array of status changes with timestamps
+  
+  // Relations
+  creator         User @relation("SolicitationCreator", fields: [created_by], references: [id])
+  items           SolicitationItem[]
+  
+  @@map("solicitations")
+}
+
+model SolicitationItem {
+  id              String @id @default(uuid())
+  solicitation_id String
+  description     String
+  quantity        Float  @default(1)
+  unit            String @default("un")
+  estimated_price Float?
+  
+  // Relations
+  solicitation    Solicitation @relation(fields: [solicitation_id], references: [id], onDelete: Cascade)
+  
+  @@map("solicitation_items")
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  MANAGER
+  TECHNICIAN
+  OPERATOR
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
+enum EquipmentStatus {
+  OPERATIONAL
+  MAINTENANCE
+  STOPPED
+  DECOMMISSIONED
+}
+
+enum EquipmentCriticality {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum PlanFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  SEMESTER
+  YEARLY
+}
+
+enum PlanStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum WorkOrderType {
+  PREVENTIVE
+  CORRECTIVE
+  PREDICTIVE
+}
+
+enum WorkOrderStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum WorkOrderPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum MovementType {
+  IN
+  OUT
+  ADJUSTMENT
+  TRANSFER
+}
+
+enum RequisitionStatus {
+  PENDING
+  APPROVED
+  PARTIALLY_DELIVERED
+  DELIVERED
+  CANCELLED
+}
+
+enum RequisitionPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum SolicitationStatus {
+  NOVA
+  EM_TRIAGEM
+  CONVERTIDA_EM_OS
+}
+
+enum SolicitationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
