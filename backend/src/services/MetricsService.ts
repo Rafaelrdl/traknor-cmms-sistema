@@ -188,7 +188,7 @@ export class MetricsService {
     const workOrders = await prisma.workOrder.findMany({
       where: {
         ...whereClause,
-        assignee: { not: null },
+        assigned_to: { not: null },
         completed_at: {
           gte: thirtyDaysAgo,
         },

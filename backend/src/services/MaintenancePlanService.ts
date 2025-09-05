@@ -343,7 +343,7 @@ export class MaintenancePlanService {
         sector_id: plan.sector_id,
         plan_id: plan.id,
         scheduled_date: plan.next_execution_date,
-        tasks: plan.tasks,
+        tasks: plan.tasks as any,
         created_by: createdBy,
         equipment: {
           create: plan.equipment.map((pe: any) => ({
