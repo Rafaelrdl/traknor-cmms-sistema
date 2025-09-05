@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +9,7 @@ import {
   XCircle, 
   TestTube, 
   Play, 
-  Refresh, 
+  RefreshCw, 
   Settings,
   Users,
   Wrench
@@ -31,14 +31,6 @@ interface TestCase {
   error?: string;
 }
 
-interface TestScenario {
-  company?: string;
-  sector?: string;
-  equipmentCount: number;
-  frequency: MaintenancePlan['frequency'];
-  expectedWorkOrders: number;
-}
-
 export function PlansTestingSuite() {
   const [companies] = useCompanies();
   const [sectors] = useSectors();
@@ -50,29 +42,7 @@ export function PlansTestingSuite() {
   const [isRunningTests, setIsRunningTests] = useState(false);
   const [testResults, setTestResults] = useState<TestCase[]>([]);
 
-  // Test scenarios to validate
-  const testScenarios: TestScenario[] = [
-    {
-      company: 'TechCorp Industrial',
-      equipmentCount: 2,
-      frequency: 'Mensal',
-      expectedWorkOrders: 2
-    },
-    {
-      company: 'Industrial Corp',
-      equipmentCount: 3,
-      frequency: 'Trimestral', 
-      expectedWorkOrders: 3
-    },
-    {
-      sector: 'Setor Administrativo',
-      equipmentCount: 1,
-      frequency: 'Semanal',
-      expectedWorkOrders: 1
-    }
-  ];
-
-  const initialTestCases: TestCase[] = [
+  const initialTestCases: TestCase[] = useMemo(() => [
     {
       id: 'test-01',
       name: 'Filtrar equipamentos por empresa',
@@ -115,11 +85,11 @@ export function PlansTestingSuite() {
       expectedResult: 'Data de próxima execução calculada corretamente',
       status: 'pending'
     }
-  ];
+  ], []);
 
   useEffect(() => {
     setTestResults(initialTestCases);
-  }, []);
+  }, [initialTestCases]);
 
   const runFilteringTest = async (testId: string): Promise<boolean> => {
     try {
@@ -173,7 +143,6 @@ export function PlansTestingSuite() {
     try {
       // This would normally require form interaction
       // For now, we'll verify the validation logic exists
-      const requiredFields = ['name', 'frequency', 'location_id', 'equipment_ids'];
       
       // Simulate empty form data
       const emptyFormData = {
@@ -224,7 +193,7 @@ export function PlansTestingSuite() {
 
       // Validate work orders have correct equipment references
       const allEquipmentCovered = equipmentIds.every(equipId => 
-        workOrders.some(wo => wo.equipmentId === equipId)
+        workOrders.some(wo => wo.equipment_ids.includes(equipId))
       );
 
       if (!allEquipmentCovered) {
@@ -253,7 +222,7 @@ export function PlansTestingSuite() {
           result = success ? 'Filtragem funcionando corretamente' : 'Falha na filtragem';
           break;
 
-        case 'test-03':
+        case 'test-03': {
           // Test multiple equipment selection
           const multiEquipmentPlans = plans.filter(p => 
             p.scope.equipment_ids && p.scope.equipment_ids.length > 1
@@ -263,6 +232,7 @@ export function PlansTestingSuite() {
             ? `${multiEquipmentPlans.length} plano(s) com múltiplos equipamentos encontrado(s)` 
             : 'Nenhum plano com múltiplos equipamentos';
           break;
+        }
 
         case 'test-04':
           success = await runFormValidationTest();
@@ -274,7 +244,7 @@ export function PlansTestingSuite() {
           result = success ? 'OSs geradas corretamente' : 'Falha na geração de OSs';
           break;
 
-        case 'test-06':
+        case 'test-06': {
           // Test automatic generation flag
           const autoGenPlans = plans.filter(p => p.auto_generate && p.next_execution_date);
           success = autoGenPlans.length > 0;
@@ -282,6 +252,7 @@ export function PlansTestingSuite() {
             ? `${autoGenPlans.length} plano(s) com geração automática configurada`
             : 'Nenhum plano com geração automática';
           break;
+        }
 
         default:
           success = false;
@@ -431,7 +402,7 @@ export function PlansTestingSuite() {
             </Button>
             
             <Button variant="outline" onClick={resetTests}>
-              <Refresh className="h-4 w-4 mr-2" />
+              <RefreshCw className="h-4 w-4 mr-2" />
               Resetar Testes
             </Button>
             

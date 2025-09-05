@@ -1,9 +1,10 @@
 import React from 'react';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { PanelLayout } from '@/components/PanelLayout';
 
 // Mock the useCurrentBreakpoint hook
-jest.mock('@/hooks/useBreakpoint', () => ({
+vi.mock('@/hooks/useBreakpoint', () => ({
   useCurrentBreakpoint: () => 'lg',
 }));
 

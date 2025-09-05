@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PlansPage } from '@/pages/PlansPage';
 import type { MaintenancePlan } from '@/models/plan';
@@ -21,7 +21,7 @@ vi.mock('@/components/PlanFormModal', () => ({
       <div data-testid="plan-form-modal">
         <div>Modal Title: {plan ? 'Edit Plan' : 'New Plan'}</div>
         <button onClick={() => onOpenChange(false)}>Close</button>
-        <button 
+                <button 
           onClick={() => {
             const mockPlan: MaintenancePlan = {
               id: plan?.id || 'new-plan-1',
@@ -30,10 +30,12 @@ vi.mock('@/components/PlanFormModal', () => ({
               scope: {},
               tasks: [],
               status: 'Ativo',
+              auto_generate: false,
               created_at: '2024-01-01T00:00:00Z',
               updated_at: '2024-01-01T00:00:00Z'
             };
             onSave(mockPlan);
+            onOpenChange(false);
           }}
         >
           Save Plan
@@ -84,25 +86,27 @@ describe('PlansPage', () => {
         description: 'Manutenção preventiva mensal',
         frequency: 'Mensal',
         scope: {
-          location_name: 'Setor Administrativo'
+          location_name: 'Prédio A'
         },
         tasks: [],
         status: 'Ativo',
+        auto_generate: false,
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z'
-      },
+      } as MaintenancePlan,
       {
         id: 'plan-2',
-        name: 'Plano Trimestral - Splits',
-        frequency: 'Trimestral',
+        name: 'Plano Semanal - Equipamento Específico',
+        frequency: 'Semanal',
         scope: {
-          equipment_name: 'Split LG 12.000 BTUs'
+          equipment_names: ['Split LG 12.000 BTUs']
         },
         tasks: [],
-        status: 'Inativo',
+        status: 'Ativo',
+        auto_generate: true,
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z'
-      },
+      } as MaintenancePlan,
       {
         id: 'plan-3',
         name: 'Plano Geral',
@@ -110,9 +114,10 @@ describe('PlansPage', () => {
         scope: {},
         tasks: [],
         status: 'Ativo',
+        auto_generate: false,
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z'
-      }
+      } as MaintenancePlan
     ];
 
     beforeEach(() => {
@@ -168,9 +173,10 @@ describe('PlansPage', () => {
         scope: {},
         tasks: [],
         status: 'Ativo',
+        auto_generate: false,
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z'
-      }
+      } as MaintenancePlan
     ];
 
     beforeEach(() => {
@@ -249,13 +255,14 @@ describe('PlansPage', () => {
         scope: {},
         tasks: [],
         status: 'Ativo',
+        auto_generate: false,
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z'
-      }
+      } as MaintenancePlan
     ];
 
     beforeEach(() => {
-      const { useMaintenancePlansNew } = require('@/hooks/useMaintenancePlans');
+      const { useMaintenancePlansNew } = vi.mocked(require('@/hooks/useMaintenancePlans'));
       useMaintenancePlansNew.mockReturnValue([mockPlans, mockSetPlans, vi.fn()]);
     });
 
