@@ -14,8 +14,8 @@ export interface MaintenancePlan {
   scope: {
     location_id?: string;
     location_name?: string;
-    equipment_ids: string[];    // Múltiplos equipamentos
-    equipment_names: string[];  // Nomes dos equipamentos para exibição
+    equipment_ids?: string[];    // Múltiplos equipamentos (opcional para flexibilidade)
+    equipment_names?: string[];  // Nomes dos equipamentos para exibição (opcional)
   };
   tasks: PlanTask[];
   status: PlanStatus;
