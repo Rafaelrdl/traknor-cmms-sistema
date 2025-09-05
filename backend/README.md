@@ -192,10 +192,73 @@ npm run docker:down
 
 ## 🚀 Deploy
 
-1. Configure as variáveis de ambiente de produção
-2. Execute o build: `npm run build`
-3. Execute as migrations: `npm run migrate:prod`
-4. Inicie o servidor: `npm start`
+### Environment Variables for Production
+
+Set these environment variables:
+
+```env
+NODE_ENV=production
+PORT=3333
+DATABASE_URL=postgresql://user:pass@host:port/database
+
+JWT_SECRET=your-very-long-and-secure-secret-key
+REFRESH_TOKEN_EXPIRES_IN=7d
+
+SMTP_HOST=your-smtp-host
+SMTP_PORT=587
+SMTP_USER=your-email
+SMTP_PASS=your-password
+SMTP_FROM=noreply@yourdomain.com
+
+CORS_ORIGIN=https://yourdomain.com
+SESSION_SECRET=another-very-secure-secret
+
+BCRYPT_ROUNDS=12
+LOG_LEVEL=info
+```
+
+### Production Deployment Steps
+
+1. **Build the application**
+   ```bash
+   npm run build
+   ```
+
+2. **Run database migrations**
+   ```bash
+   npm run migrate:prod
+   ```
+
+3. **Start the production server**
+   ```bash
+   npm start
+   ```
+
+### Docker Production
+
+```yaml
+# docker-compose.prod.yml
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "3333:3333"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+    restart: unless-stopped
+```
+
+### Health Monitoring
+
+The API includes a health check endpoint:
+```
+GET /api/health
+```
+
+Use this for load balancer health checks and monitoring.
 
 ## 🤝 Contribuição
 
