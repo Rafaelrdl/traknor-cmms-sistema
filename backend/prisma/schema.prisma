@@ -41,6 +41,7 @@ model User {
   created_plans           MaintenancePlan[] @relation("PlanCreator")
   created_invites         Invite[] @relation("InviteCreator")
   created_solicitations   Solicitation[] @relation("SolicitationCreator")
+  stock_requisitions      StockRequisition[]
   
   @@map("users")
 }
