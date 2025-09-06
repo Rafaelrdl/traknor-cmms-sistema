@@ -17,7 +17,7 @@ import { WorkOrderKanban } from '@/components/WorkOrderKanban';
 import { WorkOrderPanel } from '@/components/WorkOrderPanel';
 import { EditWorkOrderDrawer } from '@/components/EditWorkOrderDrawer';
 import { WorkOrderModal } from '@/components/WorkOrderModal';
-import { useWorkOrders, useEquipment, useSectors, useCompanies } from '@/hooks/useDataTemp';
+import { useWorkOrders, useEquipment, useSectors, useCompanies } from '@/hooks/useApiData';
 import { useWorkOrderView } from '@/hooks/useWorkOrderView';
 import type { WorkOrder, ChecklistItem } from '@/types';
 

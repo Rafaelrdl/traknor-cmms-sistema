@@ -1,10 +1,19 @@
 import { PrismaClient } from '@prisma/client';
 import { hashPassword } from '../src/utils/auth';
+import { randomUUID } from 'crypto';
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('Starting database seed...');
+
+  // Generate UUIDs for consistent references
+  const adminId = randomUUID();
+  const techId = randomUUID();
+  const companyId = randomUUID();
+  const sectorId = randomUUID();
+  const equipmentId = randomUUID();
+  const planId = randomUUID();
 
   // Create admin user
   const adminPassword = await hashPassword('admin123');
@@ -12,7 +21,7 @@ async function main() {
     where: { email: 'admin@traknor.com' },
     update: {},
     create: {
-      id: 'user-admin-001',
+      id: adminId,
       name: 'Administrador',
       email: 'admin@traknor.com',
       password: adminPassword,
@@ -40,7 +49,7 @@ async function main() {
     where: { email: 'tecnico@traknor.com' },
     update: {},
     create: {
-      id: 'user-tech-002',
+      id: techId,
       name: 'João Técnico',
       email: 'tecnico@traknor.com',
       password: techPassword,
@@ -64,10 +73,10 @@ async function main() {
 
   // Create sample company
   const company = await prisma.company.upsert({
-    where: { id: '1' },
+    where: { id: companyId },
     update: {},
     create: {
-      id: '1',
+      id: companyId,
       name: 'TechCorp Industrial',
       segment: 'Tecnologia',
       cnpj: '12.345.678/0001-90',
@@ -89,10 +98,10 @@ async function main() {
 
   // Create sample sector
   const sector = await prisma.sector.upsert({
-    where: { id: '1' },
+    where: { id: sectorId },
     update: {},
     create: {
-      id: '1',
+      id: sectorId,
       name: 'Escritório Principal',
       company_id: company.id,
       description: 'Área administrativa principal da empresa',
@@ -101,10 +110,10 @@ async function main() {
 
   // Create sample equipment
   const equipment = await prisma.equipment.upsert({
-    where: { id: '1' },
+    where: { id: equipmentId },
     update: {},
     create: {
-      id: '1',
+      id: equipmentId,
       code: 'EQ-001',
       name: 'Chiller Central 001',
       type: 'Chiller',
@@ -129,10 +138,10 @@ async function main() {
 
   // Create sample maintenance plan
   const plan = await prisma.maintenancePlan.upsert({
-    where: { id: '1' },
+    where: { id: planId },
     update: {},
     create: {
-      id: '1',
+      id: planId,
       name: 'Manutenção Preventiva Chiller - Mensal',
       description: 'Manutenção preventiva mensal do sistema de refrigeração',
       frequency: 'MONTHLY',
@@ -140,7 +149,7 @@ async function main() {
       sector_id: sector.id,
       tasks: [
         {
-          id: '1',
+          id: randomUUID(),
           name: 'Verificar níveis de óleo',
           checklist: [
             'Verificar nível do óleo do compressor',
@@ -149,7 +158,7 @@ async function main() {
           ]
         },
         {
-          id: '2',
+          id: randomUUID(),
           name: 'Inspecionar filtros',
           checklist: [
             'Verificar filtro de água',
@@ -181,11 +190,12 @@ async function main() {
   });
 
   // Create sample work order
+  const workOrderId = randomUUID();
   const workOrder = await prisma.workOrder.upsert({
-    where: { id: '1' },
+    where: { id: workOrderId },
     update: {},
     create: {
-      id: '1',
+      id: workOrderId,
       code: 'OS-2024-001',
       title: 'Manutenção Preventiva Chiller 001',
       description: 'Manutenção preventiva mensal do chiller central',
@@ -200,23 +210,23 @@ async function main() {
       estimated_hours: 4,
       tasks: [
         {
-          id: '1',
+          id: randomUUID(),
           name: 'Verificar níveis de óleo',
           completed: false,
           checklist: [
-            { id: '1', description: 'Verificar nível do óleo do compressor', completed: false },
-            { id: '2', description: 'Verificar qualidade do óleo', completed: false },
-            { id: '3', description: 'Verificar vazamentos', completed: false }
+            { id: randomUUID(), description: 'Verificar nível do óleo do compressor', completed: false },
+            { id: randomUUID(), description: 'Verificar qualidade do óleo', completed: false },
+            { id: randomUUID(), description: 'Verificar vazamentos', completed: false }
           ]
         },
         {
-          id: '2',
+          id: randomUUID(),
           name: 'Inspecionar filtros',
           completed: false,
           checklist: [
-            { id: '1', description: 'Verificar filtro de água', completed: false },
-            { id: '2', description: 'Limpar filtro de ar', completed: false },
-            { id: '3', description: 'Substituir se necessário', completed: false }
+            { id: randomUUID(), description: 'Verificar filtro de água', completed: false },
+            { id: randomUUID(), description: 'Limpar filtro de ar', completed: false },
+            { id: randomUUID(), description: 'Substituir se necessário', completed: false }
           ]
         }
       ],
@@ -240,11 +250,12 @@ async function main() {
   });
 
   // Create sample stock items
+  const stockItem1Id = randomUUID();
   await prisma.stockItem.upsert({
-    where: { id: '1' },
+    where: { id: stockItem1Id },
     update: {},
     create: {
-      id: '1',
+      id: stockItem1Id,
       code: 'ST-001',
       name: 'Filtro de Ar Condicionado',
       description: 'Filtro plissado para sistema HVAC',
@@ -259,11 +270,12 @@ async function main() {
     },
   });
 
+  const stockItem2Id = randomUUID();
   await prisma.stockItem.upsert({
-    where: { id: '2' },
+    where: { id: stockItem2Id },
     update: {},
     create: {
-      id: '2',
+      id: stockItem2Id,
       code: 'ST-002',
       name: 'Óleo Lubrificante Sintético',
       description: 'Óleo sintético para compressores',
@@ -281,6 +293,10 @@ async function main() {
   console.log('Database seeded successfully!');
   console.log('Admin user:', admin.email, '/ admin123');
   console.log('Technician user:', technician.email, '/ tecnico123');
+  console.log('Company ID:', company.id);
+  console.log('Sector ID:', sector.id);
+  console.log('Equipment ID:', equipment.id);
+  console.log('Technician ID:', technician.id);
 }
 
 main()

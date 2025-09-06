@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Building2, MapPin, Users, Search, BarChart3, Activity } from 'lucide-react';
-import { useEquipment, useSectors, useSubSections, useCompanies } from '@/hooks/useDataTemp';
+import { useEquipment, useSectors, useSubSections, useCompanies } from '@/hooks/useApiData';
 import { LocationProvider, useLocation as useLocationContext } from '@/contexts/LocationContext';
 import { IfCan } from '@/components/auth/IfCan';
 import { useRoleBasedData, DataFilterInfo } from '@/components/data/FilteredDataProvider';
