@@ -10,6 +10,7 @@ async function main() {
   // Generate UUIDs for consistent references
   const adminId = randomUUID();
   const techId = randomUUID();
+  const operatorId = randomUUID();
   const companyId = randomUUID();
   const sectorId = randomUUID();
   const equipmentId = randomUUID();
@@ -58,6 +59,34 @@ async function main() {
       phone: '(11) 98888-8888',
       department: 'Manutenção',
       position: 'Técnico de Manutenção',
+      preferences: {
+        theme: 'system',
+        language: 'pt-BR',
+        date_format: 'DD/MM/YYYY',
+        time_format: '24h',
+        notifications: {
+          email: true,
+          push: true,
+        },
+      },
+    },
+  });
+
+  // Create operator/requester user
+  const operatorPassword = await hashPassword('operador123');
+  const operator = await prisma.user.upsert({
+    where: { email: 'operador@traknor.com' },
+    update: {},
+    create: {
+      id: operatorId,
+      name: 'Carlos Operador',
+      email: 'operador@traknor.com',
+      password: operatorPassword,
+      role: 'OPERATOR',
+      status: 'ACTIVE',
+      phone: '(11) 97777-7777',
+      department: 'Operações',
+      position: 'Operador de Sistema',
       preferences: {
         theme: 'system',
         language: 'pt-BR',
