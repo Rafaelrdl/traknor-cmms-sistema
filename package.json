@@ -5,7 +5,9 @@
     "type": "module",
     "scripts": {
         "predev": "bash ./scripts/check-deps.sh",
-        "dev": "vite",
+        "dev": "vite --host 127.0.0.1 --port 5000",
+        "dev:all": "vite --host 0.0.0.0 --port 5000",
+        "dev:ipv4": "vite --host 127.0.0.1 --port 5000 --strictPort",
         "kill": "fuser -k 5000/tcp",
         "clean": "bash ./scripts/clean-install.sh",
         "build": "tsc -b --noCheck && vite build",
@@ -14,6 +16,7 @@
         "test:ui": "vitest --ui",
         "test:run": "vitest run",
         "test:coverage": "vitest run --coverage",
+        "test:integration": "node test-complete-integration.cjs && cypress run --spec 'cypress/e2e/acl/*.cy.ts'",
         "optimize": "vite optimize",
         "preview": "vite preview",
         "cy:open": "cypress open",

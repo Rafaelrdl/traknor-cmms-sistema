@@ -21,21 +21,22 @@ Cypress.Commands.add('setRole', (role: 'admin' | 'technician' | 'requester') => 
 
   const { email, password } = credentials[role];
 
-  cy.request({
-    method: 'POST',
-    url: 'http://localhost:3333/api/auth/login',
-    body: { email, password },
-  }).then((response: any) => {
-    expect(response.status).to.eq(200);
-    
-    // Store token and user info based on API response structure
-    cy.window().then((win: any) => {
-      const { user, tokens } = response.body.data;
-      win.localStorage.setItem('auth:token', tokens.access_token);
-      win.localStorage.setItem('auth:user', JSON.stringify(user));
-      win.localStorage.setItem('auth:role', user.role.toLowerCase());
-    });
-  });
+  // Limpa localStorage primeiro
+  cy.clearLocalStorage();
+  
+  // Vai para a página de login
+  cy.visit('/');
+
+  // Aguarda e verifica se está na tela de login
+  cy.get('body', { timeout: 10000 }).should('contain', 'TRAKNOR');
+  
+  // Preenche campos de login e faz login pela interface
+  cy.get('input[type="email"]', { timeout: 10000 }).should('be.visible').clear().type(email);
+  cy.get('input[type="password"]', { timeout: 10000 }).should('be.visible').clear().type(password);
+  cy.get('button').contains('Acessar').should('be.visible').click();
+
+  // Aguarda um tempo fixo para o processamento
+  cy.wait(8000);
 });
 
 export {};

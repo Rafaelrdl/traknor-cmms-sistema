@@ -17,6 +17,21 @@ export default defineConfig({
     createIconImportProxy() as PluginOption,
     sparkPlugin() as PluginOption,
   ],
+  server: {
+    port: 5000,
+    host: '0.0.0.0', // Escuta em todas as interfaces (IPv4 e IPv6)
+    strictPort: true, // Garante que use sempre a porta 5000
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost',
+      port: 5000
+    }
+  },
+  preview: {
+    port: 5000,
+    host: '0.0.0.0',
+    strictPort: true
+  },
   resolve: {
     alias: {
       '@': resolve(projectRoot, 'src')
