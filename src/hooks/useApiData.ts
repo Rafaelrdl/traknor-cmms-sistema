@@ -114,6 +114,9 @@ export const useStock = (): [StockItem[], () => void, boolean] => {
   return [MOCK_STOCK_ITEMS, () => {}, false];
 };
 
+// Alias for useStock to match component expectations
+export const useStockItems = useStock;
+
 // Authentication hook
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
