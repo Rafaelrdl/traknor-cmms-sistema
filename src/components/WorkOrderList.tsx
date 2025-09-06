@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Play, Edit, ClipboardList, AlertTriangle, Calendar, User } from 'lucide-react';
-import { useEquipment, useSectors } from '@/hooks/useDataTemp';
+import { useEquipment, useSectors } from '@/hooks/useApiData';
 import { useWorkOrderStore } from '@/store/useWorkOrderStore';
 import type { WorkOrder } from '@/types';
 import { cn } from '@/lib/utils';

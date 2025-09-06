@@ -14,7 +14,7 @@ import {
   Edit,
   Play
 } from 'lucide-react';
-import { useEquipment, useSectors } from '@/hooks/useDataTemp';
+import { useEquipment, useSectors } from '@/hooks/useApiData';
 import type { WorkOrder } from '@/types';
 import { cn } from '@/lib/utils';
 

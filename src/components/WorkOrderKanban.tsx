@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Play, Edit, ClipboardList } from 'lucide-react';
-import { useEquipment, useSectors } from '@/hooks/useDataTemp';
+import { useEquipment, useSectors } from '@/hooks/useApiData';
 import type { WorkOrder } from '@/types';
 import {
   DndContext,

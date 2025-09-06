@@ -14,7 +14,7 @@ import { CalendarIcon, Save, X, Plus, Minus } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useEquipment, useStockItems } from '@/hooks/useDataTemp';
+import { useEquipment, useStockItems } from '@/hooks/useApiData';
 import type { WorkOrder, WorkOrderStockItem, StockItem } from '@/types';
 
 interface EditWorkOrderDrawerProps {
