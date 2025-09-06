@@ -28,11 +28,12 @@ Cypress.Commands.add('setRole', (role: 'admin' | 'technician' | 'requester') => 
   }).then((response: any) => {
     expect(response.status).to.eq(200);
     
-    // Store token and user info  
+    // Store token and user info based on API response structure
     cy.window().then((win: any) => {
-      win.localStorage.setItem('auth:token', response.body.token);
-      win.localStorage.setItem('auth:user', JSON.stringify(response.body.user));
-      win.localStorage.setItem('auth:role', response.body.user.role.toLowerCase());
+      const { user, tokens } = response.body.data;
+      win.localStorage.setItem('auth:token', tokens.access_token);
+      win.localStorage.setItem('auth:user', JSON.stringify(user));
+      win.localStorage.setItem('auth:role', user.role.toLowerCase());
     });
   });
 });
