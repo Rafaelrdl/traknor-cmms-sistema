@@ -24,20 +24,39 @@ import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/components/auth/AuthProvider';
 import { OnboardingManager } from '@/hooks/useOnboardingFlow';
 
-// Initialize PDF.js configuration BEFORE any PDF components load
-import { configurePDFWorker } from '@/utils/pdfConfig';
+// Initialize PDF.js configuration safely
+try {
+  import('@/utils/pdfConfig').then(({ configurePDFWorker }) => {
+    configurePDFWorker();
+  });
+} catch (error) {
+  console.warn('Failed to configure PDF worker:', error);
+}
 
 // Initialize procedures module in development
 if (import.meta.env.DEV) {
-  import('@/utils/proceduresDevUtils');
-  // Import PDF debug utilities in development
-  import('@/utils/pdfDebug');
+  try {
+    import('@/utils/proceduresDevUtils');
+    // Import PDF debug utilities in development
+    import('@/utils/pdfDebug');
+  } catch (error) {
+    console.warn('Failed to load development utilities:', error);
+  }
 }
 
-// Configure PDF worker immediately
-configurePDFWorker();
-
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: (failureCount, error) => {
+        // Don't retry on certain errors that indicate permanent failures
+        if (error instanceof TypeError && error.message.includes('useRef')) {
+          return false;
+        }
+        return failureCount < 3;
+      },
+    },
+  },
+});
 
 function App() {
   return (
