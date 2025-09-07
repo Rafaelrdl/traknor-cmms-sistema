@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { Role } from '@/acl/abilities';
 
 const LS_KEY = 'auth:role';
