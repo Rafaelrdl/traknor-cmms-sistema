@@ -40,24 +40,15 @@ cd /tmp/spark
 LATEST_RELEASE="$LATEST_RELEASE" WORKSPACE_DIR="$WORKSPACE_DIR" bash /tmp/spark/spark-sdk-dist/install-tools.sh cli
 cd /workspaces/spark-template
 
-# TrakNor CMMS - PostgreSQL native setup for Codespaces
-echo "🐘 Configurando TrakNor CMMS para Codespaces..."
+# TrakNor CMMS - Service Container Setup
+echo "🐘 Configurando TrakNor CMMS com PostgreSQL Service Container..."
 
-# Navigate to project directory
-if [ -d "/workspaces/traknor-cmms-sistema" ]; then
-    cd /workspaces/traknor-cmms-sistema
-    
-    # Run our Codespaces setup script
-    if [ -f ".devcontainer/post-start.sh" ]; then
-        echo "Executando setup automático do TrakNor..."
-        ./.devcontainer/post-start.sh
-    else
-        echo "⚠️ Setup script não encontrado, executando setup básico..."
-        # Fallback basic setup
-        if [ -f "scripts/setup_postgres_codespaces.sh" ]; then
-            ./scripts/setup_postgres_codespaces.sh
-        fi
-    fi
+# Execute o script de inicialização se existir
+if [ -f ".devcontainer/scripts/start.sh" ]; then
+    echo "🚀 Executando setup automático do TrakNor..."
+    bash .devcontainer/scripts/start.sh
 else
-    echo "⚠️ Diretório do projeto TrakNor não encontrado"
+    echo "⚠️ Script de start não encontrado"
 fi
+
+echo "✅ TrakNor CMMS configurado para Codespaces!"

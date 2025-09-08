@@ -1,4 +1,13 @@
-.PHONY: help dev stop test migrate seed clean logs shell check db-check db-setup db-reset db-reset-logical db-status
+.PHONY: help dev stop tedev:
+	@echo "🚀 Starting TrakNor CMMS services..."
+	@echo ""
+	@echo "Execute em terminais separados:"
+	@echo "  Terminal 1: cd backend_django && python manage.py runserver 0.0.0.0:3333"
+	@echo "  Terminal 2: npm run dev"
+	@echo ""
+	@echo "URLs disponíveis:"
+	@echo "  Backend API: http://localhost:3333"
+	@echo "  Frontend: http://localhost:5173"ean logs shell check db-check db-status test-integration
 
 help:
 	@echo "TrakNor CMMS - Django Backend Commands"
@@ -14,12 +23,13 @@ help:
 	@echo "  make shell          - Django shell"
 	@echo "  make check          - Health check all services"
 	@echo ""
-	@echo "Database commands (PostgreSQL Native):"
-	@echo "  make db-check       - Check PostgreSQL prerequisites"
-	@echo "  make db-setup       - Setup PostgreSQL for first time"
+	@echo "Database commands (PostgreSQL Service Container):"
+	@echo "  make db-check       - Check database connection"
 	@echo "  make db-status      - Show PostgreSQL status"
-	@echo "  make db-reset       - 🔴 DESTRUCTIVE: Complete database reset"
-	@echo "  make db-reset-logical - ⚠️  Reset only database content"
+	@echo "  make db-shell       - Connect to database"
+	@echo ""
+	@echo "Testing:"
+	@echo "  make test-integration - Run complete integration tests"
 
 dev:
 	@echo "🚀 Starting TrakNor CMMS services..."
@@ -76,24 +86,27 @@ logs:
 
 check:
 	@echo "🔍 Health check..."
-	@curl -s http://localhost:3333/api/health | python3 -m json.tool || echo "Backend not responding"
-	@echo "✅ Health check completed"
+	@./test_integration_complete.sh
 
 db-check:
-	@echo "🔍 CHECKING DATABASE PREREQUISITES"
-	@./scripts/check_db_prerequisites_native.sh
-
-db-setup:
-	@echo "🐘 SETTING UP POSTGRESQL"
-	@./scripts/setup_postgres_codespaces.sh
+	@echo "🔍 CHECKING DATABASE CONNECTION"
+	@bash .devcontainer/scripts/wait-for-db.sh
 
 db-status:
 	@echo "📊 PostgreSQL Status:"
 	@echo "────────────────────"
-	@sudo service postgresql status || echo "PostgreSQL not running"
+	@pg_isready -h db -p 5432 -U postgres || echo "PostgreSQL não está acessível"
 	@echo ""
 	@echo "Databases:"
-	@sudo -u postgres psql -l 2>/dev/null || echo "Cannot list databases"
+	@psql -h db -U postgres -l 2>/dev/null || echo "Cannot list databases"
+
+db-shell:
+	@echo "🐘 Conectando ao PostgreSQL..."
+	@psql -h db -U postgres -d traknor
+
+test-integration:
+	@echo "🧪 EXECUTANDO TESTES DE INTEGRAÇÃO COMPLETA"
+	@./test_integration_complete.sh
 
 db-reset:
 	@echo "🔴 DESTRUCTIVE DATABASE RESET"
