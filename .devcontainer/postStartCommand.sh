@@ -44,15 +44,20 @@ cd /workspaces/spark-template
 echo "🐘 Configurando TrakNor CMMS para Codespaces..."
 
 # Navigate to project directory
-cd /workspaces/traknor-cmms-sistema
-
-# Run our Codespaces setup script
-if [ -f ".devcontainer/post-start.sh" ]; then
-    ./.devcontainer/post-start.sh
-else
-    echo "⚠️ Setup script não encontrado, executando setup básico..."
-    # Fallback basic setup
-    if [ -f "scripts/setup_postgres_codespaces.sh" ]; then
-        ./scripts/setup_postgres_codespaces.sh
+if [ -d "/workspaces/traknor-cmms-sistema" ]; then
+    cd /workspaces/traknor-cmms-sistema
+    
+    # Run our Codespaces setup script
+    if [ -f ".devcontainer/post-start.sh" ]; then
+        echo "Executando setup automático do TrakNor..."
+        ./.devcontainer/post-start.sh
+    else
+        echo "⚠️ Setup script não encontrado, executando setup básico..."
+        # Fallback basic setup
+        if [ -f "scripts/setup_postgres_codespaces.sh" ]; then
+            ./scripts/setup_postgres_codespaces.sh
+        fi
     fi
+else
+    echo "⚠️ Diretório do projeto TrakNor não encontrado"
 fi

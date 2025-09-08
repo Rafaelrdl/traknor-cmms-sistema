@@ -25,7 +25,20 @@ dev:
 	@echo "🚀 Starting TrakNor CMMS services..."
 	@# Garantir que PostgreSQL está rodando
 	@sudo service postgresql start 2>/dev/null || true
-	@./.devcontainer/post-start.sh
+	@# Aguardar PostgreSQL ficar disponível
+	@until pg_isready -h localhost -p 5432 -U postgres &>/dev/null; do \
+		echo "Aguardando PostgreSQL..." ; \
+		sleep 2 ; \
+	done
+	@echo "✅ PostgreSQL disponível"
+	@# Executar script de setup se disponível
+	@if [ -f ".devcontainer/post-start.sh" ]; then \
+		echo "Executando setup completo..." ; \
+		./.devcontainer/post-start.sh ; \
+	else \
+		echo "Executando setup básico..." ; \
+		./scripts/setup_postgres_codespaces.sh 2>/dev/null || true ; \
+	fi
 
 stop:
 	@echo "🛑 Stopping services..."
@@ -71,8 +84,8 @@ db-check:
 	@./scripts/check_db_prerequisites_native.sh
 
 db-setup:
-	@echo "� SETTING UP POSTGRESQL"
-	@./scripts/setup_postgres_native.sh
+	@echo "🐘 SETTING UP POSTGRESQL"
+	@./scripts/setup_postgres_codespaces.sh
 
 db-status:
 	@echo "📊 PostgreSQL Status:"
