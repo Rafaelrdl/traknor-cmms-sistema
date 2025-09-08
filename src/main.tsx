@@ -2,10 +2,22 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { StrictMode } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ErrorFallback } from './ErrorFallback.tsx'
 import App from './App.tsx'
 import './index.css'
 import "./styles/theme.css"
+
+// Create QueryClient instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 // Import Spark runtime safely
 try {
@@ -29,7 +41,9 @@ const AppWrapper = import.meta.env.DEV ? StrictMode : ({ children }: { children:
 root.render(
   <ErrorBoundary FallbackComponent={ErrorFallback}>
     <AppWrapper>
-      <App />
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
     </AppWrapper>
   </ErrorBoundary>
 )

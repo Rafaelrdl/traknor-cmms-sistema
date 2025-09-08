@@ -179,7 +179,7 @@ Este teste valida:
 # .env
 SECRET_KEY=django-insecure-dev-key
 DEBUG=True
-DATABASE_URL=postgres://postgres:postgres@localhost:5432/traknor
+DATABASE_URL=postgres://postgres:postgres@db:5432/traknor
 CORS_ALLOWED_ORIGINS=http://localhost:5173
 ```
 
@@ -237,7 +237,7 @@ Resposta esperada:
 make logs
 
 # Verificar PostgreSQL
-sudo service postgresql status
+pg_isready -h db -p 5432 -U postgres
 
 # Recriar ambiente
 make clean

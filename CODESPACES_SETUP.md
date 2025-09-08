@@ -213,10 +213,10 @@ make clean         # Limpar arquivos temporários
 
 ```bash
 # Verificar status
-sudo service postgresql status
+pg_isready -h db -p 5432 -U postgres
 
 # Iniciar manualmente
-sudo service postgresql start
+make db-check
 
 # Verificar logs
 sudo journalctl -u postgresql -f

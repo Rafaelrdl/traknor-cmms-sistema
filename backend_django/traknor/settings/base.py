@@ -1,11 +1,23 @@
 import environ
 import os
+import sys
 from pathlib import Path
 
-env = environ.Env()
-environ.Env.read_env()
+# Pre-check defensivo: falhar se DATABASE_URL usar localhost em Codespaces
+if os.environ.get("CODESPACES") and "127.0.0.1" in os.environ.get("DATABASE_URL", ""):
+    print("❌ DATABASE_URL aponta para 127.0.0.1 em Codespaces. Use host=db.")
+    sys.exit(1)
 
+env = environ.Env()
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+# Priorizar variáveis de ambiente do SO (devcontainer) sobre .env local
+# Só carrega .env se DATABASE_URL não existir no ambiente do SO
+if not os.environ.get("DATABASE_URL"):
+    environ.Env.read_env(BASE_DIR / ".env")
+else:
+    # Se DATABASE_URL existe no SO, ainda assim carrega .env para outras vars
+    environ.Env.read_env(BASE_DIR / ".env")
 
 SECRET_KEY = env('SECRET_KEY', default='django-insecure-dev-key')
 DEBUG = env.bool('DEBUG', default=False)
@@ -69,9 +81,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'traknor.wsgi.application'
 
-# Database
+# Database - Prioriza DATABASE_URL do ambiente (devcontainer)
 DATABASES = {
-    'default': env.db(default='postgres://postgres:postgres@localhost:5432/traknor')
+    'default': env.db(
+        'DATABASE_URL',
+        default='postgres://postgres:postgres@db:5432/traknor'
+    )
 }
 
 # Custom user model

@@ -1,23 +1,48 @@
-# TrakNor CMMS - Makefile para Service Containers
-# Configuração otimizada para PostgreSQL via Codespaces
+# TrakNor CMMS - Makefile para Service Containers APENAS
+# NUNCA usar localhost/127.0.0.1 - SEMPRE db:5432
 
 DB_HOST ?= db
 DB_USER ?= $(POSTGRES_USER)
 DB_NAME ?= $(POSTGRES_DB)
+DB_PASSWORD ?= $(POSTGRES_PASSWORD)
 
-.PHONY: help dev db-check db-shell run-backend run-frontend migrate seed test-db
+.PHONY: help dev db-check db-shell run-backend run-frontend migrate seed test-db validate-env
 
 help:
-	@echo "TrakNor CMMS - Service Container Commands"
+	@echo "🎯 TrakNor CMMS - Service Container Commands"
 	@echo ""
-	@echo "Development:"
-	@echo "  make dev         - Show how to start services"
-	@echo "  make run-backend - Run Django backend"
-	@echo "  make run-frontend- Run React frontend"
+	@echo "🚀 Development:"
+	@echo "  make dev         - Show development workflow"
+	@echo "  make run-backend - Run Django backend (port 3333)"
+	@echo "  make run-frontend- Run React frontend (port 5173)"
 	@echo ""
-	@echo "Database:"
-	@echo "  make db-check    - Check PostgreSQL connection"
+	@echo "🗄️  Database (PostgreSQL Service Container):"
+	@echo "  make db-check    - Check PostgreSQL service container"
 	@echo "  make db-shell    - Connect to PostgreSQL"
+	@echo "  make test-db     - Test database operations"
+	@echo "  make migrate     - Run Django migrations"
+	@echo ""
+	@echo "🔍 Validation:"
+	@echo "  make validate-env- Check service container configuration"
+	@echo "  make validate-all- Run all validations"
+
+dev:
+	@echo "🔄 Development Workflow:"
+	@echo "1. Rebuild Codespace: Ctrl+Shift+P → 'Codespaces: Rebuild Container'"
+	@echo "2. Check database: make db-check"
+	@echo "3. Run migrations: make migrate" 
+	@echo "4. Start backend: make run-backend (Terminal 1)"
+	@echo "5. Start frontend: make run-frontend (Terminal 2)"
+
+validate-env:
+	@echo "🔍 Validating service container configuration..."
+	@./scripts/assert_no_native_pg.sh
+	@./scripts/check_db_service.sh
+
+validate-all: validate-env
+	@echo "🧪 Running complete validation..."
+	@make db-check
+	@echo "✅ All validations passed!"
 	@echo "  make test-db     - Test database operations"
 	@echo ""
 	@echo "Django:"

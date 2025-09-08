@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
-from apps.core.views import HealthCheckView
+from apps.core.views import HealthCheckView, db_health
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -11,6 +11,7 @@ urlpatterns = [
     path('api/', include([
         # Health check
         path('health', HealthCheckView.as_view(), name='health-check'),
+        path('health/db/', db_health, name='db-health'),
         
         # Authentication routes
         path('auth/', include('apps.accounts.urls')),
