@@ -1,0 +1,75 @@
+.PHONY: help dev stop test migrate seed clean logs shell check db-check db-reset db-reset-logical
+
+help:
+	@echo "TrakNor CMMS - Django Backend Commands"
+	@echo ""
+	@echo "Available commands:"
+	@echo "  make dev            - Start all services (Django + React)"
+	@echo "  make stop           - Stop all services"
+	@echo "  make test           - Run tests"
+	@echo "  make migrate        - Run Django migrations"
+	@echo "  make seed           - Populate database with initial data"
+	@echo "  make clean          - Clean temporary files"
+	@echo "  make logs           - Show service logs"
+	@echo "  make shell          - Django shell"
+	@echo "  make check          - Health check all services"
+	@echo "  make db-check       - Check PostgreSQL reset prerequisites"
+	@echo "  make db-reset       - 🔴 DESTRUCTIVE: Complete PostgreSQL reset (removes volumes)"
+	@echo "  make db-reset-logical - ⚠️  Reset only database content (keeps cluster)"
+
+dev:
+	@echo "🚀 Starting TrakNor CMMS services..."
+	@./.devcontainer/post-start.sh
+
+stop:
+	@echo "🛑 Stopping services..."
+	@pkill -f "python manage.py runserver" 2>/dev/null || true
+	@pkill -f "npm run dev" 2>/dev/null || true
+	@echo "✅ Services stopped"
+
+test:
+	@echo "🧪 Running tests..."
+	@cd backend_django && source venv/bin/activate && python manage.py test
+
+migrate:
+	@echo "🗄️ Running migrations..."
+	@cd backend_django && source venv/bin/activate && python manage.py migrate
+
+seed:
+	@echo "📊 Seeding database..."
+	@cd backend_django && source venv/bin/activate && python manage.py create_initial_data
+
+shell:
+	@echo "🐍 Opening Django shell..."
+	@cd backend_django && source venv/bin/activate && python manage.py shell
+
+clean:
+	@echo "🧹 Cleaning temporary files..."
+	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type f -name "*.pyc" -delete
+	@rm -rf backend_django/staticfiles 2>/dev/null || true
+	@rm -f /tmp/django.log /tmp/frontend.log 2>/dev/null || true
+	@echo "✅ Cleanup completed"
+
+logs:
+	@echo "📜 Showing service logs..."
+	@tail -f /tmp/django.log /tmp/frontend.log 2>/dev/null || echo "No log files found"
+
+check:
+	@echo "🔍 Health check..."
+	@echo "Django backend health check to be implemented"
+	@echo "✅ Health check completed"
+
+db-check:
+	@echo "🔍 CHECKING DATABASE PREREQUISITES"
+	@./scripts/check_db_prerequisites.sh
+
+db-reset:
+	@echo "🔴 DESTRUCTIVE DATABASE RESET"
+	@echo "This will completely remove PostgreSQL volumes and data!"
+	@./scripts/reset_db.sh
+
+db-reset-logical:
+	@echo "⚠️  LOGICAL DATABASE RESET"
+	@echo "This will reset database content but keep PostgreSQL cluster"
+	@./scripts/reset_db_logical.sh

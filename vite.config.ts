@@ -19,13 +19,20 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': resolve(projectRoot, 'src')
+      '@': resolve(projectRoot, 'src'),
+      'react': resolve(projectRoot, './node_modules/react'),
+      'react-dom': resolve(projectRoot, './node_modules/react-dom'),
+      'react-router-dom': resolve(projectRoot, './node_modules/react-router-dom'),
     }
   },
   optimizeDeps: {
-    include: ['react-pdf', 'pdfjs-dist']
+    include: ['react-pdf', 'pdfjs-dist', 'react', 'react-dom', 'react-router-dom']
   },
   build: {
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true
+    },
     rollupOptions: {
       external: (id) => {
         // Don't bundle PDF worker files
@@ -33,6 +40,11 @@ export default defineConfig({
           return true;
         }
         return false;
+      },
+      output: {
+        manualChunks: {
+          'vendor': ['react', 'react-dom', 'react-router-dom']
+        }
       }
     }
   }

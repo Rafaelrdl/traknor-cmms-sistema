@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { Role } from '@/acl/abilities';
 
 const LS_KEY = 'auth:role';
@@ -7,10 +7,12 @@ export function useCurrentRole(): [Role, (r: Role) => void] {
   const [role, setRole] = useState<Role>(() => {
     try {
       // Tentar obter do usuário atual primeiro
-      const { usersStore } = require('./usersStore');
-      const currentUser = usersStore.getCurrentUser();
-      if (currentUser?.role) {
-        return currentUser.role;
+      const currentUserData = localStorage.getItem('auth:user');
+      if (currentUserData) {
+        const currentUser = JSON.parse(currentUserData);
+        if (currentUser?.role) {
+          return currentUser.role;
+        }
       }
     } catch {
       // Se falhar, usar localStorage como fallback
@@ -31,10 +33,12 @@ export function useCurrentRole(): [Role, (r: Role) => void] {
 export function getCurrentRole(): Role {
   try {
     // Tentar obter do usuário atual primeiro
-    const { usersStore } = require('./usersStore');
-    const currentUser = usersStore.getCurrentUser();
-    if (currentUser?.role) {
-      return currentUser.role;
+    const currentUserData = localStorage.getItem('auth:user');
+    if (currentUserData) {
+      const currentUser = JSON.parse(currentUserData);
+      if (currentUser?.role) {
+        return currentUser.role;
+      }
     }
   } catch {
     // Se falhar, usar localStorage como fallback

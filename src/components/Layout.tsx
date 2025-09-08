@@ -24,7 +24,7 @@ export function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const { shouldShow, handleComplete, handleSkip } = useFirstTimeGuide();
   
-  // Initialize automatic work order generation
+  // Initialize automatic work order generation (now safe without useRef)
   useAutomaticWorkOrderGeneration();
 
   const user = getCurrentUser();
