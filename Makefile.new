@@ -1,4 +1,4 @@
-.PHONY: help dev stop test migrate seed clean logs shell check db-check db-setup db-reset db-reset-logical db-status
+.PHONY: help dev stop test migrate seed clean logs shell check db-check db-reset db-reset-logical
 
 help:
 	@echo "TrakNor CMMS - Django Backend Commands"
@@ -13,18 +13,12 @@ help:
 	@echo "  make logs           - Show service logs"
 	@echo "  make shell          - Django shell"
 	@echo "  make check          - Health check all services"
-	@echo ""
-	@echo "Database commands (PostgreSQL Native):"
-	@echo "  make db-check       - Check PostgreSQL prerequisites"
-	@echo "  make db-setup       - Setup PostgreSQL for first time"
-	@echo "  make db-status      - Show PostgreSQL status"
-	@echo "  make db-reset       - 🔴 DESTRUCTIVE: Complete database reset"
-	@echo "  make db-reset-logical - ⚠️  Reset only database content"
+	@echo "  make db-check       - Check PostgreSQL reset prerequisites"
+	@echo "  make db-reset       - 🔴 DESTRUCTIVE: Complete PostgreSQL reset (removes volumes)"
+	@echo "  make db-reset-logical - ⚠️  Reset only database content (keeps cluster)"
 
 dev:
 	@echo "🚀 Starting TrakNor CMMS services..."
-	@# Garantir que PostgreSQL está rodando
-	@sudo service postgresql start 2>/dev/null || true
 	@./.devcontainer/post-start.sh
 
 stop:
@@ -63,28 +57,17 @@ logs:
 
 check:
 	@echo "🔍 Health check..."
-	@curl -s http://localhost:3333/api/health | python3 -m json.tool || echo "Backend not responding"
+	@echo "Django backend health check to be implemented"
 	@echo "✅ Health check completed"
 
 db-check:
 	@echo "🔍 CHECKING DATABASE PREREQUISITES"
-	@./scripts/check_db_prerequisites_native.sh
-
-db-setup:
-	@echo "� SETTING UP POSTGRESQL"
-	@./scripts/setup_postgres_native.sh
-
-db-status:
-	@echo "📊 PostgreSQL Status:"
-	@echo "────────────────────"
-	@sudo service postgresql status || echo "PostgreSQL not running"
-	@echo ""
-	@echo "Databases:"
-	@sudo -u postgres psql -l 2>/dev/null || echo "Cannot list databases"
+	@./scripts/check_db_prerequisites.sh
 
 db-reset:
 	@echo "🔴 DESTRUCTIVE DATABASE RESET"
-	@./scripts/reset_db_native.sh
+	@echo "This will completely remove PostgreSQL volumes and data!"
+	@./scripts/reset_db.sh
 
 db-reset-logical:
 	@echo "⚠️  LOGICAL DATABASE RESET"

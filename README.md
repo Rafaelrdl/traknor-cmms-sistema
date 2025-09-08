@@ -77,10 +77,50 @@ npm install
 
 ### Scripts Disponíveis
 
+## 📚 Comandos Disponíveis
+
 - `npm run dev` - Inicia o servidor de desenvolvimento (com verificação automática de deps)
 - `npm run build` - Compila o projeto para produção
 - `npm run lint` - Executa o linting do código
 - `bash ./scripts/check-deps.sh` - Verifica e corrige dependências manualmente
+
+## 🗄️ Gerenciamento de Banco de Dados
+
+O projeto utiliza PostgreSQL via Docker Compose. Os seguintes comandos estão disponíveis:
+
+### Comandos Make
+
+- `make db-reset` - **🔴 DESTRUTIVO**: Reset completo do PostgreSQL (remove volumes)
+- `make db-reset-logical` - **⚠️ CUIDADO**: Reset apenas do conteúdo do database
+
+### Scripts Disponíveis
+
+- `./scripts/reset_db.sh` - Script completo de reset com verificações de segurança
+- `./scripts/reset_db_logical.sh` - Script para reset apenas do database lógico
+
+### ⚠️ IMPORTANTE - Ambiente de Desenvolvimento
+
+**Os comandos de reset são DESTRUTIVOS e devem ser usados APENAS em desenvolvimento!**
+
+- ✅ **Safe**: Remove todos os dados do banco para começar limpo
+- ⚠️ **Cuidado**: Sempre confirma antes de executar
+- 🛡️ **Proteção**: Verifica ambiente antes de executar
+- 📋 **Relatório**: Gera relatório completo após reset
+
+#### Reset Completo (`make db-reset`)
+- Para todos os serviços Docker Compose
+- Remove completamente o volume PostgreSQL
+- **PERDE TODOS OS DADOS** do banco
+- Recria cluster PostgreSQL do zero
+- Garante aplicação correta das variáveis de ambiente
+- Testa autenticação com senha configurada
+
+#### Reset Lógico (`make db-reset-logical`)
+- Mantém o cluster PostgreSQL existente
+- Remove apenas o database `traknor`
+- Recria database vazio
+- **NÃO redefine senhas** do PostgreSQL
+- Mais rápido que reset completo
 
 📄 License
 
