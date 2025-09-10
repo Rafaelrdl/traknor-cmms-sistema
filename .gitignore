@@ -28,6 +28,5 @@ dist-ssr
 **/agent-eval-report*
 packages
 .file-manifest
-.devcontainer/
 
 .spark-workbench-id
