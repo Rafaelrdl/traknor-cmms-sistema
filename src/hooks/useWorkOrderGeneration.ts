@@ -1,15 +1,16 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { loadPlans, updatePlanNextExecution } from '@/data/plansStore';
 import { checkAndGenerateScheduledWorkOrders } from '@/data/workOrdersStore';
 import { toast } from 'sonner';
+
+// Store interval ID globally to avoid useRef
+let workOrderGenerationInterval: NodeJS.Timeout | null = null;
 
 /**
  * Hook para verificar automaticamente planos e gerar ordens de serviço
  * quando necessário. Executa a verificação a cada 30 segundos.
  */
 export function useAutomaticWorkOrderGeneration() {
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  
   const checkPlansAndGenerate = async () => {
     try {
       const plans = loadPlans();
@@ -55,17 +56,30 @@ export function useAutomaticWorkOrderGeneration() {
   };
   
   useEffect(() => {
-    // Initial check
-    checkPlansAndGenerate();
+    // Check if we're in the right context (browser, React properly loaded)
+    if (typeof window === 'undefined') return;
     
-    // Set up interval for periodic checks (every 30 seconds)
-    intervalRef.current = setInterval(checkPlansAndGenerate, 30000);
-    
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+    try {
+      // Initial check
+      checkPlansAndGenerate();
+      
+      // Clear any existing interval
+      if (workOrderGenerationInterval) {
+        clearInterval(workOrderGenerationInterval);
       }
-    };
+      
+      // Set up interval for periodic checks (every 30 seconds)
+      workOrderGenerationInterval = setInterval(checkPlansAndGenerate, 30000);
+      
+      return () => {
+        if (workOrderGenerationInterval) {
+          clearInterval(workOrderGenerationInterval);
+          workOrderGenerationInterval = null;
+        }
+      };
+    } catch (error) {
+      console.error('Failed to set up automatic work order generation:', error);
+    }
   }, []);
   
   return {
