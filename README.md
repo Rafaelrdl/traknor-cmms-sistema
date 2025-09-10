@@ -1,31 +1,105 @@
 # TrakNor CMMS - Sistema de Gerenciamento de Manutenção
 
-Sistema de gerenciamento de manutenção para equipamentos e ativos.
+Sistema completo de gerenciamento de manutenção para equipamentos e ativos, com backend TypeScript + Express + Prisma e frontend React integrados.
+
+## ✅ Status do Projeto
+
+**🎉 BACKEND E INTEGRAÇÃO VALIDADOS COM SUCESSO!**
+
+- ✅ Backend TypeScript + Express + Prisma implementado
+- ✅ API REST com autenticação JWT funcional  
+- ✅ Frontend integrado com backend via API
+- ✅ Todos os endpoints principais testados
+- ✅ Documentação completa atualizada
+
+📸 **[Ver evidência da integração funcionando](https://github.com/user-attachments/assets/8a17b77d-ab3f-4eb7-af23-986326ea1613)**
 
 ## 📁 Estrutura do Projeto
 
 ```
+├── backend/                  # 🔧 Backend API (TypeScript + Express)
+│   ├── src/                 # Código fonte do backend
+│   ├── prisma/              # Schema e migrations do banco
+│   └── tests/               # Testes do backend
 ├── docs/                    # 📚 Documentação organizada
 │   ├── features/           # Documentação de funcionalidades
 │   ├── implementation/     # Documentação técnica
 │   ├── fixes/             # Documentação de correções
-│   └── root-docs/         # Documentos gerais do projeto
-├── src/                    # 💻 Código fonte
+│   └── BACKEND_IMPLEMENTATION_COMPLETE.md # 🎯 Status da implementação
+├── src/                    # 💻 Código fonte frontend
 ├── tests/                  # 🧪 Testes organizados
 │   └── manual/            # Testes manuais e documentação
 └── cypress/               # 🔍 Testes E2E
 ```
 
+## 🏗️ Arquitetura
+
+### Backend (API REST)
+- **Framework**: Express.js com TypeScript
+- **Database**: PostgreSQL com Prisma ORM  
+- **Auth**: JWT tokens com refresh
+- **Security**: Helmet, CORS, Rate limiting
+- **Port**: 3333 (desenvolvimento)
+
+### Frontend (React)
+- **Framework**: React com TypeScript
+- **UI**: Tailwind CSS + shadcn/ui
+- **State**: Zustand + React Query
+- **API**: Cliente HTTP integrado
+- **Port**: 5173 (desenvolvimento)
+
 ## 🚀 Configuração
 
-1. Instale as dependências:
+### Pré-requisitos
+- Node.js 18+
+- PostgreSQL (ou Docker)
+- npm ou yarn
+
+### 1. Frontend
 ```bash
 npm install
+npm run dev
 ```
 
-2. Execute o projeto:
+### 2. Backend  
 ```bash
+cd backend
+npm install
+
+# Configurar banco de dados
+docker compose up postgres -d
+
+# Executar migrations e seed
+npm run migrate
+npm run seed
+
+# Iniciar servidor
 npm run dev
+```
+
+## 🔑 Credenciais de Teste
+
+```
+Email: admin@traknor.com
+Senha: admin123
+```
+
+## 📊 Endpoints da API
+
+### Autenticação
+- `POST /api/auth/login` - Login
+- `GET /api/auth/me` - Usuário atual
+
+### Dados
+- `GET /api/companies` - Empresas
+- `GET /api/users` - Usuários  
+- `GET /api/equipment` - Equipamentos
+- `GET /api/work-orders` - Ordens de serviço
+- `GET /api/plans` - Planos de manutenção
+- `GET /api/metrics/kpis` - KPIs do dashboard
+
+### Saúde  
+- `GET /api/health` - Health check
 ```
 
 3. Execute os testes:
@@ -77,10 +151,50 @@ npm install
 
 ### Scripts Disponíveis
 
+## 📚 Comandos Disponíveis
+
 - `npm run dev` - Inicia o servidor de desenvolvimento (com verificação automática de deps)
 - `npm run build` - Compila o projeto para produção
 - `npm run lint` - Executa o linting do código
 - `bash ./scripts/check-deps.sh` - Verifica e corrige dependências manualmente
+
+## 🗄️ Gerenciamento de Banco de Dados
+
+O projeto utiliza PostgreSQL via Docker Compose. Os seguintes comandos estão disponíveis:
+
+### Comandos Make
+
+- `make db-reset` - **🔴 DESTRUTIVO**: Reset completo do PostgreSQL (remove volumes)
+- `make db-reset-logical` - **⚠️ CUIDADO**: Reset apenas do conteúdo do database
+
+### Scripts Disponíveis
+
+- `./scripts/reset_db.sh` - Script completo de reset com verificações de segurança
+- `./scripts/reset_db_logical.sh` - Script para reset apenas do database lógico
+
+### ⚠️ IMPORTANTE - Ambiente de Desenvolvimento
+
+**Os comandos de reset são DESTRUTIVOS e devem ser usados APENAS em desenvolvimento!**
+
+- ✅ **Safe**: Remove todos os dados do banco para começar limpo
+- ⚠️ **Cuidado**: Sempre confirma antes de executar
+- 🛡️ **Proteção**: Verifica ambiente antes de executar
+- 📋 **Relatório**: Gera relatório completo após reset
+
+#### Reset Completo (`make db-reset`)
+- Para todos os serviços Docker Compose
+- Remove completamente o volume PostgreSQL
+- **PERDE TODOS OS DADOS** do banco
+- Recria cluster PostgreSQL do zero
+- Garante aplicação correta das variáveis de ambiente
+- Testa autenticação com senha configurada
+
+#### Reset Lógico (`make db-reset-logical`)
+- Mantém o cluster PostgreSQL existente
+- Remove apenas o database `traknor`
+- Recria database vazio
+- **NÃO redefine senhas** do PostgreSQL
+- Mais rápido que reset completo
 
 📄 License
 

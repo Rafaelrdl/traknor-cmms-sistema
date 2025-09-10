@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrakNor CMMS - Teste de Integração API</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .main {
+            padding: 40px;
+        }
+        
+        .auth-section {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .auth-section h3 {
+            color: #1e40af;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+        }
+        
+        .login-form {
+            display: flex;
+            gap: 15px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 200px;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 5px;
+        }
+        
+        .form-group input {
+            padding: 12px;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+        
+        .auth-status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        
+        .auth-status.logged-out {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 2px solid #fecaca;
+        }
+        
+        .auth-status.logged-in {
+            background: #f0fdf4;
+            color: #16a34a;
+            border: 2px solid #bbf7d0;
+        }
+        
+        .endpoints-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .endpoint-card {
+            background: #ffffff;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.3s ease;
+        }
+        
+        .endpoint-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            border-color: #3b82f6;
+        }
+        
+        .endpoint-card h4 {
+            color: #1f2937;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .endpoint-card p {
+            color: #6b7280;
+            margin-bottom: 15px;
+        }
+        
+        .create-section {
+            background: #fefce8;
+            border: 2px solid #fde047;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .create-section h3 {
+            color: #a16207;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+        }
+        
+        .create-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .response-area {
+            margin-top: 30px;
+        }
+        
+        .response-container {
+            background: #1f2937;
+            border-radius: 12px;
+            padding: 25px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .response-container pre {
+            color: #f9fafb;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #6b7280;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 TrakNor CMMS</h1>
+            <p>Validação Completa da Integração Backend + Frontend</p>
+        </div>
+        
+        <div class="main">
+            <!-- Seção de Autenticação -->
+            <div class="auth-section">
+                <h3>🔐 Autenticação</h3>
+                <div class="login-form">
+                    <div class="form-group">
+                        <label>Email:</label>
+                        <input type="email" id="email" value="admin@traknor.com" />
+                    </div>
+                    <div class="form-group">
+                        <label>Senha:</label>
+                        <input type="password" id="password" value="admin123" />
+                    </div>
+                    <button class="btn btn-primary" onclick="login()">Fazer Login</button>
+                </div>
+                <div id="authStatus" class="auth-status logged-out">❌ Não logado</div>
+            </div>
+            
+            <!-- Estatísticas -->
+            <div class="stats" id="stats" style="display: none;">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalUsers">-</div>
+                    <div class="stat-label">Usuários</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalOrders">-</div>
+                    <div class="stat-label">Ordens de Serviço</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalEquipment">-</div>
+                    <div class="stat-label">Equipamentos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalPlans">-</div>
+                    <div class="stat-label">Planos</div>
+                </div>
+            </div>
+            
+            <!-- Seção de Criação de Dados -->
+            <div class="create-section" style="display: none;" id="createSection">
+                <h3>📝 Criar Novos Dados de Teste</h3>
+                <div class="create-buttons">
+                    <button class="btn btn-success" onclick="createUser()">👤 Novo Usuário</button>
+                    <button class="btn btn-success" onclick="createWorkOrder()">📋 Nova OS</button>
+                    <button class="btn btn-success" onclick="createEquipment()">⚙️ Novo Equipamento</button>
+                    <button class="btn btn-success" onclick="createPlan()">📅 Novo Plano</button>
+                </div>
+            </div>
+            
+            <!-- Endpoints de Teste -->
+            <div class="endpoints-grid" style="display: none;" id="endpointsGrid">
+                <div class="endpoint-card">
+                    <h4>👥 Usuários</h4>
+                    <p>Listar todos os usuários do sistema</p>
+                    <button class="btn btn-primary" onclick="testEndpoint('users')">Testar</button>
+                </div>
+                
+                <div class="endpoint-card">
+                    <h4>🏢 Empresas</h4>
+                    <p>Listar empresas cadastradas</p>
+                    <button class="btn btn-primary" onclick="testEndpoint('companies')">Testar</button>
+                </div>
+                
+                <div class="endpoint-card">
+                    <h4>⚙️ Equipamentos</h4>
+                    <p>Listar equipamentos e ativos</p>
+                    <button class="btn btn-primary" onclick="testEndpoint('equipment')">Testar</button>
+                </div>
+                
+                <div class="endpoint-card">
+                    <h4>📋 Ordens de Serviço</h4>
+                    <p>Listar ordens de serviço</p>
+                    <button class="btn btn-primary" onclick="testEndpoint('work-orders')">Testar</button>
+                </div>
+                
+                <div class="endpoint-card">
+                    <h4>📅 Planos de Manutenção</h4>
+                    <p>Listar planos de manutenção</p>
+                    <button class="btn btn-primary" onclick="testEndpoint('plans')">Testar</button>
+                </div>
+                
+                <div class="endpoint-card">
+                    <h4>📈 Métricas</h4>
+                    <p>KPIs do dashboard</p>
+                    <button class="btn btn-primary" onclick="testEndpoint('metrics/kpis')">Testar</button>
+                </div>
+            </div>
+            
+            <!-- Área de Resposta -->
+            <div class="response-area">
+                <h3>📤 Última Resposta da API</h3>
+                <div class="response-container">
+                    <pre id="response">Aguardando requisição...</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3333/api';
+        let authToken = '';
+        
+        function updateResponse(data, status = 'success') {
+            const responseEl = document.getElementById('response');
+            const timestamp = new Date().toLocaleTimeString('pt-BR');
+            
+            if (status === 'error') {
+                responseEl.textContent = `[${timestamp}] ❌ ERRO:\n${JSON.stringify(data, null, 2)}`;
+            } else {
+                responseEl.textContent = `[${timestamp}] ✅ SUCESSO:\n${JSON.stringify(data, null, 2)}`;
+            }
+        }
+        
+        async function makeRequest(endpoint, options = {}) {
+            try {
+                const config = {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(authToken && { 'Authorization': `Bearer ${authToken}` })
+                    },
+                    ...options
+                };
+                
+                const response = await fetch(`${API_BASE}/${endpoint}`, config);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(`${response.status}: ${data.error?.message || 'Erro desconhecido'}`);
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Erro na requisição:', error);
+                throw error;
+            }
+        }
+        
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const data = await makeRequest('auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ email, password })
+                });
+                
+                authToken = data.data.tokens.access_token;
+                
+                const authStatus = document.getElementById('authStatus');
+                authStatus.className = 'auth-status logged-in';
+                authStatus.innerHTML = `✅ Logado como: ${data.data.user.name} (${data.data.user.role})`;
+                
+                document.getElementById('stats').style.display = 'grid';
+                document.getElementById('createSection').style.display = 'block';
+                document.getElementById('endpointsGrid').style.display = 'grid';
+                
+                updateResponse(data);
+                updateStats();
+                
+            } catch (error) {
+                updateResponse(error.message, 'error');
+            }
+        }
+        
+        async function updateStats() {
+            try {
+                const [users, workOrders, equipment, plans] = await Promise.all([
+                    makeRequest('users'),
+                    makeRequest('work-orders'),
+                    makeRequest('equipment'), 
+                    makeRequest('plans')
+                ]);
+                
+                document.getElementById('totalUsers').textContent = users.data.length;
+                document.getElementById('totalOrders').textContent = workOrders.data.length;
+                document.getElementById('totalEquipment').textContent = equipment.data.length;
+                document.getElementById('totalPlans').textContent = plans.data.length;
+                
+            } catch (error) {
+                console.error('Erro ao atualizar estatísticas:', error);
+            }
+        }
+        
+        async function testEndpoint(endpoint) {
+            try {
+                const data = await makeRequest(endpoint);
+                updateResponse(data);
+            } catch (error) {
+                updateResponse(error.message, 'error');
+            }
+        }
+        
+        async function createUser() {
+            const randomId = Math.floor(Math.random() * 1000);
+            const userData = {
+                name: `Técnico ${randomId}`,
+                email: `tecnico${randomId}@traknor.com`,
+                role: 'TECHNICIAN',
+                department: 'Manutenção',
+                position: 'Técnico de Manutenção',
+                phone: `(11) 9${randomId.toString().padStart(4, '0')}-${randomId}`
+            };
+            
+            try {
+                const data = await makeRequest('users', {
+                    method: 'POST',
+                    body: JSON.stringify(userData)
+                });
+                updateResponse(data);
+                updateStats();
+            } catch (error) {
+                updateResponse(error.message, 'error');
+            }
+        }
+        
+        async function createWorkOrder() {
+            const randomId = Math.floor(Math.random() * 1000);
+            const workOrderData = {
+                title: `Manutenção ${randomId} - Equipamento Industrial`,
+                description: `Manutenção preventiva do equipamento ${randomId}. Verificar funcionamento geral e realizar limpeza.`,
+                type: Math.random() > 0.5 ? 'PREVENTIVE' : 'CORRECTIVE',
+                priority: ['LOW', 'MEDIUM', 'HIGH'][Math.floor(Math.random() * 3)],
+                company_id: '1',
+                equipment_id: Math.random() > 0.5 ? '1' : '2',
+                assigned_to: '2',
+                scheduled_date: new Date(Date.now() + Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+                estimated_hours: Math.floor(Math.random() * 8) + 1
+            };
+            
+            try {
+                const data = await makeRequest('work-orders', {
+                    method: 'POST',
+                    body: JSON.stringify(workOrderData)
+                });
+                updateResponse(data);
+                updateStats();
+            } catch (error) {
+                updateResponse(error.message, 'error');
+            }
+        }
+        
+        async function createEquipment() {
+            const randomId = Math.floor(Math.random() * 1000);
+            const types = ['COMPRESSOR', 'PUMP', 'MOTOR', 'CNC_MACHINE', 'CONVEYOR'];
+            const equipmentData = {
+                name: `Equipamento ${randomId}`,
+                type: types[Math.floor(Math.random() * types.length)],
+                location: `Setor ${randomId % 10 + 1}`,
+                company_id: '1',
+                model: `MODEL-${randomId}`,
+                serial_number: `SN${randomId.toString().padStart(8, '0')}`,
+                manufacturer: ['Siemens', 'ABB', 'WEG', 'Schneider', 'Rockwell'][Math.floor(Math.random() * 5)]
+            };
+            
+            try {
+                const data = await makeRequest('equipment', {
+                    method: 'POST',
+                    body: JSON.stringify(equipmentData)
+                });
+                updateResponse(data);
+                updateStats();
+            } catch (error) {
+                updateResponse(error.message, 'error');
+            }
+        }
+        
+        async function createPlan() {
+            const randomId = Math.floor(Math.random() * 1000);
+            const frequencies = ['DAILY', 'WEEKLY', 'MONTHLY', 'QUARTERLY'];
+            const planData = {
+                name: `Plano de Manutenção ${randomId}`,
+                description: `Plano preventivo para equipamentos do setor ${randomId}`,
+                frequency: frequencies[Math.floor(Math.random() * frequencies.length)],
+                company_id: '1',
+                tasks: [
+                    {
+                        name: `Tarefa ${randomId}.1`,
+                        checklist: [`Verificar item A`, `Inspecionar item B`, `Documentar resultados`]
+                    },
+                    {
+                        name: `Tarefa ${randomId}.2`, 
+                        checklist: [`Limpar componentes`, `Lubrificar partes móveis`]
+                    }
+                ]
+            };
+            
+            try {
+                const data = await makeRequest('plans', {
+                    method: 'POST',
+                    body: JSON.stringify(planData)
+                });
+                updateResponse(data);
+                updateStats();
+            } catch (error) {
+                updateResponse(error.message, 'error');
+            }
+        }
+        
+        // Verificar se API está rodando
+        (async function checkAPI() {
+            try {
+                const health = await makeRequest('health');
+                console.log('✅ API está funcionando:', health);
+            } catch (error) {
+                console.error('❌ API não está acessível:', error);
+                alert('⚠️ API não está rodando em http://localhost:3333\nVerifique se o servidor backend está ativo!');
+            }
+        })();
+    </script>
+</body>
+</html>
