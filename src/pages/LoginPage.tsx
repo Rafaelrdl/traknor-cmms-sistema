@@ -5,19 +5,19 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
-import { usersStore } from '@/data/usersStore';
-import { credentialsStore } from '@/data/credentialsStore';
-// Importar inicialização dos stores
+import { useAuth } from '@/hooks/useApiData';
+// Importar inicialização dos stores para compatibilidade
 import '@/data/initializeStores';
 
 export function LoginPage() {
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    email: 'admin@traknor.com',  // Pre-filled with demo credentials
+    password: 'admin123'
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{email?: string; password?: string}>({});
+  
+  const { login, loading: isLoading } = useAuth();
 
   const validateForm = () => {
     const newErrors: {email?: string; password?: string} = {};
@@ -45,47 +45,25 @@ export function LoginPage() {
       return;
     }
 
-    setIsLoading(true);
-    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const success = await login(formData.email, formData.password);
       
-      // Validar credenciais usando o credentialsStore
-      const isValidCredentials = credentialsStore.validateCredentials(formData.email, formData.password);
-      
-      if (isValidCredentials) {
-        // Buscar dados do usuário no usersStore
-        const user = usersStore.getUserByEmail(formData.email);
+      if (success) {
+        // Dispara evento customizado para notificar mudança na autenticação
+        window.dispatchEvent(new Event('authChange'));
         
-        if (user && user.status === 'active') {
-          localStorage.setItem('auth:role', user.role);
-          localStorage.setItem('auth:user', JSON.stringify({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role
-          }));
-          
-          // Dispara evento customizado para notificar mudança na autenticação
-          window.dispatchEvent(new Event('authChange'));
-          
-          toast.success('Login realizado com sucesso!');
-          
-          // Forçar redirecionamento com window.location para garantir a navegação
-          setTimeout(() => {
-            window.location.href = '/';
-          }, 300);
-        } else {
-          toast.error('Usuário não encontrado ou inativo');
-        }
+        toast.success('Login realizado com sucesso!');
+        
+        // Forçar redirecionamento com window.location para garantir a navegação
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 300);
       } else {
         toast.error('E-mail ou senha incorretos');
       }
-    } catch {
+    } catch (error) {
+      console.error('Login error:', error);
       toast.error('Erro ao fazer login. Tente novamente.');
-    } finally {
-      setIsLoading(false);
     }
   };
 

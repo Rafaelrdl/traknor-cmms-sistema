@@ -1,53 +1,97 @@
+// Import API hooks instead of mock data
+import { 
+  useCompanies as useApiCompanies,
+  useUsers as useApiUsers,
+  useEquipment as useApiEquipment,
+  useWorkOrders as useApiWorkOrders,
+  useMaintenancePlans as useApiMaintenancePlans,
+  useSectors,
+  useSubSections,
+  useStock
+} from './useApiData';
+
 import type { 
   User, 
   Company, 
-  Sector, 
-  SubSection,
   Equipment, 
   WorkOrder, 
-  MaintenancePlan, 
-  StockItem,
   DashboardKPIs 
 } from '@/types';
+
 import { 
-  MOCK_COMPANIES,
-  MOCK_SECTORS,
-  MOCK_SUBSECTIONS,
-  MOCK_EQUIPMENT,
-  MOCK_WORK_ORDERS,
-  MOCK_MAINTENANCE_PLANS,
-  MOCK_STOCK_ITEMS,
   MOCK_DASHBOARD_KPIS,
   MOCK_CHART_DATA
 } from '@/data/mockData';
 
-// Hooks retornando arrays tipados para compatibilidade
-export const useCompanies = (): [Company[], () => void] => {
-  return [MOCK_COMPANIES, () => {}];
+// Re-export API hooks with the same interface for compatibility
+export const useCompanies = useApiCompanies;
+export const useUsers = useApiUsers;  
+export const useEquipment = useApiEquipment;
+export const useWorkOrders = useApiWorkOrders;
+export const useMaintenancePlans = useApiMaintenancePlans;
+
+// These still use mock data until API endpoints are available
+export { useSectors, useSubSections, useStock };
+
+export const useDashboardKPIs = (): [DashboardKPIs, () => void, boolean] => {
+  return [MOCK_DASHBOARD_KPIS, () => {}, false];
 };
 
-export const useSectors = (): [Sector[], () => void] => {
-  return [MOCK_SECTORS, () => {}];
+export const useUser = (): [User, () => void, boolean] => {
+  const userData: User = {
+    id: 'user-1',
+    name: 'Admin User',
+    email: 'admin@traknor.com',
+    role: 'ADMIN',
+    department: 'TI'
+  };
+  return [userData, () => {}, false];
 };
 
-export const useSubSections = (): [SubSection[], () => void] => {
-  return [MOCK_SUBSECTIONS, () => {}];
+export const useChartData = (): [typeof MOCK_CHART_DATA, () => void, boolean] => {
+  return [MOCK_CHART_DATA, () => {}, false];
 };
 
-export const useEquipment = (): [Equipment[], () => void] => {
-  return [MOCK_EQUIPMENT, () => {}];
+// Individual item getters - for now using API data where available
+export const getCompanyById = async (_id: string): Promise<Company | undefined> => {
+  // This would use API in real implementation
+  return undefined;
 };
 
-export const useWorkOrders = (): [WorkOrder[], () => void] => {
-  return [MOCK_WORK_ORDERS, () => {}];
+export const getSectorById = (_id: string) => {
+  // This would use API in real implementation  
+  return undefined;
 };
 
-export const useMaintenancePlans = (): [MaintenancePlan[], () => void] => {
-  return [MOCK_MAINTENANCE_PLANS, () => {}];
+export const getEquipmentById = async (_id: string): Promise<Equipment | undefined> => {
+  // This would use API in real implementation
+  return undefined;
 };
 
-export const useStock = (): [StockItem[], () => void] => {
-  return [MOCK_STOCK_ITEMS, () => {}];
+export const getWorkOrderById = async (_id: string): Promise<WorkOrder | undefined> => {
+  // This would use API in real implementation
+  return undefined;
+};
+
+// Individual item getters - for now using API data where available
+export const getCompanyById = async (id: string): Promise<Company | undefined> => {
+  // This would use API in real implementation
+  return undefined;
+};
+
+export const getSectorById = (id: string) => {
+  // This would use API in real implementation  
+  return undefined;
+};
+
+export const getEquipmentById = async (id: string): Promise<Equipment | undefined> => {
+  // This would use API in real implementation
+  return undefined;
+};
+
+export const getWorkOrderById = async (id: string): Promise<WorkOrder | undefined> => {
+  // This would use API in real implementation
+  return undefined;
 };
 
 export const useDashboardKPIs = (): [DashboardKPIs, () => void] => {
