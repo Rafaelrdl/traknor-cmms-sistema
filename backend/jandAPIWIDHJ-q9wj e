@@ -1,0 +1,22 @@
+        tablename        
+-------------------------
+ _prisma_migrations
+ companies
+ sectors
+ sub_sections
+ equipment
+ maintenance_plans
+ users
+ plan_equipment
+ work_orders
+ work_order_equipment
+ work_order_attachments
+ stock_items
+ stock_movements
+ stock_requisitions
+ stock_requisition_items
+ invites
+ solicitations
+ solicitation_items
+(18 rows)
+
