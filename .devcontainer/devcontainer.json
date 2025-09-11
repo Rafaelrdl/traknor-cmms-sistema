@@ -1,5 +1,5 @@
 {
-  "name": "TrakNor CMMS (Backend + PostgreSQL)",
+  "name": "TrakNor CMMS",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
   "hostRequirements": {
     "storage": "32gb",
