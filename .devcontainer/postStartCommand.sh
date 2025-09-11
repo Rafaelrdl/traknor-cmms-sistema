@@ -8,7 +8,7 @@ sudo cp .devcontainer/spark.conf /etc/supervisor/conf.d/
 cd /tmp/spark
 bash spark-sdk-dist/repair.sh
 LATEST_RELEASE="$LATEST_RELEASE" WORKSPACE_DIR="$WORKSPACE_DIR" bash /tmp/spark/spark-sdk-dist/install-tools.sh services
-cd /workspaces/spark-template
+cd /workspaces/traknor-cmms-sistema
 
 sudo chown node /var/run/
 sudo chown -R node /var/log/
@@ -25,7 +25,7 @@ fi
 
 cd /tmp/spark
 LATEST_RELEASE="$LATEST_RELEASE" WORKSPACE_DIR="$WORKSPACE_DIR" bash /tmp/spark/spark-sdk-dist/install-tools.sh sdk
-cd /workspaces/spark-template
+cd /workspaces/traknor-cmms-sistema
 
 # Keep reflog commits "forever"
 git config gc.reflogExpire 500.years.ago
@@ -39,4 +39,4 @@ ln -fs /usr/local/bin/post-commit .git/hooks/post-commit
 
 cd /tmp/spark
 LATEST_RELEASE="$LATEST_RELEASE" WORKSPACE_DIR="$WORKSPACE_DIR" bash /tmp/spark/spark-sdk-dist/install-tools.sh cli
-cd /workspaces/spark-template
+cd /workspaces/traknor-cmms-sistema
