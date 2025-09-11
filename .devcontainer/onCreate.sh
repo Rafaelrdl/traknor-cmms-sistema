@@ -2,6 +2,9 @@
 
 set -e
 
+# Definir explicitamente o diretório de trabalho
+WORKSPACE_DIR="/workspaces/traknor-cmms-sistema"
+
 echo "Installing the GitHub CLI"
 (type -p wget >/dev/null || (sudo apt update && sudo apt-get install wget -y)) \
   && sudo mkdir -p -m 755 /etc/apt/keyrings \
@@ -24,34 +27,26 @@ sudo rm -rf "$azcopy_dir"
 echo "Installing sdk"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WORKSPACE_DIR="/workspaces/traknor-cmms-sistema"
-
-# Ensure /tmp/spark directory exists
 mkdir -p /tmp/spark
-
-# Check if refreshTools.sh script exists and is executable
-if [ -f "$SCRIPT_DIR/refreshTools.sh" ] && [ -x "$SCRIPT_DIR/refreshTools.sh" ]; then
-    LATEST_RELEASE=$(bash "$SCRIPT_DIR/refreshTools.sh")
-    
-    # Check if spark-sdk-dist directory exists
-    if [ -d "/tmp/spark/spark-sdk-dist" ] && [ -f "/tmp/spark/spark-sdk-dist/install-tools.sh" ]; then
-        cd /tmp/spark
-        LATEST_RELEASE="$LATEST_RELEASE" WORKSPACE_DIR="$WORKSPACE_DIR" bash spark-sdk-dist/install-tools.sh
-    else
-        echo "Warning: spark-sdk-dist directory or install-tools.sh not found in /tmp/spark"
-    fi
+LATEST_RELEASE=$(bash "$SCRIPT_DIR/refreshTools.sh")
+if [ -d "/tmp/spark/spark-sdk-dist" ]; then
+    cd /tmp/spark
+    LATEST_RELEASE="$LATEST_RELEASE" WORKSPACE_DIR="$WORKSPACE_DIR" bash spark-sdk-dist/install-tools.sh
 else
-    echo "Warning: refreshTools.sh script not found or not executable"
+    echo "Warning: /tmp/spark/spark-sdk-dist directory not found"
 fi
 
 cd "$WORKSPACE_DIR"
 echo "Pre-starting the server and generating the optimized assets"
-# Check if package.json exists and has the optimize script
-if [ -f "package.json" ] && grep -q "\"optimize\"" package.json; then
-    npm run optimize --override
+if [ -f "package.json" ]; then
+    if grep -q "\"optimize\"" package.json; then
+        npm run optimize --override
+    else
+        echo "optimize script not found in package.json, running npm install instead"
+        npm install
+    fi
 else
-    echo "Warning: package.json not found or optimize script not defined"
-    # Fallback to npm install if optimize script doesn't exist
+    echo "package.json not found"
     npm install
 fi
 

@@ -2,10 +2,10 @@
 
 set -e
 
+# Corrigir o caminho para o diretório de trabalho correto
 WORKSPACE_DIR="/workspaces/traknor-cmms-sistema"
 LATEST_RELEASE=$(curl -s https://api.github.com/repos/github/spark-template/releases/latest)
 RELEASE_ID=$(echo "$LATEST_RELEASE" | jq -r '.id')
-
 
 TEMP_DIR=/tmp/spark
 rm -rf $TEMP_DIR
