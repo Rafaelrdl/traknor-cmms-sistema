@@ -1,30 +1,42 @@
 #!/bin/bash
-set -euo pipefail
 
-WS="$(pwd)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LATEST_RELEASE=$(bash "$SCRIPT_DIR/refreshTools.sh")
 
-sudo cp "$SCRIPT_DIR/spark.conf" /etc/supervisor/conf.d/
+sudo cp .devcontainer/spark.conf /etc/supervisor/conf.d/
 
-# Só roda scripts do spark-sdk se existirem
-if [ -d /tmp/spark/spark-sdk-dist ]; then
-  (cd /tmp/spark && bash spark-sdk-dist/repair.sh || true)
-  (cd /tmp/spark && WORKSPACE_DIR="$WS" bash /tmp/spark/spark-sdk-dist/install-tools.sh services || true)
-  (cd /tmp/spark && WORKSPACE_DIR="$WS" bash /tmp/spark/spark-sdk-dist/install-tools.sh sdk || true)
-  (cd /tmp/spark && WORKSPACE_DIR="$WS" bash /tmp/spark/spark-sdk-dist/install-tools.sh cli || true)
+cd /tmp/spark
+bash spark-sdk-dist/repair.sh
+LATEST_RELEASE="$LATEST_RELEASE" WORKSPACE_DIR="$WORKSPACE_DIR" bash /tmp/spark/spark-sdk-dist/install-tools.sh services
+cd /workspaces/spark-template
+
+sudo chown node /var/run/
+sudo chown -R node /var/log/
+
+supervisord
+supervisorctl reread
+supervisorctl update
+
+# Check if SNAPSHOT_SAS_URL was passed, if so run hydrate.sh
+if [ -n "$SNAPSHOT_SAS_URL" ]; then
+    WORKSPACE_DIR="/workspaces/spark-template"
+    SAS_URI="$SNAPSHOT_SAS_URL" /usr/local/bin/hydrate.sh $WORKSPACE_DIR
 fi
 
-sudo chown node /var/run/ || true
-sudo chown -R node /var/log/ || true
+cd /tmp/spark
+LATEST_RELEASE="$LATEST_RELEASE" WORKSPACE_DIR="$WORKSPACE_DIR" bash /tmp/spark/spark-sdk-dist/install-tools.sh sdk
+cd /workspaces/spark-template
 
-pgrep supervisord >/dev/null 2>&1 || (supervisord || true)
-supervisorctl reread || true
-supervisorctl update || true
+# Keep reflog commits "forever"
+git config gc.reflogExpire 500.years.ago
+git config gc.reflogExpireUnreachable 500.years.ago
 
-# Snapshot opcional
-if [ -n "${SNAPSHOT_SAS_URL:-}" ]; then
-  WORKSPACE_DIR="$WS" SAS_URI="$SNAPSHOT_SAS_URL" /usr/local/bin/hydrate.sh "$WS" || true
-fi
 
-# Build estático opcional
-[ -x /usr/local/bin/static-preview-build.sh ] && /usr/local/bin/static-preview-build.sh || true
+
+# Set up post-commit hook and also run the build script to perform a one-time build for static preview
+ln -fs /usr/local/bin/post-commit .git/hooks/post-commit
+/usr/local/bin/static-preview-build.sh
+
+cd /tmp/spark
+LATEST_RELEASE="$LATEST_RELEASE" WORKSPACE_DIR="$WORKSPACE_DIR" bash /tmp/spark/spark-sdk-dist/install-tools.sh cli
+cd /workspaces/spark-template
