@@ -19,7 +19,7 @@ supervisorctl update
 
 # Check if SNAPSHOT_SAS_URL was passed, if so run hydrate.sh
 if [ -n "$SNAPSHOT_SAS_URL" ]; then
-    WORKSPACE_DIR="/workspaces/spark-template"
+    WORKSPACE_DIR="/workspaces/traknor-cmms-sistema
     SAS_URI="$SNAPSHOT_SAS_URL" /usr/local/bin/hydrate.sh $WORKSPACE_DIR
 fi
 
