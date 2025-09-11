@@ -24,13 +24,36 @@ sudo rm -rf "$azcopy_dir"
 echo "Installing sdk"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LATEST_RELEASE=$(bash "$SCRIPT_DIR/refreshTools.sh")
-cd /tmp/spark
-LATEST_RELEASE="$LATEST_RELEASE" WORKSPACE_DIR="$WORKSPACE_DIR" bash spark-sdk-dist/install-tools.sh
+WORKSPACE_DIR="/workspaces/traknor-cmms-sistema"
 
-cd /workspaces/traknor-cmms-sistema
+# Ensure /tmp/spark directory exists
+mkdir -p /tmp/spark
+
+# Check if refreshTools.sh script exists and is executable
+if [ -f "$SCRIPT_DIR/refreshTools.sh" ] && [ -x "$SCRIPT_DIR/refreshTools.sh" ]; then
+    LATEST_RELEASE=$(bash "$SCRIPT_DIR/refreshTools.sh")
+    
+    # Check if spark-sdk-dist directory exists
+    if [ -d "/tmp/spark/spark-sdk-dist" ] && [ -f "/tmp/spark/spark-sdk-dist/install-tools.sh" ]; then
+        cd /tmp/spark
+        LATEST_RELEASE="$LATEST_RELEASE" WORKSPACE_DIR="$WORKSPACE_DIR" bash spark-sdk-dist/install-tools.sh
+    else
+        echo "Warning: spark-sdk-dist directory or install-tools.sh not found in /tmp/spark"
+    fi
+else
+    echo "Warning: refreshTools.sh script not found or not executable"
+fi
+
+cd "$WORKSPACE_DIR"
 echo "Pre-starting the server and generating the optimized assets"
-npm run optimize --override
+# Check if package.json exists and has the optimize script
+if [ -f "package.json" ] && grep -q "\"optimize\"" package.json; then
+    npm run optimize --override
+else
+    echo "Warning: package.json not found or optimize script not defined"
+    # Fallback to npm install if optimize script doesn't exist
+    npm install
+fi
 
 echo "Installing supervisor"
 sudo apt-get update && sudo apt-get install -y supervisor
