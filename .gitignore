@@ -23,8 +23,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-.devcontainer/devcontainer.json
-.devcontainer/spark.conf
+
 
 .env
 **/agent-eval-report*
