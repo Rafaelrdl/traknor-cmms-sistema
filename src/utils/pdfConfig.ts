@@ -38,7 +38,7 @@ export function configurePDFWorkerWithFallback() {
   ];
   
   // Try to set the primary URL
-  let selectedUrl = workerUrls[0];
+  const selectedUrl = workerUrls[0];
   pdfjs.GlobalWorkerOptions.workerSrc = selectedUrl;
   
   console.log(`PDF.js worker initially configured with: ${selectedUrl}`);
@@ -66,7 +66,7 @@ async function testWorkerUrls(urls: string[]): Promise<string | null> {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
       
-      const response = await fetch(url, { 
+      await fetch(url, { 
         method: 'HEAD',
         signal: controller.signal,
         mode: 'no-cors' // Avoid CORS issues

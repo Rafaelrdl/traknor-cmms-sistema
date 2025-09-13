@@ -20,7 +20,7 @@ export function calculateNextExecutionDate(startDate: string, frequency: Mainten
     return startDate;
   }
   
-  let nextDate = new Date(start);
+  const nextDate = new Date(start);
   
   // Calculate the next occurrence based on frequency
   switch (frequency) {
