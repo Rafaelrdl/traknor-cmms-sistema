@@ -6,9 +6,9 @@
     "memory": "8gb",
     "cpus": 4
   },
-  "//": "Runs automatically after Prebuild Template environment is created.",
+  // Runs automatically after Prebuild Template environment is created.
   "onCreateCommand": "bash .devcontainer/onCreate.sh",
-  "//2": "Runs automatically every time the dev container has been (re-)started",
+  // Runs automatically every time the dev container has been (re-)started.
   "postStartCommand": "bash .devcontainer/postStartCommand.sh",
   "customizations": {
     "codespaces": {
