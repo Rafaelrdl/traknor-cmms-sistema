@@ -6,7 +6,7 @@ echo "=== Starting onCreate.sh script for Alpine Linux ==="
 
 echo "Installing basic tools and GitHub CLI"
 sudo apk update
-sudo apk add --no-cache wget curl git bash github-cli ripgrep fd-find
+sudo apk add --no-cache wget curl git bash github-cli ripgrep fd
 echo "GitHub CLI installation completed"
 
 echo "Installing azcopy"
@@ -39,7 +39,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LATEST_RELEASE=$(bash "$SCRIPT_DIR/refreshTools.sh")
 if [ -d "/tmp/spark" ]; then
     cd /tmp/spark
-    LATEST_RELEASE="$LATEST_RELEASE" WORKSPACE_DIR="$WORKSPACE_DIR" bash spark-sdk-dist/install-tools.sh
+    # Set npm to use sudo for global installations in Alpine
+    sudo LATEST_RELEASE="$LATEST_RELEASE" WORKSPACE_DIR="$WORKSPACE_DIR" bash spark-sdk-dist/install-tools.sh || {
+        echo "WARNING: SDK installation failed, continuing..."
+    }
 else
     echo "WARNING: /tmp/spark directory not found, skipping SDK installation"
 fi
@@ -55,7 +58,11 @@ echo "npm dependencies installed successfully"
 
 echo "Pre-starting the server and generating the optimized assets"
 if [ -f "node_modules/.bin/vite" ]; then
-    npm run optimize --override
+    # Fix permissions for spark package
+    sudo chmod -R 755 node_modules/@github/spark/ 2>/dev/null || true
+    npm run optimize 2>/dev/null || {
+        echo "WARNING: Asset optimization failed, but continuing..."
+    }
     echo "Asset optimization completed"
 else
     echo "WARNING: Vite not found, skipping optimization"
