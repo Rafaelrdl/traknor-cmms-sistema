@@ -1,4 +1,7 @@
 /* Structural CSS file - do not edit directly */
+/* Import Tailwind CSS and application styles */
+@import "./index.css";
+
 /* Import Spark styles */
 @import "@github/spark/designer-styles.css";
 
