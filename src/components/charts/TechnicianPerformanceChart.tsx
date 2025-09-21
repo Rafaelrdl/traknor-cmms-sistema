@@ -7,6 +7,9 @@ export function TechnicianPerformanceChart() {
   const [chartData] = useChartData();
   const technicianData = chartData?.technicianPerformance || [];
 
+  // Debug: verificar os dados
+  console.log('Technician Performance Data:', technicianData);
+
   // Calculate max value for scaling bars
   const maxValue = technicianData.reduce((max, tech) => {
     const total = tech.preventive + tech.corrective + tech.request;
@@ -60,43 +63,58 @@ export function TechnicianPerformanceChart() {
               const requestWidth = maxValue > 0 ? (tech.request / maxValue) * 100 : 0;
               
               return (
-                <div key={tech.name} className="space-y-2 group">
+                <div key={tech.name} className="space-y-2 performance-chart-row">
                   {/* Technician name and total */}
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-foreground truncate transition-colors group-hover:text-primary">
+                    <span className="text-sm font-medium text-foreground truncate transition-colors hover:text-primary">
                       {tech.name}
                     </span>
-                    <span className="text-xs text-muted-foreground font-medium ml-2 transition-colors group-hover:text-foreground">
+                    <span className="text-xs text-muted-foreground font-medium ml-2 transition-colors hover:text-foreground">
                       {total}
                     </span>
                   </div>
                   
                   {/* Stacked horizontal bar */}
                   <div 
-                    className="relative h-6 bg-muted/30 rounded-md overflow-hidden group cursor-pointer"
+                    className="relative h-6 bg-muted/30 rounded-md overflow-visible cursor-pointer"
                     role="progressbar" 
                     aria-label={`${tech.name}: ${total} ordens de serviço total`}
                     tabIndex={0}
                   >
                     {/* Hover tooltip */}
-                    <div className="invisible group-hover:visible absolute -top-16 left-1/2 transform -translate-x-1/2 bg-popover text-popover-foreground px-3 py-2 rounded-lg shadow-lg border text-xs whitespace-nowrap z-20">
-                      <div className="font-medium mb-1">{tech.name}</div>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded" style={{ backgroundColor: '#00968f' }}></div>
-                          <span>Preventiva: {tech.preventive}</span>
+                    <div className="chart-tooltip absolute -top-24 left-1/2 transform -translate-x-1/2 bg-popover text-popover-foreground px-4 py-3 rounded-lg shadow-xl border text-xs whitespace-nowrap z-50 min-w-max pointer-events-none">
+                      <div className="font-semibold mb-2 text-center border-b border-border pb-1 text-sm">{tech.name}</div>
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between gap-4 min-w-0">
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: '#00968f' }}></div>
+                            <span className="text-xs">Preventiva:</span>
+                          </div>
+                          <span className="font-semibold text-xs">{tech.preventive}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded" style={{ backgroundColor: '#ffbe0b' }}></div>
-                          <span>Corretiva: {tech.corrective}</span>
+                        <div className="flex items-center justify-between gap-4 min-w-0">
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: '#ffbe0b' }}></div>
+                            <span className="text-xs">Corretiva:</span>
+                          </div>
+                          <span className="font-semibold text-xs">{tech.corrective}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded" style={{ backgroundColor: '#715aff' }}></div>
-                          <span>Solicitação: {tech.request}</span>
+                        <div className="flex items-center justify-between gap-4 min-w-0">
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: '#715aff' }}></div>
+                            <span className="text-xs">Solicitação:</span>
+                          </div>
+                          <span className="font-semibold text-xs">{tech.request}</span>
+                        </div>
+                        <div className="border-t border-border pt-1.5 mt-2">
+                          <div className="flex items-center justify-between gap-4 font-semibold">
+                            <span className="text-xs text-muted-foreground">Total:</span>
+                            <span className="text-xs text-foreground">{total}</span>
+                          </div>
                         </div>
                       </div>
                       {/* Arrow */}
-                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-popover"></div>
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-6 border-transparent border-t-popover drop-shadow-sm"></div>
                     </div>
 
                     {/* Preventive segment */}
