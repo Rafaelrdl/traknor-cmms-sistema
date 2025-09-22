@@ -82,39 +82,39 @@ export function TechnicianPerformanceChart() {
                     tabIndex={0}
                   >
                     {/* Hover tooltip */}
-                    <div className="chart-tooltip absolute -top-24 left-1/2 transform -translate-x-1/2 bg-popover text-popover-foreground px-4 py-3 rounded-lg shadow-xl border text-xs whitespace-nowrap z-50 min-w-max pointer-events-none">
-                      <div className="font-semibold mb-2 text-center border-b border-border pb-1 text-sm">{tech.name}</div>
+                    <div className="chart-tooltip absolute -top-24 left-1/2 transform -translate-x-1/2 bg-white text-gray-900 px-4 py-3 rounded-lg shadow-xl border border-gray-200 text-xs whitespace-nowrap z-50 min-w-max pointer-events-none">
+                      <div className="font-semibold mb-2 text-center border-b border-gray-200 pb-1 text-sm text-gray-900">{tech.name}</div>
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between gap-4 min-w-0">
                           <div className="flex items-center gap-2 flex-shrink-0">
                             <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: '#00968f' }}></div>
-                            <span className="text-xs">Preventiva:</span>
+                            <span className="text-xs text-gray-700">Preventiva:</span>
                           </div>
-                          <span className="font-semibold text-xs">{tech.preventive}</span>
+                          <span className="font-semibold text-xs text-gray-900">{tech.preventive}</span>
                         </div>
                         <div className="flex items-center justify-between gap-4 min-w-0">
                           <div className="flex items-center gap-2 flex-shrink-0">
                             <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: '#ffbe0b' }}></div>
-                            <span className="text-xs">Corretiva:</span>
+                            <span className="text-xs text-gray-700">Corretiva:</span>
                           </div>
-                          <span className="font-semibold text-xs">{tech.corrective}</span>
+                          <span className="font-semibold text-xs text-gray-900">{tech.corrective}</span>
                         </div>
                         <div className="flex items-center justify-between gap-4 min-w-0">
                           <div className="flex items-center gap-2 flex-shrink-0">
                             <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: '#715aff' }}></div>
-                            <span className="text-xs">Solicitação:</span>
+                            <span className="text-xs text-gray-700">Solicitação:</span>
                           </div>
-                          <span className="font-semibold text-xs">{tech.request}</span>
+                          <span className="font-semibold text-xs text-gray-900">{tech.request}</span>
                         </div>
-                        <div className="border-t border-border pt-1.5 mt-2">
+                        <div className="border-t border-gray-200 pt-1.5 mt-2">
                           <div className="flex items-center justify-between gap-4 font-semibold">
-                            <span className="text-xs text-muted-foreground">Total:</span>
-                            <span className="text-xs text-foreground">{total}</span>
+                            <span className="text-xs text-gray-600">Total:</span>
+                            <span className="text-xs text-gray-900">{total}</span>
                           </div>
                         </div>
                       </div>
                       {/* Arrow */}
-                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-6 border-transparent border-t-popover drop-shadow-sm"></div>
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-6 border-transparent border-t-white drop-shadow-sm"></div>
                     </div>
 
                     {/* Preventive segment */}
