@@ -91,13 +91,13 @@ body {
 
   /* Chart hover effects */
   .chart-tooltip {
-    @apply absolute bg-popover text-popover-foreground px-3 py-2 rounded-lg shadow-lg border text-xs whitespace-nowrap;
+    @apply absolute px-3 py-2 rounded-lg shadow-lg border text-xs whitespace-nowrap;
     @apply invisible transition-all duration-200;
     z-index: 9999 !important;
     min-width: max-content;
-    background: hsl(var(--popover)) !important;
-    color: hsl(var(--popover-foreground)) !important;
-    border: 1px solid hsl(var(--border)) !important;
+    background: #ffffff !important;
+    color: #1f2937 !important;
+    border: 1px solid #e5e7eb !important;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
   }
 
@@ -106,7 +106,7 @@ body {
     @apply absolute top-full left-1/2 transform -translate-x-1/2;
     border-width: 6px;
     border-style: solid;
-    border-color: hsl(var(--popover)) transparent transparent transparent;
+    border-color: #ffffff transparent transparent transparent;
   }
 
   .chart-segment {
