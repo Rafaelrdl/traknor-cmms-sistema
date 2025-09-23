@@ -1,3 +1,4 @@
+// Importações dos componentes de UI e ícones
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,14 +7,21 @@ import { useLocation as useLocationContext } from '@/contexts/LocationContext';
 import { IfCan, IfCanCreate, IfCanEdit } from '@/components/auth/IfCan';
 import type { Company, Sector, SubSection } from '@/types';
 
+// Interface para as props do componente
 interface LocationDetailsProps {
-  onEdit: () => void;
-  onCreateAsset: () => void;
+  onEdit: () => void;        // Função para editar a localização selecionada
+  onCreateAsset: () => void; // Função para criar um novo ativo
 }
 
+/**
+ * Componente que exibe os detalhes da localização selecionada no menu
+ * Mostra informações diferentes dependendo do tipo (empresa, setor, subsetor)
+ */
 export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps) {
+  // Obtém o nó selecionado do contexto de localização
   const { selectedNode } = useLocationContext();
 
+  // Estado vazio: quando nenhuma localização foi selecionada
   if (!selectedNode) {
     return (
       <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -26,17 +34,23 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
     );
   }
 
+  /**
+   * Retorna o ícone apropriado para o tipo de localização
+   */
   const getIcon = () => {
     switch (selectedNode.type) {
       case 'company':
-        return <Building2 className="h-5 w-5" />;
+        return <Building2 className="h-5 w-5" />; // Ícone de empresa
       case 'sector':
-        return <MapPin className="h-5 w-5" />;
+        return <MapPin className="h-5 w-5" />;    // Ícone de setor
       case 'subsection':
-        return <Users className="h-5 w-5" />;
+        return <Users className="h-5 w-5" />;     // Ícone de subsetor
     }
   };
 
+  /**
+   * Retorna o rótulo em português para o tipo de localização
+   */
   const getTypeLabel = () => {
     switch (selectedNode.type) {
       case 'company':
@@ -48,9 +62,15 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
     }
   };
 
+  /**
+   * Renderiza os detalhes específicos para uma empresa
+   * Exibe informações em 4 cartões: Gerais, Contato, Endereço e Dados Operacionais
+   * @param company - Dados da empresa
+   */
   const renderCompanyDetails = (company: Company) => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+        {/* Cartão 1: Informações Gerais */}
         <Card className="location-card">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Informações Gerais</CardTitle>
@@ -148,9 +168,15 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
     </div>
   );
 
+  /**
+   * Renderiza os detalhes específicos para um setor
+   * Exibe informações em 2 cartões: Contato e Dados Operacionais
+   * @param sector - Dados do setor
+   */
   const renderSectorDetails = (sector: Sector) => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+        {/* Cartão 1: Informações de Contato */}
         <Card className="location-card">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Informações de Contato</CardTitle>
@@ -202,9 +228,15 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
     </div>
   );
 
+  /**
+   * Renderiza os detalhes específicos para uma subseção
+   * Exibe informações em 2 cartões: Contato e Dados Operacionais
+   * @param subSection - Dados da subseção
+   */
   const renderSubSectionDetails = (subSection: SubSection) => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+        {/* Cartão 1: Informações de Contato */}
         <Card className="location-card">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Informações de Contato</CardTitle>
@@ -258,7 +290,7 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Cabeçalho com título e botões de ação */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           {getIcon()}
@@ -271,7 +303,7 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
         </div>
         
         <div className="flex items-center gap-2">
-          {/* + Ativo button - Hide when company is selected */}
+          {/* Botão + Ativo - Oculto quando empresa está selecionada */}
           {selectedNode.type !== 'company' && (
             <IfCanCreate subject="asset">
               <Button 
@@ -286,7 +318,7 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
             </IfCanCreate>
           )}
           
-          {/* Editar button */}
+          {/* Botão Editar localização */}
           <IfCanEdit subject="asset">
             <Button 
               variant="outline" 
@@ -302,7 +334,7 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
         </div>
       </div>
 
-      {/* Content */}
+      {/* Conteúdo específico baseado no tipo de localização selecionada */}
       {selectedNode.type === 'company' && renderCompanyDetails(selectedNode.data as Company)}
       {selectedNode.type === 'sector' && renderSectorDetails(selectedNode.data as Sector)}
       {selectedNode.type === 'subsection' && renderSubSectionDetails(selectedNode.data as SubSection)}

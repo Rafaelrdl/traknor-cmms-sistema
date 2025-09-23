@@ -1,3 +1,4 @@
+// Importações dos componentes de UI e hooks necessários
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -9,14 +10,19 @@ import { useCompanies, useSectors, useSubSections } from '@/hooks/useDataTemp';
 import { useLocation as useLocationContext } from '@/contexts/LocationContext';
 import type { Company, Sector, SubSection } from '@/types';
 
+// Interface para as props do modal
 interface LocationFormModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  mode: 'create' | 'edit';
-  type: 'company' | 'sector' | 'subsection';
-  initialData?: Company | Sector | SubSection;
+  isOpen: boolean;                                    // Controla se o modal está aberto
+  onClose: () => void;                               // Função para fechar o modal
+  mode: 'create' | 'edit';                          // Modo: criar ou editar
+  type: 'company' | 'sector' | 'subsection';        // Tipo de localização
+  initialData?: Company | Sector | SubSection;       // Dados iniciais para edição
 }
 
+/**
+ * Modal para criar ou editar localizações (empresas, setores, subsetores)
+ * Apresenta formulários diferentes baseados no tipo de localização
+ */
 export function LocationFormModal({ 
   isOpen, 
   onClose, 
@@ -24,62 +30,67 @@ export function LocationFormModal({
   type, 
   initialData 
 }: LocationFormModalProps) {
+  // Hooks para gerenciar os dados de empresas, setores e subseções
   const [companies, setCompanies] = useCompanies();
   const [sectors, setSectors] = useSectors();
   const [subSections, setSubSections] = useSubSections();
   const { selectedNode, setSelectedNode } = useLocationContext();
 
-  // Company form state
+  // Estado do formulário para empresas
   const [companyForm, setCompanyForm] = useState<Partial<Company>>({
     name: '',
     segment: '',
     cnpj: '',
     address: {
-      zip: '',
-      city: '',
-      state: '',
-      fullAddress: ''
+      zip: '',         // CEP
+      city: '',        // Cidade
+      state: '',       // Estado
+      fullAddress: ''  // Endereço completo
     },
-    responsible: '',
-    role: '',
-    phone: '',
-    email: '',
-    totalArea: 0,
-    occupants: 0,
-    hvacUnits: 0,
-    notes: ''
+    responsible: '',   // Responsável
+    role: '',         // Cargo do responsável
+    phone: '',        // Telefone
+    email: '',        // Email
+    totalArea: 0,     // Área total em m²
+    occupants: 0,     // Número de ocupantes
+    hvacUnits: 0,     // Unidades HVAC
+    notes: ''         // Observações
   });
 
-  // Sector form state
+  // Estado do formulário para setores
   const [sectorForm, setSectorForm] = useState<Partial<Sector>>({
-    name: '',
-    companyId: 'no-company',
-    responsible: '',
-    phone: '',
-    email: '',
-    area: 0,
-    occupants: 0,
-    hvacUnits: 0,
-    notes: ''
+    name: '',                    // Nome do setor
+    companyId: 'no-company',     // ID da empresa (inicialmente vazio)
+    responsible: '',             // Responsável
+    phone: '',                   // Telefone
+    email: '',                   // Email
+    area: 0,                     // Área em m²
+    occupants: 0,               // Número de ocupantes
+    hvacUnits: 0,               // Unidades HVAC
+    notes: ''                   // Observações
   });
 
-  // Sub-section form state
+  // Estado do formulário para subseções
   const [subSectionForm, setSubSectionForm] = useState<Partial<SubSection>>({
-    name: '',
-    sectorId: 'no-sector',
-    responsible: '',
-    phone: '',
-    email: '',
-    area: 0,
-    occupants: 0,
-    hvacUnits: 0,
-    notes: ''
+    name: '',                   // Nome da subseção
+    sectorId: 'no-sector',      // ID do setor (inicialmente vazio)
+    responsible: '',            // Responsável
+    phone: '',                  // Telefone
+    email: '',                  // Email
+    area: 0,                    // Área em m²
+    occupants: 0,              // Número de ocupantes
+    hvacUnits: 0,              // Unidades HVAC
+    notes: ''                  // Observações
   });
 
-  // Initialize form data when modal opens
+  /**
+   * Efeito para inicializar os dados do formulário quando o modal abre
+   * Carrega dados para edição ou limpa para criação
+   */
   useEffect(() => {
     if (isOpen) {
       if (mode === 'edit' && initialData) {
+        // Modo edição: carrega dados existentes
         if (type === 'company') {
           setCompanyForm(initialData as Company);
         } else if (type === 'sector') {
@@ -88,7 +99,7 @@ export function LocationFormModal({
           setSubSectionForm(initialData as SubSection);
         }
       } else {
-        // Reset forms for create mode
+        // Modo criação: reseta formulários
         setCompanyForm({
           name: '',
           segment: '',
@@ -129,8 +140,13 @@ export function LocationFormModal({
     }
   }, [isOpen, mode, type, initialData]);
 
+  /**
+   * Função para processar o envio do formulário
+   * Valida os dados e salva/atualiza a localização conforme o tipo e modo
+   */
   const handleSubmit = () => {
     if (type === 'company') {
+      // Criação/edição de empresa
       const newCompany: Company = {
         ...(companyForm as Omit<Company, 'id'>),
         id: mode === 'edit' ? (initialData as Company).id : Date.now().toString(),
@@ -138,58 +154,75 @@ export function LocationFormModal({
       };
 
       if (mode === 'edit') {
+        // Atualiza empresa existente na lista
         setCompanies((current) => current?.map(c => c.id === newCompany.id ? newCompany : c) || [newCompany]);
+        // Atualiza nó selecionado se for o mesmo
         if (selectedNode?.id === newCompany.id) {
           setSelectedNode({ ...selectedNode, data: newCompany });
         }
       } else {
+        // Adiciona nova empresa à lista
         setCompanies((current) => [...(current || []), newCompany]);
       }
     } else if (type === 'sector') {
-      // Don't allow saving if no company is selected
+      // Validação: não permite salvar sem empresa selecionada
       if (!sectorForm.companyId || sectorForm.companyId === 'no-company') {
         return;
       }
       
+      // Criação/edição de setor
       const newSector: Sector = {
         ...(sectorForm as Omit<Sector, 'id'>),
         id: mode === 'edit' ? (initialData as Sector).id : Date.now().toString()
       };
 
       if (mode === 'edit') {
+        // Atualiza setor existente na lista
         setSectors((current) => current?.map(s => s.id === newSector.id ? newSector : s) || [newSector]);
+        // Atualiza nó selecionado se for o mesmo
         if (selectedNode?.id === newSector.id) {
           setSelectedNode({ ...selectedNode, data: newSector });
         }
       } else {
+        // Adiciona novo setor à lista
         setSectors((current) => [...(current || []), newSector]);
       }
     } else if (type === 'subsection') {
-      // Don't allow saving if no sector is selected
+      // Validação: não permite salvar sem setor selecionado
       if (!subSectionForm.sectorId || subSectionForm.sectorId === 'no-sector') {
         return;
       }
       
+      // Criação/edição de subseção
       const newSubSection: SubSection = {
         ...(subSectionForm as Omit<SubSection, 'id'>),
         id: mode === 'edit' ? (initialData as SubSection).id : Date.now().toString()
       };
 
       if (mode === 'edit') {
+        // Atualiza subseção existente na lista
         setSubSections((current) => current?.map(ss => ss.id === newSubSection.id ? newSubSection : ss) || [newSubSection]);
+        // Atualiza nó selecionado se for o mesmo
         if (selectedNode?.id === newSubSection.id) {
           setSelectedNode({ ...selectedNode, data: newSubSection });
         }
       } else {
+        // Adiciona nova subseção à lista
         setSubSections((current) => [...(current || []), newSubSection]);
       }
     }
 
+    // Fecha o modal após salvar
     onClose();
   };
 
+  /**
+   * Renderiza o formulário específico para empresas
+   * Inclui campos para dados gerais, contato, endereço e informações operacionais
+   */
   const renderCompanyForm = () => (
     <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+      {/* Primeira linha: Nome e Segmento */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="name">Nome da Empresa *</Label>
@@ -364,8 +397,13 @@ export function LocationFormModal({
     </div>
   );
 
+  /**
+   * Renderiza o formulário específico para setores
+   * Inclui seleção de empresa, dados de contato e informações operacionais
+   */
   const renderSectorForm = () => (
     <div className="space-y-4">
+      {/* Nome do setor */}
       <div>
         <Label htmlFor="sectorName">Nome do Setor *</Label>
         <Input
@@ -484,8 +522,12 @@ export function LocationFormModal({
     </div>
   );
 
+  /**
+   * Renderiza o formulário específico para subseções
+   * Inclui seleção de empresa e setor, além de dados de contato e operacionais
+   */
   const renderSubSectionForm = () => {
-    // Filter sectors by selected company
+    // Filtra setores pela empresa selecionada
     const availableSectors = sectorForm.companyId 
       ? sectors.filter(s => s.companyId === sectorForm.companyId)
       : sectors;
@@ -641,6 +683,9 @@ export function LocationFormModal({
     );
   };
 
+  /**
+   * Gera o título do modal baseado no modo e tipo de localização
+   */
   const getTitle = () => {
     const action = mode === 'create' ? 'Adicionar' : 'Editar';
     const typeName = type === 'company' ? 'Empresa' : 
@@ -655,10 +700,12 @@ export function LocationFormModal({
           <DialogTitle>{getTitle()}</DialogTitle>
         </DialogHeader>
 
+        {/* Renderiza o formulário baseado no tipo de localização */}
         {type === 'company' && renderCompanyForm()}
         {type === 'sector' && renderSectorForm()}
         {type === 'subsection' && renderSubSectionForm()}
 
+        {/* Botões de ação */}
         <div className="flex justify-end gap-2 pt-4">
           <Button variant="outline" onClick={onClose}>
             Cancelar

@@ -16,7 +16,7 @@ import {
   TrendingUp,
   User
 } from 'lucide-react';
-import { useDashboardKPIs, useChartData } from '@/hooks/useDataTemp';
+import { useDashboardKPIs, useChartData, useWorkOrders, useEquipment, useSectors } from '@/hooks/useDataTemp';
 import { useDashboardFiltering } from '@/hooks/useDashboardFiltering';
 import { useAbility } from '@/hooks/useAbility';
 import { useMemo } from 'react';
@@ -25,6 +25,12 @@ export function Dashboard() {
   const [kpis] = useDashboardKPIs();
   const [chartData] = useChartData();
   const { role } = useAbility();
+  
+  // Usar as mesmas ordens de serviço do sistema
+  const [workOrders] = useWorkOrders();
+  const [equipment] = useEquipment();
+  const [sectors] = useSectors();
+  
   const {
     filterDashboard,
     getDashboardConfig,
@@ -36,15 +42,63 @@ export function Dashboard() {
   const dashboardConfig = getDashboardConfig();
   const availableWidgets = getAvailableWidgets();
 
+  // Filtrar ordens de serviço para próximas manutenções (próximos 7 dias)
+  const upcomingWorkOrders = useMemo(() => {
+    const today = new Date();
+    const sevenDaysFromNow = new Date();
+    sevenDaysFromNow.setDate(today.getDate() + 7);
+    
+    return (workOrders || [])
+      .filter(wo => {
+        const scheduledDate = new Date(wo.scheduledDate);
+        // Apenas OS abertas ou em progresso
+        const isUpcoming = wo.status === 'OPEN' || wo.status === 'IN_PROGRESS';
+        // Dentro dos próximos 7 dias
+        const isWithinRange = scheduledDate >= today && scheduledDate <= sevenDaysFromNow;
+        
+        // Filtrar baseado no papel do usuário
+        if (role === 'technician') {
+          // Técnico vê apenas as atribuídas a ele
+          return isUpcoming && isWithinRange && wo.assignedTo === 'José Silva'; // Substituir pelo usuário atual
+        }
+        
+        return isUpcoming && isWithinRange;
+      })
+      .sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime())
+      .slice(0, 5); // Limitar a 5 para não poluir o dashboard
+  }, [workOrders, role]);
+
+  // Calcular KPIs baseados em dados reais
+  const dashboardKPIs = useMemo(() => {
+    const openWorkOrders = (workOrders || []).filter(wo => wo.status === 'OPEN').length;
+    const overdueWorkOrders = (workOrders || []).filter(wo => {
+      return wo.status === 'OPEN' && new Date(wo.scheduledDate) < new Date();
+    }).length;
+    
+    // Equipamentos críticos (prioridade alta/crítica) - usando tag ou tipo como critério
+    const criticalEquipment = equipment.filter(eq => 
+      eq.tag?.includes('CHI') || eq.type?.toLowerCase().includes('chiller')
+    ).length;
+    
+    // MTTR e MTBF podem vir de cálculos mais complexos ou do metricsStore
+    return {
+      openWorkOrders,
+      overdueWorkOrders,
+      criticalEquipment,
+      mttr: kpis?.mttr || 2.5,
+      mtbf: kpis?.mtbf || 168
+    };
+  }, [workOrders, equipment, kpis]);
+
   // Create mock dashboard data and apply role-based filtering
   const dashboardData = useMemo(() => {
     const mockData = {
       kpis: [
-        { key: 'openWorkOrders', value: kpis?.openWorkOrders || 0, label: 'OS em Aberto', sensitive: false },
-        { key: 'overdueWorkOrders', value: kpis?.overdueWorkOrders || 0, label: 'OS em Atraso', sensitive: false },
-        { key: 'criticalEquipment', value: kpis?.criticalEquipment || 0, label: 'Equipamentos Críticos', sensitive: false },
-        { key: 'mttr', value: kpis?.mttr || 0, label: 'MTTR', sensitive: false },
-        { key: 'mtbf', value: kpis?.mtbf || 0, label: 'MTBF', sensitive: false },
+        { key: 'openWorkOrders', value: dashboardKPIs.openWorkOrders, label: 'OS em Aberto', sensitive: false },
+        { key: 'overdueWorkOrders', value: dashboardKPIs.overdueWorkOrders, label: 'OS em Atraso', sensitive: false },
+        { key: 'criticalEquipment', value: dashboardKPIs.criticalEquipment, label: 'Equipamentos Críticos', sensitive: false },
+        { key: 'mttr', value: dashboardKPIs.mttr, label: 'MTTR', sensitive: false },
+        { key: 'mtbf', value: dashboardKPIs.mtbf, label: 'MTBF', sensitive: false },
         // Role-specific KPIs
         ...(role === 'admin' ? [
           { key: 'totalCost', value: 25000, label: 'Custo Total', sensitive: true },
@@ -80,12 +134,25 @@ export function Dashboard() {
           budgetUtilization: 78
         } : undefined
       },
-      upcomingMaintenance: chartData?.upcomingMaintenance || [],
+      upcomingMaintenance: upcomingWorkOrders.map(wo => {
+        const eq = equipment.find(e => e.id === wo.equipmentId);
+        const sector = sectors.find(s => s.id === eq?.sectorId);
+        
+        return {
+          id: wo.id,
+          equipmentName: eq?.tag || wo.number,
+          type: wo.type === 'PREVENTIVE' ? 'Manutenção Preventiva' : 'Manutenção Corretiva',
+          scheduledDate: wo.scheduledDate,
+          responsible: wo.assignedTo || 'Não atribuído',
+          priority: wo.priority,
+          sectorName: sector?.name || 'Setor não definido'
+        };
+      }),
       recentActivity: [] // Would be populated with actual data
     };
 
     return filterDashboard(mockData);
-  }, [kpis, chartData, role, filterDashboard]);
+  }, [kpis, chartData, role, filterDashboard, dashboardKPIs, equipment, sectors, upcomingWorkOrders]);
 
   // Dados centralizados do mock (filtered)
   const weeklyData = chartData?.workOrderEvolution || [];
@@ -494,29 +561,41 @@ export function Dashboard() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Tag</TableHead>
-                  <TableHead>
-                    {role === 'requester' ? 'Tipo de Solicitação' : 'Equipamento'}
-                  </TableHead>
-                  <TableHead>Setor</TableHead>
+                  <TableHead>OS</TableHead>
+                  <TableHead>Equipamento</TableHead>
+                  <TableHead>Tipo</TableHead>
                   <TableHead>Data</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Prioridade</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {upcomingMaintenance.map((maintenance) => (
                   <TableRow key={maintenance.id}>
                     <TableCell className="font-medium">{maintenance.equipmentName}</TableCell>
-                    <TableCell>{maintenance.type}</TableCell>
                     <TableCell>
-                      {role === 'admin' ? 'Setor Principal' : 'Meu Setor'}
+                      <div>
+                        <div className="font-medium">{maintenance.equipmentName}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {maintenance.sectorName || 'Setor não definido'}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={maintenance.type === 'Manutenção Preventiva' ? 'default' : 'secondary'}>
+                        {maintenance.type}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       {new Date(maintenance.scheduledDate).toLocaleDateString('pt-BR')}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={maintenance.priority === 'HIGH' ? 'destructive' : 'secondary'}>
-                        {maintenance.priority === 'HIGH' ? 'Alta' : 'Média'}
+                      <Badge variant={
+                        maintenance.priority === 'CRITICAL' ? 'destructive' : 
+                        maintenance.priority === 'HIGH' ? 'outline' : 
+                        'secondary'
+                      }>
+                        {maintenance.priority === 'HIGH' ? 'Alta' : 
+                         maintenance.priority === 'MEDIUM' ? 'Média' : 'Baixa'}
                       </Badge>
                     </TableCell>
                   </TableRow>
