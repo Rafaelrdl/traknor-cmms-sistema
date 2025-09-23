@@ -81,8 +81,8 @@ export function LocationTree() {
    * @param depth - Profundidade do nó (para indentação)
    */
   const renderTreeNode = (node: LocationNode, depth = 0) => {
-    const isExpanded = expandedNodes.has(node.id);           // Verifica se o nó está expandido
-    const isSelected = selectedNode?.id === node.id;        // Verifica se o nó está selecionado
+    const isExpanded = expandedNodes.has(node.id);               // Verifica se o nó está expandido usando ID único
+    const isSelected = selectedNode?.id === node.id;            // Verifica se o nó está selecionado usando ID único
     const hasChildren = node.children && node.children.length > 0; // Verifica se tem filhos
 
     return (
@@ -96,7 +96,10 @@ export function LocationTree() {
             depth > 0 && "ml-4" // Margem esquerda para indentação
           )}
           style={{ paddingLeft: `${12 + depth * 16}px` }} // Indentação proporcional à profundidade
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Selecionando nó:', { id: node.id, name: node.name, type: node.type });
             setSelectedNode(node); // Seleciona o nó ao clicar
             // Fecha o menu mobile quando um item é selecionado em tela pequena
             if (window.innerWidth < 1024) {
@@ -113,8 +116,10 @@ export function LocationTree() {
           {hasChildren ? (
             <button
               onClick={(e) => {
+                e.preventDefault();
                 e.stopPropagation(); // Impede que o clique selecione o nó
-                toggleExpanded(node.id);
+                console.log('Expandindo/recolhendo nó:', node.id);
+                toggleExpanded(node.id); // Usa o ID único para expansão
               }}
               className="flex items-center justify-center p-0.5 hover:bg-muted rounded"
               aria-label={isExpanded ? "Recolher" : "Expandir"}

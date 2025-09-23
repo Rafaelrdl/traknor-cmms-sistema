@@ -39,6 +39,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
   /**
    * Função auxiliar para construir a estrutura hierárquica da árvore
    * Transforma os dados planos em uma estrutura de árvore aninhada
+   * Usa IDs únicos para evitar conflitos de seleção
    * @returns Array de nós raiz (empresas) com seus filhos (setores > subsetores)
    */
   const buildTree = (): LocationNode[] => {
@@ -48,25 +49,27 @@ export function LocationProvider({ children }: LocationProviderProps) {
       
       // Constrói os nós dos setores
       const sectorNodes: LocationNode[] = companySectors.map(sector => {
+        const sectorUniqueId = `company-${company.id}-sector-${sector.id}`;
+        
         // Busca todas as subseções deste setor
         const sectorSubSections = MOCK_SUBSECTIONS.filter(subSection => subSection.sectorId === sector.id);
         
         // Constrói os nós das subseções (folhas da árvore)
         const subSectionNodes: LocationNode[] = sectorSubSections.map(subSection => ({
-          id: subSection.id,
+          id: `${sectorUniqueId}-subsection-${subSection.id}`, // ID único para subseção
           name: subSection.name,
           type: 'subsection' as const,
-          parentId: sector.id,
+          parentId: sectorUniqueId,
           data: subSection,
           children: [] // Subseções são folhas, não têm filhos
         }));
 
         // Retorna o nó do setor com suas subseções como filhos
         return {
-          id: sector.id,
+          id: sectorUniqueId, // ID único para setor
           name: sector.name,
           type: 'sector' as const,
-          parentId: company.id,
+          parentId: `company-${company.id}`,
           data: sector,
           children: subSectionNodes
         };
@@ -74,7 +77,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
 
       // Retorna o nó da empresa com seus setores como filhos
       return {
-        id: company.id,
+        id: `company-${company.id}`, // ID único para empresa
         name: company.name,
         type: 'company' as const,
         data: company,
