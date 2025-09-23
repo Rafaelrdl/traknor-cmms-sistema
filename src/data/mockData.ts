@@ -320,8 +320,8 @@ export const MOCK_WORK_ORDERS: WorkOrder[] = [
     equipmentId: '1',
     type: 'PREVENTIVE',
     priority: 'MEDIUM',
-    status: 'IN_PROGRESS',
-    scheduledDate: '2024-01-25',
+    status: 'OPEN',
+    scheduledDate: '2025-09-25', // Próximos dias para aparecer no dashboard
     assignedTo: 'José Silva',
     description: 'Manutenção Preventiva - Climatizador Central. Limpeza de filtros, verificação de pressão do sistema e teste de funcionamento geral'
   },
@@ -332,7 +332,7 @@ export const MOCK_WORK_ORDERS: WorkOrder[] = [
     type: 'CORRECTIVE',
     priority: 'HIGH',
     status: 'OPEN',
-    scheduledDate: '2024-01-23',
+    scheduledDate: '2025-09-26', // Próximos dias para aparecer no dashboard
     assignedTo: 'Carlos Pereira',
     description: 'Reparo Urgente - Split Sala TI. Vazamento de refrigerante detectado na unidade evaporadora'
   },
@@ -342,11 +342,10 @@ export const MOCK_WORK_ORDERS: WorkOrder[] = [
     equipmentId: '3',
     type: 'PREVENTIVE',
     priority: 'MEDIUM',
-    status: 'COMPLETED',
-    scheduledDate: '2024-01-15',
+    status: 'IN_PROGRESS',
+    scheduledDate: '2025-09-27', // Próximos dias para aparecer no dashboard
     assignedTo: 'Roberto Oliveira',
-    description: 'Inspeção Anual - Chiller Industrial. Inspeção completa anual conforme PMOC, incluindo análise de óleo e testes de eficiência',
-    completedAt: '2024-01-18'
+    description: 'Inspeção Anual - Chiller Industrial. Inspeção completa anual conforme PMOC, incluindo análise de óleo e testes de eficiência'
   }
 ];
 
@@ -444,7 +443,9 @@ export const MOCK_CHART_DATA = {
     stopped: 2
   },
   
-  // Próximas manutenções (tabela)
+  // @deprecated - Use MOCK_WORK_ORDERS filtradas por data no Dashboard
+  // Próximas manutenções (tabela) - Mantido temporariamente para compatibilidade
+  // Os dados aqui são ignorados pelo Dashboard que agora usa OS reais
   upcomingMaintenance: [
     {
       id: '1',
