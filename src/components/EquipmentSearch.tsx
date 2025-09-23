@@ -20,6 +20,7 @@ import {
   Settings
 } from 'lucide-react';
 import type { Equipment, EquipmentFilter } from '@/types';
+import { MOCK_SECTORS } from '@/data/mockData';
 
 interface EquipmentSearchProps {
   equipment: Equipment[];
@@ -43,15 +44,73 @@ export function EquipmentSearch({
   const uniqueBrands = [...new Set(equipment.map(e => e.brand))];
   const uniqueStatuses = [...new Set(equipment.map(e => e.status))];
 
+  // Helper function to extract original ID from unique node ID
+  const extractOriginalId = (nodeId: string, type: 'sector' | 'subsection'): string | null => {
+    if (!nodeId) return null;
+    
+    // Extract original sector ID from format like "company-1-sector-2"
+    if (type === 'sector' && nodeId.includes('sector-')) {
+      const match = nodeId.match(/sector-(\d+)(?:-|$)/);
+      return match ? match[1] : null;
+    }
+    
+    // Extract original subsection ID from format like "company-1-sector-2-subsection-3" 
+    if (type === 'subsection' && nodeId.includes('subsection-')) {
+      const match = nodeId.match(/subsection-(\d+)$/);
+      return match ? match[1] : null;
+    }
+    
+    return null;
+  };
+
   // Apply filters and search
   const filteredEquipment = useMemo(() => {
     let filtered = equipment;
 
     // Location filter (if selectedLocation is provided)
     if (selectedLocation) {
-      filtered = filtered.filter(eq => 
-        eq.sectorId === selectedLocation || eq.subSectionId === selectedLocation
-      );
+      console.log('Filtering equipment for selectedLocation:', selectedLocation);
+      
+      // Extract original IDs from the unique node ID
+      const originalSectorId = extractOriginalId(selectedLocation, 'sector');
+      const originalSubsectionId = extractOriginalId(selectedLocation, 'subsection');
+      
+      console.log('Extracted IDs:', { originalSectorId, originalSubsectionId });
+      
+      filtered = filtered.filter(eq => {
+        // If selectedLocation is a sector node, match equipment's sectorId
+        if (originalSectorId && !selectedLocation.includes('subsection-')) {
+          const match = eq.sectorId === originalSectorId;
+          console.log(`Equipment ${eq.tag}: sectorId=${eq.sectorId}, matches=${match}`);
+          return match;
+        }
+        
+        // If selectedLocation is a subsection node, match equipment's subSectionId  
+        if (originalSubsectionId) {
+          const match = eq.subSectionId === originalSubsectionId;
+          console.log(`Equipment ${eq.tag}: subSectionId=${eq.subSectionId}, matches=${match}`);
+          return match;
+        }
+        
+        // If selectedLocation is a company node, show all equipment from sectors of that company
+        if (selectedLocation.includes('company-') && !selectedLocation.includes('sector-')) {
+          // Company nodes format: "company-1"
+          const companyMatch = selectedLocation.match(/company-(\d+)$/);
+          if (companyMatch) {
+            const companyId = companyMatch[1];
+            // Find all sectors of this company from MOCK_SECTORS data
+            const companySectors = MOCK_SECTORS
+              .filter(sector => sector.companyId === companyId)
+              .map(sector => sector.id);
+            
+            const match = eq.sectorId && companySectors.includes(eq.sectorId);
+            console.log(`Equipment ${eq.tag}: sectorId=${eq.sectorId}, companySectors=${companySectors}, matches=${match}`);
+            return match;
+          }
+        }
+        
+        return false;
+      });
     }
 
     // Search term filter

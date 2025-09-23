@@ -120,6 +120,23 @@ function AssetsContent() {
    * Auto-vincula o equipamento ao local selecionado na árvore quando possível.
    */
   const handleAddEquipment = () => {
+    // Helper function to extract original ID from unique node ID
+    const extractOriginalId = (nodeId: string, type: 'sector' | 'subsection'): string | null => {
+      if (!nodeId) return null;
+      
+      if (type === 'sector' && nodeId.includes('sector-')) {
+        const match = nodeId.match(/sector-(\d+)(?:-|$)/);
+        return match ? match[1] : null;
+      }
+      
+      if (type === 'subsection' && nodeId.includes('subsection-')) {
+        const match = nodeId.match(/subsection-(\d+)$/);
+        return match ? match[1] : null;
+      }
+      
+      return null;
+    };
+    
     const equipment_data: Equipment = {
       id: Date.now().toString(), // ID único baseado no timestamp
       ...newEquipment,
@@ -127,11 +144,11 @@ function AssetsContent() {
       status: 'FUNCTIONING', // Status inicial como "funcionando"
       totalOperatingHours: 0, // Horas de operação inicial
       energyConsumption: Math.floor(Math.random() * 200) + 150, // Consumo de energia mockado
-      // Auto-vinculação ao local selecionado na árvore
-      sectorId: selectedNode?.type === 'sector' ? selectedNode.id : 
+      // Auto-vinculação ao local selecionado na árvore usando IDs originais
+      sectorId: selectedNode?.type === 'sector' ? extractOriginalId(selectedNode.id, 'sector') || newEquipment.sectorId : 
                 selectedNode?.type === 'subsection' ? (selectedNode.data as SubSection).sectorId :
                 newEquipment.sectorId,
-      subSectionId: selectedNode?.type === 'subsection' ? selectedNode.id : newEquipment.subSectionId
+      subSectionId: selectedNode?.type === 'subsection' ? extractOriginalId(selectedNode.id, 'subsection') || newEquipment.subSectionId : newEquipment.subSectionId
     };
     
     // Adiciona o novo equipamento à lista existente
