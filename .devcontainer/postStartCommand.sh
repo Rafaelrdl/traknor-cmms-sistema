@@ -31,8 +31,6 @@ cd /workspaces/spark-template
 git config gc.reflogExpire 500.years.ago
 git config gc.reflogExpireUnreachable 500.years.ago
 
-
-
 # Set up post-commit hook and also run the build script to perform a one-time build for static preview
 ln -fs /usr/local/bin/post-commit .git/hooks/post-commit
 /usr/local/bin/static-preview-build.sh

@@ -7,6 +7,8 @@ import { AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { usersStore } from '@/data/usersStore';
 import { credentialsStore } from '@/data/credentialsStore';
+// Importar inicialização dos stores
+import '@/data/initializeStores';
 
 export function LoginPage() {
   const [formData, setFormData] = useState({

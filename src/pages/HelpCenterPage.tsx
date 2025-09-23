@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useHelpCenter } from '@/hooks/useHelpCenter';
 import { HelpContent, HelpCategory, ContentType } from '@/models/helpCenter';
 import { PageHeader } from '@/components/PageHeader';
-import { HelpCenterTour, useHelpCenterTour } from '@/components/tour/HelpCenterTour';
+import { HelpCenterTour, useHelpCenterTour, QuickStartCard } from '@/components/tour/HelpCenterTour';
 
 // Content type icons
 const contentTypeIcons: Record<ContentType, any> = {
@@ -56,13 +56,12 @@ export function HelpCenterPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('browse');
 
-  // Auto-start tour for new users
+  // Auto-start tour for new users (but don't auto-show quick start)
+  // Quick start is now independent and controlled by its own component
   useEffect(() => {
     if (!hasSeenTour && !loading && categories.length > 0) {
-      const timer = setTimeout(() => {
-        startTour();
-      }, 1000);
-      return () => clearTimeout(timer);
+      // Remove auto-start to prevent interference with quick start card
+      // Users can manually start the tour via the button or quick start card
     }
   }, [hasSeenTour, loading, categories, startTour]);
 
@@ -197,13 +196,12 @@ export function HelpCenterPage() {
       <PageHeader
         title="Centro de Ajuda"
         description="Encontre tutoriais, guias e respostas para suas dúvidas sobre o TrakNor CMMS"
-        action={
-          <Button onClick={startTour} variant="outline" className="flex items-center gap-2">
-            <Play className="h-4 w-4" />
-            Tour Guiado
-          </Button>
-        }
-      />
+      >
+        <Button onClick={startTour} variant="outline" className="flex items-center gap-2">
+          <Play className="h-4 w-4" />
+          Tour Guiado
+        </Button>
+      </PageHeader>
 
       {/* Search Bar */}
       <div className="relative max-w-2xl mx-auto" data-tour="search">
@@ -454,6 +452,9 @@ export function HelpCenterPage() {
         onClose={closeTour}
         onComplete={completeTour}
       />
+
+      {/* Quick Start Card - independent of tour */}
+      <QuickStartCard onStartTour={startTour} />
     </div>
   );
 }

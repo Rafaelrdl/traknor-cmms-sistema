@@ -24,10 +24,30 @@ dist-ssr
 *.sln
 *.sw?
 
+
 .env
 **/agent-eval-report*
 packages
 .file-manifest
-.devcontainer/
 
 .spark-workbench-id
+.spark-initial-sha
+.vite.log
+
+# TypeScript build info
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# ESLint cache
+.eslintcache
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Vite cache
+.vite/
+
+# Cypress
+cypress/videos/
+cypress/screenshots/

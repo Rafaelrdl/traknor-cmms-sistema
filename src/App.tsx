@@ -18,8 +18,9 @@ import { ProfilePage } from '@/pages/ProfilePage';
 import { TeamPage } from '@/pages/TeamPage';
 import { HelpCenterPage } from '@/pages/HelpCenterPage';
 import { HelpContentViewPage } from '@/pages/HelpContentViewPage';
+import { PlansTestingPage } from '@/pages/PlansTestingPage';
 import { Toaster } from '@/components/ui/sonner';
-
+// import { RoleSwitcher } from '@/components/auth/RoleSwitcher';
 import { AuthProvider } from '@/components/auth/AuthProvider';
 import { OnboardingManager } from '@/hooks/useOnboardingFlow';
 
@@ -65,12 +66,14 @@ function App() {
                     <Route path="/admin/team" element={<TeamPage />} />
                     <Route path="/help" element={<HelpCenterPage />} />
                     <Route path="/help/:contentId" element={<HelpContentViewPage />} />
+                    <Route path="/plans-testing" element={<PlansTestingPage />} />
                   </Routes>
                 </Layout>
               } />
             </Routes>
           </OnboardingManager>
           <Toaster />
+          {/* <RoleSwitcher /> */}
         </AuthProvider>
       </Router>
     </QueryClientProvider>
