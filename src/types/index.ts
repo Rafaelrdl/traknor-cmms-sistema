@@ -66,6 +66,7 @@ export interface Equipment {
   installDate: string;
   nextMaintenance: string;
   status: 'FUNCTIONING' | 'MAINTENANCE' | 'STOPPED';
+  criticidade: 'BAIXA' | 'MEDIA' | 'ALTA';
   lastMaintenance?: string;
   totalOperatingHours?: number;
   energyConsumption?: number;
@@ -211,6 +212,7 @@ export interface LocationCostAnalysis {
   locationId: string;
   locationName: string;
   locationType: 'company' | 'sector' | 'subsection';
+  locationPath: string;
   totalEquipment: number;
   totalMaintenanceCosts: number;
   avgCostPerEquipment: number;

@@ -208,6 +208,7 @@ export const MOCK_EQUIPMENT: Equipment[] = [
     brand: 'Carrier',
     type: 'CENTRAL',
     capacity: 180000, // BTU/h
+    criticidade: 'ALTA',
     sectorId: '1',
     installDate: '2022-03-15',
     nextMaintenance: '2024-04-15',
@@ -226,6 +227,7 @@ export const MOCK_EQUIPMENT: Equipment[] = [
     brand: 'LG',
     type: 'SPLIT',
     capacity: 12000, // BTU/h
+    criticidade: 'MEDIA',
     sectorId: '2',
     installDate: '2023-01-20',
     nextMaintenance: '2024-04-20',
@@ -244,6 +246,7 @@ export const MOCK_EQUIPMENT: Equipment[] = [
     brand: 'Johnson Controls',
     type: 'CHILLER',
     capacity: 500000, // BTU/h (convertido de TR)
+    criticidade: 'ALTA',
     sectorId: '3',
     installDate: '2021-06-10',
     nextMaintenance: '2024-04-10',
@@ -262,6 +265,7 @@ export const MOCK_EQUIPMENT: Equipment[] = [
     brand: 'Daikin',
     type: 'VRF',
     capacity: 54000,
+    criticidade: 'ALTA',
     sectorId: '1',
     subSectionId: '1',
     installDate: '2023-06-15',
@@ -281,6 +285,7 @@ export const MOCK_EQUIPMENT: Equipment[] = [
     brand: 'Midea',
     type: 'SPLIT',
     capacity: 18000,
+    criticidade: 'BAIXA',
     sectorId: '4',
     installDate: '2023-09-10',
     nextMaintenance: '2024-01-20',
@@ -299,6 +304,7 @@ export const MOCK_EQUIPMENT: Equipment[] = [
     brand: 'Trane',
     type: 'CENTRAL',
     capacity: 220000,
+    criticidade: 'ALTA',
     sectorId: '5',
     installDate: '2022-11-20',
     nextMaintenance: '2024-05-20',
