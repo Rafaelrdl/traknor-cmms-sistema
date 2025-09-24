@@ -17,7 +17,8 @@ import {
   MapPin,
   Calendar,
   Zap,
-  Settings
+  Settings,
+  Plus
 } from 'lucide-react';
 import type { Equipment, EquipmentFilter } from '@/types';
 import { MOCK_SECTORS } from '@/data/mockData';
@@ -27,13 +28,17 @@ interface EquipmentSearchProps {
   selectedLocation?: string;
   onFilteredResults: (filtered: Equipment[]) => void;
   onEquipmentSelect: (equipment: Equipment) => void;
+  showCreateButton?: boolean;
+  onCreateAsset?: () => void;
 }
 
 export function EquipmentSearch({ 
   equipment, 
   selectedLocation,
   onFilteredResults, 
-  onEquipmentSelect 
+  onEquipmentSelect,
+  showCreateButton = false,
+  onCreateAsset
 }: EquipmentSearchProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<EquipmentFilter>({});
@@ -405,6 +410,18 @@ export function EquipmentSearch({
               </div>
             </PopoverContent>
           </Popover>
+          
+          {/* Botão para criar novo ativo */}
+          {showCreateButton && onCreateAsset && (
+            <Button 
+              onClick={onCreateAsset} 
+              className="flex items-center gap-2"
+              data-testid="create-asset-button"
+            >
+              <Plus className="h-4 w-4" />
+              Ativo
+            </Button>
+          )}
           
           {hasActiveFilters && (
             <Button variant="ghost" size="sm" onClick={clearFilters}>

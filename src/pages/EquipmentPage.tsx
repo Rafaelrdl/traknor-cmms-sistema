@@ -202,15 +202,6 @@ function AssetsContent() {
   };
 
   /**
-   * CRIAR NOVO ATIVO
-   * 
-   * Abre o modal para criação de um novo equipamento/ativo.
-   */
-  const handleCreateAsset = () => {
-    setIsEquipmentDialogOpen(true);
-  };
-
-  /**
    * SELECIONAR EQUIPAMENTO PARA RASTREAMENTO
    * 
    * Define o equipamento selecionado e abre o modal de rastreamento de status.
@@ -351,6 +342,11 @@ function AssetsContent() {
                   selectedLocation={selectedNode?.id}
                   onFilteredResults={handleFilteredResults}
                   onEquipmentSelect={handleEquipmentSelect}
+                  showCreateButton={true} // Sempre mostrar para debug
+                  onCreateAsset={() => {
+                    console.log('Create asset clicked, selectedNode:', selectedNode);
+                    setIsEquipmentDialogOpen(true);
+                  }}
                 />
               </TabsContent>
 
@@ -366,7 +362,6 @@ function AssetsContent() {
               <TabsContent value="locations" className="h-full p-4 lg:p-6 m-0">
                 <LocationDetails 
                   onEdit={handleEditLocation}
-                  onCreateAsset={handleCreateAsset}
                 />
               </TabsContent>
             </div>
