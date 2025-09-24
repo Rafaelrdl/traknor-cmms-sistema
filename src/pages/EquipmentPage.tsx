@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect } from 'react';
-import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { LocationTree } from '@/components/LocationTree';
 import { LocationDetails } from '@/components/LocationDetails';
@@ -8,11 +7,12 @@ import { EquipmentSearch } from '@/components/EquipmentSearch';
 import { EquipmentStatusTracking } from '@/components/EquipmentStatusTracking';
 import { AssetUtilizationDashboard } from '@/components/AssetUtilizationDashboard';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Building2, MapPin, Users, Search, BarChart3, Activity } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Building2, MapPin, Users, Search, BarChart3, Activity, Info, Calendar, FileText } from 'lucide-react';
 import { useEquipment, useSectors, useSubSections, useCompanies } from '@/hooks/useDataTemp';
 import { LocationProvider, useLocation as useLocationContext } from '@/contexts/LocationContext';
 import { IfCan } from '@/components/auth/IfCan';
@@ -78,7 +78,7 @@ function AssetsContent() {
   const [locationModalMode, setLocationModalMode] = useState<'create' | 'edit'>('create');
   // Define o tipo de local sendo criado/editado (empresa, setor ou subsetor)
   const [locationModalType, setLocationModalType] = useState<'company' | 'sector' | 'subsection'>('company');
-  // Controla qual aba está ativa (buscar, análises ou locais)
+  // Controla qual aba está ativa (ativos, análises ou local)
   const [activeTab, setActiveTab] = useState('search');
   // Lista de equipamentos filtrados para exibição
   const [filteredEquipment, setFilteredEquipment] = useState<Equipment[]>(filteredEquipmentData);
@@ -89,9 +89,77 @@ function AssetsContent() {
 
   // ========== EFEITO PARA ATUALIZAR EQUIPAMENTOS FILTRADOS ==========
   // Atualiza os equipamentos filtrados quando os dados baseados em função mudam
+  // ou quando a localização selecionada muda
   useEffect(() => {
-    setFilteredEquipment(filteredEquipmentData);
-  }, [filteredEquipmentData]);
+    // Garante que temos dados de equipamentos válidos
+    const validEquipmentData = Array.isArray(filteredEquipmentData) ? filteredEquipmentData as Equipment[] : [];
+    
+    if (!selectedNode) {
+      // Se nenhum nó estiver selecionado, mostra todos os equipamentos filtrados por permissão
+      setFilteredEquipment(validEquipmentData);
+      return;
+    }
+
+    // Filtra equipamentos baseado no tipo e ID do nó selecionado
+    let filteredByLocation: Equipment[] = [];
+    
+    // Helper function to extract original ID from unique node ID
+    const extractOriginalId = (nodeId: string, type: 'sector' | 'subsection'): string | null => {
+      if (!nodeId) return null;
+      
+      if (type === 'sector' && nodeId.includes('sector-')) {
+        const match = nodeId.match(/sector-(\d+)(?:-|$)/);
+        return match ? match[1] : null;
+      }
+      
+      if (type === 'subsection' && nodeId.includes('subsection-')) {
+        const match = nodeId.match(/subsection-(\d+)$/);
+        return match ? match[1] : null;
+      }
+      
+      return nodeId; // Return as is if no pattern matches
+    };
+    
+    switch (selectedNode.type) {
+      case 'company': {
+        // Para empresas, filtra equipamentos que pertencem a setores desta empresa
+        // Extrai o ID original da empresa do formato "company-1"
+        const companyId = selectedNode.id.replace('company-', '');
+        const companySectors = sectors.filter(s => s.companyId === companyId);
+        const sectorIds = companySectors.map(s => s.id);
+        
+        filteredByLocation = validEquipmentData.filter(
+          (eq: Equipment) => eq.sectorId && sectorIds.includes(eq.sectorId)
+        );
+        break;
+      }
+      
+      case 'sector': {
+        // Para setores, filtra equipamentos deste setor específico
+        const originalSectorId = extractOriginalId(selectedNode.id, 'sector');
+        
+        filteredByLocation = validEquipmentData.filter(
+          (eq: Equipment) => eq.sectorId === originalSectorId
+        );
+        break;
+      }
+      
+      case 'subsection': {
+        // Para subsetores, filtra equipamentos deste subsetor específico
+        const originalSubsectionId = extractOriginalId(selectedNode.id, 'subsection');
+        
+        filteredByLocation = validEquipmentData.filter(
+          (eq: Equipment) => eq.subSectionId === originalSubsectionId
+        );
+        break;
+      }
+      
+      default:
+        filteredByLocation = validEquipmentData;
+    }
+    
+    setFilteredEquipment(filteredByLocation);
+  }, [selectedNode, filteredEquipmentData, sectors]);
 
   // ========== ESTADO DO FORMULÁRIO DE NOVO EQUIPAMENTO ==========
   // Estado para armazenar os dados do formulário de criação de equipamento
@@ -101,6 +169,7 @@ function AssetsContent() {
     brand: '',         // Marca do equipamento
     type: 'SPLIT' as Equipment['type'], // Tipo do equipamento (SPLIT, CENTRAL, VRF, CHILLER)
     capacity: '',      // Capacidade em BTUs
+    criticidade: 'MEDIA' as Equipment['criticidade'], // Criticidade do equipamento (BAIXA, MEDIA, ALTA)
     sectorId: '',      // ID do setor onde o equipamento está localizado
     subSectionId: '',  // ID do subsetor (opcional)
     installDate: '',   // Data de instalação
@@ -120,6 +189,23 @@ function AssetsContent() {
    * Auto-vincula o equipamento ao local selecionado na árvore quando possível.
    */
   const handleAddEquipment = () => {
+    // Helper function to extract original ID from unique node ID
+    const extractOriginalId = (nodeId: string, type: 'sector' | 'subsection'): string | null => {
+      if (!nodeId) return null;
+      
+      if (type === 'sector' && nodeId.includes('sector-')) {
+        const match = nodeId.match(/sector-(\d+)(?:-|$)/);
+        return match ? match[1] : null;
+      }
+      
+      if (type === 'subsection' && nodeId.includes('subsection-')) {
+        const match = nodeId.match(/subsection-(\d+)$/);
+        return match ? match[1] : null;
+      }
+      
+      return null;
+    };
+    
     const equipment_data: Equipment = {
       id: Date.now().toString(), // ID único baseado no timestamp
       ...newEquipment,
@@ -127,11 +213,11 @@ function AssetsContent() {
       status: 'FUNCTIONING', // Status inicial como "funcionando"
       totalOperatingHours: 0, // Horas de operação inicial
       energyConsumption: Math.floor(Math.random() * 200) + 150, // Consumo de energia mockado
-      // Auto-vinculação ao local selecionado na árvore
-      sectorId: selectedNode?.type === 'sector' ? selectedNode.id : 
+      // Auto-vinculação ao local selecionado na árvore usando IDs originais
+      sectorId: selectedNode?.type === 'sector' ? extractOriginalId(selectedNode.id, 'sector') || newEquipment.sectorId : 
                 selectedNode?.type === 'subsection' ? (selectedNode.data as SubSection).sectorId :
                 newEquipment.sectorId,
-      subSectionId: selectedNode?.type === 'subsection' ? selectedNode.id : newEquipment.subSectionId
+      subSectionId: selectedNode?.type === 'subsection' ? extractOriginalId(selectedNode.id, 'subsection') || newEquipment.subSectionId : newEquipment.subSectionId
     };
     
     // Adiciona o novo equipamento à lista existente
@@ -144,6 +230,7 @@ function AssetsContent() {
       brand: '',
       type: 'SPLIT',
       capacity: '',
+      criticidade: 'MEDIA',
       sectorId: '',
       subSectionId: '',
       installDate: '',
@@ -182,15 +269,6 @@ function AssetsContent() {
     setLocationModalType(selectedNode.type);
     setLocationModalMode('edit');
     setIsLocationModalOpen(true);
-  };
-
-  /**
-   * CRIAR NOVO ATIVO
-   * 
-   * Abre o modal para criação de um novo equipamento/ativo.
-   */
-  const handleCreateAsset = () => {
-    setIsEquipmentDialogOpen(true);
   };
 
   /**
@@ -307,10 +385,10 @@ function AssetsContent() {
             {/* Navegação das abas */}
             <div className="border-b bg-background px-4 lg:px-6">
               <TabsList className="grid w-full max-w-md grid-cols-3">
-                {/* Aba de busca de equipamentos */}
+                {/* Aba de ativos/equipamentos */}
                 <TabsTrigger value="search" className="flex items-center gap-2">
                   <Search className="h-4 w-4" />
-                  Buscar
+                  Ativos
                 </TabsTrigger>
                 {/* Aba de análises e dashboards */}
                 <TabsTrigger value="analytics" className="flex items-center gap-2">
@@ -320,20 +398,25 @@ function AssetsContent() {
                 {/* Aba de detalhes dos locais */}
                 <TabsTrigger value="locations" className="flex items-center gap-2">
                   <Activity className="h-4 w-4" />
-                  Locais
+                  Local
                 </TabsTrigger>
               </TabsList>
             </div>
 
             {/* Conteúdo das abas */}
             <div className="flex-1 overflow-auto">
-              {/* ABA DE BUSCA - Componente para buscar e filtrar equipamentos */}
+              {/* ABA DE ATIVOS - Componente para buscar e filtrar equipamentos */}
               <TabsContent value="search" className="h-full p-4 lg:p-6 m-0">
                 <EquipmentSearch
                   equipment={filteredEquipmentData}
                   selectedLocation={selectedNode?.id}
                   onFilteredResults={handleFilteredResults}
                   onEquipmentSelect={handleEquipmentSelect}
+                  showCreateButton={true} // Sempre mostrar para debug
+                  onCreateAsset={() => {
+                    console.log('Create asset clicked, selectedNode:', selectedNode);
+                    setIsEquipmentDialogOpen(true);
+                  }}
                 />
               </TabsContent>
 
@@ -345,11 +428,10 @@ function AssetsContent() {
                 />
               </TabsContent>
 
-              {/* ABA DE LOCAIS - Detalhes do local selecionado */}
+              {/* ABA DE LOCAL - Detalhes do local selecionado */}
               <TabsContent value="locations" className="h-full p-4 lg:p-6 m-0">
                 <LocationDetails 
                   onEdit={handleEditLocation}
-                  onCreateAsset={handleCreateAsset}
                 />
               </TabsContent>
             </div>
@@ -373,77 +455,95 @@ function AssetsContent() {
       {/* ========== MODAL DE CRIAÇÃO DE EQUIPAMENTO ========== */}
       {/* Formulário completo para adicionar um novo equipamento */}
       <Dialog open={isEquipmentDialogOpen} onOpenChange={setIsEquipmentDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Adicionar Equipamento</DialogTitle>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-6 md:p-8">
+          <DialogHeader className="mb-6">
+            <DialogTitle className="text-2xl">Adicionar Equipamento</DialogTitle>
+            <DialogDescription>
+              Preencha os dados do equipamento para adicioná-lo ao sistema. Os campos marcados com * são obrigatórios.
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-6">
+          
+          <div className="space-y-8">
             {/* ========== SEÇÃO: INFORMAÇÕES BÁSICAS ========== */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-muted-foreground">Informações Básicas</h3>
-              <div className="grid grid-cols-2 gap-4">
-                {/* Tag do equipamento - identificação única obrigatória */}
-                <div>
-                  <Label htmlFor="tag">Tag do Equipamento *</Label>
+            <div className="bg-muted/30 rounded-lg p-6 border border-border/50">
+              <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
+                <Info className="w-4 h-4 text-primary" />
+                Informações Básicas
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                {/* Tag do equipamento - campo mais importante ocupa coluna inteira */}
+                <div className="md:col-span-2">
+                  <Label htmlFor="tag" className="mb-2 block">
+                    Tag do Equipamento *
+                    <span className="text-xs text-muted-foreground ml-2 font-normal">
+                      Identificação única do equipamento
+                    </span>
+                  </Label>
                   <Input 
                     id="tag"
                     value={newEquipment.tag}
                     onChange={(e) => setNewEquipment(prev => ({ ...prev, tag: e.target.value }))}
-                    placeholder="AC-001"
+                    placeholder="CLI-001"
                     required
+                    className="h-10"
                   />
                 </div>
-                {/* Tipo do equipamento - seleção obrigatória */}
+                
+                {/* Tipo do equipamento */}
                 <div>
-                  <Label htmlFor="type">Tipo *</Label>
+                  <Label htmlFor="type" className="mb-2 block">Tipo do Equipamento *</Label>
                   <Select 
                     value={newEquipment.type} 
                     onValueChange={(value: Equipment['type']) => 
                       setNewEquipment(prev => ({ ...prev, type: value }))
                     }
                   >
-                    <SelectTrigger>
-                      <SelectValue />
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="Selecione o tipo" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="SPLIT">Split</SelectItem>
-                      <SelectItem value="CENTRAL">Central</SelectItem>
                       <SelectItem value="VRF">VRF</SelectItem>
+                      <SelectItem value="CENTRAL">Central</SelectItem>
                       <SelectItem value="CHILLER">Chiller</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
+                
                 {/* Marca do equipamento */}
                 <div>
-                  <Label htmlFor="brand">Marca *</Label>
+                  <Label htmlFor="brand" className="mb-2 block">Marca *</Label>
                   <Input 
                     id="brand"
                     value={newEquipment.brand}
                     onChange={(e) => setNewEquipment(prev => ({ ...prev, brand: e.target.value }))}
-                    placeholder="Daikin"
+                    placeholder="Daikin, Carrier, etc"
                     required
+                    className="h-10"
                   />
                 </div>
-                {/* Modelo do equipamento */}
+                
+                {/* Modelo */}
                 <div>
-                  <Label htmlFor="model">Modelo *</Label>
+                  <Label htmlFor="model" className="mb-2 block">Modelo *</Label>
                   <Input 
                     id="model"
                     value={newEquipment.model}
                     onChange={(e) => setNewEquipment(prev => ({ ...prev, model: e.target.value }))}
                     placeholder="Inverter 18000"
                     required
+                    className="h-10"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                {/* Capacidade em BTUs */}
+                
                 <div>
-                  <Label htmlFor="capacity">Capacidade (BTUs) *</Label>
+                  <Label htmlFor="capacity" className="mb-2 block">
+                    Capacidade (BTUs) *
+                    <span className="text-xs text-muted-foreground ml-2 font-normal">
+                      Potência do equipamento
+                    </span>
+                  </Label>
                   <Input 
                     id="capacity"
                     type="number"
@@ -451,35 +551,74 @@ function AssetsContent() {
                     onChange={(e) => setNewEquipment(prev => ({ ...prev, capacity: e.target.value }))}
                     placeholder="18000"
                     required
+                    className="h-10"
                   />
                 </div>
+                
+                {/* Criticidade do equipamento */}
+                <div>
+                  <Label htmlFor="criticidade" className="mb-2 block">
+                    Criticidade *
+                    <span className="text-xs text-muted-foreground ml-2 font-normal">
+                      Nível de importância operacional
+                    </span>
+                  </Label>
+                  <Select 
+                    value={newEquipment.criticidade} 
+                    onValueChange={(value: Equipment['criticidade']) => 
+                      setNewEquipment(prev => ({ ...prev, criticidade: value }))
+                    }
+                  >
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="Selecione a criticidade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="BAIXA">🟢 Baixa</SelectItem>
+                      <SelectItem value="MEDIA">🟡 Média</SelectItem>
+                      <SelectItem value="ALTA">🔴 Alta</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
                 {/* Número de série (opcional) */}
                 <div>
-                  <Label htmlFor="serialNumber">Número de Série</Label>
+                  <Label htmlFor="serialNumber" className="mb-2 block">
+                    Número de Série
+                    <span className="text-xs text-muted-foreground ml-2 font-normal">(opcional)</span>
+                  </Label>
                   <Input 
                     id="serialNumber"
                     value={newEquipment.serialNumber}
                     onChange={(e) => setNewEquipment(prev => ({ ...prev, serialNumber: e.target.value }))}
                     placeholder="SN123456789"
+                    className="h-10"
                   />
                 </div>
               </div>
             </div>
 
             {/* ========== SEÇÃO: INFORMAÇÕES DE LOCALIZAÇÃO ========== */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-muted-foreground">Localização</h3>
-              <div className="grid grid-cols-2 gap-4">
-                {/* Seleção de setor - obrigatória, desabilitada se já há setor selecionado */}
+            <div className="bg-muted/30 rounded-lg p-6 border border-border/50">
+              <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-primary" />
+                Informações de Localização
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                {/* Seletor de Setor */}
                 <div>
-                  <Label htmlFor="sector">Setor *</Label>
+                  <Label htmlFor="sector" className="mb-2 block">Setor *</Label>
                   <Select 
                     value={newEquipment.sectorId} 
-                    onValueChange={(value) => setNewEquipment(prev => ({ ...prev, sectorId: value, subSectionId: '' }))}
+                    onValueChange={(value) => setNewEquipment(prev => ({
+                      ...prev,
+                      sectorId: value,
+                      subSectionId: ''  // Resetar subsection ao mudar de setor
+                    }))}
                     disabled={selectedNode?.type === 'sector' || selectedNode?.type === 'subsection'}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecionar setor" />
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="Selecione o setor" />
                     </SelectTrigger>
                     <SelectContent>
                       {sectors.map(sector => (
@@ -490,16 +629,23 @@ function AssetsContent() {
                     </SelectContent>
                   </Select>
                 </div>
-                {/* Seleção de subsetor - opcional, depende do setor selecionado */}
+                
+                {/* Seletor de Subsetor */}
                 <div>
-                  <Label htmlFor="subSection">Subsetor (Opcional)</Label>
+                  <Label htmlFor="subsection" className="mb-2 block">
+                    Subsetor
+                    <span className="text-xs text-muted-foreground ml-2 font-normal">(se aplicável)</span>
+                  </Label>
                   <Select 
                     value={newEquipment.subSectionId} 
-                    onValueChange={(value) => setNewEquipment(prev => ({ ...prev, subSectionId: value }))}
+                    onValueChange={(value) => setNewEquipment(prev => ({
+                      ...prev,
+                      subSectionId: value
+                    }))}
                     disabled={selectedNode?.type === 'subsection' || !newEquipment.sectorId}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecionar subsetor" />
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="Selecione o subsetor" />
                     </SelectTrigger>
                     <SelectContent>
                       {subSections
@@ -512,87 +658,108 @@ function AssetsContent() {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-
-              {/* Localização específica dentro do setor/subsetor */}
-              <div>
-                <Label htmlFor="location">Localização Específica</Label>
-                <Input 
-                  id="location"
-                  value={newEquipment.location}
-                  onChange={(e) => setNewEquipment(prev => ({ ...prev, location: e.target.value }))}
-                  placeholder="Sala 101, Teto - Posição A"
-                />
+                
+                {/* Localização específica */}
+                <div className="md:col-span-2">
+                  <Label htmlFor="location" className="mb-2 block">Localização Específica</Label>
+                  <Input 
+                    id="location"
+                    value={newEquipment.location}
+                    onChange={(e) => setNewEquipment(prev => ({ ...prev, location: e.target.value }))}
+                    placeholder="Sala 101, Corredor principal, etc."
+                    className="h-10"
+                  />
+                </div>
               </div>
             </div>
 
             {/* ========== SEÇÃO: DATAS E GARANTIA ========== */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-muted-foreground">Datas e Garantia</h3>
-              <div className="grid grid-cols-2 gap-4">
-                {/* Data de instalação - obrigatória */}
+            <div className="bg-muted/30 rounded-lg p-6 border border-border/50">
+              <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-primary" />
+                Datas e Garantia
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-5">
+                {/* Data de instalação */}
                 <div>
-                  <Label htmlFor="installDate">Data de Instalação *</Label>
+                  <Label htmlFor="installDate" className="mb-2 block">Data de Instalação *</Label>
                   <Input 
                     id="installDate"
                     type="date"
                     value={newEquipment.installDate}
                     onChange={(e) => setNewEquipment(prev => ({ ...prev, installDate: e.target.value }))}
                     required
+                    className="h-10"
                   />
                 </div>
-                {/* Data da próxima manutenção - obrigatória */}
+                
+                {/* Próxima manutenção */}
                 <div>
-                  <Label htmlFor="nextMaintenance">Próxima Manutenção *</Label>
+                  <Label htmlFor="nextMaintenance" className="mb-2 block">Próxima Manutenção *</Label>
                   <Input 
                     id="nextMaintenance"
                     type="date"
                     value={newEquipment.nextMaintenance}
                     onChange={(e) => setNewEquipment(prev => ({ ...prev, nextMaintenance: e.target.value }))}
                     required
+                    className="h-10"
                   />
                 </div>
-              </div>
-
-              {/* Data de fim da garantia - opcional */}
-              <div>
-                <Label htmlFor="warrantyExpiry">Fim da Garantia</Label>
-                <Input 
-                  id="warrantyExpiry"
-                  type="date"
-                  value={newEquipment.warrantyExpiry}
-                  onChange={(e) => setNewEquipment(prev => ({ ...prev, warrantyExpiry: e.target.value }))}
-                />
+                
+                {/* Fim da garantia */}
+                <div>
+                  <Label htmlFor="warrantyExpiry" className="mb-2 block">
+                    Fim da Garantia
+                    <span className="text-xs text-muted-foreground ml-2 font-normal">(opcional)</span>
+                  </Label>
+                  <Input 
+                    id="warrantyExpiry"
+                    type="date"
+                    value={newEquipment.warrantyExpiry}
+                    onChange={(e) => setNewEquipment(prev => ({ ...prev, warrantyExpiry: e.target.value }))}
+                    className="h-10"
+                  />
+                </div>
               </div>
             </div>
 
             {/* ========== SEÇÃO: OBSERVAÇÕES ========== */}
-            <div className="space-y-4">
+            <div className="bg-muted/30 rounded-lg p-6 border border-border/50">
+              <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-primary" />
+                Observações
+              </h3>
+              
               <div>
-                <Label htmlFor="notes">Observações</Label>
-                <textarea
+                <Label htmlFor="notes" className="mb-2 block">
+                  Informações Adicionais
+                  <span className="text-xs text-muted-foreground ml-2 font-normal">(opcional)</span>
+                </Label>
+                <Textarea 
                   id="notes"
                   value={newEquipment.notes}
                   onChange={(e) => setNewEquipment(prev => ({ ...prev, notes: e.target.value }))}
                   placeholder="Informações adicionais sobre o equipamento..."
-                  className="w-full min-h-[80px] px-3 py-2 text-sm border border-input rounded-md bg-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
+                  rows={3}
+                  className="min-h-[80px] resize-none"
                 />
               </div>
             </div>
+          </div>
 
-            {/* ========== BOTÕES DE AÇÃO DO FORMULÁRIO ========== */}
-            <div className="flex justify-end gap-4">
-              <Button variant="outline" onClick={() => setIsEquipmentDialogOpen(false)}>
-                Cancelar
-              </Button>
-              {/* Botão de adicionar - desabilitado se campos obrigatórios não estão preenchidos */}
-              <Button 
-                onClick={handleAddEquipment} 
-                disabled={!newEquipment.tag || !newEquipment.brand || !newEquipment.model || !newEquipment.capacity || !newEquipment.installDate || !newEquipment.nextMaintenance}
-              >
-                Adicionar Equipamento
-              </Button>
-            </div>
+          {/* ========== BOTÕES DE AÇÃO DO FORMULÁRIO ========== */}
+          <div className="flex justify-end gap-4 mt-8 pt-4 border-t">
+            <Button variant="outline" onClick={() => setIsEquipmentDialogOpen(false)}>
+              Cancelar
+            </Button>
+            {/* Botão de adicionar - desabilitado se campos obrigatórios não estão preenchidos */}
+            <Button 
+              onClick={handleAddEquipment} 
+              disabled={!newEquipment.tag || !newEquipment.brand || !newEquipment.model || !newEquipment.capacity || !newEquipment.criticidade || !newEquipment.installDate || !newEquipment.nextMaintenance}
+            >
+              Adicionar Equipamento
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

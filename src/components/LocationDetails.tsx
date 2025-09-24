@@ -2,22 +2,21 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Building2, MapPin, Users, Edit, Plus } from 'lucide-react';
+import { Building2, MapPin, Users, Edit } from 'lucide-react';
 import { useLocation as useLocationContext } from '@/contexts/LocationContext';
-import { IfCan, IfCanCreate, IfCanEdit } from '@/components/auth/IfCan';
+import { IfCanEdit } from '@/components/auth/IfCan';
 import type { Company, Sector, SubSection } from '@/types';
 
 // Interface para as props do componente
 interface LocationDetailsProps {
   onEdit: () => void;        // Função para editar a localização selecionada
-  onCreateAsset: () => void; // Função para criar um novo ativo
 }
 
 /**
  * Componente que exibe os detalhes da localização selecionada no menu
  * Mostra informações diferentes dependendo do tipo (empresa, setor, subsetor)
  */
-export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps) {
+export function LocationDetails({ onEdit }: LocationDetailsProps) {
   // Obtém o nó selecionado do contexto de localização
   const { selectedNode } = useLocationContext();
 
@@ -303,21 +302,6 @@ export function LocationDetails({ onEdit, onCreateAsset }: LocationDetailsProps)
         </div>
         
         <div className="flex items-center gap-2">
-          {/* Botão + Ativo - Oculto quando empresa está selecionada */}
-          {selectedNode.type !== 'company' && (
-            <IfCanCreate subject="asset">
-              <Button 
-                onClick={onCreateAsset} 
-                className="btn-press flex items-center gap-2"
-                aria-label="Adicionar novo ativo"
-                data-testid="asset-create"
-              >
-                <Plus className="h-4 w-4" />
-                + Ativo
-              </Button>
-            </IfCanCreate>
-          )}
-          
           {/* Botão Editar localização */}
           <IfCanEdit subject="asset">
             <Button 

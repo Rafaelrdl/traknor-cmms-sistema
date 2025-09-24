@@ -17,14 +17,17 @@ import {
   Clock,
   Gauge,
   PieChart,
-  Building2,
   MapPin,
-  Users,
-  Wrench,
   Target,
   Thermometer,
-  Calendar
+  LayoutGrid,
+  Award,
+  List,
+  ChevronRight,
+  HelpCircle,
+  Check
 } from 'lucide-react';
+import { MOCK_COMPANIES, MOCK_SECTORS, MOCK_SUBSECTIONS } from '@/data/mockData';
 import type { AssetUtilization, LocationCostAnalysis, Equipment } from '@/types';
 
 interface AssetUtilizationDashboardProps {
@@ -34,12 +37,17 @@ interface AssetUtilizationDashboardProps {
 }
 
 export function AssetUtilizationDashboard({ 
-  equipment, 
+  equipment,
   selectedLocation,
-  selectedPeriod = '30d' 
+  selectedPeriod 
 }: AssetUtilizationDashboardProps) {
   const [activeTab, setActiveTab] = useState('utilization');
   const [selectedTimeframe, setSelectedTimeframe] = useState(selectedPeriod);
+  
+  // Estados para a aba "Por Localização"
+  const [locationFilterType, setLocationFilterType] = useState('all');
+  const [locationSortBy, setLocationSortBy] = useState('cost-high');
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
 
   // Mock data generation - in real app, this would come from API
   const utilizationData = useMemo<AssetUtilization[]>(() => {
@@ -56,29 +64,80 @@ export function AssetUtilizationDashboard({
   }, [equipment]);
 
   const locationCostData = useMemo<LocationCostAnalysis[]>(() => {
-    // Group equipment by location
-    const locationGroups = equipment.reduce((acc, eq) => {
-      const locationKey = eq.sectorId || eq.subSectionId || 'unknown';
-      if (!acc[locationKey]) {
-        acc[locationKey] = [];
+    // Filter equipment based on selected location
+    let filteredEquipment = equipment;
+    
+    if (selectedLocation) {
+      filteredEquipment = equipment.filter(eq => {
+        // If selected location is a company, show equipment from all sectors/subsections of that company
+        if (MOCK_COMPANIES.find(c => c.id === selectedLocation)) {
+          const companyId = selectedLocation;
+          const companySectors = MOCK_SECTORS.filter(s => s.companyId === companyId);
+          const companySectorIds = companySectors.map(s => s.id);
+          const companySubsections = MOCK_SUBSECTIONS.filter(ss => 
+            companySectors.some(s => s.id === ss.sectorId)
+          );
+          const companySubsectionIds = companySubsections.map(ss => ss.id);
+          
+          return companySectorIds.includes(eq.sectorId!) || companySubsectionIds.includes(eq.subSectionId!);
+        }
+        
+        // If selected location is a sector, show equipment from that sector and its subsections
+        if (MOCK_SECTORS.find(s => s.id === selectedLocation)) {
+          const sectorId = selectedLocation;
+          const sectorSubsections = MOCK_SUBSECTIONS.filter(ss => ss.sectorId === sectorId);
+          const sectorSubsectionIds = sectorSubsections.map(ss => ss.id);
+          
+          return eq.sectorId === sectorId || sectorSubsectionIds.includes(eq.subSectionId!);
+        }
+        
+        // If selected location is a subsection, show only equipment from that subsection
+        if (MOCK_SUBSECTIONS.find(ss => ss.id === selectedLocation)) {
+          return eq.subSectionId === selectedLocation;
+        }
+        
+        return true;
+      });
+    }
+
+    // Group equipment by sector and subsection
+    const sectorGroups = filteredEquipment.reduce((acc, eq) => {
+      if (eq.sectorId) {
+        if (!acc[eq.sectorId]) {
+          acc[eq.sectorId] = [];
+        }
+        acc[eq.sectorId].push(eq);
       }
-      acc[locationKey].push(eq);
       return acc;
     }, {} as Record<string, Equipment[]>);
 
-    return Object.entries(locationGroups).map(([locationId, equipments]) => {
+    const subsectionGroups = equipment.reduce((acc, eq) => {
+      if (eq.subSectionId) {
+        if (!acc[eq.subSectionId]) {
+          acc[eq.subSectionId] = [];
+        }
+        acc[eq.subSectionId].push(eq);
+      }
+      return acc;
+    }, {} as Record<string, Equipment[]>);
+
+    // Process sectors
+    const sectorAnalysis = Object.entries(sectorGroups).map(([sectorId, equipments]) => {
+      const sector = MOCK_SECTORS.find(s => s.id === sectorId);
+      const company = MOCK_COMPANIES.find(c => c.id === sector?.companyId);
+      
       const totalEquipment = equipments.length;
       const totalMaintenanceCosts = equipments.reduce((total, eq) => {
         const utilizationItem = utilizationData.find(u => u.equipmentId === eq.id);
         return total + (utilizationItem?.maintenanceCosts || 0);
       }, 0);
 
-      const preventiveCosts = totalMaintenanceCosts * 0.6; // 60% preventive
-      const correctiveCosts = totalMaintenanceCosts * 0.3; // 30% corrective  
-      const emergencyCosts = totalMaintenanceCosts * 0.1; // 10% emergency
+      const preventiveCosts = totalMaintenanceCosts * 0.6;
+      const correctiveCosts = totalMaintenanceCosts * 0.3;
+      const emergencyCosts = totalMaintenanceCosts * 0.1;
       const energyCosts = equipments.reduce((total, eq) => {
         const utilizationItem = utilizationData.find(u => u.equipmentId === eq.id);
-        return total + (utilizationItem?.energyConsumption || 0) * 0.6; // R$ 0.60 per kWh
+        return total + (utilizationItem?.energyConsumption || 0) * 0.6;
       }, 0);
 
       const totalDowntimeHours = equipments.reduce((total, eq) => {
@@ -86,16 +145,16 @@ export function AssetUtilizationDashboard({
         return total + (utilizationItem?.downtimeHours || 0);
       }, 0);
 
-      // Generate mock cost trends
       const costTrends = Array.from({ length: 12 }, (_, i) => ({
         period: new Date(2024, i, 1).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }),
         cost: Math.floor(Math.random() * totalMaintenanceCosts * 0.3) + totalMaintenanceCosts * 0.7
       }));
 
       return {
-        locationId,
-        locationName: `Setor ${locationId}`,
+        locationId: sectorId,
+        locationName: sector?.name || `Setor ${sectorId}`,
         locationType: 'sector' as const,
+        locationPath: `${company?.name || 'Empresa'} > ${sector?.name || `Setor ${sectorId}`}`,
         totalEquipment,
         totalMaintenanceCosts: Math.round(totalMaintenanceCosts),
         avgCostPerEquipment: Math.round(totalMaintenanceCosts / totalEquipment),
@@ -107,15 +166,115 @@ export function AssetUtilizationDashboard({
         costTrends
       };
     });
-  }, [equipment, utilizationData]);
+
+    // Process subsections
+    const subsectionAnalysis = Object.entries(subsectionGroups).map(([subsectionId, equipments]) => {
+      const subsection = MOCK_SUBSECTIONS.find(ss => ss.id === subsectionId);
+      const sector = MOCK_SECTORS.find(s => s.id === subsection?.sectorId);
+      const company = MOCK_COMPANIES.find(c => c.id === sector?.companyId);
+      
+      const totalEquipment = equipments.length;
+      const totalMaintenanceCosts = equipments.reduce((total, eq) => {
+        const utilizationItem = utilizationData.find(u => u.equipmentId === eq.id);
+        return total + (utilizationItem?.maintenanceCosts || 0);
+      }, 0);
+
+      const preventiveCosts = totalMaintenanceCosts * 0.6;
+      const correctiveCosts = totalMaintenanceCosts * 0.3;
+      const emergencyCosts = totalMaintenanceCosts * 0.1;
+      const energyCosts = equipments.reduce((total, eq) => {
+        const utilizationItem = utilizationData.find(u => u.equipmentId === eq.id);
+        return total + (utilizationItem?.energyConsumption || 0) * 0.6;
+      }, 0);
+
+      const totalDowntimeHours = equipments.reduce((total, eq) => {
+        const utilizationItem = utilizationData.find(u => u.equipmentId === eq.id);
+        return total + (utilizationItem?.downtimeHours || 0);
+      }, 0);
+
+      const costTrends = Array.from({ length: 12 }, (_, i) => ({
+        period: new Date(2024, i, 1).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }),
+        cost: Math.floor(Math.random() * totalMaintenanceCosts * 0.3) + totalMaintenanceCosts * 0.7
+      }));
+
+      return {
+        locationId: subsectionId,
+        locationName: subsection?.name || `Subsetor ${subsectionId}`,
+        locationType: 'subsection' as const,
+        locationPath: `${company?.name || 'Empresa'} > ${sector?.name || 'Setor'} > ${subsection?.name || `Subsetor ${subsectionId}`}`,
+        totalEquipment,
+        totalMaintenanceCosts: Math.round(totalMaintenanceCosts),
+        avgCostPerEquipment: Math.round(totalMaintenanceCosts / totalEquipment),
+        preventiveCosts: Math.round(preventiveCosts),
+        correctiveCosts: Math.round(correctiveCosts),
+        emergencyCosts: Math.round(emergencyCosts),
+        energyCosts: Math.round(energyCosts),
+        totalDowntimeHours,
+        costTrends
+      };
+    });
+
+    return [...sectorAnalysis, ...subsectionAnalysis].filter(location => location.totalEquipment > 0);
+  }, [equipment, utilizationData, selectedLocation]);
 
   // Calculate overall metrics
   const overallMetrics = useMemo(() => {
-    const avgUtilization = utilizationData.reduce((sum, item) => sum + item.utilizationRate, 0) / utilizationData.length;
-    const totalEnergyCost = utilizationData.reduce((sum, item) => sum + item.energyConsumption * 0.6, 0);
-    const totalMaintenanceCost = utilizationData.reduce((sum, item) => sum + item.maintenanceCosts, 0);
-    const totalDowntime = utilizationData.reduce((sum, item) => sum + item.downtimeHours, 0);
-    const avgEfficiency = utilizationData.reduce((sum, item) => sum + item.efficiency, 0) / utilizationData.length;
+    // Filter utilization data based on selected location
+    let filteredUtilizationData = utilizationData;
+    
+    if (selectedLocation) {
+      const filteredEquipmentIds = equipment.filter(eq => {
+        // If selected location is a company, include equipment from all sectors/subsections of that company
+        if (MOCK_COMPANIES.find(c => c.id === selectedLocation)) {
+          const companyId = selectedLocation;
+          const companySectors = MOCK_SECTORS.filter(s => s.companyId === companyId);
+          const companySectorIds = companySectors.map(s => s.id);
+          const companySubsections = MOCK_SUBSECTIONS.filter(ss => 
+            companySectors.some(s => s.id === ss.sectorId)
+          );
+          const companySubsectionIds = companySubsections.map(ss => ss.id);
+          
+          return companySectorIds.includes(eq.sectorId!) || companySubsectionIds.includes(eq.subSectionId!);
+        }
+        
+        // If selected location is a sector, include equipment from that sector and its subsections
+        if (MOCK_SECTORS.find(s => s.id === selectedLocation)) {
+          const sectorId = selectedLocation;
+          const sectorSubsections = MOCK_SUBSECTIONS.filter(ss => ss.sectorId === sectorId);
+          const sectorSubsectionIds = sectorSubsections.map(ss => ss.id);
+          
+          return eq.sectorId === sectorId || sectorSubsectionIds.includes(eq.subSectionId!);
+        }
+        
+        // If selected location is a subsection, include only equipment from that subsection
+        if (MOCK_SUBSECTIONS.find(ss => ss.id === selectedLocation)) {
+          return eq.subSectionId === selectedLocation;
+        }
+        
+        return true;
+      }).map(eq => eq.id);
+      
+      filteredUtilizationData = utilizationData.filter(item => 
+        filteredEquipmentIds.includes(item.equipmentId)
+      );
+    }
+    
+    if (filteredUtilizationData.length === 0) {
+      return {
+        avgUtilization: 0,
+        totalEnergyCost: 0,
+        totalMaintenanceCost: 0,
+        totalDowntime: 0,
+        avgEfficiency: 0,
+        totalOperatingCost: 0
+      };
+    }
+    
+    const avgUtilization = filteredUtilizationData.reduce((sum, item) => sum + item.utilizationRate, 0) / filteredUtilizationData.length;
+    const totalEnergyCost = filteredUtilizationData.reduce((sum, item) => sum + item.energyConsumption * 0.6, 0);
+    const totalMaintenanceCost = filteredUtilizationData.reduce((sum, item) => sum + item.maintenanceCosts, 0);
+    const totalDowntime = filteredUtilizationData.reduce((sum, item) => sum + item.downtimeHours, 0);
+    const avgEfficiency = filteredUtilizationData.reduce((sum, item) => sum + item.efficiency, 0) / filteredUtilizationData.length;
 
     return {
       avgUtilization: Math.round(avgUtilization * 10) / 10,
@@ -125,7 +284,7 @@ export function AssetUtilizationDashboard({
       avgEfficiency: Math.round(avgEfficiency * 10) / 10,
       totalOperatingCost: Math.round(totalEnergyCost + totalMaintenanceCost)
     };
-  }, [utilizationData]);
+  }, [utilizationData, selectedLocation, equipment]);
 
   const getUtilizationColor = (rate: number) => {
     if (rate >= 85) return 'text-green-600';
@@ -137,15 +296,6 @@ export function AssetUtilizationDashboard({
     if (efficiency >= 90) return 'text-green-600';
     if (efficiency >= 80) return 'text-yellow-600';
     return 'text-red-600';
-  };
-
-  const getCostTrendIcon = (current: number, previous: number) => {
-    if (current > previous) {
-      return <TrendingUp className="h-4 w-4 text-red-500" />;
-    } else if (current < previous) {
-      return <TrendingDown className="h-4 w-4 text-green-500" />;
-    }
-    return null;
   };
 
   return (
@@ -550,108 +700,305 @@ export function AssetUtilizationDashboard({
         </TabsContent>
 
         <TabsContent value="locations" className="space-y-6">
-          {/* Location Cost Analysis */}
-          <div className="grid gap-6">
-            {locationCostData.map(location => (
-              <Card key={location.locationId}>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="h-5 w-5" />
-                      {location.locationName}
-                    </div>
-                    <Badge variant="outline">
-                      {location.totalEquipment} equipamentos
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Cost Summary */}
-                  <div className="grid gap-4 md:grid-cols-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600">
-                        R$ {location.totalMaintenanceCosts.toLocaleString()}
-                      </div>
-                      <p className="text-sm text-muted-foreground">Custo Total</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-green-600">
-                        R$ {location.avgCostPerEquipment.toLocaleString()}
-                      </div>
-                      <p className="text-sm text-muted-foreground">Custo Médio</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-purple-600">
-                        R$ {location.energyCosts.toLocaleString()}
-                      </div>
-                      <p className="text-sm text-muted-foreground">Energia</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-orange-600">
-                        {location.totalDowntimeHours}h
-                      </div>
-                      <p className="text-sm text-muted-foreground">Downtime</p>
-                    </div>
-                  </div>
-
-                  {/* Cost Breakdown */}
-                  <div className="space-y-3">
-                    <h4 className="font-medium">Distribuição de Custos de Manutenção</h4>
-                    <div className="grid gap-2 md:grid-cols-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Preventiva:</span>
-                        <span className="font-medium">R$ {location.preventiveCosts.toLocaleString()}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Corretiva:</span>
-                        <span className="font-medium">R$ {location.correctiveCosts.toLocaleString()}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Emergencial:</span>
-                        <span className="font-medium">R$ {location.emergencyCosts.toLocaleString()}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Cost Trend Chart (simplified) */}
-                  <div className="space-y-3">
-                    <h4 className="font-medium">Tendência de Custos (12 meses)</h4>
-                    <div className="flex items-end gap-1 h-20">
-                      {location.costTrends.slice(-6).map((trend, index) => {
-                        const height = (trend.cost / Math.max(...location.costTrends.map(t => t.cost))) * 80;
-                        const prevCost = index > 0 ? location.costTrends[index - 1].cost : trend.cost;
-                        
-                        return (
-                          <div key={trend.period} className="flex flex-col items-center gap-1 flex-1">
-                            <div className="flex items-center gap-1">
-                              {getCostTrendIcon(trend.cost, prevCost)}
-                            </div>
-                            <div 
-                              className="bg-blue-500 w-full rounded-t transition-all duration-300 hover:bg-blue-600"
-                              style={{ height: `${height}px` }}
-                              title={`${trend.period}: R$ ${trend.cost.toFixed(0)}`}
-                            />
-                            <span className="text-xs text-muted-foreground rotate-45 origin-left">
-                              {trend.period}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+          {/* Controles e filtros */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card p-4 rounded-lg border">
+            <div>
+              <h3 className="font-medium">Análise por Localização</h3>
+              <p className="text-sm text-muted-foreground">
+                Comparativo de custos e desempenho por local
+              </p>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+              <Select value={locationFilterType} onValueChange={setLocationFilterType}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filtrar por" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os Locais</SelectItem>
+                  <SelectItem value="sector">Apenas Setores</SelectItem>
+                  <SelectItem value="subsection">Apenas Subsetores</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={locationSortBy} onValueChange={setLocationSortBy}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Ordenar por" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cost-high">Maior Custo</SelectItem>
+                  <SelectItem value="cost-low">Menor Custo</SelectItem>
+                  <SelectItem value="equipment-high">Mais Equipamentos</SelectItem>
+                  <SelectItem value="equipment-low">Menos Equipamentos</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <div className="flex gap-1">
+                <Button variant={viewMode === 'cards' ? 'default' : 'outline'} size="icon" onClick={() => setViewMode('cards')}>
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+                <Button variant={viewMode === 'table' ? 'default' : 'outline'} size="icon" onClick={() => setViewMode('table')}>
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </div>
 
+          {/* Métricas comparativas principais */}
+          {locationCostData.length > 0 && (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Local Mais Eficiente</CardTitle>
+                  <Award className="h-4 w-4 text-green-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{locationCostData.sort((a, b) => a.avgCostPerEquipment - b.avgCostPerEquipment)[0]?.locationName}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    R$ {locationCostData.sort((a, b) => a.avgCostPerEquipment - b.avgCostPerEquipment)[0]?.avgCostPerEquipment.toLocaleString()} por equipamento
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Local Menos Eficiente</CardTitle>
+                  <AlertTriangle className="h-4 w-4 text-red-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{locationCostData.sort((a, b) => b.avgCostPerEquipment - a.avgCostPerEquipment)[0]?.locationName}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    R$ {locationCostData.sort((a, b) => b.avgCostPerEquipment - a.avgCostPerEquipment)[0]?.avgCostPerEquipment.toLocaleString()} por equipamento
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Maior Custo Total</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-amber-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{locationCostData.sort((a, b) => b.totalMaintenanceCosts - a.totalMaintenanceCosts)[0]?.locationName}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    R$ {locationCostData.sort((a, b) => b.totalMaintenanceCosts - a.totalMaintenanceCosts)[0]?.totalMaintenanceCosts.toLocaleString()}
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Menor Custo Total</CardTitle>
+                  <TrendingDown className="h-4 w-4 text-blue-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{locationCostData.sort((a, b) => a.totalMaintenanceCosts - b.totalMaintenanceCosts)[0]?.locationName}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    R$ {locationCostData.sort((a, b) => a.totalMaintenanceCosts - b.totalMaintenanceCosts)[0]?.totalMaintenanceCosts.toLocaleString()}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+          
+          {/* Visualização principal - Cards ou Tabela */}
+          {viewMode === 'cards' ? (
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {locationCostData
+                .filter(location => {
+                  if (locationFilterType === 'all') return true;
+                  return location.locationType === locationFilterType;
+                })
+                .sort((a, b) => {
+                  switch (locationSortBy) {
+                    case 'cost-high':
+                      return b.totalMaintenanceCosts - a.totalMaintenanceCosts;
+                    case 'cost-low':
+                      return a.totalMaintenanceCosts - b.totalMaintenanceCosts;
+                    case 'equipment-high':
+                      return b.totalEquipment - a.totalEquipment;
+                    case 'equipment-low':
+                      return a.totalEquipment - b.totalEquipment;
+                    default:
+                      return 0;
+                  }
+                })
+                .map(location => (
+                  <Card key={location.locationId} className="overflow-hidden transition-all hover:border-primary/50">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-start gap-2">
+                          {location.locationType === 'sector' ? (
+                            <MapPin className="h-5 w-5 text-primary mt-0.5" />
+                          ) : (
+                            <LayoutGrid className="h-5 w-5 text-primary mt-0.5" />
+                          )}
+                          <div>
+                            <CardTitle className="text-base">{location.locationName}</CardTitle>
+                            <p className="text-xs text-muted-foreground">{location.locationPath}</p>
+                          </div>
+                        </div>
+                        <Badge variant="outline" className="ml-auto">
+                          {location.totalEquipment} equipamentos
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    
+                    <CardContent className="pb-3">
+                      {/* Métricas principais */}
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Custo Total</span>
+                          </div>
+                          <p className="text-lg font-semibold">
+                            R$ {location.totalMaintenanceCosts.toLocaleString()}
+                          </p>
+                        </div>
+                        
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Custo Médio</span>
+                            <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                          </div>
+                          <p className="text-lg font-semibold">
+                            R$ {location.avgCostPerEquipment.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Mini breakdown de custos */}
+                      <div className="mt-4 border-t pt-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs text-muted-foreground">Distribuição de custos</span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 text-xs">
+                          <div className="text-center">
+                            <div className="text-green-600 font-medium">R$ {location.preventiveCosts.toLocaleString()}</div>
+                            <div className="text-muted-foreground">Preventiva</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-orange-600 font-medium">R$ {location.correctiveCosts.toLocaleString()}</div>
+                            <div className="text-muted-foreground">Corretiva</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-red-600 font-medium">R$ {location.emergencyCosts.toLocaleString()}</div>
+                            <div className="text-muted-foreground">Emergencial</div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                    
+                    <div className="px-6 pb-4 flex justify-end">
+                      <Button variant="outline" size="sm">
+                        Ver detalhes
+                        <ChevronRight className="ml-1 h-4 w-4" />
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Local</TableHead>
+                      <TableHead className="text-right">Equipamentos</TableHead>
+                      <TableHead className="text-right">Custo Total</TableHead>
+                      <TableHead className="text-right">Custo Médio</TableHead>
+                      <TableHead className="text-right">Energia</TableHead>
+                      <TableHead className="text-right">Downtime</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {locationCostData
+                      .filter(location => {
+                        if (locationFilterType === 'all') return true;
+                        return location.locationType === locationFilterType;
+                      })
+                      .sort((a, b) => {
+                        switch (locationSortBy) {
+                          case 'cost-high':
+                            return b.totalMaintenanceCosts - a.totalMaintenanceCosts;
+                          case 'cost-low':
+                            return a.totalMaintenanceCosts - b.totalMaintenanceCosts;
+                          case 'equipment-high':
+                            return b.totalEquipment - a.totalEquipment;
+                          case 'equipment-low':
+                            return a.totalEquipment - b.totalEquipment;
+                          default:
+                            return 0;
+                        }
+                      })
+                      .map(location => (
+                        <TableRow key={location.locationId}>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              {location.locationType === 'sector' ? (
+                                <MapPin className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <LayoutGrid className="h-4 w-4 text-muted-foreground" />
+                              )}
+                              <div>
+                                <p className="font-medium">{location.locationName}</p>
+                                <p className="text-xs text-muted-foreground">{location.locationPath}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">{location.totalEquipment}</TableCell>
+                          <TableCell className="text-right font-medium">
+                            R$ {location.totalMaintenanceCosts.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            R$ {location.avgCostPerEquipment.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            R$ {location.energyCosts.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {location.totalDowntimeHours}h
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Estado vazio aprimorado */}
           {locationCostData.length === 0 && (
             <Card className="text-center py-12">
               <CardContent>
-                <MapPin className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-medium mb-2">Nenhuma análise de local disponível</h3>
-                <p className="text-muted-foreground">
-                  Adicione equipamentos com localizações definidas para visualizar análises por local.
+                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+                  <MapPin className="h-10 w-10 text-muted-foreground" />
+                </div>
+                
+                <h3 className="mt-6 text-lg font-medium">Sem dados de localização disponíveis</h3>
+                
+                <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground">
+                  Adicione equipamentos com localizações definidas para visualizar análises comparativas.
                 </p>
+                
+                <div className="mt-8 border-t pt-6">
+                  <p className="text-sm font-medium">Dicas para começar:</p>
+                  <ul className="mt-2 grid gap-y-1.5 text-sm text-muted-foreground">
+                    <li className="flex items-center gap-1.5">
+                      <Check className="h-4 w-4 text-green-500" />
+                      Adicione empresas, setores e subsetores
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <Check className="h-4 w-4 text-green-500" />
+                      Cadastre equipamentos vinculados aos locais
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <Check className="h-4 w-4 text-green-500" />
+                      Registre ordens de serviço para análise de custos
+                    </li>
+                  </ul>
+                </div>
               </CardContent>
             </Card>
           )}
