@@ -24,7 +24,7 @@ interface FilterOptions {
 const mockUserContext = {
   id: 'current-user-id',
   departmentId: 'dept-maintenance',
-  sectorIds: ['sector-hvac-1', 'sector-hvac-2'],
+  sectorIds: ['1', '2', '3', '4', '5'], // IDs dos setores mockados
   role: 'technician' as Role,
 };
 

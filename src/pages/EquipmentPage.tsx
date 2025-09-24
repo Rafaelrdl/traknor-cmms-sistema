@@ -89,9 +89,77 @@ function AssetsContent() {
 
   // ========== EFEITO PARA ATUALIZAR EQUIPAMENTOS FILTRADOS ==========
   // Atualiza os equipamentos filtrados quando os dados baseados em função mudam
+  // ou quando a localização selecionada muda
   useEffect(() => {
-    setFilteredEquipment(filteredEquipmentData);
-  }, [filteredEquipmentData]);
+    // Garante que temos dados de equipamentos válidos
+    const validEquipmentData = Array.isArray(filteredEquipmentData) ? filteredEquipmentData as Equipment[] : [];
+    
+    if (!selectedNode) {
+      // Se nenhum nó estiver selecionado, mostra todos os equipamentos filtrados por permissão
+      setFilteredEquipment(validEquipmentData);
+      return;
+    }
+
+    // Filtra equipamentos baseado no tipo e ID do nó selecionado
+    let filteredByLocation: Equipment[] = [];
+    
+    // Helper function to extract original ID from unique node ID
+    const extractOriginalId = (nodeId: string, type: 'sector' | 'subsection'): string | null => {
+      if (!nodeId) return null;
+      
+      if (type === 'sector' && nodeId.includes('sector-')) {
+        const match = nodeId.match(/sector-(\d+)(?:-|$)/);
+        return match ? match[1] : null;
+      }
+      
+      if (type === 'subsection' && nodeId.includes('subsection-')) {
+        const match = nodeId.match(/subsection-(\d+)$/);
+        return match ? match[1] : null;
+      }
+      
+      return nodeId; // Return as is if no pattern matches
+    };
+    
+    switch (selectedNode.type) {
+      case 'company': {
+        // Para empresas, filtra equipamentos que pertencem a setores desta empresa
+        // Extrai o ID original da empresa do formato "company-1"
+        const companyId = selectedNode.id.replace('company-', '');
+        const companySectors = sectors.filter(s => s.companyId === companyId);
+        const sectorIds = companySectors.map(s => s.id);
+        
+        filteredByLocation = validEquipmentData.filter(
+          (eq: Equipment) => eq.sectorId && sectorIds.includes(eq.sectorId)
+        );
+        break;
+      }
+      
+      case 'sector': {
+        // Para setores, filtra equipamentos deste setor específico
+        const originalSectorId = extractOriginalId(selectedNode.id, 'sector');
+        
+        filteredByLocation = validEquipmentData.filter(
+          (eq: Equipment) => eq.sectorId === originalSectorId
+        );
+        break;
+      }
+      
+      case 'subsection': {
+        // Para subsetores, filtra equipamentos deste subsetor específico
+        const originalSubsectionId = extractOriginalId(selectedNode.id, 'subsection');
+        
+        filteredByLocation = validEquipmentData.filter(
+          (eq: Equipment) => eq.subSectionId === originalSubsectionId
+        );
+        break;
+      }
+      
+      default:
+        filteredByLocation = validEquipmentData;
+    }
+    
+    setFilteredEquipment(filteredByLocation);
+  }, [selectedNode, filteredEquipmentData, sectors]);
 
   // ========== ESTADO DO FORMULÁRIO DE NOVO EQUIPAMENTO ==========
   // Estado para armazenar os dados do formulário de criação de equipamento
