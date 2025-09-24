@@ -78,7 +78,7 @@ function AssetsContent() {
   const [locationModalMode, setLocationModalMode] = useState<'create' | 'edit'>('create');
   // Define o tipo de local sendo criado/editado (empresa, setor ou subsetor)
   const [locationModalType, setLocationModalType] = useState<'company' | 'sector' | 'subsection'>('company');
-  // Controla qual aba está ativa (buscar, análises ou locais)
+  // Controla qual aba está ativa (buscar, análises ou local)
   const [activeTab, setActiveTab] = useState('search');
   // Lista de equipamentos filtrados para exibição
   const [filteredEquipment, setFilteredEquipment] = useState<Equipment[]>(filteredEquipmentData);
@@ -337,7 +337,7 @@ function AssetsContent() {
                 {/* Aba de detalhes dos locais */}
                 <TabsTrigger value="locations" className="flex items-center gap-2">
                   <Activity className="h-4 w-4" />
-                  Locais
+                  Local
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -362,7 +362,7 @@ function AssetsContent() {
                 />
               </TabsContent>
 
-              {/* ABA DE LOCAIS - Detalhes do local selecionado */}
+              {/* ABA DE LOCAL - Detalhes do local selecionado */}
               <TabsContent value="locations" className="h-full p-4 lg:p-6 m-0">
                 <LocationDetails 
                   onEdit={handleEditLocation}
