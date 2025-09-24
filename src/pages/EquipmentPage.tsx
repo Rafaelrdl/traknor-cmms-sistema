@@ -78,7 +78,7 @@ function AssetsContent() {
   const [locationModalMode, setLocationModalMode] = useState<'create' | 'edit'>('create');
   // Define o tipo de local sendo criado/editado (empresa, setor ou subsetor)
   const [locationModalType, setLocationModalType] = useState<'company' | 'sector' | 'subsection'>('company');
-  // Controla qual aba está ativa (buscar, análises ou local)
+  // Controla qual aba está ativa (ativos, análises ou local)
   const [activeTab, setActiveTab] = useState('search');
   // Lista de equipamentos filtrados para exibição
   const [filteredEquipment, setFilteredEquipment] = useState<Equipment[]>(filteredEquipmentData);
@@ -315,10 +315,10 @@ function AssetsContent() {
             {/* Navegação das abas */}
             <div className="border-b bg-background px-4 lg:px-6">
               <TabsList className="grid w-full max-w-md grid-cols-3">
-                {/* Aba de busca de equipamentos */}
+                {/* Aba de ativos/equipamentos */}
                 <TabsTrigger value="search" className="flex items-center gap-2">
                   <Search className="h-4 w-4" />
-                  Buscar
+                  Ativos
                 </TabsTrigger>
                 {/* Aba de análises e dashboards */}
                 <TabsTrigger value="analytics" className="flex items-center gap-2">
@@ -335,7 +335,7 @@ function AssetsContent() {
 
             {/* Conteúdo das abas */}
             <div className="flex-1 overflow-auto">
-              {/* ABA DE BUSCA - Componente para buscar e filtrar equipamentos */}
+              {/* ABA DE ATIVOS - Componente para buscar e filtrar equipamentos */}
               <TabsContent value="search" className="h-full p-4 lg:p-6 m-0">
                 <EquipmentSearch
                   equipment={filteredEquipmentData}
