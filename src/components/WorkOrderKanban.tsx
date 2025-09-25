@@ -2,9 +2,10 @@ import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { StatusBadge } from '@/components/StatusBadge';
+
 import { Play, Edit, ClipboardList } from 'lucide-react';
-import { useEquipment, useSectors } from '@/hooks/useDataTemp';
+import { format } from 'date-fns';
+import { useEquipment } from '@/hooks/useDataTemp';
 import type { WorkOrder } from '@/types';
 import {
   DndContext,
@@ -15,8 +16,8 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
-  type DragOverEvent,
-  type DragStartEvent
+  type DragStartEvent,
+  useDroppable
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -51,7 +52,6 @@ function WorkOrderCard({
   onEditWorkOrder 
 }: WorkOrderCardProps) {
   const [equipment] = useEquipment();
-  const [sectors] = useSectors();
   
   const {
     attributes,
@@ -69,7 +69,19 @@ function WorkOrderCard({
   };
 
   const eq = equipment.find(e => e.id === workOrder.equipmentId);
-  const sector = sectors.find(s => s.id === eq?.sectorId);
+  
+  // Formatar data de forma mais compacta
+  const formattedDate = workOrder.scheduledDate 
+    ? format(new Date(workOrder.scheduledDate), "dd/MM") 
+    : '';
+
+  // Definir cor da borda baseada na prioridade e status
+  const getBorderColor = () => {
+    if (workOrder.priority === 'CRITICAL') return 'hsl(var(--destructive))';
+    if (workOrder.priority === 'HIGH') return '#f97316'; // orange-500
+    if (workOrder.status === 'COMPLETED') return '#22c55e'; // green-500
+    return 'hsl(var(--border))';
+  };
 
   return (
     <div
@@ -79,83 +91,101 @@ function WorkOrderCard({
       {...listeners}
       className="touch-none"
     >
-      <Card className="mb-3 cursor-move hover:shadow-md transition-shadow">
-        <CardContent className="p-4">
-          <div className="space-y-3">
-            {/* Header */}
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="font-medium text-sm">{workOrder.number}</p>
-                <p className="text-xs text-muted-foreground">{workOrder.description}</p>
-              </div>
-              <StatusBadge status={workOrder.priority} />
-            </div>
-
-            {/* Equipment Info */}
-            <div className="text-xs text-muted-foreground">
-              <div><strong>Tag:</strong> {eq?.tag}</div>
-              <div><strong>Setor:</strong> {sector?.name}</div>
-            </div>
-
-            {/* Type and Date */}
-            <div className="flex items-center justify-between">
-              <StatusBadge status={workOrder.type} />
-              <span className="text-xs text-muted-foreground">
-                {new Date(workOrder.scheduledDate).toLocaleDateString('pt-BR')}
+      <Card 
+        className="mb-2 cursor-move hover:shadow-md transition-shadow border-l-4" 
+        style={{ borderLeftColor: getBorderColor() }}
+      >
+        <CardContent className="p-2">
+          {/* Cabeçalho compacto com número e tipo */}
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-1">
+              <span className="font-medium text-xs truncate max-w-[100px]" title={workOrder.number}>
+                {workOrder.number}
               </span>
+              <div 
+                className="h-3 w-3 rounded-full flex-shrink-0" 
+                style={{ 
+                  backgroundColor: workOrder.type === 'PREVENTIVE' ? '#22c55e' : '#f97316' 
+                }} 
+                title={workOrder.type === 'PREVENTIVE' ? 'Preventiva' : 'Corretiva'} 
+              />
             </div>
+            <span className="text-[10px] text-muted-foreground flex-shrink-0">{formattedDate}</span>
+          </div>
 
-            {/* Assigned to */}
-            {workOrder.assignedTo && (
-              <div className="text-xs">
-                <strong>Responsável:</strong> {workOrder.assignedTo}
-              </div>
+          {/* Descrição truncada */}
+          <p 
+            className="text-xs mb-1" 
+            title={workOrder.description}
+            style={{
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden'
+            }}
+          >
+            {workOrder.description}
+          </p>
+
+          {/* Linha de informação do equipamento */}
+          <p className="text-xs font-medium truncate mb-1 text-muted-foreground" title={eq?.tag || ''}>
+            {eq?.tag}
+          </p>
+
+          {/* Responsável (se houver) */}
+          {workOrder.assignedTo && (
+            <div className="text-[10px] text-muted-foreground mb-1 truncate" title={workOrder.assignedTo}>
+              👤 {workOrder.assignedTo}
+            </div>
+          )}
+
+          {/* Ações compactas */}
+          <div className="flex items-center justify-end gap-0.5">
+            {workOrder.status === 'OPEN' && onStartWorkOrder && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 w-6 p-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onStartWorkOrder(workOrder.id);
+                }}
+                title="Iniciar OS"
+              >
+                <Play className="h-3 w-3" />
+                <span className="sr-only">Iniciar</span>
+              </Button>
             )}
-
-            {/* Actions */}
-            <div className="flex gap-1 pt-2">
-              {workOrder.status === 'OPEN' && onStartWorkOrder && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onStartWorkOrder(workOrder.id);
-                  }}
-                  className="flex-1 h-8 text-xs"
-                >
-                  <Play className="h-3 w-3 mr-1" />
-                  Iniciar
-                </Button>
-              )}
-              {workOrder.status === 'IN_PROGRESS' && onExecuteWorkOrder && (
-                <Button 
-                  variant="default" 
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onExecuteWorkOrder(workOrder);
-                  }}
-                  className="flex-1 h-8 text-xs"
-                >
-                  <ClipboardList className="h-3 w-3 mr-1" />
-                  Executar
-                </Button>
-              )}
-              {onEditWorkOrder && (
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEditWorkOrder(workOrder);
-                  }}
-                  className="h-8 w-8 p-0"
-                >
-                  <Edit className="h-3 w-3" />
-                </Button>
-              )}
-            </div>
+            
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-6 w-6 p-0"
+              onClick={(e) => {
+                e.stopPropagation();
+                onExecuteWorkOrder?.(workOrder);
+              }}
+              title="Executar OS"
+            >
+              <ClipboardList className="h-3 w-3" />
+              <span className="sr-only">Executar</span>
+            </Button>
+            
+            {onEditWorkOrder && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 w-6 p-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditWorkOrder(workOrder);
+                }}
+                title="Editar OS"
+              >
+                <Edit className="h-3 w-3" />
+                <span className="sr-only">Editar</span>
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -165,29 +195,44 @@ function WorkOrderCard({
 
 function KanbanColumn({ 
   title, 
-  status, 
+  status,
   workOrders, 
   onStartWorkOrder, 
   onExecuteWorkOrder, 
   onEditWorkOrder 
 }: KanbanColumnProps) {
+  const {
+    isOver,
+    setNodeRef
+  } = useDroppable({
+    id: status,
+  });
+
+  const style = {
+    backgroundColor: isOver ? 'hsl(var(--accent))' : undefined,
+  };
+
   return (
-    <div className="flex-1 min-w-80">
+    <div className="flex-1 min-w-[220px]">
       <Card>
-        <CardHeader className="pb-4">
+        <CardHeader className="pb-3">
           <CardTitle className="flex items-center justify-between text-sm">
             {title}
-            <Badge variant="secondary" className="ml-2">
+            <Badge variant="secondary" className="ml-2 text-xs px-2 py-0.5">
               {workOrders.length}
             </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          <SortableContext 
-            items={workOrders.map(wo => wo.id)} 
-            strategy={verticalListSortingStrategy}
+          <div
+            ref={setNodeRef}
+            style={style}
+            className="min-h-96 rounded-md transition-colors"
           >
-            <div className="min-h-96">
+            <SortableContext 
+              items={workOrders.map(wo => wo.id)} 
+              strategy={verticalListSortingStrategy}
+            >
               {workOrders.map((wo) => (
                 <WorkOrderCard
                   key={wo.id}
@@ -202,8 +247,8 @@ function KanbanColumn({
                   Nenhuma ordem de serviço
                 </div>
               )}
-            </div>
-          </SortableContext>
+            </SortableContext>
+          </div>
         </CardContent>
       </Card>
     </div>
@@ -264,48 +309,65 @@ export function WorkOrderKanban({
     : null;
 
   function handleDragStart(event: DragStartEvent) {
+    console.log('Drag start event:', event.active.id);
     setActiveId(event.active.id as string);
   }
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
 
+    console.log('Drag end event:', { active: active.id, over: over?.id });
+
     if (!over) {
+      console.log('No drop target detected');
       setActiveId(null);
       return;
     }
 
     const activeWorkOrder = workOrders.find(wo => wo.id === active.id);
     if (!activeWorkOrder) {
+      console.log('Active work order not found');
       setActiveId(null);
       return;
     }
 
-    // Check if we're dropping on a column
+    // Verificar se estamos soltando em uma coluna (droppable zone)
     const overId = over.id as string;
-    const targetColumn = columns.find(col => col.id === overId);
+    console.log('Drop target ID:', overId);
     
-    if (targetColumn && activeWorkOrder.status !== targetColumn.status) {
-      onUpdateWorkOrder(activeWorkOrder.id, { 
-        status: targetColumn.status,
-        ...(targetColumn.status === 'COMPLETED' && { completedAt: new Date().toISOString() })
-      });
+    // overId será 'OPEN', 'IN_PROGRESS', ou 'COMPLETED'
+    if (['OPEN', 'IN_PROGRESS', 'COMPLETED'].includes(overId)) {
+      const newStatus = overId as WorkOrder['status'];
+      
+      if (activeWorkOrder.status !== newStatus) {
+        console.log(`Moving work order ${activeWorkOrder.id} from ${activeWorkOrder.status} to ${newStatus}`);
+        
+        onUpdateWorkOrder(activeWorkOrder.id, { 
+          status: newStatus,
+          ...(newStatus === 'COMPLETED' && { completedAt: new Date().toISOString() })
+        });
+      } else {
+        console.log('Work order already in target status');
+      }
+    } else {
+      console.log('Invalid drop target:', overId);
     }
 
     setActiveId(null);
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCorners}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
-      <div className="flex gap-6 overflow-x-auto pb-6">
-        {columns.map((column) => (
-          <div key={column.id} className="flex-shrink-0">
+    <div className="kanban-container relative">
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="flex gap-4 pb-4 w-full overflow-x-auto">
+          {columns.map((column) => (
             <KanbanColumn
+              key={column.id}
               title={column.title}
               status={column.status}
               workOrders={column.workOrders}
@@ -313,20 +375,20 @@ export function WorkOrderKanban({
               onExecuteWorkOrder={onExecuteWorkOrder}
               onEditWorkOrder={onEditWorkOrder}
             />
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      <DragOverlay>
-        {activeWorkOrder ? (
-          <WorkOrderCard
-            workOrder={activeWorkOrder}
-            onStartWorkOrder={onStartWorkOrder}
-            onExecuteWorkOrder={onExecuteWorkOrder}
-            onEditWorkOrder={onEditWorkOrder}
-          />
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+        <DragOverlay>
+          {activeWorkOrder ? (
+            <WorkOrderCard
+              workOrder={activeWorkOrder}
+              onStartWorkOrder={onStartWorkOrder}
+              onExecuteWorkOrder={onExecuteWorkOrder}
+              onEditWorkOrder={onEditWorkOrder}
+            />
+          ) : null}
+        </DragOverlay>
+      </DndContext>
+    </div>
   );
 }

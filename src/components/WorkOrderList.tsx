@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/StatusBadge';
-import { Play, Edit, ClipboardList, AlertTriangle, Calendar, User } from 'lucide-react';
+import { Play, Edit, ClipboardList, AlertTriangle, User } from 'lucide-react';
 import { useEquipment, useSectors } from '@/hooks/useDataTemp';
 import { useWorkOrderStore } from '@/store/useWorkOrderStore';
 import type { WorkOrder } from '@/types';
@@ -41,21 +41,54 @@ export function WorkOrderList({
     }
   };
 
-  // Compact mode - list view for panel
+  // Compact mode - Gmail-style list view for panel
   if (compact) {
     return (
       <div className="h-full overflow-y-auto bg-background">
-        <div className="sticky top-0 bg-background border-b p-3">
+        <div className="sticky top-0 bg-background/95 backdrop-blur-sm border-b px-4 py-3">
           <h3 className="font-medium text-sm text-muted-foreground">
             Ordens de Serviço ({workOrders.length})
           </h3>
         </div>
-        <div className="divide-y">
+        <div className="divide-y divide-border/60">
           {workOrders.map((wo) => {
             const eq = equipment.find(e => e.id === wo.equipmentId);
-            const sector = sectors.find(s => s.id === eq?.sectorId);
+
             const isSelected = selectedWorkOrderId === wo.id;
-            const isOverdue = new Date(wo.scheduledDate) < new Date() && wo.status !== 'COMPLETED';
+            const isOverdue = wo.scheduledDate && new Date(wo.scheduledDate) < new Date() && wo.status !== 'COMPLETED';
+            const isToday = wo.scheduledDate && new Date(wo.scheduledDate).toDateString() === new Date().toDateString();
+            
+            // Format date Gmail style (show time if today, date if not)
+            const formatDate = (dateString: string) => {
+              const date = new Date(dateString);
+              if (isToday) {
+                return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+              } else {
+                return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+              }
+            };
+
+            // Priority color indicator
+            const getPriorityColor = () => {
+              if (isSelected) {
+                // Use white/light colors when selected for contrast against teal background
+                switch (wo.priority) {
+                  case 'CRITICAL': return 'bg-red-200 border border-red-300';
+                  case 'HIGH': return 'bg-orange-200 border border-orange-300';
+                  case 'MEDIUM': return 'bg-yellow-200 border border-yellow-300';
+                  case 'LOW': return 'bg-blue-200 border border-blue-300';
+                  default: return 'bg-gray-200 border border-gray-300';
+                }
+              } else {
+                switch (wo.priority) {
+                  case 'CRITICAL': return 'bg-red-500';
+                  case 'HIGH': return 'bg-orange-500';
+                  case 'MEDIUM': return 'bg-yellow-500';
+                  case 'LOW': return 'bg-blue-500';
+                  default: return 'bg-gray-400';
+                }
+              }
+            };
             
             return (
               <div
@@ -64,63 +97,122 @@ export function WorkOrderList({
                 tabIndex={0}
                 aria-selected={isSelected}
                 className={cn(
-                  "p-3 cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset border-l-3",
+                  "px-4 py-4 cursor-pointer transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#006b76]/20 focus:ring-inset relative",
                   isSelected 
-                    ? "bg-[#f1f7f9] border-l-[#006b76]" 
-                    : "hover:bg-[#f5fafa] border-l-transparent",
-                  isOverdue && "border-l-red-500"
+                    ? "bg-[#006b76] text-white border-l-4 border-l-white shadow-sm" 
+                    : "hover:bg-[#006b76]/10 border-l-4 border-l-transparent",
+                  isOverdue && !isSelected && "border-l-red-500/70 bg-red-50/30"
                 )}
                 onClick={() => handleWorkOrderClick(wo)}
                 onKeyDown={(e) => handleKeyDown(e, wo)}
               >
-                <div className="space-y-2">
-                  {/* Header */}
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      <ClipboardList className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <span className="font-medium text-sm truncate">
-                        {wo.number}
-                      </span>
-                      {isOverdue && (
-                        <AlertTriangle className="h-3 w-3 text-red-500 flex-shrink-0" />
+                <div className="flex gap-3">
+                  {/* Priority indicator */}
+                  <div 
+                    className={cn("mt-1.5 h-2 w-2 rounded-full flex-shrink-0", getPriorityColor())}
+                    title={`Prioridade: ${wo.priority}`}
+                  />
+                  
+                  <div className="flex-1 min-w-0">
+                    {/* Header row */}
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className={cn(
+                          "font-medium text-sm truncate",
+                          isSelected ? "text-white" : "text-foreground"
+                        )}>
+                          {wo.number}
+                        </span>
+                        {isOverdue && (
+                          <AlertTriangle className={cn(
+                            "h-3 w-3 flex-shrink-0",
+                            isSelected ? "text-red-200" : "text-red-500"
+                          )} />
+                        )}
+                        {wo.status === 'IN_PROGRESS' && (
+                          <div className={cn(
+                            "h-2 w-2 rounded-full animate-pulse flex-shrink-0",
+                            isSelected ? "bg-blue-200" : "bg-blue-500"
+                          )} />
+                        )}
+                      </div>
+                      <div className={cn(
+                        "text-xs flex-shrink-0",
+                        isSelected ? "text-white/90" : "text-muted-foreground"
+                      )}>
+                        {wo.scheduledDate ? formatDate(wo.scheduledDate) : ''}
+                      </div>
+                    </div>
+
+                    {/* Equipment line */}
+                    <div className={cn(
+                      "text-xs truncate mb-1",
+                      isSelected ? "text-white/90" : "text-muted-foreground"
+                    )}>
+                      {eq?.tag || 'Sem equipamento'} {eq && `• ${eq.brand} ${eq.model}`}
+                    </div>
+
+                    {/* Description preview - 2 lines with ellipsis */}
+                    <div 
+                      className={cn(
+                        "text-xs mb-3 line-clamp-2 leading-relaxed",
+                        isSelected ? "text-white/80" : "text-muted-foreground/80"
+                      )}
+                      title={wo.description}
+                    >
+                      {wo.description}
+                    </div>
+
+                    {/* Status and metadata row */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <StatusBadge 
+                          status={wo.status} 
+                          className={cn(
+                            "text-[10px] px-1.5 py-0.5",
+                            isSelected && "bg-white/20 text-white border-white/30"
+                          )} 
+                        />
+                        {wo.type && (
+                          <Badge 
+                            variant="outline" 
+                            className={cn(
+                              "text-[10px] px-1.5 py-0.5",
+                              isSelected 
+                                ? "border-white/30 text-white bg-white/10" 
+                                : wo.type === 'PREVENTIVE' 
+                                  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-0" 
+                                  : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-0"
+                            )}
+                          >
+                            {wo.type === 'PREVENTIVE' ? 'Prev' : 'Corr'}
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      {wo.assignedTo && (
+                        <div className={cn(
+                          "flex items-center gap-1 text-xs",
+                          isSelected ? "text-white/90" : "text-muted-foreground"
+                        )}>
+                          <User className="h-3 w-3" />
+                          <span className="truncate max-w-20" title={wo.assignedTo}>
+                            {wo.assignedTo.split(' ')[0]}
+                          </span>
+                        </div>
                       )}
                     </div>
-                    <StatusBadge status={wo.priority} className="text-xs" />
                   </div>
-
-                  {/* Equipment */}
-                  <div className="text-xs text-muted-foreground truncate">
-                    {eq?.tag} • {eq?.brand} {eq?.model}
-                  </div>
-
-                  {/* Status and Date */}
-                  <div className="flex items-center justify-between">
-                    <StatusBadge status={wo.status} className="text-xs" />
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Calendar className="h-3 w-3" />
-                      {new Date(wo.scheduledDate).toLocaleDateString('pt-BR', { 
-                        day: '2-digit', 
-                        month: '2-digit' 
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Assigned To */}
-                  {wo.assignedTo && (
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <User className="h-3 w-3" />
-                      <span className="truncate">{wo.assignedTo}</span>
-                    </div>
-                  )}
                 </div>
               </div>
             );
           })}
           
           {workOrders.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              <ClipboardList className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Nenhuma OS encontrada</p>
+            <div className="text-center py-12 text-muted-foreground">
+              <ClipboardList className="h-12 w-12 mx-auto mb-3 opacity-30" />
+              <p className="text-sm font-medium mb-1">Nenhuma ordem de serviço</p>
+              <p className="text-xs">Refine os filtros ou crie uma nova OS</p>
             </div>
           )}
         </div>

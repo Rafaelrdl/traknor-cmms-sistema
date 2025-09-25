@@ -37,9 +37,10 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
       </ToggleGroupItem>
       <ToggleGroupItem
         value="panel"
-        aria-label="Visualização em Painel"
+        aria-label="Visualização Estilo E-mail"
         size="sm"
         className="h-8 w-8 p-0"
+        title="Visualização dividida - Lista e detalhes lado a lado"
       >
         <Mail className="h-4 w-4" />
       </ToggleGroupItem>
