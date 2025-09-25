@@ -24,14 +24,14 @@ export function PanelLayout({ detailsSlot, listSlot, className }: PanelLayoutPro
 
   return (
     <div className={cn("flex h-[600px] border rounded-lg overflow-hidden bg-card", className)}>
-      {/* Details Panel - Left side (72% desktop, 65% tablet) */}
-      <div className="flex-1 lg:flex-[0.72] md:flex-[0.65] border-r overflow-hidden">
-        {detailsSlot}
+      {/* List Panel - Left side (Gmail style: narrower list) */}
+      <div className="w-full lg:w-[32%] md:w-[38%] xl:w-[28%] flex-shrink-0 overflow-hidden border-r bg-muted/20">
+        {listSlot}
       </div>
       
-      {/* List Panel - Right side (28% desktop, 35% tablet) */}
-      <div className="w-full lg:w-[28%] md:w-[35%] flex-shrink-0 overflow-hidden">
-        {listSlot}
+      {/* Details Panel - Right side (Gmail style: wider details) */}
+      <div className="flex-1 overflow-hidden bg-background">
+        {detailsSlot}
       </div>
     </div>
   );

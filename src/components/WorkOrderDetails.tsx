@@ -5,7 +5,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
 import { 
-  Inbox, 
   Calendar, 
   User, 
   ClipboardList, 
@@ -76,18 +75,23 @@ export function WorkOrderDetails({
   // Empty state
   if (!workOrder) {
     return (
-      <div className={cn("flex flex-col items-center justify-center h-full p-6 text-center", className)}>
-        <div className="space-y-4">
-          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-            <Inbox className="w-8 h-8 text-muted-foreground" />
+      <div className={cn("flex flex-col items-center justify-center h-full p-8 text-center bg-muted/10", className)}>
+        <div className="space-y-6 max-w-sm">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+            <ClipboardList className="w-10 h-10 text-primary/60" />
           </div>
-          <div>
-            <h3 className="text-lg font-medium text-foreground">
-              Selecione uma ordem de serviço
+          <div className="space-y-2">
+            <h3 className="text-xl font-semibold text-foreground">
+              Nenhuma OS selecionada
             </h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              Escolha uma OS da lista para visualizar os detalhes completos
+            <p className="text-muted-foreground leading-relaxed">
+              Selecione uma ordem de serviço na lista ao lado para visualizar todos os detalhes, histórico e opções de execução.
             </p>
+          </div>
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+            <kbd className="px-2 py-1 bg-muted rounded text-xs">↑</kbd>
+            <kbd className="px-2 py-1 bg-muted rounded text-xs">↓</kbd>
+            <span>para navegar</span>
           </div>
         </div>
       </div>
