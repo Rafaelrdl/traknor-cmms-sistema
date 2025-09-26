@@ -15,7 +15,7 @@ import { ViewToggle } from '@/components/ViewToggle';
 import { WorkOrderList } from '@/components/WorkOrderList';
 import { WorkOrderKanban } from '@/components/WorkOrderKanban';
 import { WorkOrderPanel } from '@/components/WorkOrderPanel';
-import { EditWorkOrderDrawer } from '@/components/EditWorkOrderDrawer';
+import { WorkOrderEditModal } from '@/components/WorkOrderEditModal';
 import { WorkOrderModal } from '@/components/WorkOrderModal';
 import { useWorkOrders, useEquipment, useSectors, useCompanies } from '@/hooks/useDataTemp';
 import { useWorkOrderView } from '@/hooks/useWorkOrderView';
@@ -361,8 +361,8 @@ export function WorkOrdersPage() {
         </SheetContent>
       </Sheet>
 
-      {/* Edit Work Order Drawer */}
-      <EditWorkOrderDrawer
+      {/* Edit Work Order Modal */}
+      <WorkOrderEditModal
         workOrder={editingOrder}
         isOpen={!!editingOrder}
         onClose={() => setEditingOrder(null)}
