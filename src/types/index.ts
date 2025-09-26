@@ -105,6 +105,9 @@ export interface WorkOrder {
   description: string;
   completedAt?: string;
   stockItems?: WorkOrderStockItem[];
+  executionDescription?: string;
+  photos?: UploadedPhoto[];
+  checklistResponses?: ChecklistResponse[];
 }
 
 export interface WorkOrderStockItem {
@@ -125,6 +128,26 @@ export interface ChecklistItem {
   required: boolean;
   response?: string | number | boolean;
   observations?: string;
+}
+
+export interface ChecklistResponse {
+  taskId: string;
+  taskName: string;
+  completed: boolean;
+  observations?: string;
+  checkItems?: {
+    id: string;
+    description: string;
+    checked: boolean;
+  }[];
+}
+
+export interface UploadedPhoto {
+  id: string;
+  url: string;
+  name: string;
+  uploadedAt: string;
+  uploadedBy?: string;
 }
 
 export interface StockItem {
