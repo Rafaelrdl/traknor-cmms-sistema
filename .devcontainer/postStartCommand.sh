@@ -27,6 +27,24 @@ cd /tmp/spark
 LATEST_RELEASE="$LATEST_RELEASE" WORKSPACE_DIR="$WORKSPACE_DIR" bash /tmp/spark/spark-sdk-dist/install-tools.sh sdk
 cd /workspaces/spark-template
 
+# Ensure we're always on main branch and up to date
+echo "=== Ensuring we're on main branch ==="
+current_branch=$(git branch --show-current)
+if [ "$current_branch" != "main" ]; then
+    echo "Current branch is $current_branch, switching to main..."
+    git stash push -u -m "Auto-stash before switching to main" || echo "Nothing to stash"
+    git checkout main
+    git pull origin main
+    echo "Switched to main branch and updated"
+else
+    echo "Already on main branch, updating..."
+    git pull origin main
+fi
+
+# Clean up old branches and references
+git remote prune origin
+git gc --prune=now
+
 # Keep reflog commits "forever"
 git config gc.reflogExpire 500.years.ago
 git config gc.reflogExpireUnreachable 500.years.ago
