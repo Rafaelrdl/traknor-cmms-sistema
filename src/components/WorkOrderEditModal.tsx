@@ -334,14 +334,6 @@ export function WorkOrderEditModal({
                 OS #{workOrder.number} - Atualize as informações necessárias
               </DialogDescription>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="h-8 w-8 -mt-1 -mr-2"
-            >
-              <X className="h-4 w-4" />
-            </Button>
           </div>
         </DialogHeader>
 
