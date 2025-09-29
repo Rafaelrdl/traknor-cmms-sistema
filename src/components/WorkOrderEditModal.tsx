@@ -376,8 +376,7 @@ export function WorkOrderEditModal({
                 {/* Aba de Detalhes */}
                 {canEditDetails && (
                   <TabsContent value="details" className="mt-0 space-y-6">
-                    <div className="space-y-6">
-                      {/* Informações Básicas */}
+                    {/* Informações Básicas */}
                       <div className="rounded-lg border bg-card">
                         <div className="px-4 py-3 border-b bg-muted/50">
                           <h3 className="text-sm font-medium flex items-center gap-2">
@@ -644,8 +643,7 @@ export function WorkOrderEditModal({
                           </div>
                         </div>
                       </div>
-                    </div>
-                </TabsContent>
+                  </TabsContent>
                 )}
 
                 {/* Aba de Materiais */}
