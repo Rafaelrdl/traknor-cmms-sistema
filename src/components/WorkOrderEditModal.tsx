@@ -376,8 +376,6 @@ export function WorkOrderEditModal({
                 {/* Aba de Detalhes */}
                 {canEditDetails && (
                   <TabsContent value="details" className="mt-0 space-y-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Coluna da Esquerda */}
                     <div className="space-y-6">
                       {/* Informações Básicas */}
                       <div className="rounded-lg border bg-card">
@@ -522,10 +520,6 @@ export function WorkOrderEditModal({
                           </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    {/* Coluna da Direita */}
-                    <div className="space-y-6">
                       {/* Localização e Equipamento */}
                       <div className="rounded-lg border bg-card">
                         <div className="px-4 py-3 border-b bg-muted/50">
@@ -651,7 +645,6 @@ export function WorkOrderEditModal({
                         </div>
                       </div>
                     </div>
-                  </div>
                 </TabsContent>
                 )}
 
