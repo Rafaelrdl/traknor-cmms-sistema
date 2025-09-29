@@ -21,7 +21,6 @@ import {
   Trash2,
   Save,
   X,
-  Info,
   Calendar,
   User,
   Tag,
@@ -345,17 +344,22 @@ export function WorkOrderEditModal({
                 value="details" 
                 className="flex items-center gap-2 data-[state=active]:bg-background"
               >
-                <Info className="h-4 w-4" />
-                Detalhes
+                <ClipboardList className="h-4 w-4" />
+                <span>Detalhes</span>
+                {Object.keys(errors).length > 0 && (
+                  <span className="h-5 w-5 bg-destructive rounded-full flex items-center justify-center">
+                    <AlertTriangle className="h-3 w-3 text-white" />
+                  </span>
+                )}
               </TabsTrigger>
               <TabsTrigger 
                 value="materials" 
                 className="flex items-center gap-2 data-[state=active]:bg-background"
               >
                 <Package className="h-4 w-4" />
-                Materiais
+                <span>Materiais</span>
                 {selectedStockItems.length > 0 && (
-                  <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary/10 text-primary rounded-full">
+                  <span className="h-5 w-5 bg-secondary rounded-full flex items-center justify-center text-xs font-medium">
                     {selectedStockItems.length}
                   </span>
                 )}
@@ -366,7 +370,7 @@ export function WorkOrderEditModal({
                   className="flex items-center gap-2 data-[state=active]:bg-background"
                 >
                   <Wrench className="h-4 w-4" />
-                  Execução
+                  <span>Execução</span>
                 </TabsTrigger>
               )}
             </TabsList>
@@ -375,274 +379,283 @@ export function WorkOrderEditModal({
               <div className="p-6">
                 {/* Aba de Detalhes */}
                 {canEditDetails && (
-                  <TabsContent value="details" className="mt-0 space-y-6">
-                    {/* Informações Básicas */}
-                      <div className="rounded-lg border bg-card">
-                        <div className="px-4 py-3 border-b bg-muted/50">
-                          <h3 className="text-sm font-medium flex items-center gap-2">
-                            <ClipboardList className="h-4 w-4 text-muted-foreground" />
-                            Informações Básicas
-                          </h3>
-                        </div>
-                        <div className="p-4 space-y-4">
-                          {/* Tipo de Ordem */}
-                          <div className="space-y-2">
-                            <Label htmlFor="workOrderType">
-                              Tipo de Ordem <span className="text-destructive">*</span>
-                            </Label>
-                            <Select 
-                              value={formData.type || ''} 
-                              onValueChange={(value) => {
-                                setFormData(prev => ({ ...prev, type: value as WorkOrder['type'] }));
-                                if (errors.type) setErrors(prev => ({ ...prev, type: '' }));
-                              }}
-                            >
-                              <SelectTrigger className={cn(errors.type && "border-destructive")}>
-                                <SelectValue placeholder="Selecione o tipo" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="CORRECTIVE">
-                                  <div className="flex items-center gap-2">
-                                    <Wrench className="h-4 w-4" />
-                                    Corretiva
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="PREVENTIVE">
-                                  <div className="flex items-center gap-2">
-                                    <Calendar className="h-4 w-4" />
-                                    Preventiva
-                                  </div>
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                            {errors.type && (
-                              <p className="text-xs text-destructive">{errors.type}</p>
-                            )}
+                  <TabsContent value="details" className="mt-0">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Coluna Esquerda */}
+                      <div className="space-y-6">
+                        {/* Informações Básicas */}
+                        <div className="rounded-lg border bg-card">
+                          <div className="px-4 py-3 border-b bg-muted/50">
+                            <h3 className="text-sm font-medium flex items-center gap-2">
+                              <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                              Informações Básicas
+                            </h3>
                           </div>
-                          
-                          {/* Prioridade */}
-                          <div className="space-y-2">
-                            <Label htmlFor="workOrderPriority">
-                              Prioridade <span className="text-destructive">*</span>
-                            </Label>
-                            <Select 
-                              value={formData.priority || ''} 
-                              onValueChange={(value) => {
-                                setFormData(prev => ({ ...prev, priority: value as WorkOrder['priority'] }));
-                                if (errors.priority) setErrors(prev => ({ ...prev, priority: '' }));
-                              }}
-                            >
-                              <SelectTrigger className={cn(errors.priority && "border-destructive")}>
-                                <SelectValue placeholder="Selecione a prioridade" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map((priority) => (
-                                  <SelectItem key={priority} value={priority}>
+                          <div className="p-4 space-y-4">
+                            {/* Tipo de Ordem */}
+                            <div className="space-y-2">
+                              <Label htmlFor="workOrderType">
+                                Tipo de Ordem <span className="text-destructive">*</span>
+                              </Label>
+                              <Select 
+                                value={formData.type || ''} 
+                                onValueChange={(value) => {
+                                  setFormData(prev => ({ ...prev, type: value as WorkOrder['type'] }));
+                                  if (errors.type) setErrors(prev => ({ ...prev, type: '' }));
+                                }}
+                              >
+                                <SelectTrigger className={cn(errors.type && "border-destructive")}>
+                                  <SelectValue placeholder="Selecione o tipo" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="CORRECTIVE">
                                     <div className="flex items-center gap-2">
-                                      <div className={cn("w-2 h-2 rounded-full", getPriorityColor(priority))} />
-                                      <span>{getPriorityLabel(priority)}</span>
+                                      <Wrench className="h-4 w-4" />
+                                      Corretiva
                                     </div>
                                   </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            {errors.priority && (
-                              <p className="text-xs text-destructive">{errors.priority}</p>
-                            )}
-                          </div>
-                          
-                          {/* Descrição */}
-                          <div className="space-y-2">
-                            <Label htmlFor="workOrderDescription">
-                              Descrição <span className="text-destructive">*</span>
-                            </Label>
-                            <Textarea 
-                              id="workOrderDescription"
-                              value={formData.description || ''} 
-                              onChange={(e) => {
-                                setFormData(prev => ({ ...prev, description: e.target.value }));
-                                if (errors.description) setErrors(prev => ({ ...prev, description: '' }));
-                              }}
-                              placeholder="Descreva o problema ou trabalho a ser realizado"
-                              rows={4}
-                              className={cn(
-                                "resize-none",
-                                errors.description && "border-destructive"
+                                  <SelectItem value="PREVENTIVE">
+                                    <div className="flex items-center gap-2">
+                                      <Calendar className="h-4 w-4" />
+                                      Preventiva
+                                    </div>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                              {errors.type && (
+                                <p className="text-xs text-destructive">{errors.type}</p>
                               )}
-                            />
-                            {errors.description && (
-                              <p className="text-xs text-destructive">{errors.description}</p>
-                            )}
+                            </div>
+                            
+                            {/* Prioridade */}
+                            <div className="space-y-2">
+                              <Label htmlFor="workOrderPriority">
+                                Prioridade <span className="text-destructive">*</span>
+                              </Label>
+                              <Select 
+                                value={formData.priority || ''} 
+                                onValueChange={(value) => {
+                                  setFormData(prev => ({ ...prev, priority: value as WorkOrder['priority'] }));
+                                  if (errors.priority) setErrors(prev => ({ ...prev, priority: '' }));
+                                }}
+                              >
+                                <SelectTrigger className={cn(errors.priority && "border-destructive")}>
+                                  <SelectValue placeholder="Selecione a prioridade" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map((priority) => (
+                                    <SelectItem key={priority} value={priority}>
+                                      <div className="flex items-center gap-2">
+                                        <div className={cn("w-2 h-2 rounded-full", getPriorityColor(priority))} />
+                                        <span>{getPriorityLabel(priority)}</span>
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              {errors.priority && (
+                                <p className="text-xs text-destructive">{errors.priority}</p>
+                              )}
+                            </div>
+                            
+                            {/* Descrição */}
+                            <div className="space-y-2">
+                              <Label htmlFor="workOrderDescription">
+                                Descrição <span className="text-destructive">*</span>
+                              </Label>
+                              <Textarea 
+                                id="workOrderDescription"
+                                value={formData.description || ''} 
+                                onChange={(e) => {
+                                  setFormData(prev => ({ ...prev, description: e.target.value }));
+                                  if (errors.description) setErrors(prev => ({ ...prev, description: '' }));
+                                }}
+                                placeholder="Descreva o problema ou trabalho a ser realizado"
+                                rows={4}
+                                className={cn(
+                                  "resize-none",
+                                  errors.description && "border-destructive"
+                                )}
+                              />
+                              {errors.description && (
+                                <p className="text-xs text-destructive">{errors.description}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Agendamento */}
+                        <div className="rounded-lg border bg-card">
+                          <div className="px-4 py-3 border-b bg-muted/50">
+                            <h3 className="text-sm font-medium flex items-center gap-2">
+                              <CalendarClock className="h-4 w-4 text-muted-foreground" />
+                              Agendamento
+                            </h3>
+                          </div>
+                          <div className="p-4 space-y-4">
+                            {/* Data Programada */}
+                            <div className="space-y-2">
+                              <Label htmlFor="scheduledDate">
+                                Data Programada <span className="text-destructive">*</span>
+                              </Label>
+                              <DatePicker
+                                date={formData.scheduledDate ? new Date(formData.scheduledDate) : undefined}
+                                setDate={(date) => {
+                                  setFormData(prev => ({ ...prev, scheduledDate: date?.toISOString() }));
+                                  if (errors.scheduledDate) setErrors(prev => ({ ...prev, scheduledDate: '' }));
+                                }}
+                                className={cn(errors.scheduledDate && "border-destructive")}
+                              />
+                              {errors.scheduledDate && (
+                                <p className="text-xs text-destructive">{errors.scheduledDate}</p>
+                              )}
+                            </div>
+                            
+                            {/* Responsável */}
+                            <div className="space-y-2">
+                              <Label htmlFor="assignedTo">
+                                <User className="h-3.5 w-3.5 inline mr-1.5" />
+                                Responsável
+                              </Label>
+                              <Input 
+                                id="assignedTo"
+                                value={formData.assignedTo || ''} 
+                                onChange={(e) => setFormData(prev => ({ ...prev, assignedTo: e.target.value }))}
+                                placeholder="Nome do técnico responsável"
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
                       
-                      {/* Agendamento */}
-                      <div className="rounded-lg border bg-card">
-                        <div className="px-4 py-3 border-b bg-muted/50">
-                          <h3 className="text-sm font-medium flex items-center gap-2">
-                            <CalendarClock className="h-4 w-4 text-muted-foreground" />
-                            Agendamento
-                          </h3>
-                        </div>
-                        <div className="p-4 space-y-4">
-                          {/* Data Programada */}
-                          <div className="space-y-2">
-                            <Label htmlFor="scheduledDate">
-                              Data Programada <span className="text-destructive">*</span>
-                            </Label>
-                            <DatePicker
-                              date={formData.scheduledDate ? new Date(formData.scheduledDate) : undefined}
-                              setDate={(date) => {
-                                setFormData(prev => ({ ...prev, scheduledDate: date?.toISOString() }));
-                                if (errors.scheduledDate) setErrors(prev => ({ ...prev, scheduledDate: '' }));
-                              }}
-                              className={cn(errors.scheduledDate && "border-destructive")}
-                            />
-                            {errors.scheduledDate && (
-                              <p className="text-xs text-destructive">{errors.scheduledDate}</p>
+                      {/* Coluna Direita */}
+                      <div className="space-y-6">
+                        {/* Localização e Equipamento */}
+                        <div className="rounded-lg border bg-card">
+                          <div className="px-4 py-3 border-b bg-muted/50">
+                            <h3 className="text-sm font-medium flex items-center gap-2">
+                              <Building className="h-4 w-4 text-muted-foreground" />
+                              Localização e Equipamento
+                            </h3>
+                          </div>
+                          <div className="p-4 space-y-4">
+                            {/* Equipamento */}
+                            <div className="space-y-2">
+                              <Label htmlFor="equipmentId">
+                                <Tag className="h-3.5 w-3.5 inline mr-1.5" />
+                                Equipamento <span className="text-destructive">*</span>
+                              </Label>
+                              <Select 
+                                value={formData.equipmentId || ''} 
+                                onValueChange={(value) => {
+                                  setFormData(prev => ({ ...prev, equipmentId: value }));
+                                  if (errors.equipmentId) setErrors(prev => ({ ...prev, equipmentId: '' }));
+                                }}
+                              >
+                                <SelectTrigger className={cn(errors.equipmentId && "border-destructive")}>
+                                  <SelectValue placeholder="Selecione o equipamento" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {equipment.map(eq => (
+                                    <SelectItem key={eq.id} value={eq.id}>
+                                      <div className="flex flex-col">
+                                        <span className="font-medium">{eq.tag}</span>
+                                        <span className="text-xs text-muted-foreground">
+                                          {eq.brand} {eq.model}
+                                        </span>
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              {errors.equipmentId && (
+                                <p className="text-xs text-destructive">{errors.equipmentId}</p>
+                              )}
+                            </div>
+                            
+                            {/* Informações do equipamento selecionado */}
+                            {selectedEquipment && (
+                              <div className="rounded-lg bg-muted/50 p-4 space-y-3">
+                                <div className="grid grid-cols-2 gap-3 text-sm">
+                                  <div>
+                                    <span className="text-muted-foreground">Tipo:</span>
+                                    <p className="font-medium">{selectedEquipment.type}</p>
+                                  </div>
+                                  <div>
+                                    <span className="text-muted-foreground">Marca:</span>
+                                    <p className="font-medium">{selectedEquipment.brand}</p>
+                                  </div>
+                                  <div>
+                                    <span className="text-muted-foreground">Modelo:</span>
+                                    <p className="font-medium">{selectedEquipment.model}</p>
+                                  </div>
+                                  <div>
+                                    <span className="text-muted-foreground">Capacidade:</span>
+                                    <p className="font-medium">{selectedEquipment.capacity.toLocaleString()} BTUs</p>
+                                  </div>
+                                </div>
+                                
+                                <Separator />
+                                
+                                <div className="space-y-2 text-sm">
+                                  <div className="flex items-center gap-2">
+                                    <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                                    <span className="text-muted-foreground">Localização:</span>
+                                  </div>
+                                  <div className="pl-5 space-y-1">
+                                    <p><span className="text-muted-foreground">Empresa:</span> <span className="font-medium">{selectedCompany?.name || 'Não definida'}</span></p>
+                                    <p><span className="text-muted-foreground">Setor:</span> <span className="font-medium">{selectedSector?.name || 'Não definido'}</span></p>
+                                  </div>
+                                </div>
+                              </div>
                             )}
                           </div>
-                          
-                          {/* Responsável */}
-                          <div className="space-y-2">
-                            <Label htmlFor="assignedTo">
-                              <User className="h-3.5 w-3.5 inline mr-1.5" />
-                              Responsável
-                            </Label>
-                            <Input 
-                              id="assignedTo"
-                              value={formData.assignedTo || ''} 
-                              onChange={(e) => setFormData(prev => ({ ...prev, assignedTo: e.target.value }))}
-                              placeholder="Nome do técnico responsável"
-                            />
+                        </div>
+                        
+                        {/* Status da Ordem de Serviço */}
+                        <div className="rounded-lg border bg-card">
+                          <div className="px-4 py-3 border-b bg-muted/50">
+                            <h3 className="text-sm font-medium flex items-center gap-2">
+                              <Circle className="h-4 w-4 text-muted-foreground" />
+                              Status da Ordem
+                            </h3>
                           </div>
-                        </div>
-                      </div>
-                      {/* Localização e Equipamento */}
-                      <div className="rounded-lg border bg-card">
-                        <div className="px-4 py-3 border-b bg-muted/50">
-                          <h3 className="text-sm font-medium flex items-center gap-2">
-                            <Building className="h-4 w-4 text-muted-foreground" />
-                            Localização e Equipamento
-                          </h3>
-                        </div>
-                        <div className="p-4 space-y-4">
-                          {/* Equipamento */}
-                          <div className="space-y-2">
-                            <Label htmlFor="equipmentId">
-                              <Tag className="h-3.5 w-3.5 inline mr-1.5" />
-                              Equipamento <span className="text-destructive">*</span>
-                            </Label>
-                            <Select 
-                              value={formData.equipmentId || ''} 
-                              onValueChange={(value) => {
-                                setFormData(prev => ({ ...prev, equipmentId: value }));
-                                if (errors.equipmentId) setErrors(prev => ({ ...prev, equipmentId: '' }));
-                              }}
-                            >
-                              <SelectTrigger className={cn(errors.equipmentId && "border-destructive")}>
-                                <SelectValue placeholder="Selecione o equipamento" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {equipment.map(eq => (
-                                  <SelectItem key={eq.id} value={eq.id}>
-                                    <div className="flex flex-col">
-                                      <span className="font-medium">{eq.tag}</span>
-                                      <span className="text-xs text-muted-foreground">
-                                        {eq.brand} {eq.model}
-                                      </span>
+                          <div className="p-4 space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="workOrderStatus">Status Atual</Label>
+                              <Select 
+                                value={formData.status || ''} 
+                                onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as WorkOrder['status'] }))}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione o status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="OPEN">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                                      Aberta
                                     </div>
                                   </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            {errors.equipmentId && (
-                              <p className="text-xs text-destructive">{errors.equipmentId}</p>
-                            )}
-                          </div>
-                          
-                          {/* Informações do equipamento selecionado */}
-                          {selectedEquipment && (
-                            <div className="rounded-lg bg-muted/50 p-4 space-y-3">
-                              <div className="grid grid-cols-2 gap-3 text-sm">
-                                <div>
-                                  <span className="text-muted-foreground">Tipo:</span>
-                                  <p className="font-medium">{selectedEquipment.type}</p>
-                                </div>
-                                <div>
-                                  <span className="text-muted-foreground">Marca:</span>
-                                  <p className="font-medium">{selectedEquipment.brand}</p>
-                                </div>
-                                <div>
-                                  <span className="text-muted-foreground">Modelo:</span>
-                                  <p className="font-medium">{selectedEquipment.model}</p>
-                                </div>
-                                <div>
-                                  <span className="text-muted-foreground">Capacidade:</span>
-                                  <p className="font-medium">{selectedEquipment.capacity.toLocaleString()} BTUs</p>
-                                </div>
-                              </div>
-                              
-                              <Separator />
-                              
-                              <div className="space-y-2 text-sm">
-                                <div className="flex items-center gap-2">
-                                  <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-                                  <span className="text-muted-foreground">Localização:</span>
-                                </div>
-                                <div className="pl-5 space-y-1">
-                                  <p><span className="text-muted-foreground">Empresa:</span> <span className="font-medium">{selectedCompany?.name || 'Não definida'}</span></p>
-                                  <p><span className="text-muted-foreground">Setor:</span> <span className="font-medium">{selectedSector?.name || 'Não definido'}</span></p>
-                                </div>
-                              </div>
+                                  <SelectItem value="IN_PROGRESS">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-2 h-2 rounded-full bg-blue-500" />
+                                      Em Progresso
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="COMPLETED">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-2 h-2 rounded-full bg-green-500" />
+                                      Concluída
+                                    </div>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* Status da Ordem de Serviço */}
-                      <div className="rounded-lg border bg-card">
-                        <div className="px-4 py-3 border-b bg-muted/50">
-                          <h3 className="text-sm font-medium flex items-center gap-2">
-                            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-                            Status da Ordem
-                          </h3>
-                        </div>
-                        <div className="p-4 space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="workOrderStatus">Status Atual</Label>
-                            <Select 
-                              value={formData.status || ''} 
-                              onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as WorkOrder['status'] }))}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione o status" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="OPEN">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                                    Aberta
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="IN_PROGRESS">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-blue-500" />
-                                    Em Progresso
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="COMPLETED">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                                    Concluída
-                                  </div>
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
                           </div>
                         </div>
                       </div>
+                    </div>
                   </TabsContent>
                 )}
 
