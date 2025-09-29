@@ -6,7 +6,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { Checkbox } from '@/components/ui/checkbox';
@@ -21,7 +20,6 @@ import {
   Trash2,
   Save,
   X,
-  Info,
   Calendar,
   User,
   Tag,
@@ -53,7 +51,25 @@ interface StockItemRequest {
   unit: string;
 }
 
-
+// Componente para exibir o equipamento selecionado no trigger do Select
+function EquipmentSelectDisplay({ equipmentId, equipment }: { 
+  equipmentId: string | undefined;
+  equipment: any[];
+}) {
+  if (!equipmentId) return null;
+  
+  const eq = equipment.find(e => e.id === equipmentId);
+  if (!eq) return null;
+  
+  return (
+    <div className="truncate flex-1 py-0.5">
+      <div className="font-medium truncate">{eq.tag}</div>
+      <div className="text-xs text-muted-foreground truncate">
+        {eq.brand} {eq.model} • {eq.type}
+      </div>
+    </div>
+  );
+}
 
 export function WorkOrderEditModal({
   isOpen,
@@ -334,14 +350,6 @@ export function WorkOrderEditModal({
                 OS #{workOrder.number} - Atualize as informações necessárias
               </DialogDescription>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="h-8 w-8 -mt-1 -mr-2"
-            >
-              <X className="h-4 w-4" />
-            </Button>
           </div>
         </DialogHeader>
 
@@ -353,17 +361,22 @@ export function WorkOrderEditModal({
                 value="details" 
                 className="flex items-center gap-2 data-[state=active]:bg-background"
               >
-                <Info className="h-4 w-4" />
-                Detalhes
+                <ClipboardList className="h-4 w-4" />
+                <span>Detalhes</span>
+                {Object.keys(errors).length > 0 && (
+                  <span className="h-5 w-5 bg-destructive rounded-full flex items-center justify-center">
+                    <AlertTriangle className="h-3 w-3 text-white" />
+                  </span>
+                )}
               </TabsTrigger>
               <TabsTrigger 
                 value="materials" 
                 className="flex items-center gap-2 data-[state=active]:bg-background"
               >
                 <Package className="h-4 w-4" />
-                Materiais
+                <span>Materiais</span>
                 {selectedStockItems.length > 0 && (
-                  <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary/10 text-primary rounded-full">
+                  <span className="h-5 w-5 bg-secondary rounded-full flex items-center justify-center text-xs font-medium">
                     {selectedStockItems.length}
                   </span>
                 )}
@@ -374,7 +387,7 @@ export function WorkOrderEditModal({
                   className="flex items-center gap-2 data-[state=active]:bg-background"
                 >
                   <Wrench className="h-4 w-4" />
-                  Execução
+                  <span>Execução</span>
                 </TabsTrigger>
               )}
             </TabsList>
@@ -383,410 +396,539 @@ export function WorkOrderEditModal({
               <div className="p-6">
                 {/* Aba de Detalhes */}
                 {canEditDetails && (
-                  <TabsContent value="details" className="mt-0 space-y-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Coluna da Esquerda */}
-                    <div className="space-y-6">
-                      {/* Informações Básicas */}
-                      <div className="rounded-lg border bg-card">
-                        <div className="px-4 py-3 border-b bg-muted/50">
-                          <h3 className="text-sm font-medium flex items-center gap-2">
-                            <ClipboardList className="h-4 w-4 text-muted-foreground" />
-                            Informações Básicas
-                          </h3>
-                        </div>
-                        <div className="p-4 space-y-4">
-                          {/* Tipo de Ordem */}
-                          <div className="space-y-2">
-                            <Label htmlFor="workOrderType">
-                              Tipo de Ordem <span className="text-destructive">*</span>
-                            </Label>
-                            <Select 
-                              value={formData.type || ''} 
-                              onValueChange={(value) => {
-                                setFormData(prev => ({ ...prev, type: value as WorkOrder['type'] }));
-                                if (errors.type) setErrors(prev => ({ ...prev, type: '' }));
-                              }}
-                            >
-                              <SelectTrigger className={cn(errors.type && "border-destructive")}>
-                                <SelectValue placeholder="Selecione o tipo" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="CORRECTIVE">
-                                  <div className="flex items-center gap-2">
-                                    <Wrench className="h-4 w-4" />
-                                    Corretiva
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="PREVENTIVE">
-                                  <div className="flex items-center gap-2">
-                                    <Calendar className="h-4 w-4" />
-                                    Preventiva
-                                  </div>
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                            {errors.type && (
-                              <p className="text-xs text-destructive">{errors.type}</p>
-                            )}
+                  <TabsContent value="details" className="mt-0">
+                    <ScrollArea className="h-[60vh] pr-4">
+                      <div className="space-y-6">
+                        {/* Card 1: Informações Principais - Compactado */}
+                        <div className="rounded-lg border bg-card">
+                          <div className="px-4 py-3 border-b bg-muted/50">
+                            <h3 className="text-sm font-medium flex items-center gap-2">
+                              <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                              Informações da Ordem
+                            </h3>
                           </div>
-                          
-                          {/* Prioridade */}
-                          <div className="space-y-2">
-                            <Label htmlFor="workOrderPriority">
-                              Prioridade <span className="text-destructive">*</span>
-                            </Label>
-                            <Select 
-                              value={formData.priority || ''} 
-                              onValueChange={(value) => {
-                                setFormData(prev => ({ ...prev, priority: value as WorkOrder['priority'] }));
-                                if (errors.priority) setErrors(prev => ({ ...prev, priority: '' }));
-                              }}
-                            >
-                              <SelectTrigger className={cn(errors.priority && "border-destructive")}>
-                                <SelectValue placeholder="Selecione a prioridade" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map((priority) => (
-                                  <SelectItem key={priority} value={priority}>
-                                    <div className="flex items-center gap-2">
-                                      <div className={cn("w-2 h-2 rounded-full", getPriorityColor(priority))} />
-                                      <span>{getPriorityLabel(priority)}</span>
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            {errors.priority && (
-                              <p className="text-xs text-destructive">{errors.priority}</p>
-                            )}
-                          </div>
-                          
-                          {/* Descrição */}
-                          <div className="space-y-2">
-                            <Label htmlFor="workOrderDescription">
-                              Descrição <span className="text-destructive">*</span>
-                            </Label>
-                            <Textarea 
-                              id="workOrderDescription"
-                              value={formData.description || ''} 
-                              onChange={(e) => {
-                                setFormData(prev => ({ ...prev, description: e.target.value }));
-                                if (errors.description) setErrors(prev => ({ ...prev, description: '' }));
-                              }}
-                              placeholder="Descreva o problema ou trabalho a ser realizado"
-                              rows={4}
-                              className={cn(
-                                "resize-none",
-                                errors.description && "border-destructive"
-                              )}
-                            />
-                            {errors.description && (
-                              <p className="text-xs text-destructive">{errors.description}</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Agendamento */}
-                      <div className="rounded-lg border bg-card">
-                        <div className="px-4 py-3 border-b bg-muted/50">
-                          <h3 className="text-sm font-medium flex items-center gap-2">
-                            <CalendarClock className="h-4 w-4 text-muted-foreground" />
-                            Agendamento
-                          </h3>
-                        </div>
-                        <div className="p-4 space-y-4">
-                          {/* Data Programada */}
-                          <div className="space-y-2">
-                            <Label htmlFor="scheduledDate">
-                              Data Programada <span className="text-destructive">*</span>
-                            </Label>
-                            <DatePicker
-                              date={formData.scheduledDate ? new Date(formData.scheduledDate) : undefined}
-                              setDate={(date) => {
-                                setFormData(prev => ({ ...prev, scheduledDate: date?.toISOString() }));
-                                if (errors.scheduledDate) setErrors(prev => ({ ...prev, scheduledDate: '' }));
-                              }}
-                              className={cn(errors.scheduledDate && "border-destructive")}
-                            />
-                            {errors.scheduledDate && (
-                              <p className="text-xs text-destructive">{errors.scheduledDate}</p>
-                            )}
-                          </div>
-                          
-                          {/* Responsável */}
-                          <div className="space-y-2">
-                            <Label htmlFor="assignedTo">
-                              <User className="h-3.5 w-3.5 inline mr-1.5" />
-                              Responsável
-                            </Label>
-                            <Input 
-                              id="assignedTo"
-                              value={formData.assignedTo || ''} 
-                              onChange={(e) => setFormData(prev => ({ ...prev, assignedTo: e.target.value }))}
-                              placeholder="Nome do técnico responsável"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Coluna da Direita */}
-                    <div className="space-y-6">
-                      {/* Localização e Equipamento */}
-                      <div className="rounded-lg border bg-card">
-                        <div className="px-4 py-3 border-b bg-muted/50">
-                          <h3 className="text-sm font-medium flex items-center gap-2">
-                            <Building className="h-4 w-4 text-muted-foreground" />
-                            Localização e Equipamento
-                          </h3>
-                        </div>
-                        <div className="p-4 space-y-4">
-                          {/* Equipamento */}
-                          <div className="space-y-2">
-                            <Label htmlFor="equipmentId">
-                              <Tag className="h-3.5 w-3.5 inline mr-1.5" />
-                              Equipamento <span className="text-destructive">*</span>
-                            </Label>
-                            <Select 
-                              value={formData.equipmentId || ''} 
-                              onValueChange={(value) => {
-                                setFormData(prev => ({ ...prev, equipmentId: value }));
-                                if (errors.equipmentId) setErrors(prev => ({ ...prev, equipmentId: '' }));
-                              }}
-                            >
-                              <SelectTrigger className={cn(errors.equipmentId && "border-destructive")}>
-                                <SelectValue placeholder="Selecione o equipamento" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {equipment.map(eq => (
-                                  <SelectItem key={eq.id} value={eq.id}>
-                                    <div className="flex flex-col">
-                                      <span className="font-medium">{eq.tag}</span>
-                                      <span className="text-xs text-muted-foreground">
-                                        {eq.brand} {eq.model}
-                                      </span>
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            {errors.equipmentId && (
-                              <p className="text-xs text-destructive">{errors.equipmentId}</p>
-                            )}
-                          </div>
-                          
-                          {/* Informações do equipamento selecionado */}
-                          {selectedEquipment && (
-                            <div className="rounded-lg bg-muted/50 p-4 space-y-3">
-                              <div className="grid grid-cols-2 gap-3 text-sm">
-                                <div>
-                                  <span className="text-muted-foreground">Tipo:</span>
-                                  <p className="font-medium">{selectedEquipment.type}</p>
-                                </div>
-                                <div>
-                                  <span className="text-muted-foreground">Marca:</span>
-                                  <p className="font-medium">{selectedEquipment.brand}</p>
-                                </div>
-                                <div>
-                                  <span className="text-muted-foreground">Modelo:</span>
-                                  <p className="font-medium">{selectedEquipment.model}</p>
-                                </div>
-                                <div>
-                                  <span className="text-muted-foreground">Capacidade:</span>
-                                  <p className="font-medium">{selectedEquipment.capacity.toLocaleString()} BTUs</p>
-                                </div>
+                          <div className="p-4 space-y-4">
+                            {/* Linha 1: Tipo, Prioridade e Status - Grid de 3 colunas */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              {/* Tipo de Ordem */}
+                              <div className="space-y-2">
+                                <Label htmlFor="workOrderType" className="text-xs font-medium">
+                                  Tipo de Ordem <span className="text-destructive">*</span>
+                                </Label>
+                                <Select 
+                                  value={formData.type || ''} 
+                                  onValueChange={(value) => {
+                                    setFormData(prev => ({ ...prev, type: value as WorkOrder['type'] }));
+                                    if (errors.type) setErrors(prev => ({ ...prev, type: '' }));
+                                  }}
+                                >
+                                  <SelectTrigger className={cn(
+                                    "h-9",
+                                    errors.type && "border-destructive focus:ring-destructive"
+                                  )}>
+                                    <SelectValue placeholder="Selecione" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="CORRECTIVE">
+                                      <div className="flex items-center gap-2">
+                                        <Wrench className="h-3.5 w-3.5" />
+                                        <span>Corretiva</span>
+                                      </div>
+                                    </SelectItem>
+                                    <SelectItem value="PREVENTIVE">
+                                      <div className="flex items-center gap-2">
+                                        <Calendar className="h-3.5 w-3.5" />
+                                        <span>Preventiva</span>
+                                      </div>
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                {errors.type && (
+                                  <p className="text-xs text-destructive mt-1">{errors.type}</p>
+                                )}
                               </div>
                               
-                              <Separator />
+                              {/* Prioridade */}
+                              <div className="space-y-2">
+                                <Label htmlFor="workOrderPriority" className="text-xs font-medium">
+                                  Prioridade <span className="text-destructive">*</span>
+                                </Label>
+                                <Select 
+                                  value={formData.priority || ''} 
+                                  onValueChange={(value) => {
+                                    setFormData(prev => ({ ...prev, priority: value as WorkOrder['priority'] }));
+                                    if (errors.priority) setErrors(prev => ({ ...prev, priority: '' }));
+                                  }}
+                                >
+                                  <SelectTrigger className={cn(
+                                    "h-9",
+                                    errors.priority && "border-destructive focus:ring-destructive"
+                                  )}>
+                                    <SelectValue placeholder="Selecione" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map((priority) => (
+                                      <SelectItem key={priority} value={priority}>
+                                        <div className="flex items-center gap-2">
+                                          <div className={cn(
+                                            "w-2 h-2 rounded-full",
+                                            getPriorityColor(priority)
+                                          )} />
+                                          <span className="text-sm">{getPriorityLabel(priority)}</span>
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                {errors.priority && (
+                                  <p className="text-xs text-destructive mt-1">{errors.priority}</p>
+                                )}
+                              </div>
+
+                              {/* Status */}
+                              <div className="space-y-2">
+                                <Label htmlFor="workOrderStatus" className="text-xs font-medium">
+                                  Status <span className="text-destructive">*</span>
+                                </Label>
+                                <Select 
+                                  value={formData.status || ''} 
+                                  onValueChange={(value) => {
+                                    setFormData(prev => ({ ...prev, status: value as WorkOrder['status'] }));
+                                    if (errors.status) setErrors(prev => ({ ...prev, status: '' }));
+                                  }}
+                                >
+                                  <SelectTrigger className={cn(
+                                    "h-9",
+                                    errors.status && "border-destructive focus:ring-destructive"
+                                  )}>
+                                    <SelectValue placeholder="Selecione" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="OPEN">
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                                        <span className="text-sm">Aberta</span>
+                                      </div>
+                                    </SelectItem>
+                                    <SelectItem value="IN_PROGRESS">
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-blue-500" />
+                                        <span className="text-sm">Em Progresso</span>
+                                      </div>
+                                    </SelectItem>
+                                    <SelectItem value="COMPLETED">
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-green-500" />
+                                        <span className="text-sm">Concluída</span>
+                                      </div>
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                {errors.status && (
+                                  <p className="text-xs text-destructive mt-1">{errors.status}</p>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Descrição - Campo completo */}
+                            <div className="space-y-2">
+                              <Label htmlFor="workOrderDescription" className="text-xs font-medium">
+                                Descrição do Serviço <span className="text-destructive">*</span>
+                              </Label>
+                              <Textarea 
+                                id="workOrderDescription"
+                                value={formData.description || ''} 
+                                onChange={(e) => {
+                                  setFormData(prev => ({ ...prev, description: e.target.value }));
+                                  if (errors.description) setErrors(prev => ({ ...prev, description: '' }));
+                                }}
+                                placeholder="Descreva detalhadamente o problema ou trabalho a ser realizado..."
+                                rows={3}
+                                className={cn(
+                                  "resize-none text-sm",
+                                  errors.description && "border-destructive focus:ring-destructive"
+                                )}
+                              />
+                              {errors.description && (
+                                <p className="text-xs text-destructive mt-1">{errors.description}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Card 2: Agendamento e Responsável - Compactado */}
+                        <div className="rounded-lg border bg-card">
+                          <div className="px-4 py-3 border-b bg-muted/50">
+                            <h3 className="text-sm font-medium flex items-center gap-2">
+                              <CalendarClock className="h-4 w-4 text-muted-foreground" />
+                              Agendamento e Atribuição
+                            </h3>
+                          </div>
+                          <div className="p-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* Data Programada */}
+                              <div className="space-y-2">
+                                <Label htmlFor="scheduledDate" className="text-xs font-medium flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  Data Programada <span className="text-destructive">*</span>
+                                </Label>
+                                <DatePicker
+                                  date={formData.scheduledDate ? new Date(formData.scheduledDate) : undefined}
+                                  setDate={(date) => {
+                                    setFormData(prev => ({ ...prev, scheduledDate: date?.toISOString() }));
+                                    if (errors.scheduledDate) setErrors(prev => ({ ...prev, scheduledDate: '' }));
+                                  }}
+                                  className={cn(
+                                    "h-9",
+                                    errors.scheduledDate && "border-destructive"
+                                  )}
+                                />
+                                {errors.scheduledDate && (
+                                  <p className="text-xs text-destructive mt-1">{errors.scheduledDate}</p>
+                                )}
+                              </div>
                               
-                              <div className="space-y-2 text-sm">
-                                <div className="flex items-center gap-2">
-                                  <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-                                  <span className="text-muted-foreground">Localização:</span>
+                              {/* Responsável */}
+                              <div className="space-y-2">
+                                <Label htmlFor="assignedTo" className="text-xs font-medium flex items-center gap-1">
+                                  <User className="h-3 w-3" />
+                                  Técnico Responsável
+                                </Label>
+                                <Input 
+                                  id="assignedTo"
+                                  value={formData.assignedTo || ''} 
+                                  onChange={(e) => setFormData(prev => ({ ...prev, assignedTo: e.target.value }))}
+                                  placeholder="Nome do técnico"
+                                  className="h-9 text-sm"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Data de Conclusão - Aparece apenas quando status é COMPLETED */}
+                            {formData.status === 'COMPLETED' && (
+                              <div className="mt-4 pt-4 border-t">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor="completedAt" className="text-xs font-medium flex items-center gap-1">
+                                      <CalendarClock className="h-3 w-3" />
+                                      Data de Conclusão <span className="text-destructive">*</span>
+                                    </Label>
+                                    <DatePicker
+                                      date={formData.completedAt ? new Date(formData.completedAt) : undefined}
+                                      setDate={(date) => {
+                                        setFormData(prev => ({ ...prev, completedAt: date?.toISOString() }));
+                                        if (errors.completedAt) setErrors(prev => ({ ...prev, completedAt: '' }));
+                                      }}
+                                      placeholder="Quando foi concluída"
+                                      className={cn(
+                                        "h-9",
+                                        errors.completedAt && "border-destructive"
+                                      )}
+                                    />
+                                    {errors.completedAt && (
+                                      <p className="text-xs text-destructive mt-1">{errors.completedAt}</p>
+                                    )}
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-medium text-muted-foreground">
+                                      Tempo de Execução
+                                    </Label>
+                                    <div className="h-9 px-3 py-2 bg-muted/50 rounded-md text-sm">
+                                      {formData.completedAt && formData.scheduledDate ? (
+                                        <span className="text-muted-foreground">
+                                          {Math.ceil(
+                                            (new Date(formData.completedAt).getTime() - new Date(formData.scheduledDate).getTime()) 
+                                            / (1000 * 60 * 60 * 24)
+                                          )} dias
+                                        </span>
+                                      ) : (
+                                        <span className="text-muted-foreground/50">-</span>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
-                                <div className="pl-5 space-y-1">
-                                  <p><span className="text-muted-foreground">Empresa:</span> <span className="font-medium">{selectedCompany?.name || 'Não definida'}</span></p>
-                                  <p><span className="text-muted-foreground">Setor:</span> <span className="font-medium">{selectedSector?.name || 'Não definido'}</span></p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Card 3: Equipamento e Localização - Melhorado */}
+                        <div className="rounded-lg border bg-card">
+                          <div className="px-4 py-3 border-b bg-muted/50">
+                            <h3 className="text-sm font-medium flex items-center gap-2">
+                              <Building className="h-4 w-4 text-muted-foreground" />
+                              Equipamento e Localização
+                            </h3>
+                          </div>
+                          <div className="p-4 space-y-4">
+                            {/* Seleção de Equipamento */}
+                            <div className="space-y-2">
+                              <Label htmlFor="equipmentId" className="text-xs font-medium flex items-center gap-1">
+                                <Tag className="h-3 w-3" />
+                                Equipamento <span className="text-destructive">*</span>
+                              </Label>
+                              <Select 
+                                value={formData.equipmentId || ''} 
+                                onValueChange={(value) => {
+                                  setFormData(prev => ({ ...prev, equipmentId: value }));
+                                  if (errors.equipmentId) setErrors(prev => ({ ...prev, equipmentId: '' }));
+                                }}
+                              >
+                                <SelectTrigger className={cn(
+                                  "h-auto min-h-[2.25rem] whitespace-normal",
+                                  errors.equipmentId && "border-destructive focus:ring-destructive"
+                                )}>
+                                  {formData.equipmentId ? (
+                                    <div className="flex items-center w-full pr-2">
+                                      <EquipmentSelectDisplay 
+                                        equipmentId={formData.equipmentId}
+                                        equipment={equipment}
+                                      />
+                                    </div>
+                                  ) : (
+                                    <SelectValue placeholder="Selecione o equipamento" />
+                                  )}
+                                </SelectTrigger>
+                                <SelectContent className="w-[var(--radix-select-trigger-width)] max-w-[400px]">
+                                  {equipment.map(eq => {
+                                    const eqSector = sectors.find(s => s.id === eq.sectorId);
+                                    const eqCompany = eqSector ? companies.find(c => c.id === eqSector.companyId) : null;
+                                    
+                                    return (
+                                      <SelectItem key={eq.id} value={eq.id} className="py-3">
+                                        <div className="flex items-start gap-3 w-full min-w-0">
+                                          <div className="flex-1 min-w-0">
+                                            <div className="font-medium text-sm truncate">{eq.tag}</div>
+                                            <div className="text-xs text-muted-foreground mt-0.5 truncate">
+                                              {eq.brand} {eq.model} • {eq.type}
+                                            </div>
+                                            {eqCompany && eqSector && (
+                                              <div className="text-xs text-muted-foreground mt-0.5 truncate">
+                                                {eqCompany.name} → {eqSector.name}
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </SelectItem>
+                                    );
+                                  })}
+                                </SelectContent>
+                              </Select>
+                              {errors.equipmentId && (
+                                <p className="text-xs text-destructive mt-1">{errors.equipmentId}</p>
+                              )}
+                            </div>
+                            
+                            {/* Card de Informações do Equipamento - Visual Melhorado */}
+                            {selectedEquipment && (
+                              <div className="rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 p-4">
+                                <div className="flex items-start gap-3">
+                                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                    <Tag className="h-5 w-5 text-primary" />
+                                  </div>
+                                  <div className="flex-1 space-y-3">
+                                    <div>
+                                      <h4 className="font-medium text-sm">{selectedEquipment.tag}</h4>
+                                      <p className="text-xs text-muted-foreground mt-0.5">
+                                        {selectedEquipment.type} • {selectedEquipment.capacity.toLocaleString()} BTUs
+                                      </p>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-3 text-xs">
+                                      <div>
+                                        <span className="text-muted-foreground">Marca/Modelo:</span>
+                                        <p className="font-medium mt-0.5">{selectedEquipment.brand} {selectedEquipment.model}</p>
+                                      </div>
+                                      <div>
+                                        <span className="text-muted-foreground">Localização:</span>
+                                        <p className="font-medium mt-0.5">
+                                          {selectedCompany?.name || 'N/A'}
+                                        </p>
+                                        <p className="text-muted-foreground">
+                                          {selectedSector?.name || 'N/A'}
+                                        </p>
+                                      </div>
+                                    </div>
+
+                                    {/* Tags visuais para informações importantes */}
+                                    <div className="flex flex-wrap gap-2 pt-2 border-t border-primary/10">
+                                      <span className="inline-flex items-center px-2 py-1 rounded-md bg-background/80 text-xs">
+                                        <MapPin className="h-3 w-3 mr-1" />
+                                        {selectedSector?.name || 'Setor'}
+                                      </span>
+                                      <span className="inline-flex items-center px-2 py-1 rounded-md bg-background/80 text-xs">
+                                        <Building className="h-3 w-3 mr-1" />
+                                        {selectedCompany?.name || 'Empresa'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
+                )}
+
+                {/* Aba de Materiais - Melhorada */}
+                <TabsContent value="materials" className="mt-0">
+                  <ScrollArea className="h-[60vh] pr-4">
+                    <div className="space-y-6">
+                      <div className="rounded-lg border bg-card">
+                        <div className="px-4 py-3 border-b bg-muted/50">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-medium flex items-center gap-2">
+                              <Package className="h-4 w-4 text-muted-foreground" />
+                              Materiais e Peças
+                            </h3>
+                            {selectedStockItems.length > 0 && (
+                              <span className="text-xs text-muted-foreground">
+                                {selectedStockItems.length} {selectedStockItems.length === 1 ? 'item' : 'itens'} selecionado{selectedStockItems.length === 1 ? '' : 's'}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="p-4 space-y-4">
+                          {/* Formulário de Adição - Layout Melhorado */}
+                          <div className="bg-muted/30 rounded-lg p-3 border border-muted-foreground/10">
+                            <Label className="text-xs font-medium text-muted-foreground mb-3 block">
+                              Adicionar Material
+                            </Label>
+                            <div className="flex flex-col sm:flex-row gap-2">
+                              <div className="flex-1">
+                                <Select 
+                                  value={stockItemForm.stockItemId} 
+                                  onValueChange={(value) => setStockItemForm(prev => ({ ...prev, stockItemId: value }))}
+                                >
+                                  <SelectTrigger className="h-9">
+                                    <SelectValue placeholder="Selecione um item do estoque" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {availableStockItems.length === 0 ? (
+                                      <div className="p-4 text-center text-sm text-muted-foreground">
+                                        Todos os itens já foram adicionados
+                                      </div>
+                                    ) : (
+                                      availableStockItems.map(item => (
+                                        <SelectItem key={item.id} value={item.id}>
+                                          <div className="flex items-center justify-between w-full gap-2">
+                                            <span className="font-medium text-sm">{item.description}</span>
+                                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                              <span>Estoque: {item.quantity}</span>
+                                              <span>•</span>
+                                              <span>{item.unit}</span>
+                                            </div>
+                                          </div>
+                                        </SelectItem>
+                                      ))
+                                    )}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              <div className="flex gap-2">
+                                <Input 
+                                  type="number" 
+                                  min="1"
+                                  value={stockItemForm.quantity} 
+                                  onChange={(e) => setStockItemForm(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
+                                  placeholder="Qtd"
+                                  className="w-20 h-9"
+                                />
+                                
+                                <Button 
+                                  onClick={addStockItem}
+                                  disabled={!stockItemForm.stockItemId}
+                                  size="sm"
+                                  className="h-9 px-3"
+                                >
+                                  <Plus className="h-4 w-4" />
+                                  <span className="ml-1.5 hidden sm:inline">Adicionar</span>
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Lista de Materiais - Visual Melhorado */}
+                          {selectedStockItems.length === 0 ? (
+                            <div className="rounded-lg border-2 border-dashed border-muted-foreground/20 bg-muted/10 p-12">
+                              <div className="flex flex-col items-center text-center max-w-sm mx-auto">
+                                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                                  <Package className="h-6 w-6 text-muted-foreground" />
+                                </div>
+                                <p className="text-sm font-medium text-muted-foreground mb-1">
+                                  Nenhum material adicionado
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  Selecione os materiais que serão utilizados nesta ordem de serviço
+                                </p>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {selectedStockItems.map((item, index) => (
+                                <div
+                                  key={item.id}
+                                  className={cn(
+                                    "flex items-center gap-3 p-3 rounded-lg border transition-colors",
+                                    "hover:bg-muted/50 group"
+                                  )}
+                                >
+                                  <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center shrink-0">
+                                    <span className="text-xs font-medium text-primary">
+                                      {index + 1}
+                                    </span>
+                                  </div>
+                                  
+                                  <div className="flex-1">
+                                    <p className="font-medium text-sm">{item.name}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      SKU: {item.stockItemId}
+                                    </p>
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-3">
+                                    <div className="text-right">
+                                      <p className="text-sm font-medium">{item.quantity}</p>
+                                      <p className="text-xs text-muted-foreground">{item.unit}</p>
+                                    </div>
+                                    
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon"
+                                      onClick={() => removeStockItem(item.id)}
+                                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                              
+                              {/* Resumo */}
+                              <div className="mt-4 p-3 bg-muted/30 rounded-lg border border-muted-foreground/10">
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="text-muted-foreground">Total de itens:</span>
+                                  <span className="font-medium">
+                                    {selectedStockItems.reduce((acc, item) => acc + item.quantity, 0)} unidades
+                                  </span>
                                 </div>
                               </div>
                             </div>
                           )}
                         </div>
                       </div>
-                      
-                      {/* Status da Ordem de Serviço */}
-                      <div className="rounded-lg border bg-card">
-                        <div className="px-4 py-3 border-b bg-muted/50">
-                          <h3 className="text-sm font-medium flex items-center gap-2">
-                            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-                            Status da Ordem
-                          </h3>
-                        </div>
-                        <div className="p-4 space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="workOrderStatus">Status Atual</Label>
-                            <Select 
-                              value={formData.status || ''} 
-                              onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as WorkOrder['status'] }))}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione o status" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="OPEN">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                                    Aberta
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="IN_PROGRESS">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-blue-500" />
-                                    Em Progresso
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="COMPLETED">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                                    Concluída
-                                  </div>
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      </div>
                     </div>
-                  </div>
-                </TabsContent>
-                )}
-
-                {/* Aba de Materiais */}
-                <TabsContent value="materials" className="mt-0 space-y-6">
-                  <div className="rounded-lg border bg-card">
-                    <div className="px-4 py-3 border-b bg-muted/50">
-                      <h3 className="text-sm font-medium flex items-center gap-2">
-                        <Package className="h-4 w-4 text-muted-foreground" />
-                        Itens de Estoque Utilizados
-                      </h3>
-                    </div>
-                    <div className="p-4 space-y-4">
-                      {/* Adicionar item */}
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <div className="flex-1">
-                          <Label htmlFor="stockItemId" className="sr-only">Item</Label>
-                          <Select 
-                            value={stockItemForm.stockItemId} 
-                            onValueChange={(value) => setStockItemForm(prev => ({ ...prev, stockItemId: value }))}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione um item do estoque" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {availableStockItems.map(item => (
-                                <SelectItem key={item.id} value={item.id}>
-                                  <div className="flex justify-between items-center w-full">
-                                    <span>{item.description}</span>
-                                    <span className="text-xs text-muted-foreground ml-2">
-                                      {item.unit}
-                                    </span>
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        
-                        <div className="w-full sm:w-28">
-                          <Label htmlFor="quantity" className="sr-only">Quantidade</Label>
-                          <Input 
-                            id="quantity"
-                            type="number" 
-                            min="1"
-                            value={stockItemForm.quantity} 
-                            onChange={(e) => setStockItemForm(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
-                            placeholder="Qtd"
-                          />
-                        </div>
-                        
-                        <Button 
-                          onClick={addStockItem}
-                          disabled={!stockItemForm.stockItemId}
-                          className="sm:w-auto"
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Adicionar
-                        </Button>
-                      </div>
-                      
-                      {/* Lista de itens adicionados */}
-                      {selectedStockItems.length === 0 ? (
-                        <div className="rounded-lg border-2 border-dashed bg-muted/20 p-8">
-                          <div className="flex flex-col items-center text-center">
-                            <Package className="h-12 w-12 text-muted-foreground/50 mb-3" />
-                            <p className="text-sm text-muted-foreground">
-                              Nenhum item adicionado
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Selecione itens do estoque que serão utilizados
-                            </p>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="rounded-lg border overflow-hidden">
-                          <table className="w-full">
-                            <thead>
-                              <tr className="border-b bg-muted/50">
-                                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
-                                  Item
-                                </th>
-                                <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground">
-                                  Quantidade
-                                </th>
-                                <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground w-16">
-                                  Ação
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {selectedStockItems.map((item, index) => (
-                                <tr key={item.id} className={cn(
-                                  "border-b",
-                                  index % 2 === 0 ? "bg-background" : "bg-muted/20"
-                                )}>
-                                  <td className="px-4 py-3">
-                                    <p className="font-medium text-sm">{item.name}</p>
-                                  </td>
-                                  <td className="px-4 py-3 text-center">
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                                      {item.quantity} {item.unit}
-                                    </span>
-                                  </td>
-                                  <td className="px-4 py-3 text-center">
-                                    <Button 
-                                      variant="ghost" 
-                                      size="icon"
-                                      onClick={() => removeStockItem(item.id)}
-                                      className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  </ScrollArea>
                 </TabsContent>
                 
                 {/* Aba de Execução */}
                 {canEditExecution && (
-                  <TabsContent value="execution" className="mt-0 space-y-6">
+                  <TabsContent value="execution" className="mt-0">
+                    <ScrollArea className="h-[60vh] pr-4">
+                      <div className="space-y-6">
                     {/* Status de Execução */}
                     <div className="rounded-lg border bg-card">
                       <div className="px-4 py-3 border-b bg-muted/50">
@@ -1001,6 +1143,8 @@ export function WorkOrderEditModal({
                         </div>
                       </div>
                     )}
+                    </div>
+                    </ScrollArea>
                   </TabsContent>
                 )}
               </div>
