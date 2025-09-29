@@ -37,57 +37,97 @@ index.html            ⚠️ apenas <title> e meta tags
 
 ---
 
-## 2. Dados e estado — padrão unificado
+## 2. Dados e estado — padrão atual
 
-**Regra de ouro**
+**Estado atual da implementação**
 
-* **Persistência de domínio** → **`useKV()`** (sem `localStorage`/`sessionStorage`).
-* **Estado efêmero de UI** (filtros, ids em edição, visibilidade de modal) → **Zustand** (sem persistência).
+* **Persistência de domínio** → **Store classes** + `localStorage` (`src/data/*Store.ts`).
+* **Estado efêmero de UI** → **React useState** ou **Context API**.
+* **Dados temporários/mock** → hooks em `src/hooks/useDataTemp.ts`.
 
-#### Adaptador KV (exemplo)
+#### Padrão de Store atual (exemplo)
 
 ```ts
-// src/data/useWorkOrdersKV.ts
-import { useKV } from '@github/spark/hooks'
-import type { WorkOrder } from '@/types'
+// src/data/usersStore.ts
+class UsersStore {
+  private users: User[] = []
+  
+  load() { /* localStorage */ }
+  save() { /* localStorage */ }
+  createUser(data: Partial<User>) { /* ... */ }
+  updateUser(id: string, data: Partial<User>) { /* ... */ }
+}
 
-const KEY = 'workOrders:db'
-export function useWorkOrdersKV() {
-  const [items, setItems] = useKV<WorkOrder[]>(KEY, [])
-  const add = (item: WorkOrder) => setItems(prev => ([...(prev ?? []), item]))
-  const patch = (id: string, data: Partial<WorkOrder>) =>
-    setItems(prev => (prev ?? []).map(x => x.id === id ? { ...x, ...data } : x))
-  return { items: items ?? [], setItems, add, patch }
+export const usersStore = new UsersStore()
+export function useUsers() {
+  return {
+    createUser: usersStore.createUser.bind(usersStore),
+    /* ... mais métodos ... */
+  }
 }
 ```
 
-#### Zustand para UI (exemplo)
+#### Context para estado de UI complexo
 
 ```ts
-// src/data/uiStore.ts
-import { create } from 'zustand'
-
-interface UIState { editId?: string; setEdit: (id?: string) => void }
-export const useUIStore = create<UIState>(set => ({
-  editId: undefined,
-  setEdit: (id) => set({ editId: id })
-}))
+// src/contexts/LocationContext.tsx
+export function LocationProvider({ children }) {
+  const [selectedNode, setSelectedNode] = useState<LocationNode | null>(null)
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
+  /* contexto compartilhado entre componentes */
+}
 ```
 
-**Sincronização**
+**Migração gradual**
 
-* Dados (persistentes) → hooks baseados em `useKV()`.
-* UI (efêmero) → Zustand. Não misturar persistência no Zustand.
+* Novos recursos: usar `useKV()` quando disponível no Spark.
+* Código existente: manter padrão store class até migração.
 
 ---
 
 ## 3. Arquitetura de componentes
 
-* **Layout-first**: `src/components/Layout.tsx` (navegação por papel).
-* **Modais**: Radix Dialog (`WorkOrderEditModal.tsx`, `ProcedureViewModal.tsx`).
-* **UI base**: `src/components/ui/` (shadcn/ui).
-* **Páginas**: `src/pages/` + rotas **protegidas** em `App.tsx`.
-* **Responsivo**: validar com `useIsMobile()`.
+### Estrutura de UI
+
+* **Layout**: `src/components/Layout.tsx` com navegação baseada em ACL/role.
+* **UI base**: `src/components/ui/` (shadcn/ui) — **NÃO modificar diretamente**.
+* **Páginas**: `src/pages/` + roteamento protegido em `App.tsx`.
+* **Responsivo**: `useIsMobile()` para lógica condicional.
+
+### Padrões de Modal/Dialog
+
+**Estrutura padrão dos modais:**
+
+```tsx
+// Exemplo: LocationFormModal.tsx, WorkOrderEditModal.tsx
+export function MyModal({ isOpen, onClose, data }: Props) {
+  const [formData, setFormData] = useState(initialData)
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh]">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+        
+        <ScrollArea className="max-h-[calc(90vh-120px)]">
+          {/* Conteúdo do modal */}
+        </ScrollArea>
+        
+        <div className="flex justify-end gap-3 mt-8 pt-4 border-t">
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={handleSubmit}>Salvar</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+```
+
+**Modal vs Drawer:**
+* **Modais** → Formulários complexos, edição de dados.
+* **Drawers** → Visualização, listas, navegação lateral.
 
 ---
 
@@ -135,7 +175,28 @@ export const useUIStore = create<UIState>(set => ({
 
 ---
 
-## 9. Backend Django — contrato de integração
+## 9. Onboarding e autenticação
+
+### Fluxo de onboarding
+
+* **`OnboardingManager`** em `useOnboardingFlow.tsx` controla jornada do usuário.
+* **Estados**: convite aceito → setup → tour → guia interativo.
+* **Persistência**: `localStorage` com prefixo `onboarding:`.
+* **Páginas**: `OnboardingPage` → `QuickSetupPage` → `WelcomeTourPage`.
+
+### Autenticação atual
+
+```ts
+// src/data/authStore.ts - padrão current
+export function useCurrentRole(): [Role, (r: Role) => void]
+export function getCurrentRole(): Role  // sync version
+
+// Fallback: localStorage 'auth:role' se usuário não disponível
+```
+
+---
+
+## 10. Backend Django — contrato de integração
 
 ### Porta e execução
 
@@ -178,7 +239,7 @@ path('api/work-orders', WorkOrderListView.as_view()),
 
 ---
 
-## 10. Ferramentas e padrões
+## 11. Ferramentas e padrões
 
 * **Forms**: React Hook Form + Zod.
 * **Rotas**: React Router com guards/proteção.
@@ -190,7 +251,7 @@ path('api/work-orders', WorkOrderListView.as_view()),
 
 ---
 
-## 11. Devcontainer/Codespaces
+## 12. Devcontainer/Codespaces
 
 **Requisitos mínimos**
 
@@ -217,15 +278,33 @@ echo "Spark + Django ativos"
 
 ---
 
-## 12. Testes
+## 13. Testes
 
-* Unitários: **Vitest** (`src/__tests__/`).
-* E2E: **Cypress** por perfil/ACL (script `cy:run-acl`).
-* Planos: **`PlansTestingSuite.tsx`**.
+### Configuração atual
+
+* **Unitários**: Vitest + Testing Library (`src/__tests__/setup.ts`).
+* **E2E**: Cypress configurado (`cypress.config.ts`) — **pasta não existe ainda**.
+* **Script ACL**: `npm run cy:run-acl` para testes por perfil.
+
+### Padrões de teste descobertos
+
+```ts
+// src/__tests__/setup.ts
+import '@testing-library/jest-dom'
+globalThis.localStorage = { /* mock */ }
+```
+
+```bash
+# Scripts disponíveis
+npm test          # Testes unitários
+npm run test:ui   # Interface do Vitest  
+npm run cy:open   # Cypress interativo
+npm run cy:run-acl # Testes E2E por ACL
+```
 
 ---
 
-## 13. Checklist de validação
+## 14. Checklist de validação
 
 ```bash
 # Frontend
@@ -244,17 +323,17 @@ curl -H "Origin: http://localhost:5173" -I http://localhost:3333/api/health | \
 
 ---
 
-## 14. Troubleshooting
+## 15. Troubleshooting
 
 * **Spark não carrega**: conferir `src/main.tsx`/`src/main.css`, porta `3333` livre, CORS/headers no Django, rebuild do container.
 * **Assets falham**: imports explícitos; sem caminhos string; não alterar `vite.base`.
-* **Persistência falha**: garantir `useKV` em componente/hook; não misturar com persistência Zustand; usar updates funcionais (`set(prev => ...)`).
+* **Persistência falha**: verificar stores em `src/data/`; padrão atual usa `localStorage`; autenticação em `authStore.ts`.
 
 ---
 
-## 15. Regras de ouro
+## 16. Regras de ouro
 
-1. Persistência de domínio → **`useKV()`**; **nunca** `localStorage`/`sessionStorage`.
+1. Persistência de domínio → **Store classes** + `localStorage` (atual); migrar para `useKV()` gradualmente.
 2. Arquivos/scripts protegidos **intocáveis** (`main.tsx`, `main.css`, `dev/build/preview`).
 3. API Django **sempre** `{ success, data, error }`; rotas **sem** barra final; recursos **com hífen**.
 4. Frontend **:5173**, backend **:3333** (não usar **:8000** para o app).
