@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
-import { Play, Edit, ClipboardList } from 'lucide-react';
+import { Play, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 import { useEquipment } from '@/hooks/useDataTemp';
 import type { WorkOrder } from '@/types';
@@ -34,21 +34,18 @@ interface KanbanColumnProps {
   status: WorkOrder['status'];
   workOrders: WorkOrder[];
   onStartWorkOrder?: (id: string) => void;
-  onExecuteWorkOrder?: (wo: WorkOrder) => void;
   onEditWorkOrder?: (wo: WorkOrder) => void;
 }
 
 interface WorkOrderCardProps {
   workOrder: WorkOrder;
   onStartWorkOrder?: (id: string) => void;
-  onExecuteWorkOrder?: (wo: WorkOrder) => void;
   onEditWorkOrder?: (wo: WorkOrder) => void;
 }
 
 function WorkOrderCard({ 
   workOrder, 
   onStartWorkOrder, 
-  onExecuteWorkOrder, 
   onEditWorkOrder 
 }: WorkOrderCardProps) {
   const [equipment] = useEquipment();
@@ -157,20 +154,6 @@ function WorkOrderCard({
               </Button>
             )}
             
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-6 w-6 p-0"
-              onClick={(e) => {
-                e.stopPropagation();
-                onExecuteWorkOrder?.(workOrder);
-              }}
-              title="Executar OS"
-            >
-              <ClipboardList className="h-3 w-3" />
-              <span className="sr-only">Executar</span>
-            </Button>
-            
             {onEditWorkOrder && (
               <Button 
                 variant="ghost" 
@@ -198,7 +181,6 @@ function KanbanColumn({
   status,
   workOrders, 
   onStartWorkOrder, 
-  onExecuteWorkOrder, 
   onEditWorkOrder 
 }: KanbanColumnProps) {
   const {
@@ -238,7 +220,6 @@ function KanbanColumn({
                   key={wo.id}
                   workOrder={wo}
                   onStartWorkOrder={onStartWorkOrder}
-                  onExecuteWorkOrder={onExecuteWorkOrder}
                   onEditWorkOrder={onEditWorkOrder}
                 />
               ))}
@@ -259,7 +240,6 @@ interface WorkOrderKanbanProps {
   workOrders: WorkOrder[];
   onUpdateWorkOrder: (id: string, updates: Partial<WorkOrder>) => void;
   onStartWorkOrder?: (id: string) => void;
-  onExecuteWorkOrder?: (wo: WorkOrder) => void;
   onEditWorkOrder?: (wo: WorkOrder) => void;
 }
 
@@ -267,7 +247,6 @@ export function WorkOrderKanban({
   workOrders, 
   onUpdateWorkOrder,
   onStartWorkOrder, 
-  onExecuteWorkOrder, 
   onEditWorkOrder 
 }: WorkOrderKanbanProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -372,7 +351,6 @@ export function WorkOrderKanban({
               status={column.status}
               workOrders={column.workOrders}
               onStartWorkOrder={onStartWorkOrder}
-              onExecuteWorkOrder={onExecuteWorkOrder}
               onEditWorkOrder={onEditWorkOrder}
             />
           ))}
@@ -383,7 +361,6 @@ export function WorkOrderKanban({
             <WorkOrderCard
               workOrder={activeWorkOrder}
               onStartWorkOrder={onStartWorkOrder}
-              onExecuteWorkOrder={onExecuteWorkOrder}
               onEditWorkOrder={onEditWorkOrder}
             />
           ) : null}

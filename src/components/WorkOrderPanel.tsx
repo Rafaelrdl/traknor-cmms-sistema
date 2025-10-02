@@ -10,14 +10,12 @@ import type { WorkOrder } from '@/types';
 interface WorkOrderPanelProps {
   workOrders: WorkOrder[];
   onStartWorkOrder?: (id: string) => void;
-  onExecuteWorkOrder?: (wo: WorkOrder) => void;
   onEditWorkOrder?: (wo: WorkOrder) => void;
 }
 
 export function WorkOrderPanel({ 
   workOrders, 
   onStartWorkOrder, 
-  onExecuteWorkOrder, 
   onEditWorkOrder 
 }: WorkOrderPanelProps) {
   const { selectedWorkOrder, selectedWorkOrderId, setSelectedWorkOrder, clearSelection } = useWorkOrderStore();
@@ -205,7 +203,6 @@ export function WorkOrderPanel({
           workOrder={selectedWorkOrder}
           loading={isLoading}
           onStartWorkOrder={onStartWorkOrder}
-          onExecuteWorkOrder={onExecuteWorkOrder}
           onEditWorkOrder={onEditWorkOrder}
         />
       </div>
@@ -218,7 +215,6 @@ export function WorkOrderPanel({
       compact
       onSelectWorkOrder={handleSelectWorkOrder}
       onStartWorkOrder={onStartWorkOrder}
-      onExecuteWorkOrder={onExecuteWorkOrder}
       onEditWorkOrder={onEditWorkOrder}
     />
   );

@@ -12,7 +12,6 @@ import { cn } from '@/lib/utils';
 interface WorkOrderListProps {
   workOrders: WorkOrder[];
   onStartWorkOrder?: (id: string) => void;
-  onExecuteWorkOrder?: (wo: WorkOrder) => void;
   onEditWorkOrder?: (wo: WorkOrder) => void;
   compact?: boolean;
   onSelectWorkOrder?: (workOrder: WorkOrder) => void;
@@ -21,7 +20,6 @@ interface WorkOrderListProps {
 export function WorkOrderList({ 
   workOrders, 
   onStartWorkOrder, 
-  onExecuteWorkOrder, 
   onEditWorkOrder,
   compact = false,
   onSelectWorkOrder
@@ -284,16 +282,6 @@ export function WorkOrderList({
                       aria-label={`Iniciar ordem de serviço ${wo.number}`}
                     >
                       <Play className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {wo.status === 'IN_PROGRESS' && onExecuteWorkOrder && (
-                    <Button 
-                      variant="default" 
-                      size="sm"
-                      onClick={() => onExecuteWorkOrder(wo)}
-                      aria-label={`Executar ordem de serviço ${wo.number}`}
-                    >
-                      <ClipboardList className="h-4 w-4" />
                     </Button>
                   )}
                   {onEditWorkOrder && (

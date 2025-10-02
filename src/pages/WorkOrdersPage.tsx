@@ -1,23 +1,22 @@
 import { useState } from 'react';
 import { PageHeader } from '@/components/PageHeader';
-import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, ClipboardList, Play, CheckCircle, Camera } from 'lucide-react';
+import { Plus, Search, ClipboardList, CheckCircle, Camera } from 'lucide-react';
 import { ViewToggle } from '@/components/ViewToggle';
 import { WorkOrderList } from '@/components/WorkOrderList';
 import { WorkOrderKanban } from '@/components/WorkOrderKanban';
 import { WorkOrderPanel } from '@/components/WorkOrderPanel';
 import { WorkOrderEditModal } from '@/components/WorkOrderEditModal';
 import { WorkOrderModal } from '@/components/WorkOrderModal';
-import { useWorkOrders, useEquipment, useSectors, useCompanies } from '@/hooks/useDataTemp';
+import { useWorkOrders, useEquipment } from '@/hooks/useDataTemp';
 import { useWorkOrderView } from '@/hooks/useWorkOrderView';
 import type { WorkOrder, ChecklistItem } from '@/types';
 
@@ -52,8 +51,6 @@ const mockChecklist: ChecklistItem[] = [
 export function WorkOrdersPage() {
   const [workOrders, setWorkOrders] = useWorkOrders();
   const [equipment] = useEquipment();
-  const [sectors] = useSectors();
-  const [companies] = useCompanies();
   const [view, setView] = useWorkOrderView();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -115,10 +112,6 @@ export function WorkOrdersPage() {
     };
 
     setWorkOrders((current) => [newWorkOrder, ...(current || [])]);
-  };
-
-  const handleExecuteWorkOrder = (wo: WorkOrder) => {
-    setSelectedOrder(wo);
   };
 
   const updateChecklistResponse = (questionId: string, response: any) => {
@@ -186,7 +179,6 @@ export function WorkOrdersPage() {
             <WorkOrderList
               workOrders={filteredOrders}
               onStartWorkOrder={startWorkOrder}
-              onExecuteWorkOrder={handleExecuteWorkOrder}
               onEditWorkOrder={setEditingOrder}
             />
           )}
@@ -196,7 +188,6 @@ export function WorkOrdersPage() {
               workOrders={filteredOrders}
               onUpdateWorkOrder={updateWorkOrder}
               onStartWorkOrder={startWorkOrder}
-              onExecuteWorkOrder={handleExecuteWorkOrder}
               onEditWorkOrder={setEditingOrder}
             />
           )}
@@ -205,7 +196,6 @@ export function WorkOrdersPage() {
             <WorkOrderPanel
               workOrders={filteredOrders}
               onStartWorkOrder={startWorkOrder}
-              onExecuteWorkOrder={handleExecuteWorkOrder}
               onEditWorkOrder={setEditingOrder}
             />
           )}

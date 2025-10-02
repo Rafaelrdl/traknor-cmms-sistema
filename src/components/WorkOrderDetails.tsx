@@ -21,7 +21,6 @@ interface WorkOrderDetailsProps {
   workOrder: WorkOrder | null;
   loading?: boolean;
   onStartWorkOrder?: (id: string) => void;
-  onExecuteWorkOrder?: (wo: WorkOrder) => void;
   onEditWorkOrder?: (wo: WorkOrder) => void;
   className?: string;
 }
@@ -30,7 +29,6 @@ export function WorkOrderDetails({
   workOrder, 
   loading = false, 
   onStartWorkOrder, 
-  onExecuteWorkOrder, 
   onEditWorkOrder,
   className 
 }: WorkOrderDetailsProps) {
@@ -130,16 +128,6 @@ export function WorkOrderDetails({
                 >
                   <Play className="h-4 w-4 mr-2" />
                   Iniciar
-                </Button>
-              )}
-              {workOrder.status === 'IN_PROGRESS' && onExecuteWorkOrder && (
-                <Button 
-                  variant="default" 
-                  size="sm"
-                  onClick={() => onExecuteWorkOrder(workOrder)}
-                >
-                  <ClipboardList className="h-4 w-4 mr-2" />
-                  Executar
                 </Button>
               )}
             </div>
