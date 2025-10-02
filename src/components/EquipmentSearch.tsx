@@ -517,13 +517,13 @@ export function EquipmentSearch({
                     </div>
                     <div className="flex items-center gap-2">
                       <Zap className="h-4 w-4 text-muted-foreground" />
-                      <span>{eq.capacity.toLocaleString()} BTUs</span>
+                      <span>{typeof eq.capacity === 'number' ? eq.capacity.toLocaleString('pt-BR') : 'N/A'} BTUs</span>
                     </div>
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>{new Date(eq.installDate).toLocaleDateString('pt-BR')}</span>
+                      <span>{eq.installDate ? new Date(eq.installDate).toLocaleDateString('pt-BR') : 'N/A'}</span>
                     </div>
                     {eq.location && (
                       <div className="flex items-center gap-2">
