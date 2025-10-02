@@ -62,255 +62,317 @@ export function generateWorkOrderPrintContent({
         }
         
         body {
-          font-family: 'Times New Roman', Times, serif;
-          font-size: 12pt;
-          line-height: 1.5;
-          color: #000000;
-          max-width: 210mm;
-          margin: 0 auto;
-          padding: 0;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          font-size: 11pt;
+          line-height: 1.6;
+          color: #2d3748;
           background-color: white;
-        }
-        
-        /* Cabeçalho principal com degradê */
-        .main-header {
-          background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
-          color: white;
-          padding: 25px 30px;
-          border-radius: 8px 8px 0 0;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-        
-        .logo-section {
-          display: flex;
-          align-items: center;
-          gap: 15px;
-        }
-        
-        .logo {
-          width: 50px;
-          height: 50px;
-          background-color: white;
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 800;
-          font-size: 18px;
-          color: #0369a1;
-        }
-        
-        .company-name {
-          font-size: 24px;
-          font-weight: bold;
-          margin-bottom: 4px;
-        }
-        
-        .document-title {
-          font-size: 14px;
-          opacity: 0.9;
-        }
-        
-        .wo-number {
-          font-size: 32px;
-          font-weight: 800;
-          color: white;
-          text-align: center;
-        }
-        
-        .wo-number-label {
-          font-size: 14px;
-          opacity: 0.9;
-          text-align: center;
         }
         
         /* Container principal */
-        .document-container {
-          border: 1px solid #e2e8f0;
-          border-radius: 8px;
-          overflow: hidden;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-          margin: 20px;
+        .page-container {
+          max-width: 210mm;
+          margin: 0 auto;
+          background-color: white;
         }
         
-        .content-container {
-          padding: 25px 30px;
+        /* Cabeçalho melhorado */
+        .header-container {
+          background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+          padding: 0;
+          margin-bottom: 30px;
         }
         
-        /* Seções do documento */
-        .section {
-          margin-bottom: 25px;
-          page-break-inside: avoid;
-        }
-        
-        .section-title {
-          font-size: 12pt;
-          font-weight: bold;
-          text-transform: uppercase;
-          border-bottom: 1px solid #000;
-          padding-bottom: 5px;
-          margin-bottom: 15px;
-          letter-spacing: 0.5px;
-        }
-        
-        /* Grid de informações */
-        .info-row {
+        .header-content {
+          padding: 30px 35px;
           display: flex;
-          margin-bottom: 8px;
+          justify-content: space-between;
+          align-items: flex-start;
         }
         
-        .info-label {
-          font-weight: bold;
-          width: 180px;
-          flex-shrink: 0;
-        }
-        
-        .info-value {
+        .header-left {
           flex: 1;
         }
         
+        .logo-row {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          margin-bottom: 15px;
+        }
+        
+        .logo-circle {
+          width: 55px;
+          height: 55px;
+          background-color: white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 900;
+          font-size: 20px;
+          color: #0369a1;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .company-info {
+          color: white;
+        }
+        
+        .company-name {
+          font-size: 26px;
+          font-weight: 700;
+          letter-spacing: -0.5px;
+          margin-bottom: 2px;
+        }
+        
+        .company-tagline {
+          font-size: 13px;
+          opacity: 0.95;
+          letter-spacing: 0.3px;
+        }
+        
+        .header-right {
+          text-align: right;
+          color: white;
+        }
+        
+        .os-label {
+          font-size: 11px;
+          text-transform: uppercase;
+          letter-spacing: 1.5px;
+          opacity: 0.9;
+          margin-bottom: 5px;
+        }
+        
+        .os-number {
+          font-size: 34px;
+          font-weight: 800;
+          letter-spacing: -1px;
+          text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header-meta {
+          background-color: rgba(255,255,255,0.15);
+          padding: 12px 35px;
+          border-top: 1px solid rgba(255,255,255,0.2);
+          color: white;
+          font-size: 12px;
+          display: flex;
+          justify-content: space-between;
+        }
+        
+        .meta-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        
+        .meta-label {
+          opacity: 0.9;
+        }
+        
+        .meta-value {
+          font-weight: 600;
+        }
+        
+        /* Conteúdo principal */
+        .content-container {
+          padding: 0 35px 35px;
+        }
+        
+        /* Seções aprimoradas */
+        .section {
+          margin-bottom: 35px;
+          page-break-inside: avoid;
+        }
+        
+        .section-header {
+          background: linear-gradient(to right, #f7fafc, transparent);
+          border-left: 4px solid #0369a1;
+          padding: 10px 15px;
+          margin-bottom: 20px;
+        }
+        
+        .section-number {
+          display: inline-block;
+          background-color: #0369a1;
+          color: white;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          text-align: center;
+          line-height: 24px;
+          font-size: 12px;
+          font-weight: 700;
+          margin-right: 10px;
+        }
+        
+        .section-title {
+          display: inline;
+          font-size: 14pt;
+          font-weight: 600;
+          color: #1a202c;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        
+        /* Grid de informações aprimorado */
         .info-grid {
           display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 15px;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 18px 25px;
+          background-color: #fafbfc;
+          padding: 20px;
+          border-radius: 8px;
+          margin-bottom: 25px;
         }
         
-        .info-grid-item {
+        .info-item {
           display: flex;
+          flex-direction: column;
+          gap: 6px;
         }
         
-        .info-grid-item .info-label {
-          width: 140px;
+        .info-label {
+          font-size: 10pt;
+          font-weight: 700;
+          text-transform: uppercase;
+          color: #4a5568;
+          letter-spacing: 0.5px;
         }
         
-        /* Caixas de texto */
+        .info-value {
+          font-size: 11pt;
+          font-weight: 400;
+          color: #1a202c;
+          line-height: 1.5;
+        }
+        
+        /* Caixas de texto aprimoradas */
         .text-box {
-          border: 1px solid #000;
-          padding: 10px;
-          min-height: 60px;
+          background-color: #ffffff;
+          border: 1px solid #cbd5e0;
+          border-radius: 6px;
+          padding: 15px;
+          min-height: 80px;
           margin-top: 10px;
           white-space: pre-wrap;
           word-wrap: break-word;
+          line-height: 1.6;
+          color: #2d3748;
         }
         
 
         
-        /* Checklist formal */
-        .checklist-table {
+        /* Tabelas modernas */
+        .data-table {
           width: 100%;
-          border-collapse: collapse;
-          margin-top: 10px;
+          border-collapse: separate;
+          border-spacing: 0;
+          margin-top: 15px;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          overflow: hidden;
         }
         
-        .checklist-table th,
-        .checklist-table td {
-          border: 1px solid #000;
-          padding: 8px;
+        .data-table th,
+        .data-table td {
+          padding: 12px 15px;
           text-align: left;
+          border-bottom: 1px solid #e2e8f0;
         }
         
-        .checklist-table th {
-          background-color: #f0f0f0;
-          font-weight: bold;
+        .data-table th {
+          background-color: #f7fafc;
+          font-weight: 700;
           text-transform: uppercase;
           font-size: 10pt;
+          color: #4a5568;
+          letter-spacing: 0.5px;
         }
         
-        .checklist-table .task-number {
-          width: 40px;
-          text-align: center;
-          font-weight: bold;
+        .data-table td {
+          font-size: 10pt;
+          color: #2d3748;
         }
         
-        .checklist-table .task-status {
-          width: 80px;
+        .data-table tbody tr:hover {
+          background-color: #f7fafc;
+        }
+        
+        .data-table tbody tr:last-child td {
+          border-bottom: none;
+        }
+        
+        .data-table .task-number {
+          width: 50px;
           text-align: center;
-          font-weight: bold;
+          font-weight: 600;
+          color: #0369a1;
+        }
+        
+        .data-table .task-status {
+          width: 100px;
+          text-align: center;
+          font-weight: 600;
         }
         
         .status-complete {
-          color: #000;
+          color: #059669;
         }
         
         .status-pending {
-          color: #666;
+          color: #d97706;
         }
         
-        /* Galeria de fotos - CORREÇÃO PARA NÃO ESTOURAR */
-        .photos-section {
-          margin-top: 15px;
-        }
-        
+        /* Galeria de fotos moderna */
         .photos-grid {
           display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 15px;
-          margin-top: 15px;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 20px;
+          margin-top: 20px;
         }
         
-        .photo-container {
-          border: 1px solid #000;
-          padding: 5px;
+        .photo-card {
+          background-color: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          padding: 10px;
           text-align: center;
           page-break-inside: avoid;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         
-        .photo-container img {
+        .photo-card img {
           max-width: 100%;
-          max-height: 200px;
+          max-height: 150px;
           width: auto;
           height: auto;
           object-fit: contain;
           display: block;
           margin: 0 auto;
+          border-radius: 4px;
         }
         
         .photo-caption {
-          margin-top: 5px;
+          margin-top: 8px;
           font-size: 9pt;
-          color: #333;
+          color: #718096;
+          font-weight: 500;
         }
         
-        /* Tabela de materiais */
-        .materials-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 10px;
-        }
-        
-        .materials-table th,
-        .materials-table td {
-          border: 1px solid #000;
-          padding: 8px;
-          text-align: left;
-        }
-        
-        .materials-table th {
-          background-color: #f0f0f0;
-          font-weight: bold;
-          text-transform: uppercase;
-          font-size: 10pt;
-        }
-        
-        .materials-table td:nth-child(2),
-        .materials-table td:nth-child(3),
-        .materials-table td:nth-child(4) {
-          text-align: center;
-        }
-        
-        /* Assinaturas */
+        /* Assinaturas modernas */
         .signatures-section {
-          margin-top: 50px;
+          margin-top: 60px;
           page-break-inside: avoid;
         }
         
         .signature-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 50px;
-          margin-top: 60px;
+          gap: 60px;
+          margin-top: 40px;
         }
         
         .signature-block {
@@ -318,76 +380,89 @@ export function generateWorkOrderPrintContent({
         }
         
         .signature-line {
-          border-bottom: 1px solid #000;
-          margin-bottom: 5px;
-          height: 40px;
+          border-bottom: 2px solid #2d3748;
+          margin-bottom: 10px;
+          height: 50px;
         }
         
         .signature-name {
-          font-size: 10pt;
-          font-weight: bold;
+          font-size: 11pt;
+          font-weight: 700;
           text-transform: uppercase;
+          color: #1a202c;
+          margin-bottom: 4px;
         }
         
         .signature-title {
           font-size: 9pt;
-          color: #333;
-          margin-top: 3px;
+          color: #718096;
+          font-weight: 500;
         }
         
-        /* Rodapé formal */
-        .document-footer {
-          margin-top: 40px;
-          padding-top: 20px;
-          border-top: 1px solid #000;
-          text-align: center;
+        .signature-cpf {
           font-size: 9pt;
-          color: #333;
+          color: #4a5568;
+          margin-top: 4px;
         }
         
-        .footer-info {
-          margin-bottom: 5px;
+        /* Rodapé corporativo */
+        .footer-container {
+          margin-top: 50px;
+          padding: 25px 35px;
+          background-color: #f7fafc;
+          border-top: 3px solid #0369a1;
+          text-align: center;
         }
         
-        .legal-text {
+        .footer-legal {
+          font-size: 9pt;
+          color: #4a5568;
           font-style: italic;
-          margin-top: 10px;
+          line-height: 1.5;
+          margin-bottom: 8px;
         }
         
-        /* Informações de emissão */
-        .emission-info {
-          text-align: right;
-          font-size: 10pt;
-          margin-bottom: 20px;
-          padding-bottom: 10px;
-          border-bottom: 1px solid #ccc;
+        .footer-date {
+          font-size: 8pt;
+          color: #718096;
+          margin-top: 10px;
         }
         
         /* Otimizações para impressão */
         @media print {
           @page {
             size: A4;
-            margin: 15mm;
+            margin: 12mm;
           }
           
           body {
             padding: 0;
-          }
-          
-          .document-container {
             margin: 0;
-            box-shadow: none;
-            border: none;
           }
           
-          .main-header {
+          .page-container {
+            margin: 0;
+            max-width: 100%;
+            box-shadow: none;
+          }
+          
+          .header-container,
+          .section-header,
+          .section-number,
+          .info-grid {
             -webkit-print-color-adjust: exact !important;
             color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
           
-          .section {
+          .section,
+          .photo-card,
+          .signature-block {
             page-break-inside: avoid;
+          }
+          
+          .photos-grid {
+            page-break-before: avoid;
           }
           
           .photos-grid {
@@ -415,125 +490,139 @@ export function generateWorkOrderPrintContent({
       </style>
     </head>
     <body>
-      <div class="document-container">
-        <!-- Cabeçalho Principal -->
-        <div class="main-header">
-          <div class="logo-section">
-            <div class="logo">TN</div>
-            <div>
+      <div class="page-container">
+        <!-- Cabeçalho Moderno -->
+        <div class="header-container">
+          <div class="header-content">
+            <div class="logo-circle">TN</div>
+            <div class="header-text">
               <div class="company-name">TrakNor CMMS</div>
-              <div class="document-title">Sistema de Gerenciamento de Manutenção</div>
+              <div class="document-type">ORDEM DE SERVIÇO</div>
             </div>
+            <div class="os-number">#${workOrder.number}</div>
           </div>
-          <div>
-            <div class="wo-number">#${workOrder.number}</div>
-            <div class="wo-number-label">ORDEM DE SERVIÇO</div>
+          <div class="header-meta">
+            <span class="meta-item">Emitido em: ${new Date().toLocaleDateString('pt-BR', { 
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            })}</span>
+            <span class="meta-separator">•</span>
+            <span class="meta-item">${new Date().toLocaleTimeString('pt-BR', { 
+              hour: '2-digit',
+              minute: '2-digit'
+            })}</span>
           </div>
         </div>
         
         <div class="content-container">
-          <!-- Informações de Emissão -->
-          <div class="emission-info">
-            <strong>Data de Emissão:</strong> ${new Date().toLocaleDateString('pt-BR', { 
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            })}
-          </div>
-        <!-- Seção 1: Informações Gerais -->
-        <div class="section">
-          <div class="section-title">1. Informações Gerais</div>
-          <div class="info-grid">
-            <div class="info-grid-item">
-              <span class="info-label">Tipo de Serviço:</span>
-              <span class="info-value">${getTypeLabel(workOrder.type)}</span>
+          <!-- Seção 1: Informações Gerais -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-number">1</span>
+              <h2 class="section-title">Informações Gerais</h2>
             </div>
-            <div class="info-grid-item">
-              <span class="info-label">Status:</span>
-              <span class="info-value">${getStatusLabel(workOrder.status)}</span>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Tipo de Serviço</span>
+                <span class="info-value">${getTypeLabel(workOrder.type)}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Status</span>
+                <span class="info-value">${getStatusLabel(workOrder.status)}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Prioridade</span>
+                <span class="info-value">${getPriorityLabel(workOrder.priority)}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Data Programada</span>
+                <span class="info-value">${new Date(workOrder.scheduledDate).toLocaleDateString('pt-BR')}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Técnico Responsável</span>
+                <span class="info-value">${workOrder.assignedTo || 'Não atribuído'}</span>
+              </div>
+              ${workOrder.completedAt ? `
+              <div class="info-item">
+                <span class="info-label">Data de Conclusão</span>
+                <span class="info-value">${new Date(workOrder.completedAt).toLocaleDateString('pt-BR')}</span>
+              </div>
+              ` : ''}
             </div>
-            <div class="info-grid-item">
-              <span class="info-label">Prioridade:</span>
-              <span class="info-value">${getPriorityLabel(workOrder.priority)}</span>
-            </div>
-            <div class="info-grid-item">
-              <span class="info-label">Data Programada:</span>
-              <span class="info-value">${new Date(workOrder.scheduledDate).toLocaleDateString('pt-BR')}</span>
-            </div>
-            <div class="info-grid-item">
-              <span class="info-label">Técnico Responsável:</span>
-              <span class="info-value">${workOrder.assignedTo || 'NÃO ATRIBUÍDO'}</span>
-            </div>
-            ${workOrder.completedAt ? `
-            <div class="info-grid-item">
-              <span class="info-label">Data de Conclusão:</span>
-              <span class="info-value">${new Date(workOrder.completedAt).toLocaleDateString('pt-BR')}</span>
-            </div>
-            ` : ''}
           </div>
         </div>
           
-        <!-- Seção 2: Equipamento e Localização -->
-        <div class="section">
-          <div class="section-title">2. Equipamento e Localização</div>
-          ${eq ? `
-          <div class="info-grid">
-            <div class="info-grid-item">
-              <span class="info-label">Tag do Equipamento:</span>
-              <span class="info-value">${eq.tag}</span>
+          <!-- Seção 2: Equipamento e Localização -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-number">2</span>
+              <h2 class="section-title">Equipamento e Localização</h2>
             </div>
-            <div class="info-grid-item">
-              <span class="info-label">Tipo:</span>
-              <span class="info-value">${eq.type}</span>
+            ${eq ? `
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Tag do Equipamento</span>
+                <span class="info-value">${eq.tag}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Tipo</span>
+                <span class="info-value">${eq.type}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Marca</span>
+                <span class="info-value">${eq.brand}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Modelo</span>
+                <span class="info-value">${eq.model}</span>
+              </div>
+              ${eq.capacity ? `
+              <div class="info-item">
+                <span class="info-label">Capacidade</span>
+                <span class="info-value">${eq.capacity.toLocaleString('pt-BR')} BTUs</span>
+              </div>
+              ` : ''}
+              ${company ? `
+              <div class="info-item">
+                <span class="info-label">Empresa</span>
+                <span class="info-value">${company.name}</span>
+              </div>
+              ` : ''}
+              ${sector ? `
+              <div class="info-item">
+                <span class="info-label">Setor</span>
+                <span class="info-value">${sector.name}</span>
+              </div>
+              ` : ''}
             </div>
-            <div class="info-grid-item">
-              <span class="info-label">Marca:</span>
-              <span class="info-value">${eq.brand}</span>
+            ` : `
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Equipamento</span>
+                <span class="info-value">Não especificado</span>
+              </div>
             </div>
-            <div class="info-grid-item">
-              <span class="info-label">Modelo:</span>
-              <span class="info-value">${eq.model}</span>
-            </div>
-            ${eq.capacity ? `
-            <div class="info-grid-item">
-              <span class="info-label">Capacidade:</span>
-              <span class="info-value">${eq.capacity.toLocaleString('pt-BR')} BTUs</span>
-            </div>
-            ` : ''}
-            ${company ? `
-            <div class="info-grid-item">
-              <span class="info-label">Empresa:</span>
-              <span class="info-value">${company.name}</span>
-            </div>
-            ` : ''}
-            ${sector ? `
-            <div class="info-grid-item">
-              <span class="info-label">Setor:</span>
-              <span class="info-value">${sector.name}</span>
-            </div>
-            ` : ''}
+            `}
           </div>
-          ` : `
-          <div class="info-row">
-            <span class="info-label">Equipamento:</span>
-            <span class="info-value">NÃO ESPECIFICADO</span>
+          
+          <!-- Seção 3: Descrição do Serviço -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-number">3</span>
+              <h2 class="section-title">Descrição do Serviço</h2>
+            </div>
+            <div class="text-box">${workOrder.description || 'Não informado'}</div>
           </div>
-          `}
-        </div>
           
-        <!-- Seção 3: Descrição do Serviço -->
-        <div class="section">
-          <div class="section-title">3. Descrição do Serviço</div>
-          <div class="text-box">${workOrder.description || 'Não informado'}</div>
-        </div>
-          
-        <!-- Seção 4: Checklist (Apenas para Preventivas) -->
-        ${workOrder.type === 'PREVENTIVE' && workOrder.checklistResponses && workOrder.checklistResponses.length > 0 ? `
-        <div class="section">
-          <div class="section-title">4. Checklist de Manutenção Preventiva</div>
-          <table class="checklist-table">
+          <!-- Seção 4: Checklist (Apenas para Preventivas) -->
+          ${workOrder.type === 'PREVENTIVE' && workOrder.checklistResponses && workOrder.checklistResponses.length > 0 ? `
+          <div class="section">
+            <div class="section-header">
+              <span class="section-number">4</span>
+              <h2 class="section-title">Checklist de Manutenção Preventiva</h2>
+            </div>
+            <table class="data-table">
             <thead>
               <tr>
                 <th class="task-number">Nº</th>
@@ -558,11 +647,14 @@ export function generateWorkOrderPrintContent({
         </div>
         ` : ''}
           
-        <!-- Seção 5: Materiais Utilizados -->
-        ${workOrder.stockItems && workOrder.stockItems.length > 0 ? `
-        <div class="section">
-          <div class="section-title">${workOrder.type === 'PREVENTIVE' && workOrder.checklistResponses?.length ? '5' : '4'}. Materiais Utilizados</div>
-          <table class="materials-table">
+          <!-- Seção 5: Materiais Utilizados -->
+          ${workOrder.stockItems && workOrder.stockItems.length > 0 ? `
+          <div class="section">
+            <div class="section-header">
+              <span class="section-number">${workOrder.type === 'PREVENTIVE' && workOrder.checklistResponses?.length ? '5' : '4'}</span>
+              <h2 class="section-title">Materiais Utilizados</h2>
+            </div>
+            <table class="data-table">
             <thead>
               <tr>
                 <th>Descrição do Item</th>
@@ -585,67 +677,86 @@ export function generateWorkOrderPrintContent({
         </div>
         ` : ''}
           
-        <!-- Seção 6: Detalhes da Execução -->
-        <div class="section">
-          <div class="section-title">${
-            workOrder.type === 'PREVENTIVE' && workOrder.checklistResponses?.length ? 
-              (workOrder.stockItems?.length ? '6' : '5') : 
-              (workOrder.stockItems?.length ? '5' : '4')
-          }. Detalhes da Execução</div>
-          <div class="text-box">${workOrder.executionDescription || ' '}</div>
-        </div>
-          
-        <!-- Seção 7: Evidências Fotográficas -->
-        ${workOrder.photos && workOrder.photos.length > 0 ? `
-        <div class="section">
-          <div class="section-title">${
-            workOrder.type === 'PREVENTIVE' && workOrder.checklistResponses?.length ? 
-              (workOrder.stockItems?.length ? '7' : '6') : 
-              (workOrder.stockItems?.length ? '6' : '5')
-          }. Evidências Fotográficas</div>
-          <div class="photos-grid">
-            ${workOrder.photos.map((photo, index) => `
-            <div class="photo-container">
-              <img src="${photo.url}" alt="Evidência ${index + 1}" onerror="this.style.display='none'"/>
-              <div class="photo-caption">Evidência ${index + 1}${photo.name ? `: ${photo.name}` : ''}</div>
+          <!-- Seção 6: Detalhes da Execução -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-number">${
+                workOrder.type === 'PREVENTIVE' && workOrder.checklistResponses?.length ? 
+                  (workOrder.stockItems?.length ? '6' : '5') : 
+                  (workOrder.stockItems?.length ? '5' : '4')
+              }</span>
+              <h2 class="section-title">Detalhes da Execução</h2>
             </div>
+            <div class="text-box">${workOrder.executionDescription || ' '}</div>
+          </div>
+          
+          <!-- Seção 7: Evidências Fotográficas -->
+          ${workOrder.photos && workOrder.photos.length > 0 ? `
+          <div class="section">
+            <div class="section-header">
+              <span class="section-number">${
+                workOrder.type === 'PREVENTIVE' && workOrder.checklistResponses?.length ? 
+                  (workOrder.stockItems?.length ? '7' : '6') : 
+                  (workOrder.stockItems?.length ? '6' : '5')
+              }</span>
+              <h2 class="section-title">Evidências Fotográficas</h2>
+            </div>
+            <div class="photos-grid">
+              ${workOrder.photos.map((photo, index) => `
+              <div class="photo-card">
+                <img src="${photo.url}" alt="Evidência ${index + 1}" onerror="this.style.display='none'"/>
+                <div class="photo-caption">Evidência ${index + 1}${photo.name ? `: ${photo.name}` : ''}</div>
+              </div>
             `).join('')}
           </div>
         </div>
         ` : ''}
           
-        <!-- Seção de Assinaturas -->
-        <div class="signatures-section">
-          <div class="section-title">Assinaturas e Aprovações</div>
-          <div class="signature-grid">
-            <div class="signature-block">
-              <div class="signature-line"></div>
-              <div class="signature-name">Técnico Responsável</div>
-              ${workOrder.assignedTo ? `<div class="signature-title">${workOrder.assignedTo}</div>` : ''}
-              <div class="signature-title">CPF: _________________</div>
+          <!-- Seção de Assinaturas -->
+          <div class="section signatures-section">
+            <div class="section-header">
+              <span class="section-number">${
+                workOrder.type === 'PREVENTIVE' && workOrder.checklistResponses?.length ? 
+                  (workOrder.stockItems?.length ? (workOrder.photos?.length ? '8' : '7') : (workOrder.photos?.length ? '7' : '6')) : 
+                  (workOrder.stockItems?.length ? (workOrder.photos?.length ? '7' : '6') : (workOrder.photos?.length ? '6' : '5'))
+              }</span>
+              <h2 class="section-title">Assinaturas e Aprovações</h2>
             </div>
-            <div class="signature-block">
-              <div class="signature-line"></div>
-              <div class="signature-name">Cliente/Responsável</div>
-              <div class="signature-title">Nome Completo</div>
-              <div class="signature-title">CPF: _________________</div>
+            <div class="signature-grid">
+              <div class="signature-block">
+                <div class="signature-line"></div>
+                <div class="signature-name">Técnico Responsável</div>
+                ${workOrder.assignedTo ? `<div class="signature-title">${workOrder.assignedTo}</div>` : ''}
+                <div class="signature-cpf">CPF: ___ . ___ . ___ - __</div>
+              </div>
+              <div class="signature-block">
+                <div class="signature-line"></div>
+                <div class="signature-name">Cliente/Responsável</div>
+                <div class="signature-title">Nome Completo</div>
+                <div class="signature-cpf">CPF: ___ . ___ . ___ - __</div>
+              </div>
             </div>
           </div>
         </div>
         
-          <!-- Rodapé do Documento -->
-          <div class="document-footer">
-            <div class="footer-info">
-              <strong>Documento gerado eletronicamente por TrakNor CMMS</strong>
-            </div>
-            <div class="footer-info">
-              ${new Date().toLocaleString('pt-BR')}
-            </div>
-            <div class="legal-text">
-              Este documento é parte integrante do sistema de gestão de manutenção e deve ser 
-              arquivado conforme os procedimentos da empresa. A assinatura acima confirma a 
-              execução dos serviços descritos nesta ordem.
-            </div>
+        <!-- Rodapé Corporativo -->
+        <div class="footer-container">
+          <div class="footer-legal">
+            <strong>Documento gerado eletronicamente por TrakNor CMMS</strong>
+          </div>
+          <div class="footer-legal">
+            Este documento é parte integrante do sistema de gestão de manutenção e deve ser 
+            arquivado conforme os procedimentos da empresa. A assinatura acima confirma a 
+            execução dos serviços descritos nesta ordem.
+          </div>
+          <div class="footer-date">
+            Emitido em: ${new Date().toLocaleString('pt-BR', { 
+              day: '2-digit', 
+              month: 'long', 
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
           </div>
         </div>
       </div>
@@ -742,11 +853,7 @@ function getBaseStyles(): string {
     }
     
     .info-value {
-      color: #6b7280;
-      background-color: #f9fafb;
-      padding: 8px 12px;
-      border-radius: 6px;
-      border: 1px solid #e5e7eb;
+      color: #000000;
     }
     
     .description-box, .execution-box {
