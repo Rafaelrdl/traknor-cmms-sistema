@@ -14,15 +14,13 @@ interface WorkOrderListProps {
   onStartWorkOrder?: (id: string) => void;
   onEditWorkOrder?: (wo: WorkOrder) => void;
   compact?: boolean;
-  onSelectWorkOrder?: (workOrder: WorkOrder) => void;
 }
 
 export function WorkOrderList({ 
   workOrders, 
   onStartWorkOrder, 
   onEditWorkOrder,
-  compact = false,
-  onSelectWorkOrder
+  compact = false
 }: WorkOrderListProps) {
   const [equipment] = useEquipment();
   const [sectors] = useSectors();
@@ -39,8 +37,10 @@ export function WorkOrderList({
   };
 
   const handleWorkOrderClick = (workOrder: WorkOrder) => {
+    // Use apenas a store global para evitar dupla atualização
     setSelectedWorkOrder(workOrder);
-    onSelectWorkOrder?.(workOrder);
+    // onSelectWorkOrder já seria chamado pelo handleSelectWorkOrder do panel,
+    // causando dupla atualização e loop infinito
   };
 
   const handleKeyDown = (event: React.KeyboardEvent, workOrder: WorkOrder) => {

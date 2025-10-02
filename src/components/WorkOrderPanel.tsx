@@ -64,9 +64,9 @@ export function WorkOrderPanel({
   // Handle work order selection
   const handleSelectWorkOrder = useCallback((workOrder: WorkOrder) => {
     if (selectedWorkOrder?.id !== workOrder.id) {
-      setSelectedWorkOrderRef.current(workOrder);
+      setSelectedWorkOrder(workOrder);
     }
-  }, [selectedWorkOrder?.id]);
+  }, [selectedWorkOrder?.id, setSelectedWorkOrder]);
 
   // Auto-select first work order if none selected and list is not empty
   // Fixed version with proper dependency handling
@@ -160,16 +160,8 @@ export function WorkOrderPanel({
     }
   }, [canGoPrev, currentIndex, workOrders, handleSelectWorkOrder]);
 
-  // Atualizar quando a lista mudar
-  useEffect(() => {
-    if (selectedWorkOrder) {
-      const updated = workOrders.find(wo => wo.id === selectedWorkOrder.id);
-      if (updated) {
-        setSelectedWorkOrder(updated);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workOrders]);
+  // Removido useEffect que causava loop infinito ao atualizar workOrders
+  // A seleção é tratada apenas em resposta a ações do usuário
 
   const handleSaveWorkOrder = useCallback((updates: Partial<WorkOrder>) => {
     if (selectedWorkOrder && onUpdateWorkOrder) {
@@ -229,7 +221,6 @@ export function WorkOrderPanel({
                 <WorkOrderList
                   workOrders={workOrders}
                   compact
-                  onSelectWorkOrder={handleSelectWorkOrder}
                   onStartWorkOrder={onStartWorkOrder}
                   onEditWorkOrder={onEditWorkOrder}
                 />
