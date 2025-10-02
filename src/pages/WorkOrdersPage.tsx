@@ -197,6 +197,7 @@ export function WorkOrdersPage() {
               workOrders={filteredOrders}
               onStartWorkOrder={startWorkOrder}
               onEditWorkOrder={setEditingOrder}
+              onUpdateWorkOrder={updateWorkOrder}
             />
           )}
         </CardContent>

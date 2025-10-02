@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { PanelLayout } from '@/components/PanelLayout';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { WorkOrderList } from '@/components/WorkOrderList';
-import { WorkOrderDetails } from '@/components/WorkOrderDetails';
+import { WorkOrderDetailView } from '@/components/WorkOrderDetailView';
 import { useWorkOrderStore } from '@/store/useWorkOrderStore';
 import type { WorkOrder } from '@/types';
 
@@ -11,15 +11,17 @@ interface WorkOrderPanelProps {
   workOrders: WorkOrder[];
   onStartWorkOrder?: (id: string) => void;
   onEditWorkOrder?: (wo: WorkOrder) => void;
+  onUpdateWorkOrder?: (id: string, updates: Partial<WorkOrder>) => void;
 }
 
 export function WorkOrderPanel({ 
   workOrders, 
   onStartWorkOrder, 
-  onEditWorkOrder 
+  onEditWorkOrder,
+  onUpdateWorkOrder
 }: WorkOrderPanelProps) {
   const { selectedWorkOrder, selectedWorkOrderId, setSelectedWorkOrder, clearSelection } = useWorkOrderStore();
-  const [isLoading, setIsLoading] = useState(false);
+  const [panelSizes, setPanelSizes] = useState([30, 70]);
   
   // Use refs to avoid dependency issues
   const setSelectedWorkOrderRef = useRef(setSelectedWorkOrder);
@@ -59,16 +61,10 @@ export function WorkOrderPanel({
     window.history.replaceState({}, '', url.toString());
   }, [selectedWorkOrderId]);
 
-  // Handle work order selection with loading simulation
+  // Handle work order selection
   const handleSelectWorkOrder = useCallback((workOrder: WorkOrder) => {
     if (selectedWorkOrder?.id !== workOrder.id) {
-      setIsLoading(true);
       setSelectedWorkOrderRef.current(workOrder);
-      
-      // Simulate API call delay for better UX
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 200);
     }
   }, [selectedWorkOrder?.id]);
 
@@ -164,68 +160,100 @@ export function WorkOrderPanel({
     }
   }, [canGoPrev, currentIndex, workOrders, handleSelectWorkOrder]);
 
-  const detailsSlot = (
-    <div className="h-full flex flex-col">
-      {/* Navigation Header */}
-      {selectedWorkOrder && workOrders.length > 1 && (
-        <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/30">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={!canGoPrev}
-              onClick={goToPrev}
-              className="h-7 w-7 p-0"
-              title="Ordem anterior"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={!canGoNext}
-              onClick={goToNext}
-              className="h-7 w-7 p-0"
-              title="Próxima ordem"
-            >
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Button>
-            <span className="text-xs text-muted-foreground ml-2">
-              {currentIndex + 1} de {workOrders.length}
-            </span>
-          </div>
-        </div>
-      )}
-      
-      {/* Details Content */}
-      <div className="flex-1 overflow-hidden">
-        <WorkOrderDetails
-          workOrder={selectedWorkOrder}
-          loading={isLoading}
-          onStartWorkOrder={onStartWorkOrder}
-          onEditWorkOrder={onEditWorkOrder}
-        />
-      </div>
-    </div>
-  );
+  // Atualizar quando a lista mudar
+  useEffect(() => {
+    if (selectedWorkOrder) {
+      const updated = workOrders.find(wo => wo.id === selectedWorkOrder.id);
+      if (updated) {
+        setSelectedWorkOrder(updated);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workOrders]);
 
-  const listSlot = (
-    <WorkOrderList
-      workOrders={workOrders}
-      compact
-      onSelectWorkOrder={handleSelectWorkOrder}
-      onStartWorkOrder={onStartWorkOrder}
-      onEditWorkOrder={onEditWorkOrder}
-    />
-  );
+  const handleSaveWorkOrder = useCallback((updates: Partial<WorkOrder>) => {
+    if (selectedWorkOrder && onUpdateWorkOrder) {
+      onUpdateWorkOrder(selectedWorkOrder.id, updates);
+    }
+  }, [selectedWorkOrder, onUpdateWorkOrder]);
 
   return (
     <div className="w-full">
-      <PanelLayout 
-        detailsSlot={detailsSlot} 
-        listSlot={listSlot}
-        className="min-h-[600px]"
-      />
+      <div className="h-[calc(100vh-16rem)] border rounded-lg overflow-hidden bg-background">
+        <ResizablePanelGroup 
+          direction="horizontal"
+          className="h-full"
+          onLayout={(sizes) => setPanelSizes(sizes)}
+        >
+          {/* Lista de Ordens de Serviço */}
+          <ResizablePanel 
+            defaultSize={panelSizes[0]}
+            minSize={25}
+            maxSize={40}
+            className="bg-muted/30"
+          >
+            <div className="h-full flex flex-col">
+              {/* Navigation Header */}
+              {selectedWorkOrder && workOrders.length > 1 && (
+                <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/30 shrink-0">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={!canGoPrev}
+                      onClick={goToPrev}
+                      className="h-7 w-7 p-0"
+                      title="Ordem anterior"
+                    >
+                      <ArrowLeft className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={!canGoNext}
+                      onClick={goToNext}
+                      className="h-7 w-7 p-0"
+                      title="Próxima ordem"
+                    >
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Button>
+                    <span className="text-xs text-muted-foreground ml-2">
+                      {currentIndex + 1} de {workOrders.length}
+                    </span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Lista */}
+              <div className="flex-1 overflow-hidden">
+                <WorkOrderList
+                  workOrders={workOrders}
+                  compact
+                  onSelectWorkOrder={handleSelectWorkOrder}
+                  onStartWorkOrder={onStartWorkOrder}
+                  onEditWorkOrder={onEditWorkOrder}
+                />
+              </div>
+            </div>
+          </ResizablePanel>
+
+          <ResizableHandle withHandle />
+
+          {/* Detalhes da Ordem de Serviço */}
+          <ResizablePanel 
+            defaultSize={panelSizes[1]}
+            minSize={60}
+            className="bg-background"
+          >
+            <WorkOrderDetailView
+              workOrder={selectedWorkOrder}
+              onSave={handleSaveWorkOrder}
+              readOnly={!onUpdateWorkOrder}
+              className="h-full"
+            />
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </div>
       
       {/* Keyboard navigation hints */}
       <div className="mt-2 text-xs text-muted-foreground text-center">
