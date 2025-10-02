@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,13 +40,26 @@ export function WorkOrderDetailView({
   className
 }: WorkOrderDetailViewProps) {
   const [activeTab, setActiveTab] = useState('details');
-  const [formData, setFormData] = useState<Partial<WorkOrder>>({});
+  const [formData, setFormData] = useState<Partial<WorkOrder>>(() => 
+    workOrder || { 
+      status: 'OPEN', 
+      type: 'CORRECTIVE', 
+      priority: 'MEDIUM' 
+    }
+  );
   const [isDirty, setIsDirty] = useState(false);
   
+  // Hooks de dados - retornam arrays memoizados
   const [equipment] = useEquipment();
   const [sectors] = useSectors();
   const [companies] = useCompanies();
   const [stockItems] = useStockItems();
+  
+  // Memoizar arrays para evitar re-renders
+  const equipmentList = useMemo(() => equipment, [equipment]);
+  const sectorsList = useMemo(() => sectors, [sectors]);
+  const companiesList = useMemo(() => companies, [companies]);
+  const stockItemsList = useMemo(() => stockItems, [stockItems]);
 
   // Carregar dados quando workOrder mudar
   useEffect(() => {
@@ -55,9 +68,47 @@ export function WorkOrderDetailView({
       setIsDirty(false);
       setActiveTab('details');
     }
-  }, [workOrder]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workOrder?.id]); // Apenas quando o ID mudar, evitando re-renders desnecessários
 
-  // Estado vazio
+  // Handlers memoizados (devem estar antes do return condicional)
+  const handleSave = useCallback(() => {
+    if (onSave && isDirty) {
+      onSave(formData);
+      setIsDirty(false);
+    }
+  }, [onSave, isDirty, formData]);
+
+  const handleFieldChange = useCallback((field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    setIsDirty(true);
+  }, []);
+
+  const handlePrint = useCallback(() => {
+    if (!workOrder) return;
+    printWorkOrder({
+      workOrder: { ...workOrder, ...formData } as WorkOrder,
+      equipment: equipmentList,
+      sectors: sectorsList,
+      companies: companiesList
+    });
+  }, [workOrder, formData, equipmentList, sectorsList, companiesList]);
+
+  // Derivações memoizadas
+  const selectedEquipment = useMemo(() => 
+    equipmentList.find(e => e.id === formData.equipmentId),
+    [equipmentList, formData.equipmentId]
+  );
+  const selectedSector = useMemo(() => 
+    sectorsList.find(s => s.id === selectedEquipment?.sectorId),
+    [sectorsList, selectedEquipment?.sectorId]
+  );
+  const selectedCompany = useMemo(() => 
+    companiesList.find(c => c.id === selectedSector?.companyId),
+    [companiesList, selectedSector?.companyId]
+  );
+
+  // Estado vazio - return condicional deve estar depois de todos os hooks
   if (!workOrder) {
     return (
       <div className={cn("flex items-center justify-center h-full bg-muted/20", className)}>
@@ -76,37 +127,32 @@ export function WorkOrderDetailView({
     );
   }
 
-  const selectedEquipment = equipment.find(e => e.id === formData.equipmentId);
-  const selectedSector = sectors.find(s => s.id === selectedEquipment?.sectorId);
-  const selectedCompany = companies.find(c => c.id === selectedSector?.companyId);
-
-  const handleSave = () => {
-    if (onSave && isDirty) {
-      onSave(formData);
-      setIsDirty(false);
-    }
-  };
-
-  const handleFieldChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    setIsDirty(true);
-  };
-
-  const handlePrint = () => {
-    printWorkOrder({
-      workOrder: { ...workOrder, ...formData } as WorkOrder,
-      equipment,
-      sectors,
-      companies
-    });
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'OPEN': return 'bg-blue-500/10 text-blue-700 border-blue-500/20';
       case 'IN_PROGRESS': return 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20';
       case 'COMPLETED': return 'bg-green-500/10 text-green-700 border-green-500/20';
       default: return 'bg-gray-500/10 text-gray-700 border-gray-500/20';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'LOW': return 'bg-slate-500/10 text-slate-700 border-slate-500/20';
+      case 'MEDIUM': return 'bg-blue-500/10 text-blue-700 border-blue-500/20';
+      case 'HIGH': return 'bg-orange-500/10 text-orange-700 border-orange-500/20';
+      case 'CRITICAL': return 'bg-red-500/10 text-red-700 border-red-500/20';
+      default: return 'bg-gray-500/10 text-gray-700 border-gray-500/20';
+    }
+  };
+
+  const getPriorityLabel = (priority: string) => {
+    switch (priority) {
+      case 'LOW': return 'Baixa';
+      case 'MEDIUM': return 'Média';
+      case 'HIGH': return 'Alta';
+      case 'CRITICAL': return 'Crítica';
+      default: return priority;
     }
   };
 
@@ -127,6 +173,12 @@ export function WorkOrderDetailView({
                 {formData.status === 'OPEN' && 'Aberta'}
                 {formData.status === 'IN_PROGRESS' && 'Em Execução'}
                 {formData.status === 'COMPLETED' && 'Concluída'}
+              </Badge>
+              <Badge 
+                variant="outline" 
+                className={cn("flex-shrink-0", getPriorityColor(formData.priority || ''))}
+              >
+                {getPriorityLabel(formData.priority || '')}
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground mt-1">
@@ -244,12 +296,12 @@ export function WorkOrderDetailView({
                       <div className="space-y-2">
                         <Label htmlFor="status">Status</Label>
                         <Select 
-                          value={formData.status}
+                          value={formData.status || 'OPEN'}
                           onValueChange={(value) => handleFieldChange('status', value)}
                           disabled={readOnly}
                         >
                           <SelectTrigger id="status">
-                            <SelectValue />
+                            <SelectValue placeholder="Selecione o status" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="OPEN">Aberta</SelectItem>
@@ -281,12 +333,12 @@ export function WorkOrderDetailView({
                         <div className="space-y-2">
                           <Label htmlFor="type">Tipo</Label>
                           <Select 
-                            value={formData.type}
+                            value={formData.type || 'CORRECTIVE'}
                             onValueChange={(value) => handleFieldChange('type', value)}
                             disabled={readOnly}
                           >
                             <SelectTrigger id="type">
-                              <SelectValue />
+                              <SelectValue placeholder="Selecione o tipo" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="PREVENTIVE">Preventiva</SelectItem>
@@ -297,12 +349,12 @@ export function WorkOrderDetailView({
                         <div className="space-y-2">
                           <Label htmlFor="priority">Prioridade</Label>
                           <Select 
-                            value={formData.priority}
+                            value={formData.priority || 'MEDIUM'}
                             onValueChange={(value) => handleFieldChange('priority', value)}
                             disabled={readOnly}
                           >
                             <SelectTrigger id="priority">
-                              <SelectValue />
+                              <SelectValue placeholder="Selecione a prioridade" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="LOW">Baixa</SelectItem>
@@ -370,7 +422,7 @@ export function WorkOrderDetailView({
                     {formData.stockItems && formData.stockItems.length > 0 ? (
                       <div className="space-y-3">
                         {formData.stockItems.map((item, index) => {
-                          const stockItem = stockItems.find(si => si.id === item.stockItemId);
+                          const stockItem = stockItemsList.find(si => si.id === item.stockItemId);
                           return (
                             <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                               <div>

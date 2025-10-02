@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { 
   User,
   Company, 
@@ -56,7 +56,8 @@ export const useCompanies = (): [Company[], (value: Company[] | ((current: Compa
   const deleteData = () => {
     console.log('Companies deleted');
   };
-  return [data, setData, deleteData];
+  // Memoizar retorno para evitar re-criação de array
+  return useMemo(() => [data, setData, deleteData] as const, [data]);
 };
 
 /**
@@ -73,7 +74,8 @@ export const useSectors = (): [Sector[], (value: Sector[] | ((current: Sector[])
   const deleteData = () => {
     console.log('Sectors deleted');
   };
-  return [data, setData, deleteData];
+  // Memoizar retorno para evitar re-criação de array
+  return useMemo(() => [data, setData, deleteData] as const, [data]);
 };
 
 /**
@@ -109,7 +111,8 @@ export const useEquipment = (): [Equipment[], (value: Equipment[] | ((current: E
   const deleteData = () => {
     console.log('Equipment deleted');
   };
-  return [data, setData, deleteData];
+  // Memoizar retorno para evitar re-criação de array
+  return useMemo(() => [data, setData, deleteData] as const, [data]);
 };
 
 /**
@@ -167,7 +170,8 @@ export const useStock = (): [StockItem[], (value: StockItem[] | ((current: Stock
   const deleteData = () => {
     console.log('Stock deleted');
   };
-  return [data, setData, deleteData];
+  // Memoizar retorno para evitar re-criação de array
+  return useMemo(() => [data, setData, deleteData] as const, [data]);
 };
 
 // Alias para useStock para compatibilidade com componentes existentes

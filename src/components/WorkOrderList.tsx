@@ -53,14 +53,15 @@ export function WorkOrderList({
   // Compact mode - Gmail-style list view for panel
   if (compact) {
     return (
-      <div className="h-full overflow-y-auto bg-background">
-        <div className="sticky top-0 bg-background/95 backdrop-blur-sm border-b px-4 py-3">
+      <div className="h-full flex flex-col bg-background">
+        <div className="flex-shrink-0 bg-background/95 backdrop-blur-sm border-b px-4 py-3">
           <h3 className="font-medium text-sm text-muted-foreground">
             Ordens de Serviço ({workOrders.length})
           </h3>
         </div>
-        <div className="divide-y divide-border/60">
-          {workOrders.map((wo) => {
+        <div className="flex-1 overflow-y-auto">
+          <div className="divide-y divide-border/60">
+            {workOrders.map((wo) => {
             const eq = equipment.find(e => e.id === wo.equipmentId);
 
             const isSelected = selectedWorkOrderId === wo.id;
@@ -224,6 +225,7 @@ export function WorkOrderList({
               <p className="text-xs">Refine os filtros ou crie uma nova OS</p>
             </div>
           )}
+          </div>
         </div>
       </div>
     );

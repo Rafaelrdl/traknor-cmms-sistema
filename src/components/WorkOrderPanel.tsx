@@ -14,7 +14,7 @@ interface WorkOrderPanelProps {
   onUpdateWorkOrder?: (id: string, updates: Partial<WorkOrder>) => void;
 }
 
-export function WorkOrderPanel({ 
+function WorkOrderPanelComponent({ 
   workOrders, 
   onStartWorkOrder, 
   onEditWorkOrder,
@@ -253,3 +253,7 @@ export function WorkOrderPanel({
     </div>
   );
 }
+
+// Memoizar componente para evitar re-renders desnecessários
+export const WorkOrderPanel = React.memo(WorkOrderPanelComponent);
+WorkOrderPanel.displayName = 'WorkOrderPanel';
