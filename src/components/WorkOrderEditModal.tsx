@@ -25,14 +25,14 @@ import {
   Tag,
   MapPin,
   Circle,
-
+  FileText,
   Camera,
   Upload,
-  FileText,
   ClipboardCheck
 } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useCompanies, useSectors, useEquipment, useStockItems } from '@/hooks/useDataTemp';
+import { printWorkOrder } from '@/utils/printWorkOrder';
 import type { WorkOrder, WorkOrderStockItem, ChecklistResponse, UploadedPhoto } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -97,6 +97,18 @@ export function WorkOrderEditModal({
   const user = { name: 'Usuário Atual', role: 'ADMIN' }; // Placeholder
   const canEditDetails = user.role === 'ADMIN';
   const canEditExecution = true; // Tanto admin quanto técnico podem editar execução
+
+  // Função para imprimir a ordem de serviço
+  const handlePrintWorkOrder = () => {
+    if (!workOrder) return;
+    
+    printWorkOrder({
+      workOrder: { ...workOrder, ...formData } as WorkOrder,
+      equipment,
+      sectors,
+      companies
+    });
+  };
   
   // Carregar dados da ordem de serviço quando abrir o modal
   useEffect(() => {
@@ -322,9 +334,9 @@ export function WorkOrderEditModal({
       <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0 gap-0">
         {/* Header - Fixed */}
         <DialogHeader className="px-6 py-4 border-b bg-background shrink-0">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-1.5">
+          <div className="flex flex-col">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-3">
                 <DialogTitle className="text-xl font-semibold flex items-center gap-2">
                   <ClipboardList className="h-5 w-5 text-primary" />
                   Editar Ordem de Serviço
@@ -346,10 +358,21 @@ export function WorkOrderEditModal({
                   {formData.status === 'COMPLETED' && 'Concluída'}
                 </div>
               </div>
-              <DialogDescription>
-                OS #{workOrder.number} - Atualize as informações necessárias
-              </DialogDescription>
+              
+              {/* Botão de Impressão reposicionado */}
+              <Button 
+                variant="outline" 
+                onClick={handlePrintWorkOrder}
+                className="mr-8" 
+                title="Imprimir ordem de serviço"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Imprimir</span>
+              </Button>
             </div>
+            <DialogDescription className="mt-2">
+              OS #{workOrder.number} - Atualize as informações necessárias
+            </DialogDescription>
           </div>
         </DialogHeader>
 

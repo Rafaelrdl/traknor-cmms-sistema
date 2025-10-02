@@ -2,9 +2,10 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/StatusBadge';
-import { Play, Edit, ClipboardList, AlertTriangle, User } from 'lucide-react';
-import { useEquipment, useSectors } from '@/hooks/useDataTemp';
+import { Play, Edit, ClipboardList, AlertTriangle, User, FileText } from 'lucide-react';
+import { useEquipment, useSectors, useCompanies } from '@/hooks/useDataTemp';
 import { useWorkOrderStore } from '@/store/useWorkOrderStore';
+import { printWorkOrder } from '@/utils/printWorkOrder';
 import type { WorkOrder } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -27,7 +28,17 @@ export function WorkOrderList({
 }: WorkOrderListProps) {
   const [equipment] = useEquipment();
   const [sectors] = useSectors();
+  const [companies] = useCompanies();
   const { selectedWorkOrderId, setSelectedWorkOrder } = useWorkOrderStore();
+
+  const handlePrintWorkOrder = (workOrder: WorkOrder) => {
+    printWorkOrder({
+      workOrder,
+      equipment,
+      sectors,
+      companies
+    });
+  };
 
   const handleWorkOrderClick = (workOrder: WorkOrder) => {
     setSelectedWorkOrder(workOrder);
@@ -295,6 +306,15 @@ export function WorkOrderList({
                       <Edit className="h-4 w-4" />
                     </Button>
                   )}
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => handlePrintWorkOrder(wo)}
+                    aria-label={`Imprimir ordem de serviço ${wo.number}`}
+                    title="Imprimir OS"
+                  >
+                    <FileText className="h-4 w-4" />
+                  </Button>
                 </div>
               </TableCell>
             </TableRow>
