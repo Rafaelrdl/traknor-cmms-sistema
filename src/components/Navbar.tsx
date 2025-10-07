@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -19,8 +19,9 @@ import {
   MoreHorizontal
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { useNavbarOverflow } from '@/hooks/useNavbarOverflow';
 
+// Ordem original dos itens - será preservada na responsividade
 const navigation = [
   { name: 'Visão Geral', href: '/', icon: Home },
   { name: 'Ativos', href: '/ativos', icon: Package },
@@ -138,74 +139,107 @@ interface DesktopNavbarProps {
 
 export function DesktopNavbar({ className }: DesktopNavbarProps) {
   const location = useLocation();
-  const isLarge = useBreakpoint('lg');
-  const isXl = useBreakpoint('xl');
-  const is2Xl = useBreakpoint('2xl');
-
-  // Determine how many items to show based on breakpoint
-  const getVisibleItems = () => {
-    if (is2Xl) return navigation; // Show all items on 2xl screens (≥1440px)
-    if (isXl) return navigation.slice(0, 8); // Show 8 items on xl screens (≥1280px)  
-    if (isLarge) return navigation.slice(0, 6); // Show 6 items on lg screens (≥1024px)
-    return navigation.slice(0, 4); // Show 4 items on smaller desktop screens
-  };
-
-  const visibleItems = getVisibleItems();
-  const hiddenItems = navigation.slice(visibleItems.length);
+  
+  // Hook dinâmico Priority+ Nav V2 (medição real do DOM)
+  const { 
+    containerRef, 
+    listRef,
+    overflowBtnRef,
+    visibleItems, 
+    hiddenItems, 
+    isCompact, 
+    hasOverflow 
+  } = useNavbarOverflow(navigation);
 
   return (
-    <nav className={cn("hidden md:flex items-center space-x-1 lg:space-x-2 xl:space-x-3", className)}>
-      {visibleItems.map((item) => {
-        const isActive = location.pathname === item.href;
-        return (
-          <Link
-            key={item.name}
-            to={item.href}
-            className={cn(
-              "nav-item",
-              isActive ? "nav-item-active" : "nav-item-inactive"
-            )}
-          >
-            <item.icon className="h-4 w-4 flex-shrink-0" />
-            <span className="hidden lg:inline">{item.name}</span>
-          </Link>
-        );
-      })}
-      
-      {/* Overflow menu for hidden items */}
-      {hiddenItems.length > 0 && (
+    <nav 
+      ref={containerRef}
+      className={cn("hidden md:flex items-center overflow-hidden flex-1", className)}
+      data-compact={isCompact ? "true" : "false"}
+    >
+      {/* Lista de itens com min-width:0 para prevenir overflow */}
+      <ul 
+        ref={listRef}
+        className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden"
+      >
+        {/* Renderizar TODOS os itens (para medição), mas apenas visibleCount serão mostrados */}
+        {navigation.map((item, index) => {
+          const isActive = location.pathname === item.href;
+          const isVisible = index < visibleItems.length;
+          
+          return (
+            <li 
+              key={item.name}
+              className={cn(
+                "flex-shrink-0",
+                !isVisible && "hidden"
+              )}
+            >
+              <Link
+                to={item.href}
+                className={cn(
+                  "nav-item flex items-center gap-2 transition-all duration-200",
+                  isActive ? "nav-item-active" : "nav-item-inactive"
+                )}
+              >
+                <item.icon className="h-4 w-4 flex-shrink-0" />
+                {/* Label sempre renderizado (para medição), mas escondido via CSS quando compact */}
+                <span className="nav-item-label whitespace-nowrap">
+                  {item.name}
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+        
+      {/* Botão overflow - SEMPRE renderizado (para medição), mas escondido quando não necessário */}
+      <div className={cn(
+        "flex-shrink-0 ml-2",
+        !hasOverflow && "invisible pointer-events-none"
+      )}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
+              ref={overflowBtnRef}
               variant="ghost"
               size="sm"
-              className="text-muted-foreground hover:bg-muted hover:text-foreground px-2"
+              className="nav-overflow-menu text-muted-foreground hover:bg-muted hover:text-foreground px-2"
+              aria-label={`Mais ${hiddenItems.length} opções de navegação`}
+              aria-expanded={hasOverflow}
             >
               <MoreHorizontal className="h-4 w-4" />
-              <span className="sr-only">Mais opções</span>
+              {hasOverflow && (
+                <span className="nav-overflow-badge ml-1.5 text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-full min-w-[20px] text-center font-medium">
+                  {hiddenItems.length}
+                </span>
+              )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            {hiddenItems.map((item) => {
-              const isActive = location.pathname === item.href;
-              return (
-                <DropdownMenuItem key={item.name} asChild>
-                  <Link
-                    to={item.href}
-                    className={cn(
-                      "flex items-center gap-2 w-full",
-                      isActive && "bg-accent text-accent-foreground"
-                    )}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    {item.name}
-                  </Link>
-                </DropdownMenuItem>
-              );
-            })}
-          </DropdownMenuContent>
+          {hasOverflow && (
+            <DropdownMenuContent align="end" className="w-56 max-h-[70vh] overflow-y-auto">
+              {hiddenItems.map((item) => {
+                const isActive = location.pathname === item.href;
+                return (
+                  <DropdownMenuItem key={item.name} asChild>
+                    <Link
+                      to={item.href}
+                      className={cn(
+                        "flex items-center gap-2 w-full cursor-pointer",
+                        isActive && "bg-accent text-accent-foreground"
+                      )}
+                    >
+                      <item.icon className="h-4 w-4 flex-shrink-0" />
+                      {/* Menu de overflow sempre mostra texto completo */}
+                      <span>{item.name}</span>
+                    </Link>
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          )}
         </DropdownMenu>
-      )}
+      </div>
     </nav>
   );
 }

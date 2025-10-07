@@ -74,7 +74,8 @@ body {
 /* Responsive navigation utilities */
 @layer utilities {
   .nav-item {
-    @apply flex items-center gap-2 px-2 lg:px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap;
+    @apply flex items-center gap-2 px-2 lg:px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap flex-shrink-0;
+    min-width: fit-content;
   }
   
   .nav-item-active {
@@ -87,6 +88,70 @@ body {
 
   .mobile-nav-item {
     @apply flex items-center gap-3 px-4 py-3 text-base font-medium rounded-lg transition-all duration-200;
+  }
+
+  /* Prevent critical elements from shrinking */
+  .no-shrink {
+    @apply flex-shrink-0;
+    min-width: fit-content;
+  }
+
+  /* Header layout protection */
+  .header-logo {
+    @apply flex-shrink-0;
+    min-width: fit-content;
+    max-width: min-content;
+  }
+
+  .header-actions {
+    @apply flex-shrink-0;
+    min-width: fit-content;
+  }
+
+  .header-nav {
+    @apply flex-1 min-w-0;
+    flex-basis: 0;
+  }
+
+  /* Dynamic navbar transitions */
+  .nav-item-enter {
+    @apply opacity-0 transform -translate-x-2;
+  }
+  
+  .nav-item-enter-active {
+    @apply opacity-100 transform translate-x-0 transition-all duration-300 ease-out;
+  }
+  
+  .nav-item-exit {
+    @apply opacity-100 transform translate-x-0;
+  }
+  
+  .nav-item-exit-active {
+    @apply opacity-0 transform -translate-x-2 transition-all duration-300 ease-in;
+  }
+  
+  /* Container que se adapta suavemente */
+  .nav-container {
+    @apply flex items-center overflow-hidden;
+    transition: width 200ms ease-in-out;
+  }
+  
+  /* Overflow menu button - sempre visível quando há itens ocultos */
+  .nav-overflow-menu {
+    @apply flex-shrink-0;
+    min-width: fit-content;
+    z-index: 10;
+  }
+
+  /* Overflow indicator badge */
+  .nav-overflow-badge {
+    @apply bg-primary/10 text-primary text-xs px-1.5 py-0.5 rounded-full min-w-[20px] text-center font-medium;
+    animation: badge-pulse 2s ease-in-out infinite;
+  }
+  
+  @keyframes badge-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(0.95); }
   }
 
   /* Chart hover effects */

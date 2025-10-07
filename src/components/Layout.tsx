@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { LogOut, User, Settings, Users } from 'lucide-react';
+import { LogOut, User, Users } from 'lucide-react';
 import { useUsers } from '@/data/usersStore';
 import { IfCan } from '@/components/auth/IfCan';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -47,11 +47,11 @@ export function Layout({ children }: LayoutProps) {
     <div className="min-h-screen bg-background">
       {/* Top Navigation */}
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex h-16 items-center justify-between px-4 sm:px-6">
-          {/* Logo */}
+        <div className="flex h-16 items-center gap-2 sm:gap-4 px-4 sm:px-6">
+          {/* Logo - Always visible, never shrinks */}
           <Link 
             to="/" 
-            className="flex items-center hover:opacity-80 transition-opacity flex-shrink-0" 
+            className="flex items-center hover:opacity-80 transition-opacity flex-shrink-0 min-w-fit" 
             aria-label="Página inicial"
             data-tour="logo"
           >
@@ -66,11 +66,11 @@ export function Layout({ children }: LayoutProps) {
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <DesktopNavbar className="flex-1 mx-8" data-tour="navigation" />
+          {/* Desktop Navigation - Flex grows, can shrink */}
+          <DesktopNavbar className="flex-1 min-w-0 mx-2 sm:mx-4 lg:mx-6" data-tour="navigation" />
 
-          {/* Right Side: Mobile Menu + User Menu */}
-          <div className="flex items-center space-x-2">
+          {/* Right Side: Mobile Menu + User Menu - Always visible, never shrinks */}
+          <div className="flex items-center gap-2 flex-shrink-0 min-w-fit">
             {/* Mobile Navigation */}
             {isMobile && (
               <MobileNavbar 
@@ -80,10 +80,10 @@ export function Layout({ children }: LayoutProps) {
               />
             )}
 
-            {/* User Menu */}
+            {/* User Menu - Always visible */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild data-tour="user-menu">
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full flex-shrink-0">
                   <Avatar className="h-8 w-8">
                     {user.avatar_url && (
                       <AvatarImage src={user.avatar_url} alt={user.name} />

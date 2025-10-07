@@ -22,6 +22,9 @@ const defaultTheme = {
       coarse: { raw: "(pointer: coarse)" },
       fine: { raw: "(pointer: fine)" },
       pwa: { raw: "(display-mode: standalone)" },
+      // Custom breakpoints for better navbar responsiveness
+      'nav-md': '900px',   // Intermediate breakpoint for navbar
+      'nav-lg': '1140px',  // Better control between lg and xl
     },
     colors: {
       background: "var(--background)",
