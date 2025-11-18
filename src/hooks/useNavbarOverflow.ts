@@ -73,7 +73,7 @@ export function useNavbarOverflow(items: NavItem[]) {
 
     // Se tudo coube com labels, encerrar (sucesso!)
     if (visibleWithLabels === items.length) {
-      setCompact(false);
+      setIsCompact(false);
       setVisibleCount(items.length);
       return;
     }
