@@ -5,7 +5,6 @@ import {
   SensorsPage, 
   MonitorAssetsPage, 
   RulesPage,
-  SettingsPage,
   ReportsPage,
   MaintenancePage,
   EditableOverviewPage
@@ -23,7 +22,6 @@ import {
  * - /monitor/ativos         → Lista de Ativos HVAC
  * - /monitor/regras         → Configuração de Regras
  * - /monitor/relatorios     → Relatórios de Monitoramento
- * - /monitor/configuracoes  → Configurações do Sistema
  * - /monitor/manutencao     → Manutenção Preditiva
  */
 export function MonitorRoutes() {
@@ -49,9 +47,6 @@ export function MonitorRoutes() {
 
       {/* Relatórios */}
       <Route path="/relatorios" element={<ReportsPage />} />
-
-      {/* Configurações */}
-      <Route path="/configuracoes" element={<SettingsPage />} />
 
       {/* Manutenção Preditiva */}
       <Route path="/manutencao" element={<MaintenancePage />} />

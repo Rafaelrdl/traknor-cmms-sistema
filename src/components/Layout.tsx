@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { LogOut, User, Users } from 'lucide-react';
+import { LogOut, User, Users, Settings } from 'lucide-react';
 import { useUsers } from '@/data/usersStore';
 import { IfCan } from '@/components/auth/IfCan';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -12,6 +12,7 @@ import { FirstTimeGuide, useFirstTimeGuide } from '@/components/onboarding/First
 import { TourHint } from '@/components/tour/TourHint';
 import { useAutomaticWorkOrderGeneration } from '@/hooks/useWorkOrderGeneration';
 import { ProductSwitcher } from '@/components/ProductSwitcher';
+import { PreferencesModal } from '@/components/PreferencesModal';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -20,6 +21,7 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const { getCurrentUser } = useUsers();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { shouldShow, handleComplete, handleSkip } = useFirstTimeGuide();
@@ -105,6 +107,10 @@ export function Layout({ children }: LayoutProps) {
                     </Link>
                   </DropdownMenuItem>
                 </IfCan>
+                <DropdownMenuItem onClick={() => setIsPreferencesOpen(true)}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Preferências</span>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
@@ -128,6 +134,9 @@ export function Layout({ children }: LayoutProps) {
       
       {/* Tour Hint - contextual help */}
       <TourHint />
+      
+      {/* Preferences Modal */}
+      <PreferencesModal open={isPreferencesOpen} onOpenChange={setIsPreferencesOpen} />
     </div>
   );
 }
