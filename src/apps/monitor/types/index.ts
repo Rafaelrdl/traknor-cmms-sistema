@@ -7,3 +7,4 @@
 export * from './device';
 export * from './asset';
 export * from './rule';
+export * from './dashboard';

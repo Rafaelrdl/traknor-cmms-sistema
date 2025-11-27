@@ -1,16 +1,16 @@
 # Verificação de Migração: TrakSense → Sistema Unificado
 
-## 📊 Status Geral
+## 📊 Status Geral (Atualizado)
 
 | Categoria | Total | Migrado | Pendente | Status |
 |-----------|-------|---------|----------|--------|
-| Páginas | 10 | 3 | 7 | 🟡 30% |
+| Páginas | 10 | 6 | 4 | 🟢 60% |
 | Componentes Dashboard | 10 | 0 | 10 | 🔴 0% |
 | Componentes Charts | 11 | 0 | 11 | 🔴 0% |
-| Componentes Alerts | 4 | 1 | 3 | 🟡 25% |
-| Hooks | 14 | 0 | 14 | 🔴 0% |
-| Stores | 12 | 0 | 12 | 🔴 0% |
-| Services | 8 | 0 | 8 | 🔴 0% |
+| Componentes Alerts | 4 | 2 | 2 | 🟡 50% |
+| Hooks | 14 | 6 | 8 | 🟡 43% |
+| Stores | 12 | 1 | 11 | 🟡 8% |
+| Services | 8 | 3 | 5 | 🟡 38% |
 
 ---
 
@@ -22,14 +22,14 @@
 | OverviewPage | MonitorDashboard | ✅ Criada | 🟡 Parcial (sem charts) |
 | AlertsPage | AlertsList | ✅ Criada | 🟡 Parcial (sem detalhes) |
 | AssetDetailPage | EquipmentRealtime | ✅ Criada | 🟡 Parcial |
+| **SensorsPage** | **SensorsPage** | ✅ **MIGRADA** | 🟢 **Completa** |
+| **AssetsPage** | **MonitorAssetsPage** | ✅ **MIGRADA** | 🟢 **Completa** |
+| **RulesPage** | **RulesPage** | ✅ **MIGRADA** | 🟡 Parcial (modal pendente) |
 
 ### ❌ Não Migradas
 | Página TrakSense | Funcionalidade | Prioridade |
 |------------------|----------------|------------|
 | **EditableOverviewPage** | Dashboard drag-drop com dnd-kit, widgets customizáveis | 🔴 ALTA |
-| **SensorsPage** | Grid de dispositivos IoT, status real-time, filtros | 🔴 ALTA |
-| **RulesPage** | Configuração de regras de alertas | 🔴 ALTA |
-| **AssetsPage** | Lista de ativos com telemetria integrada | 🟡 MÉDIA |
 | **ReportsPage** | Relatórios de monitoramento | 🟡 MÉDIA |
 | **SettingsPage** | Configurações do módulo Monitor | 🟡 MÉDIA |
 | **MaintenancePage** | Manutenções vinculadas ao Monitor | 🟢 BAIXA |

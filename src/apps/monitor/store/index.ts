@@ -3,3 +3,4 @@
  */
 
 export { useMonitorStore } from './monitorStore';
+export { useOverviewStore } from './overviewStore';
