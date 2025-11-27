@@ -1,5 +1,4 @@
 import { createRoot } from 'react-dom/client'
-import "@github/spark/spark"
 import { ErrorBoundary } from 'react-error-boundary'
 import { ErrorFallback } from './ErrorFallback.tsx'
 import App from './App.tsx'

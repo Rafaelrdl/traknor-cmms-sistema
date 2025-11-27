@@ -17,7 +17,7 @@ import {
   RotateCcw, 
   FileText,
   Download 
-} from '@phosphor-icons/react';
+} from 'lucide-react';
 import { ProcedureVersion } from '@/models/procedure';
 import { rollbackToVersion, getFileBlob, getCategoryById } from '@/data/proceduresStore';
 import { cn } from '@/lib/utils';

@@ -2,7 +2,4 @@
 /* Import Tailwind CSS and application styles */
 @import "./index.css";
 
-/* Import Spark styles */
-@import "@github/spark/designer-styles.css";
-
 /* Additional global styles can be added below */

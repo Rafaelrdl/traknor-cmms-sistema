@@ -58,7 +58,6 @@ const monitorNavigation: NavItem[] = [
   { name: 'Visão Geral', href: '/monitor', icon: LayoutDashboard, exact: true },
   { name: 'Dashboard', href: '/monitor/dashboard', icon: Activity },
   { name: 'Ativos', href: '/monitor/ativos', icon: Box },
-  { name: 'Equipamentos', href: '/monitor/equipamentos', icon: Gauge },
   { name: 'Sensores', href: '/monitor/sensores', icon: Cpu },
   { name: 'Alertas', href: '/monitor/alertas', icon: Bell },
   { name: 'Regras', href: '/monitor/regras', icon: AlertTriangle },

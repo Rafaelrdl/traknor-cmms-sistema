@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { ArrowLeft, ArrowRight, FileText, History, RotateCcw, Eye } from '@phosphor-icons/react';
+import { ArrowLeft, ArrowRight, FileText, History, RotateCcw, Eye } from 'lucide-react';
 import { 
   ProcedureVersion, 
   VersionComparison as VersionComparisonType,

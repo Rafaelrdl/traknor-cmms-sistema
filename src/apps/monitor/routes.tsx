@@ -1,7 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { 
   MonitorDashboard, 
-  EquipmentRealtime, 
   AlertsList, 
   SensorsPage, 
   MonitorAssetsPage, 
@@ -19,7 +18,6 @@ import {
  * Estrutura implementada:
  * - /monitor                → Visão Geral (Dashboard Customizável)
  * - /monitor/dashboard      → Dashboard de Monitoramento (KPIs)
- * - /monitor/equipamentos/:id → Visualização em tempo real do equipamento
  * - /monitor/alertas        → Lista de Alertas
  * - /monitor/sensores       → Grid de Sensores/Devices
  * - /monitor/ativos         → Lista de Ativos HVAC
@@ -36,9 +34,6 @@ export function MonitorRoutes() {
       
       {/* Dashboard de KPIs */}
       <Route path="/dashboard" element={<MonitorDashboard />} />
-      
-      {/* Visualização de equipamento em tempo real */}
-      <Route path="/equipamentos/:id" element={<EquipmentRealtime />} />
       
       {/* Lista de alertas */}
       <Route path="/alertas" element={<AlertsList />} />
