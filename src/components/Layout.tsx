@@ -11,7 +11,7 @@ import { MobileNavbar, DesktopNavbar } from '@/components/Navbar';
 import { FirstTimeGuide, useFirstTimeGuide } from '@/components/onboarding/FirstTimeGuide';
 import { TourHint } from '@/components/tour/TourHint';
 import { useAutomaticWorkOrderGeneration } from '@/hooks/useWorkOrderGeneration';
-import TrakNorLogoUrl from '@/assets/images/traknor-logo.svg';
+import { ProductSwitcher } from '@/components/ProductSwitcher';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -48,23 +48,10 @@ export function Layout({ children }: LayoutProps) {
       {/* Top Navigation */}
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-16 items-center gap-2 sm:gap-4 px-4 sm:px-6">
-          {/* Logo - Always visible, never shrinks */}
-          <Link 
-            to="/" 
-            className="flex items-center hover:opacity-80 transition-opacity flex-shrink-0 min-w-fit" 
-            aria-label="Página inicial"
-            data-tour="logo"
-          >
-            <img 
-              src={TrakNorLogoUrl} 
-              alt="Logo TrakNor" 
-              className="h-8 w-8 md:h-10 md:w-10 mr-2 md:mr-3"
-            />
-            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
-              <span className="font-bold text-lg sm:text-xl text-primary">TrakNor</span>
-              <span className="text-xs sm:text-sm text-muted-foreground">CMMS</span>
-            </div>
-          </Link>
+          {/* Product Switcher - Always visible, never shrinks */}
+          <div className="flex-shrink-0 min-w-fit" data-tour="product-switcher">
+            <ProductSwitcher />
+          </div>
 
           {/* Desktop Navigation - Flex grows, can shrink */}
           <DesktopNavbar className="flex-1 min-w-0 mx-2 sm:mx-4 lg:mx-6" data-tour="navigation" />
@@ -105,14 +92,14 @@ export function Layout({ children }: LayoutProps) {
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link to="/profile" className="w-full">
+                  <Link to="/cmms/profile" className="w-full">
                     <User className="mr-2 h-4 w-4" />
                     <span>Perfil</span>
                   </Link>
                 </DropdownMenuItem>
                 <IfCan action="manage" subject="user">
                   <DropdownMenuItem asChild>
-                    <Link to="/admin/team" className="w-full">
+                    <Link to="/cmms/admin/team" className="w-full">
                       <Users className="mr-2 h-4 w-4" />
                       <span>Equipe</span>
                     </Link>

@@ -95,7 +95,7 @@ export function HelpContentViewPage() {
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold mb-4">Conteúdo não encontrado</h2>
         <p className="text-muted-foreground mb-6">O conteúdo solicitado não existe ou foi removido.</p>
-        <Button onClick={() => navigate('/help')}>
+        <Button onClick={() => navigate('/cmms/help')}>
           Voltar ao Centro de Ajuda
         </Button>
       </div>
@@ -167,7 +167,7 @@ export function HelpContentViewPage() {
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
-          onClick={() => navigate('/help')}
+          onClick={() => navigate('/cmms/help')}
           className="flex items-center gap-2"
         >
           <ArrowLeft className="h-4 w-4" />

@@ -4,6 +4,7 @@ interface NavItem {
   name: string;
   href: string;
   icon: any;
+  exact?: boolean;
 }
 
 /**

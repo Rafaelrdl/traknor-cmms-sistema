@@ -16,24 +16,69 @@ import {
   FileText,
   HelpCircle,
   Menu,
-  MoreHorizontal
+  MoreHorizontal,
+  Activity,
+  Gauge,
+  Bell,
+  Settings,
+  Cpu,
+  AlertTriangle,
+  Box
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavbarOverflow } from '@/hooks/useNavbarOverflow';
 
-// Ordem original dos itens - será preservada na responsividade
-const navigation = [
-  { name: 'Visão Geral', href: '/', icon: Home },
-  { name: 'Ativos', href: '/ativos', icon: Package },
-  { name: 'Ordens de Serviço', href: '/work-orders', icon: ClipboardList },
-  { name: 'Solicitações', href: '/requests', icon: MessageSquare },
-  { name: 'Planos', href: '/plans', icon: Calendar },
-  { name: 'Métricas', href: '/metrics', icon: BarChart3 },
-  { name: 'Estoque', href: '/inventory', icon: Warehouse },
-  { name: 'Procedimentos', href: '/procedures', icon: BookOpen },
-  { name: 'Relatórios', href: '/reports', icon: FileText },
-  { name: 'Ajuda', href: '/help', icon: HelpCircle },
+// Tipos para navegação
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  exact?: boolean;
+}
+
+// Rotas do módulo CMMS (TrakNor)
+const cmmsNavigation: NavItem[] = [
+  { name: 'Visão Geral', href: '/cmms', icon: Home, exact: true },
+  { name: 'Ativos', href: '/cmms/ativos', icon: Package },
+  { name: 'Ordens de Serviço', href: '/cmms/work-orders', icon: ClipboardList },
+  { name: 'Solicitações', href: '/cmms/requests', icon: MessageSquare },
+  { name: 'Planos', href: '/cmms/plans', icon: Calendar },
+  { name: 'Métricas', href: '/cmms/metrics', icon: BarChart3 },
+  { name: 'Estoque', href: '/cmms/inventory', icon: Warehouse },
+  { name: 'Procedimentos', href: '/cmms/procedures', icon: BookOpen },
+  { name: 'Relatórios', href: '/cmms/reports', icon: FileText },
+  { name: 'Ajuda', href: '/cmms/help', icon: HelpCircle },
 ];
+
+// Rotas do módulo Monitor (TrakSense)
+const monitorNavigation: NavItem[] = [
+  { name: 'Dashboard', href: '/monitor', icon: Activity, exact: true },
+  { name: 'Ativos', href: '/monitor/ativos', icon: Box },
+  { name: 'Equipamentos', href: '/monitor/equipamentos', icon: Gauge },
+  { name: 'Sensores', href: '/monitor/sensores', icon: Cpu },
+  { name: 'Alertas', href: '/monitor/alertas', icon: Bell },
+  { name: 'Regras', href: '/monitor/regras', icon: AlertTriangle },
+  { name: 'Relatórios', href: '/monitor/relatorios', icon: FileText },
+  { name: 'Configurações', href: '/monitor/configuracoes', icon: Settings },
+];
+
+// Hook para obter a navegação baseada no módulo ativo
+function useModuleNavigation(): NavItem[] {
+  const location = useLocation();
+  
+  if (location.pathname.startsWith('/monitor')) {
+    return monitorNavigation;
+  }
+  return cmmsNavigation;
+}
+
+// Helper para verificar se uma rota está ativa
+function isRouteActive(pathname: string, href: string, exact?: boolean): boolean {
+  if (exact) {
+    return pathname === href;
+  }
+  return pathname === href || pathname.startsWith(href + '/');
+}
 
 interface MobileNavbarProps {
   isOpen: boolean;
@@ -42,6 +87,8 @@ interface MobileNavbarProps {
 
 export function MobileNavbar({ isOpen, onOpenChange }: MobileNavbarProps) {
   const location = useLocation();
+  const navigation = useModuleNavigation();
+  const isMonitor = location.pathname.startsWith('/monitor');
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -87,15 +134,23 @@ export function MobileNavbar({ isOpen, onOpenChange }: MobileNavbarProps) {
               className="h-full bg-background flex flex-col"
             >
               {/* Header */}
-              <div className="flex items-center justify-start p-4 border-b border-border">
-                <span className="font-semibold text-lg">Menu de Navegação</span>
+              <div className={cn(
+                "flex items-center justify-start p-4 border-b",
+                isMonitor ? "border-green-200 bg-green-50" : "border-blue-200 bg-blue-50"
+              )}>
+                <span className={cn(
+                  "font-semibold text-lg",
+                  isMonitor ? "text-green-700" : "text-blue-700"
+                )}>
+                  {isMonitor ? 'TrakSense Monitor' : 'TrakNor CMMS'}
+                </span>
               </div>
 
               {/* Navigation Items */}
               <nav className="flex-1 overflow-y-auto">
                 <div className="px-4 py-6 space-y-2">
                   {navigation.map((item, index) => {
-                    const isActive = location.pathname === item.href;
+                    const isActive = isRouteActive(location.pathname, item.href, item.exact);
                     return (
                       <motion.div
                         key={item.name}
@@ -139,6 +194,8 @@ interface DesktopNavbarProps {
 
 export function DesktopNavbar({ className }: DesktopNavbarProps) {
   const location = useLocation();
+  const navigation = useModuleNavigation();
+  const isMonitor = location.pathname.startsWith('/monitor');
   
   // Hook dinâmico Priority+ Nav V2 (medição real do DOM)
   const { 
@@ -164,7 +221,7 @@ export function DesktopNavbar({ className }: DesktopNavbarProps) {
       >
         {/* Renderizar TODOS os itens (para medição), mas apenas visibleCount serão mostrados */}
         {navigation.map((item, index) => {
-          const isActive = location.pathname === item.href;
+          const isActive = isRouteActive(location.pathname, item.href, item.exact);
           const isVisible = index < visibleItems.length;
           
           return (
@@ -219,7 +276,7 @@ export function DesktopNavbar({ className }: DesktopNavbarProps) {
           {hasOverflow && (
             <DropdownMenuContent align="end" className="w-56 max-h-[70vh] overflow-y-auto">
               {hiddenItems.map((item) => {
-                const isActive = location.pathname === item.href;
+                const isActive = isRouteActive(location.pathname, item.href, item.exact);
                 return (
                   <DropdownMenuItem key={item.name} asChild>
                     <Link

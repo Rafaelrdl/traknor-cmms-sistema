@@ -1,28 +1,17 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Layout } from '@/components/Layout';
 import { LoginPage } from '@/pages/LoginPage';
 import { OnboardingPage } from '@/pages/OnboardingPage';
 import { QuickSetupPage } from '@/pages/QuickSetupPage';
 import { WelcomeTourPage } from '@/pages/WelcomeTourPage';
-import { Dashboard } from '@/pages/Dashboard';
-import { EquipmentPage } from '@/pages/EquipmentPage';
-import { WorkOrdersPage } from '@/pages/WorkOrdersPage';
-import { RequestsPage } from '@/pages/RequestsPage';
-import { PlansPage } from '@/pages/PlansPage';
-import { MetricsPage } from '@/pages/MetricsPage';
-import { InventoryPage } from '@/pages/InventoryPage';
-import { ProceduresPage } from '@/pages/ProceduresPage';
-import { ReportsPage } from '@/pages/ReportsPage';
-import { ProfilePage } from '@/pages/ProfilePage';
-import { TeamPage } from '@/pages/TeamPage';
-import { HelpCenterPage } from '@/pages/HelpCenterPage';
-import { HelpContentViewPage } from '@/pages/HelpContentViewPage';
-import { PlansTestingPage } from '@/pages/PlansTestingPage';
 import { Toaster } from '@/components/ui/sonner';
 // import { RoleSwitcher } from '@/components/auth/RoleSwitcher';
 import { AuthProvider } from '@/components/auth/AuthProvider';
 import { OnboardingManager } from '@/hooks/useOnboardingFlow';
+
+// Módulos da plataforma
+import { CmmsRoutes, MonitorRoutes } from '@/apps';
 
 // Initialize PDF.js configuration BEFORE any PDF components load
 import { configurePDFWorker } from '@/utils/pdfConfig';
@@ -46,27 +35,27 @@ function App() {
         <AuthProvider>
           <OnboardingManager>
             <Routes>
+              {/* Rotas públicas (sem layout) */}
               <Route path="/login" element={<LoginPage />} />
               <Route path="/onboarding/accept" element={<OnboardingPage />} />
               <Route path="/quick-setup" element={<QuickSetupPage />} />
               <Route path="/welcome-tour" element={<WelcomeTourPage />} />
+              
+              {/* Rotas protegidas (com layout) */}
               <Route path="/*" element={
                 <Layout>
                   <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/ativos" element={<EquipmentPage />} />
-                    <Route path="/work-orders" element={<WorkOrdersPage />} />
-                    <Route path="/requests" element={<RequestsPage />} />
-                    <Route path="/plans" element={<PlansPage />} />
-                    <Route path="/metrics" element={<MetricsPage />} />
-                    <Route path="/inventory" element={<InventoryPage />} />
-                    <Route path="/procedures" element={<ProceduresPage />} />
-                    <Route path="/reports" element={<ReportsPage />} />
-                    <Route path="/profile" element={<ProfilePage />} />
-                    <Route path="/admin/team" element={<TeamPage />} />
-                    <Route path="/help" element={<HelpCenterPage />} />
-                    <Route path="/help/:contentId" element={<HelpContentViewPage />} />
-                    <Route path="/plans-testing" element={<PlansTestingPage />} />
+                    {/* Módulo CMMS (TrakNor) */}
+                    <Route path="/cmms/*" element={<CmmsRoutes />} />
+                    
+                    {/* Módulo Monitor (TrakSense) */}
+                    <Route path="/monitor/*" element={<MonitorRoutes />} />
+                    
+                    {/* Redirect raiz para CMMS */}
+                    <Route path="/" element={<Navigate to="/cmms" replace />} />
+                    
+                    {/* Fallback - redireciona rotas desconhecidas para CMMS */}
+                    <Route path="*" element={<Navigate to="/cmms" replace />} />
                   </Routes>
                 </Layout>
               } />
