@@ -30,8 +30,6 @@ dist-ssr
 packages
 .file-manifest
 
-.spark-workbench-id
-.spark-initial-sha
 .vite.log
 
 # TypeScript build info

@@ -1,6 +1,19 @@
 # TrakNor CMMS - Sistema de Gerenciamento de Manutenção
 
-Sistema de gerenciamento de manutenção para equipamentos e ativos.
+Sistema de gerenciamento de manutenção para equipamentos e ativos industriais.
+
+## 🚀 Sobre o Projeto
+
+O TrakNor CMMS é uma solução completa para gerenciamento de manutenção, monitoramento de ativos e controle de ordens de serviço. Desenvolvido com tecnologias modernas para oferecer uma experiência de usuário fluida e responsiva.
+
+### Funcionalidades Principais
+
+- **Dashboard Personalizável** - Widgets configuráveis para visualização de KPIs
+- **Gestão de Ordens de Serviço** - Criação, acompanhamento e histórico de OS
+- **Monitoramento de Ativos** - Visualização em tempo real do status dos equipamentos
+- **Alertas e Regras** - Configuração de alertas automáticos baseados em sensores
+- **Gestão de Manutenção** - Planejamento preventivo e corretivo
+- **Relatórios** - Geração de relatórios customizados
 
 ## 📁 Estrutura do Projeto
 
@@ -11,37 +24,78 @@ Sistema de gerenciamento de manutenção para equipamentos e ativos.
 │   ├── fixes/             # Documentação de correções
 │   └── root-docs/         # Documentos gerais do projeto
 ├── src/                    # 💻 Código fonte
-├── tests/                  # 🧪 Testes organizados
-│   └── manual/            # Testes manuais e documentação
+│   ├── apps/              # Aplicações modulares
+│   ├── components/        # Componentes reutilizáveis
+│   ├── hooks/             # Custom hooks
+│   ├── store/             # Estado global (Zustand)
+│   └── types/             # Tipos TypeScript
+├── scripts/               # 🔧 Scripts utilitários
 └── cypress/               # 🔍 Testes E2E
 ```
 
+## 🛠️ Tecnologias
+
+- **React 19** + **TypeScript 5.7**
+- **Vite 6** - Build tool
+- **Tailwind CSS 4** - Estilização
+- **Zustand** - Gerenciamento de estado
+- **React Query** - Cache e sincronização de dados
+- **React Router DOM** - Navegação
+- **Radix UI** - Componentes acessíveis
+- **Recharts** - Gráficos e visualizações
+- **React Hook Form** + **Zod** - Formulários e validação
+- **Vitest** - Testes unitários
+- **Cypress** - Testes E2E
+
 ## 🚀 Configuração
 
-1. Instale as dependências:
+### Pré-requisitos
+
+- Node.js 18+ 
+- npm ou yarn
+
+### Instalação
+
+1. Clone o repositório:
+```bash
+git clone https://github.com/seu-usuario/traknor-cmms-sistema.git
+cd traknor-cmms-sistema
+```
+
+2. Instale as dependências:
 ```bash
 npm install
 ```
 
-2. Execute o projeto:
+3. Configure as variáveis de ambiente:
+```bash
+cp .env.example .env
+# Edite o arquivo .env com suas configurações
+```
+
+4. Execute o projeto:
 ```bash
 npm run dev
 ```
 
-3. Execute os testes:
-```bash
-npm test
-```
+O servidor de desenvolvimento estará disponível em `http://localhost:5173`
+
+### Scripts Disponíveis
+
+| Comando | Descrição |
+|---------|-----------|
+| `npm run dev` | Inicia o servidor de desenvolvimento |
+| `npm run build` | Compila o projeto para produção |
+| `npm run preview` | Visualiza o build de produção |
+| `npm run lint` | Executa o linting do código |
+| `npm test` | Executa os testes unitários |
+| `npm run test:ui` | Executa os testes com interface gráfica |
+| `npm run cy:open` | Abre o Cypress para testes E2E |
+| `npm run cy:run` | Executa os testes E2E no terminal |
 
 ## 🆘 Solução de Problemas
 
-Encontrou um erro? Consulte nossos guias:
-
-- **🚑 [QUICK-FIX.md](QUICK-FIX.md)** - Soluções rápidas para erros comuns
-- **🔧 [TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Guia detalhado de diagnóstico
-- **🚨 [NOT_INSTRUCTIONS.md](NOT_INSTRUCTIONS.md)** - Arquivos que não devem ser modificados
-
-### Erros Mais Comuns:
+### Erros Comuns
 
 **Vite Module Not Found:**
 ```bash
@@ -60,87 +114,36 @@ rm -rf node_modules package-lock.json
 npm install
 ```
 
-## 📚 Documentação
-
-Toda a documentação do projeto está organizada na pasta `docs/`. Para mais detalhes, consulte [docs/README.md](docs/README.md).
-
-## 🧪 Testes
-
-Os testes estão organizados na pasta `tests/`. Para mais informações, consulte [tests/README.md](tests/README.md).
-
-## �️ Tecnologias
-
-- React + TypeScript
-- Vite
-- Tailwind CSS
-- Zustand (gerenciamento de estado)
-- React Hook Form
-- React Router DOM
-- Vitest (testes unitários)
-- Cypress (testes E2E)
-
-## �🔧 Dicas para Ambiente de Desenvolvimento
-
-### Problemas Comuns com Dependências
-
-Se você encontrar erros de importação como:
-```
-Failed to resolve import "react-pdf" from "src/utils/pdfConfig.ts"
-Failed to resolve import "@dnd-kit/core" from "src/components/WorkOrderKanban.tsx"
-```
-
-Execute o seguinte comando para restaurar as dependências:
-
+**Problemas com dependências:**
 ```bash
 bash ./scripts/check-deps.sh
 ```
 
-Ou, alternativamente:
+### Guias de Troubleshooting
 
-```bash
-rm -rf node_modules/.vite
-npm install
-```
+- **🚑 [QUICK-FIX.md](QUICK-FIX.md)** - Soluções rápidas para erros comuns
+- **🔧 [TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Guia detalhado de diagnóstico
 
-### Scripts Disponíveis
+## 📚 Documentação
 
-- `npm run dev` - Inicia o servidor de desenvolvimento (com verificação automática de deps)
-- `npm run build` - Compila o projeto para produção
-- `npm run lint` - Executa o linting do código
-- `bash ./scripts/check-deps.sh` - Verifica e corrige dependências manualmente
+Toda a documentação do projeto está organizada na pasta `docs/`. Para mais detalhes, consulte [docs/README.md](docs/README.md).
 
-📄 License
+## 🔒 Segurança
 
-The project files and resources are licensed under the terms of the MIT license.
-  
-🧠 What Can You Do?
+Para informações sobre práticas de segurança, consulte [SECURITY.md](SECURITY.md).
 
-Right now, this is just a starting point — the perfect place to begin building and testing your Spark applications.
+## 📄 Licença
 
-🧹 Just Exploring?
-No problem! If you were just checking things out and don't need to keep this code:
+Este projeto está licenciado sob a licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
 
-- Simply delete your Spark.
-- Everything will be cleaned up — no traces left behind. Spark Template!
-You've just launched your brand-new Spark Template Codespace — everything’s fired up and ready for you to explore, build, and create with Spark!
+## 👥 Contribuindo
 
-This template is your blank canvas. It comes with a minimal setup to help you get started quickly with Spark development.
+1. Faça um Fork do projeto
+2. Crie sua Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a Branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
 
-🚀 What's Inside?
-- A clean, minimal Spark environment
-- Pre-configured for local development
-- Ready to scale with your ideas
-  
-🧠 What Can You Do?
+---
 
-Right now, this is just a starting point — the perfect place to begin building and testing your Spark applications.
-
-🧹 Just Exploring?
-No problem! If you were just checking things out and don’t need to keep this code:
-
-- Simply delete your Spark.
-- Everything will be cleaned up — no traces left behind.
-
-📄 License For Spark Template Resources 
-
-The Spark Template files and resources from GitHub are licensed under the terms of the MIT license, Copyright GitHub, Inc.
+Desenvolvido com ❤️ pela equipe TrakNor
