@@ -2,10 +2,12 @@
  * API Client para o módulo Monitor
  * 
  * Cliente HTTP configurado para o backend TrakSense
+ * Usa o proxy do Vite em desenvolvimento: /api → http://umc.localhost:8000/api
  */
 
-// Base URL do backend TrakSense (deve ser configurado via env)
-const MONITOR_API_BASE = import.meta.env.VITE_MONITOR_API_URL || 'http://localhost:8000/api';
+// Base URL relativa para usar o proxy do Vite
+// Em produção, isso será configurado para apontar para o backend correto
+const MONITOR_API_BASE = '/api';
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>;
@@ -22,17 +24,23 @@ class MonitorApiClient {
   }
 
   private buildUrl(path: string, params?: Record<string, string | number | boolean | undefined>): string {
-    const url = new URL(`${this.baseUrl}${path}`);
+    // Constrói URL relativa (funciona com proxy do Vite)
+    let fullPath = `${this.baseUrl}${path}`;
     
     if (params) {
+      const searchParams = new URLSearchParams();
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          url.searchParams.append(key, String(value));
+          searchParams.append(key, String(value));
         }
       });
+      const queryString = searchParams.toString();
+      if (queryString) {
+        fullPath += `?${queryString}`;
+      }
     }
     
-    return url.toString();
+    return fullPath;
   }
 
   private async request<T>(path: string, options: RequestOptions = {}): Promise<T> {

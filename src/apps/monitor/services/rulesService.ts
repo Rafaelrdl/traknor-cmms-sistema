@@ -2,9 +2,11 @@
  * Service para gerenciar Rules (regras de monitoramento)
  * 
  * Rules definem condições para disparo automático de alertas
+ * 
+ * 🔧 CORRIGIDO: Usa cliente Axios principal (@/lib/api) para autenticação
  */
 
-import { monitorApi } from './api';
+import { api } from '@/lib/api';
 import type { 
   Rule, 
   RuleFilters, 
@@ -12,12 +14,6 @@ import type {
   UpdateRuleRequest,
   RuleStatistics 
 } from '../types/rule';
-
-// Helper para converter filtros
-const toParams = (filters?: RuleFilters): Record<string, string | number | boolean | undefined> | undefined => {
-  if (!filters) return undefined;
-  return { ...filters };
-};
 
 interface PaginatedResponse<T> {
   results: T[];
@@ -29,55 +25,62 @@ export const rulesService = {
    * Lista todas as regras
    */
   async list(filters?: RuleFilters): Promise<PaginatedResponse<Rule>> {
-    return monitorApi.get<PaginatedResponse<Rule>>('/rules/', toParams(filters));
+    const response = await api.get<PaginatedResponse<Rule>>('/alerts/rules/', { params: filters });
+    return response.data;
   },
 
   /**
    * Busca uma regra específica
    */
   async get(id: number): Promise<Rule> {
-    return monitorApi.get<Rule>(`/rules/${id}/`);
+    const response = await api.get<Rule>(`/alerts/rules/${id}/`);
+    return response.data;
   },
 
   /**
    * Cria uma nova regra
    */
   async create(data: CreateRuleRequest): Promise<Rule> {
-    return monitorApi.post<Rule>('/rules/', data);
+    const response = await api.post<Rule>('/alerts/rules/', data);
+    return response.data;
   },
 
   /**
    * Atualiza uma regra (PATCH - parcial)
    */
   async patch(id: number, data: UpdateRuleRequest): Promise<Rule> {
-    return monitorApi.patch<Rule>(`/rules/${id}/`, data);
+    const response = await api.patch<Rule>(`/alerts/rules/${id}/`, data);
+    return response.data;
   },
 
   /**
    * Atualiza uma regra (PUT - completo)
    */
   async update(id: number, data: CreateRuleRequest): Promise<Rule> {
-    return monitorApi.put<Rule>(`/rules/${id}/`, data);
+    const response = await api.put<Rule>(`/alerts/rules/${id}/`, data);
+    return response.data;
   },
 
   /**
    * Remove uma regra
    */
   async delete(id: number): Promise<void> {
-    return monitorApi.delete<void>(`/rules/${id}/`);
+    await api.delete(`/alerts/rules/${id}/`);
   },
 
   /**
    * Toggle status de uma regra (enabled/disabled)
    */
   async toggleStatus(id: number): Promise<Rule> {
-    return monitorApi.post<Rule>(`/rules/${id}/toggle_status/`);
+    const response = await api.post<Rule>(`/alerts/rules/${id}/toggle_status/`);
+    return response.data;
   },
 
   /**
    * Estatísticas das regras
    */
   async statistics(): Promise<RuleStatistics> {
-    return monitorApi.get<RuleStatistics>('/rules/statistics/');
+    const response = await api.get<RuleStatistics>('/alerts/rules/statistics/');
+    return response.data;
   },
 };

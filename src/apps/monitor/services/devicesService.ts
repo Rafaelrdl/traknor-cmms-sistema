@@ -10,16 +10,12 @@
  * - GET /devices/{id}/ - Detalhes de um device
  * - GET /sites/{id}/devices/summary/ - Lista devices com variáveis agrupadas
  * - GET /devices/{id}/summary/ - Device com variáveis agrupadas
+ * 
+ * 🔧 CORRIGIDO: Usa cliente Axios principal (@/lib/api) para autenticação
  */
 
-import { monitorApi } from './api';
+import { api } from '@/lib/api';
 import type { Device, DeviceSummary, DeviceFilters } from '../types/device';
-
-// Helper para converter DeviceFilters em Record
-const toParams = (filters?: DeviceFilters): Record<string, string | number | boolean | undefined> | undefined => {
-  if (!filters) return undefined;
-  return { ...filters };
-};
 
 const normalizeDevice = (device: any): Device => {
   const status = (device.status ?? '').toString();
@@ -59,11 +55,12 @@ export const devicesService = {
    * Lista devices de um site específico
    */
   async listBySite(siteId: number, filters?: DeviceFilters): Promise<Device[]> {
-    const response = await monitorApi.get<any>(`/sites/${siteId}/devices/`, toParams(filters));
-    const payload = Array.isArray(response)
-      ? response
-      : Array.isArray(response?.results)
-        ? response.results
+    const response = await api.get<any>(`/sites/${siteId}/devices/`, { params: filters });
+    const data = response.data;
+    const payload = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.results)
+        ? data.results
         : [];
     return payload.map(normalizeDevice);
   },
@@ -72,11 +69,12 @@ export const devicesService = {
    * Lista todos os devices com filtros
    */
   async getAll(filters?: DeviceFilters): Promise<Device[]> {
-    const response = await monitorApi.get<any>('/devices/', toParams(filters));
-    const payload = Array.isArray(response)
-      ? response
-      : Array.isArray(response?.results)
-        ? response.results
+    const response = await api.get<any>('/devices/', { params: filters });
+    const data = response.data;
+    const payload = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.results)
+        ? data.results
         : [];
     return payload.map(normalizeDevice);
   },
@@ -85,8 +83,8 @@ export const devicesService = {
    * Busca um device específico por ID
    */
   async getById(id: number): Promise<Device> {
-    const response = await monitorApi.get<any>(`/devices/${id}/`);
-    return normalizeDevice(response);
+    const response = await api.get<any>(`/devices/${id}/`);
+    return normalizeDevice(response.data);
   },
 
   /**
@@ -110,13 +108,15 @@ export const devicesService = {
    * incluindo contagem de variáveis online/offline e informações do asset.
    */
   async getSummaryBySite(siteId: number, filters?: DeviceFilters): Promise<DeviceSummary[]> {
-    return monitorApi.get<DeviceSummary[]>(`/sites/${siteId}/devices/summary/`, toParams(filters));
+    const response = await api.get<DeviceSummary[]>(`/sites/${siteId}/devices/summary/`, { params: filters });
+    return response.data;
   },
 
   /**
    * Busca um device específico com variáveis agrupadas (Device Summary)
    */
   async getSummaryById(deviceId: number): Promise<DeviceSummary> {
-    return monitorApi.get<DeviceSummary>(`/devices/${deviceId}/summary/`);
+    const response = await api.get<DeviceSummary>(`/devices/${deviceId}/summary/`);
+    return response.data;
   },
 };
