@@ -7,17 +7,25 @@ interface NavItem {
   exact?: boolean;
 }
 
+// Constantes de largura para cálculo
+const ITEM_WIDTH = {
+  FULL: 110,           // Item com ícone + texto (estimativa média)
+  COMPACT: 40,         // Item apenas com ícone + padding
+  OVERFLOW_BUTTON: 52, // Botão "Mais (...)"
+  GAP: 8,              // Espaçamento entre itens
+};
+
 /**
- * Hook para navegação responsiva com algoritmo Priority+ Nav V2
+ * Hook para navegação responsiva com algoritmo Priority+ Nav
  * 
- * Estratégia baseada em MEDIÇÃO REAL do DOM (não estimativas):
- * 1. Mede largura disponível do container
- * 2. Tenta encaixar todos com label (getBoundingClientRect)
- * 3. Se não couber, calcula se precisa do botão "..."
- * 4. Compara: quantos cabem com labels vs quantos cabem só com ícones
- * 5. Escolhe o modo que mostre MAIS itens visíveis
+ * Estratégia PRIORIZA TEXTO:
+ * 1. Sempre tenta manter o máximo de itens COM TEXTO visíveis
+ * 2. Itens excedentes vão para o menu "Mais" (overflow)
+ * 3. Modo compacto (apenas ícones) só ativa em telas MUITO pequenas
+ *    onde mesmo com overflow, poucos itens caberiam com texto
  * 
- * SEM números mágicos. SEM thresholds fixos.
+ * Regra: Só usar modo compacto se isso permitir mostrar 
+ * SIGNIFICATIVAMENTE mais itens (pelo menos 3+ a mais)
  */
 export function useNavbarOverflow(items: NavItem[]) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -27,76 +35,79 @@ export function useNavbarOverflow(items: NavItem[]) {
   const [visibleCount, setVisibleCount] = useState(items.length);
   const [isCompact, setIsCompact] = useState(false);
 
-  /**
-   * Calcula quantos itens cabem no espaço disponível
-   * @param available - Largura disponível em pixels
-   * @param mode - "labels" (ícone+texto) ou "icons" (apenas ícone)
-   */
-  const fitCount = useCallback((available: number, mode: 'labels' | 'icons'): number => {
-    const list = listRef.current;
-    if (!list) return 0;
+  const measure = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
 
-    const children = Array.from(list.children) as HTMLLIElement[];
-    let accumulatedWidth = 0;
-    let visibleItemCount = 0;
+    const containerWidth = container.clientWidth;
+    const totalItems = items.length;
+    
+    // FASE 1: Calcular se todos cabem com ícone + texto
+    const fullWidth = (totalItems * ITEM_WIDTH.FULL) + ((totalItems - 1) * ITEM_WIDTH.GAP);
+    
+    if (fullWidth <= containerWidth) {
+      // Tudo cabe no modo completo!
+      setIsCompact(false);
+      setVisibleCount(totalItems);
+      return;
+    }
 
-    for (const li of children) {
-      const liWidth = li.getBoundingClientRect().width;
-      const labelElement = li.querySelector<HTMLElement>('.nav-item-label');
-      const labelWidth = labelElement ? labelElement.getBoundingClientRect().width : 0;
-
-      // Calcular largura do item no modo solicitado
-      const itemWidth = mode === 'labels' 
-        ? liWidth 
-        : Math.max(0, liWidth - labelWidth); // Remove largura do label, mantém padding/ícone
-
-      if (accumulatedWidth + itemWidth <= available) {
-        accumulatedWidth += itemWidth;
-        visibleItemCount++;
+    // FASE 2: Precisa do botão overflow - reservar espaço
+    const availableWidth = containerWidth - ITEM_WIDTH.OVERFLOW_BUTTON - ITEM_WIDTH.GAP;
+    
+    // Quantos cabem no modo completo (com texto)?
+    let countWithLabels = 0;
+    let accWidth = 0;
+    for (let i = 0; i < totalItems; i++) {
+      const itemWidth = ITEM_WIDTH.FULL + (i > 0 ? ITEM_WIDTH.GAP : 0);
+      if (accWidth + itemWidth <= availableWidth) {
+        accWidth += itemWidth;
+        countWithLabels++;
       } else {
         break;
       }
     }
 
-    return visibleItemCount;
-  }, []);
-
-  const measure = useCallback(() => {
-    const container = containerRef.current;
-    const list = listRef.current;
-    const overflowBtn = overflowBtnRef.current;
-    
-    if (!container || !list || !overflowBtn) return;
-
-    // PASSO 1: Assumir que NÃO precisa do botão "Mais"
-    const totalWidth = container.clientWidth;
-    let visibleWithLabels = fitCount(totalWidth, 'labels');
-
-    // Se tudo coube com labels, encerrar (sucesso!)
-    if (visibleWithLabels === items.length) {
+    // PRIORIZAR TEXTO: Se consegue mostrar pelo menos 4 itens com texto, usar texto
+    // Só considerar modo compacto se tela for MUITO pequena
+    if (countWithLabels >= 4) {
       setIsCompact(false);
-      setVisibleCount(items.length);
+      setVisibleCount(countWithLabels);
       return;
     }
 
-    // PASSO 2: Vai precisar do botão "Mais" - recalcular com espaço reservado
-    const overflowBtnWidth = overflowBtn.offsetWidth || 60;
-    const availableWidth = totalWidth - overflowBtnWidth - 8; // 8px = gap mínimo
+    // FASE 3: Tela muito pequena - avaliar se compacto ajudaria MUITO
+    let countWithIcons = 0;
+    accWidth = 0;
+    for (let i = 0; i < totalItems; i++) {
+      const itemWidth = ITEM_WIDTH.COMPACT + (i > 0 ? ITEM_WIDTH.GAP : 0);
+      if (accWidth + itemWidth <= availableWidth) {
+        accWidth += itemWidth;
+        countWithIcons++;
+      } else {
+        break;
+      }
+    }
 
-    visibleWithLabels = fitCount(availableWidth, 'labels');
-    const visibleWithIcons = fitCount(availableWidth, 'icons');
-
-    // PASSO 3: Escolher o modo que exibe MAIS itens
-    // Estratégia: preferir labels, mas se ícones permitirem mostrar mais, usar ícones
-    const shouldUseCompact = visibleWithIcons > visibleWithLabels;
+    // Só usar modo compacto se mostrar pelo menos 4 itens A MAIS que modo com texto
+    // E se conseguir mostrar pelo menos 6 itens no modo compacto
+    const shouldUseCompact = (countWithIcons >= countWithLabels + 4) && (countWithIcons >= 6);
     
-    setIsCompact(shouldUseCompact);
-    setVisibleCount(shouldUseCompact ? visibleWithIcons : visibleWithLabels);
-  }, [items.length, fitCount]);
+    if (shouldUseCompact) {
+      setIsCompact(true);
+      setVisibleCount(countWithIcons);
+    } else {
+      // Preferir texto mesmo que mostre menos itens
+      setIsCompact(false);
+      setVisibleCount(Math.max(countWithLabels, 3)); // Mínimo 3 itens visíveis
+    }
+  }, [items.length]);
 
   // Medição inicial após montagem
   useEffect(() => {
-    measure();
+    // Pequeno delay para garantir que o layout está estável
+    const timer = setTimeout(measure, 50);
+    return () => clearTimeout(timer);
   }, [measure]);
 
   // Observar mudanças de tamanho do container

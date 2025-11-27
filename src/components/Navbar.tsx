@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Home,
   Package,
@@ -213,94 +214,115 @@ export function DesktopNavbar({ className }: DesktopNavbarProps) {
   } = useNavbarOverflow(navigation);
 
   return (
-    <nav 
-      ref={containerRef}
-      className={cn("hidden md:flex items-center overflow-hidden flex-1", className)}
-      data-compact={isCompact ? "true" : "false"}
-    >
-      {/* Lista de itens com min-width:0 para prevenir overflow */}
-      <ul 
-        ref={listRef}
-        className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden"
+    <TooltipProvider delayDuration={300}>
+      <nav 
+        ref={containerRef}
+        className={cn("hidden md:flex items-center overflow-hidden flex-1", className)}
+        data-compact={isCompact ? "true" : "false"}
       >
-        {/* Renderizar TODOS os itens (para medição), mas apenas visibleCount serão mostrados */}
-        {navigation.map((item, index) => {
-          const isActive = isRouteActive(location.pathname, item.href, item.exact);
-          const isVisible = index < visibleItems.length;
-          
-          return (
-            <li 
-              key={item.name}
-              className={cn(
-                "flex-shrink-0",
-                !isVisible && "hidden"
-              )}
-            >
+        {/* Lista de itens com min-width:0 para prevenir overflow */}
+        <ul 
+          ref={listRef}
+          className="flex items-center gap-1 lg:gap-2 flex-1 min-w-0 overflow-hidden"
+        >
+          {/* Renderizar TODOS os itens (para medição), mas apenas visibleCount serão mostrados */}
+          {navigation.map((item, index) => {
+            const isActive = isRouteActive(location.pathname, item.href, item.exact);
+            const isVisible = index < visibleItems.length;
+            
+            const navLink = (
               <Link
                 to={item.href}
                 className={cn(
-                  "nav-item flex items-center gap-2 transition-all duration-200",
+                  "nav-item flex items-center transition-all duration-200",
+                  isCompact ? "gap-0 px-2.5" : "gap-2 px-2 lg:px-3",
                   isActive ? "nav-item-active" : "nav-item-inactive"
                 )}
               >
                 <item.icon className="h-4 w-4 flex-shrink-0" />
-                {/* Label sempre renderizado (para medição), mas escondido via CSS quando compact */}
-                <span className="nav-item-label whitespace-nowrap">
+                {/* Label escondido quando compact */}
+                <span className={cn(
+                  "nav-item-label whitespace-nowrap transition-all duration-200",
+                  isCompact && "sr-only"
+                )}>
                   {item.name}
                 </span>
               </Link>
-            </li>
-          );
-        })}
-      </ul>
+            );
+            
+            return (
+              <li 
+                key={item.name}
+                className={cn(
+                  "flex-shrink-0",
+                  !isVisible && "hidden"
+                )}
+              >
+                {isCompact ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      {navLink}
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="font-medium">
+                      {item.name}
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  navLink
+                )}
+              </li>
+            );
+          })}
+        </ul>
         
-      {/* Botão overflow - SEMPRE renderizado (para medição), mas escondido quando não necessário */}
-      <div className={cn(
-        "flex-shrink-0 ml-2",
-        !hasOverflow && "invisible pointer-events-none"
-      )}>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              ref={overflowBtnRef}
-              variant="ghost"
-              size="sm"
-              className="nav-overflow-menu text-muted-foreground hover:bg-muted hover:text-foreground px-2"
-              aria-label={`Mais ${hiddenItems.length} opções de navegação`}
-              aria-expanded={hasOverflow}
-            >
-              <MoreHorizontal className="h-4 w-4" />
-              {hasOverflow && (
-                <span className="nav-overflow-badge ml-1.5 text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-full min-w-[20px] text-center font-medium">
-                  {hiddenItems.length}
-                </span>
-              )}
-            </Button>
-          </DropdownMenuTrigger>
-          {hasOverflow && (
-            <DropdownMenuContent align="end" className="w-56 max-h-[70vh] overflow-y-auto">
-              {hiddenItems.map((item) => {
-                const isActive = isRouteActive(location.pathname, item.href, item.exact);
-                return (
-                  <DropdownMenuItem key={item.name} asChild>
-                    <Link
-                      to={item.href}
-                      className={cn(
-                        "flex items-center gap-2 w-full cursor-pointer",
-                        isActive && "bg-accent text-accent-foreground"
-                      )}
-                    >
-                      <item.icon className="h-4 w-4 flex-shrink-0" />
-                      {/* Menu de overflow sempre mostra texto completo */}
-                      <span>{item.name}</span>
-                    </Link>
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuContent>
-          )}
-        </DropdownMenu>
-      </div>
-    </nav>
+        {/* Botão overflow - SEMPRE renderizado (para medição), mas escondido quando não necessário */}
+        <div className={cn(
+          "flex-shrink-0 ml-1 lg:ml-2",
+          !hasOverflow && "invisible pointer-events-none"
+        )}>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                ref={overflowBtnRef}
+                variant="ghost"
+                size="sm"
+                className="nav-overflow-menu text-muted-foreground hover:bg-muted hover:text-foreground px-2"
+                aria-label={`Mais ${hiddenItems.length} opções de navegação`}
+                aria-expanded={hasOverflow}
+              >
+                <MoreHorizontal className="h-4 w-4" />
+                {hasOverflow && (
+                  <span className="nav-overflow-badge ml-1 text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-full min-w-[20px] text-center font-medium">
+                    {hiddenItems.length}
+                  </span>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            {hasOverflow && (
+              <DropdownMenuContent align="end" className="w-56 max-h-[70vh] overflow-y-auto">
+                {hiddenItems.map((item) => {
+                  const isActive = isRouteActive(location.pathname, item.href, item.exact);
+                  return (
+                    <DropdownMenuItem key={item.name} asChild>
+                      <Link
+                        to={item.href}
+                        className={cn(
+                          "flex items-center gap-2 w-full cursor-pointer",
+                          isActive && "bg-accent text-accent-foreground"
+                        )}
+                      >
+                        <item.icon className="h-4 w-4 flex-shrink-0" />
+                        {/* Menu de overflow sempre mostra texto completo */}
+                        <span>{item.name}</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            )}
+          </DropdownMenu>
+        </div>
+      </nav>
+    </TooltipProvider>
   );
 }

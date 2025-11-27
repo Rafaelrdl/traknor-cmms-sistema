@@ -74,7 +74,7 @@ body {
 /* Responsive navigation utilities */
 @layer utilities {
   .nav-item {
-    @apply flex items-center gap-2 px-2 lg:px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap flex-shrink-0;
+    @apply flex items-center py-2 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap flex-shrink-0;
     min-width: fit-content;
   }
   
@@ -88,6 +88,15 @@ body {
 
   .mobile-nav-item {
     @apply flex items-center gap-3 px-4 py-3 text-base font-medium rounded-lg transition-all duration-200;
+  }
+
+  /* Modo compacto - apenas ícones */
+  [data-compact="true"] .nav-item {
+    @apply px-2.5;
+  }
+
+  [data-compact="true"] .nav-item-label {
+    @apply sr-only;
   }
 
   /* Prevent critical elements from shrinking */
