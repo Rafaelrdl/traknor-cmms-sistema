@@ -6,7 +6,6 @@ import {
   MonitorAssetsPage, 
   RulesPage,
   ReportsPage,
-  MaintenancePage,
   EditableOverviewPage
 } from './pages';
 
@@ -22,7 +21,6 @@ import {
  * - /monitor/ativos         → Lista de Ativos HVAC
  * - /monitor/regras         → Configuração de Regras
  * - /monitor/relatorios     → Relatórios de Monitoramento
- * - /monitor/manutencao     → Manutenção Preditiva
  */
 export function MonitorRoutes() {
   return (
@@ -47,9 +45,6 @@ export function MonitorRoutes() {
 
       {/* Relatórios */}
       <Route path="/relatorios" element={<ReportsPage />} />
-
-      {/* Manutenção Preditiva */}
-      <Route path="/manutencao" element={<MaintenancePage />} />
       
       {/* Fallback - redireciona para dashboard */}
       <Route path="/*" element={<Navigate to="/monitor" replace />} />
