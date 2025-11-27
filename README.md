@@ -33,6 +33,33 @@ npm run dev
 npm test
 ```
 
+## 🆘 Solução de Problemas
+
+Encontrou um erro? Consulte nossos guias:
+
+- **🚑 [QUICK-FIX.md](QUICK-FIX.md)** - Soluções rápidas para erros comuns
+- **🔧 [TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Guia detalhado de diagnóstico
+- **🚨 [NOT_INSTRUCTIONS.md](NOT_INSTRUCTIONS.md)** - Arquivos que não devem ser modificados
+
+### Erros Mais Comuns:
+
+**Vite Module Not Found:**
+```bash
+npm run clean
+```
+
+**Porta em uso:**
+```bash
+npm run kill
+```
+
+**Problemas de cache:**
+```bash
+npm cache clean --force
+rm -rf node_modules package-lock.json
+npm install
+```
+
 ## 📚 Documentação
 
 Toda a documentação do projeto está organizada na pasta `docs/`. Para mais detalhes, consulte [docs/README.md](docs/README.md).

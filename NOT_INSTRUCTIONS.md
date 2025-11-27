@@ -246,6 +246,42 @@ CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5001
 
 ### 🔥 Cenários de Emergência
 
+#### 🆘 Erro: Cannot find module 'dep-*.js' (Vite Corrompido)
+
+**Sintoma:**
+```
+Cannot find module '/workspaces/spark-template/node_modules/vite/dist/node/chunks/dep-CvfTChi5.js'
+```
+
+**Causa:** Arquivos internos do Vite corrompidos no node_modules
+
+**Solução IMEDIATA:**
+```bash
+# Use o script de limpeza do projeto
+npm run clean
+
+# Ou manualmente:
+rm -rf node_modules package-lock.json
+npm cache clean --force
+npm install
+```
+
+**Prevenção:**
+- ✅ Use `npm ci` em instalações limpas
+- ✅ Não interrompa `npm install`
+- ✅ Execute `npm run clean` periodicamente se houver problemas
+- ❌ Nunca edite arquivos dentro de `node_modules/`
+
+**Verificação:**
+```bash
+npm list vite  # Deve mostrar vite@6.3.5 sem erros
+ls node_modules/vite/dist/node/chunks/  # Deve listar vários dep-*.js
+```
+
+📖 **Guia completo**: Veja `TROUBLESHOOTING.md` para mais detalhes
+
+---
+
 #### Se Quebrar a Integração Spark:
 
 1. **Parar imediatamente qualquer alteração**
