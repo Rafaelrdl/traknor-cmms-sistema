@@ -4,11 +4,11 @@
  * Permite configurar:
  * - Nome e descrição da regra
  * - Equipamento associado
- * - Parâmetros de monitoramento
+ * - Parâmetros de monitoramento (baseados em dispositivos/sensores reais)
  * - Ações de notificação
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -41,12 +41,16 @@ import {
   Mail, 
   Bell, 
   Volume2,
-  MessageSquare 
+  MessageSquare,
+  Cpu,
+  Activity
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useCreateRuleMutation, useUpdateRuleMutation } from '../hooks/useRulesQuery';
 import { useAssetsQuery } from '../hooks/useAssetsQuery';
+import { useDevicesSummaryQuery } from '../hooks/useDevicesQuery';
+import { useMonitorStore } from '../store/monitorStore';
 import type { 
   Rule, 
   RuleParameter, 
@@ -54,6 +58,7 @@ import type {
   Operator, 
   Severity 
 } from '../types/rule';
+import type { DeviceSummary, SensorVariable } from '../types/device';
 
 interface RuleFormModalProps {
   open: boolean;
@@ -88,8 +93,15 @@ const NOTIFICATION_ACTIONS: { value: NotificationAction; label: string; descript
 // Template padrão de mensagem
 const DEFAULT_MESSAGE_TEMPLATE = "{sensor} está {operator} {threshold}{unit} (valor atual: {value}{unit})";
 
+// Interface estendida para parâmetros com deviceId
+interface RuleParameterWithDevice extends RuleParameter {
+  deviceId?: number;
+}
+
 export function RuleFormModal({ open, onOpenChange, editingRule }: RuleFormModalProps) {
+  const { currentSite } = useMonitorStore();
   const { data: assets = [] } = useAssetsQuery();
+  const { data: devices = [], isLoading: isLoadingDevices } = useDevicesSummaryQuery(currentSite?.id);
   const createMutation = useCreateRuleMutation();
   const updateMutation = useUpdateRuleMutation();
 
@@ -98,7 +110,21 @@ export function RuleFormModal({ open, onOpenChange, editingRule }: RuleFormModal
   const [ruleName, setRuleName] = useState('');
   const [ruleDescription, setRuleDescription] = useState('');
   const [actions, setActions] = useState<NotificationAction[]>(['IN_APP']);
-  const [parameters, setParameters] = useState<RuleParameter[]>([]);
+  const [parameters, setParameters] = useState<RuleParameterWithDevice[]>([]);
+
+  // Memoizar mapa de dispositivos para acesso rápido
+  const devicesMap = useMemo(() => {
+    const map = new Map<number, DeviceSummary>();
+    devices.forEach(device => map.set(device.id, device));
+    return map;
+  }, [devices]);
+
+  // Obter variáveis de um dispositivo específico
+  const getDeviceVariables = (deviceId: number | undefined): SensorVariable[] => {
+    if (!deviceId) return [];
+    const device = devicesMap.get(deviceId);
+    return device?.variables || [];
+  };
 
   // Reset/Preencher formulário quando modal abre
   useEffect(() => {
@@ -144,7 +170,8 @@ export function RuleFormModal({ open, onOpenChange, editingRule }: RuleFormModal
 
   // Adicionar novo parâmetro
   const addParameter = () => {
-    const newParam: RuleParameter = {
+    const newParam: RuleParameterWithDevice = {
+      deviceId: undefined,
       parameter_key: '',
       variable_key: '',
       operator: '>',
@@ -162,9 +189,30 @@ export function RuleFormModal({ open, onOpenChange, editingRule }: RuleFormModal
   };
 
   // Atualizar parâmetro
-  const updateParameter = (index: number, field: keyof RuleParameter, value: any) => {
+  const updateParameter = (index: number, field: keyof RuleParameterWithDevice, value: any) => {
     const updated = [...parameters];
-    updated[index] = { ...updated[index], [field]: value };
+    
+    // Se mudar o device, resetar a variável selecionada
+    if (field === 'deviceId') {
+      updated[index] = { 
+        ...updated[index], 
+        deviceId: value,
+        parameter_key: '', // Reset parameter key ao mudar device
+        variable_key: '',
+      };
+    } else if (field === 'parameter_key') {
+      // Ao selecionar uma variável, preencher automaticamente alguns campos
+      const device = devicesMap.get(updated[index].deviceId || 0);
+      const variable = device?.variables.find(v => v.tag === value);
+      updated[index] = { 
+        ...updated[index], 
+        parameter_key: value,
+        unit: variable?.unit || '',
+      };
+    } else {
+      updated[index] = { ...updated[index], [field]: value };
+    }
+    
     setParameters(updated);
   };
 
@@ -198,8 +246,12 @@ export function RuleFormModal({ open, onOpenChange, editingRule }: RuleFormModal
     // Validar cada parâmetro
     for (let i = 0; i < parameters.length; i++) {
       const param = parameters[i];
+      if (!param.deviceId) {
+        toast.error(`Parâmetro ${i + 1}: Selecione um dispositivo`);
+        return;
+      }
       if (!param.parameter_key) {
-        toast.error(`Parâmetro ${i + 1}: Informe a chave do parâmetro`);
+        toast.error(`Parâmetro ${i + 1}: Selecione uma variável`);
         return;
       }
     }
@@ -209,11 +261,16 @@ export function RuleFormModal({ open, onOpenChange, editingRule }: RuleFormModal
       return;
     }
 
+    // Preparar dados para envio (remover deviceId do payload pois é apenas para UI)
     const ruleData = {
       name: ruleName.trim(),
       description: ruleDescription.trim(),
       equipment: parseInt(equipmentId),
-      parameters: parameters,
+      parameters: parameters.map(({ deviceId, ...param }) => ({
+        ...param,
+        // Incluir referência ao device para rastreabilidade
+        device: deviceId,
+      })),
       actions: actions,
       enabled: true,
     };
@@ -324,7 +381,7 @@ export function RuleFormModal({ open, onOpenChange, editingRule }: RuleFormModal
                 <Button
                   type="button"
                   onClick={addParameter}
-                  disabled={!equipmentId}
+                  disabled={!equipmentId || devices.length === 0}
                   size="sm"
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -332,30 +389,72 @@ export function RuleFormModal({ open, onOpenChange, editingRule }: RuleFormModal
                 </Button>
               </div>
 
-              {!equipmentId && (
-                <div className="border-2 border-dashed border-blue-300 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+              {!currentSite && (
+                <div className="border-2 border-dashed border-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4">
                   <div className="flex items-start gap-3">
-                    <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                    <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-blue-900 dark:text-blue-300">Selecione um equipamento</p>
-                      <p className="text-xs text-blue-700 dark:text-blue-400">
-                        Escolha um equipamento acima para visualizar seus sensores disponíveis
+                      <p className="text-sm font-medium text-amber-900 dark:text-amber-300">Nenhum site selecionado</p>
+                      <p className="text-xs text-amber-700 dark:text-amber-400">
+                        Vá até a página de Sensores e selecione um site para carregar os dispositivos
                       </p>
                     </div>
                   </div>
                 </div>
               )}
 
-              {parameters.length === 0 && equipmentId && (
+              {currentSite && devices.length === 0 && !isLoadingDevices && (
+                <div className="border-2 border-dashed border-blue-300 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-blue-900 dark:text-blue-300">Nenhum dispositivo encontrado</p>
+                      <p className="text-xs text-blue-700 dark:text-blue-400">
+                        O site "{currentSite.name}" não possui dispositivos cadastrados
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {isLoadingDevices && (
+                <div className="border-2 border-dashed border-muted-foreground/30 bg-muted/30 rounded-lg p-4">
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">Carregando dispositivos...</p>
+                  </div>
+                </div>
+              )}
+
+              {parameters.length === 0 && equipmentId && devices.length > 0 && (
                 <div className="border-2 border-dashed border-muted-foreground/30 bg-muted/30 rounded-lg p-4">
                   <div className="flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
                     <div>
                       <p className="text-sm font-medium">Nenhum parâmetro configurado</p>
                       <p className="text-xs text-muted-foreground">
-                        Clique em "Adicionar Parâmetro" para começar a configurar os alertas
+                        Clique em "Adicionar Parâmetro" para selecionar dispositivos e variáveis a monitorar
                       </p>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Info: Dispositivos Disponíveis */}
+              {currentSite && devices.length > 0 && parameters.length === 0 && !equipmentId && (
+                <div className="border rounded-lg p-3 bg-muted/30">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">
+                    📡 {devices.length} dispositivo(s) disponível(is) no site "{currentSite.name}":
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    {devices.slice(0, 5).map(device => (
+                      <Badge key={device.id} variant="outline" className="text-xs">
+                        {device.display_name || device.name}
+                      </Badge>
+                    ))}
+                    {devices.length > 5 && (
+                      <Badge variant="secondary" className="text-xs">+{devices.length - 5} mais</Badge>
+                    )}
                   </div>
                 </div>
               )}
@@ -385,27 +484,82 @@ export function RuleFormModal({ open, onOpenChange, editingRule }: RuleFormModal
                     </CardHeader>
                     <CardContent className="space-y-4 p-4">
                       
-                      {/* Chave do Parâmetro e Variável */}
+                      {/* Dispositivo (Sensor) e Variável */}
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-2">
-                          <Label className="text-xs">
-                            Chave do Parâmetro <span className="text-destructive">*</span>
+                          <Label className="text-xs flex items-center gap-1">
+                            <Cpu className="w-3 h-3" />
+                            Dispositivo (Sensor) <span className="text-destructive">*</span>
                           </Label>
-                          <Input
-                            placeholder="Ex: temperature, humidity"
-                            value={param.parameter_key}
-                            onChange={(e) => updateParameter(index, 'parameter_key', e.target.value)}
-                          />
+                          <Select
+                            value={param.deviceId ? String(param.deviceId) : ''}
+                            onValueChange={(value) => updateParameter(index, 'deviceId', parseInt(value))}
+                            disabled={isLoadingDevices}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder={isLoadingDevices ? "Carregando..." : "Selecione um dispositivo"} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {devices.length === 0 ? (
+                                <SelectItem value="__none__" disabled>
+                                  {currentSite ? "Nenhum dispositivo encontrado" : "Selecione um site primeiro"}
+                                </SelectItem>
+                              ) : (
+                                devices.map((device) => (
+                                  <SelectItem key={device.id} value={String(device.id)}>
+                                    <div className="flex items-center gap-2">
+                                      <div className={`w-2 h-2 rounded-full ${device.device_status === 'ONLINE' ? 'bg-green-500' : 'bg-gray-400'}`} />
+                                      <span>{device.display_name || device.name}</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        ({device.total_variables_count} variáveis)
+                                      </span>
+                                    </div>
+                                  </SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-xs">
-                            Variável <span className="text-muted-foreground">(opcional)</span>
+                          <Label className="text-xs flex items-center gap-1">
+                            <Activity className="w-3 h-3" />
+                            Variável <span className="text-destructive">*</span>
                           </Label>
-                          <Input
-                            placeholder="Ex: avg, max, current"
-                            value={param.variable_key}
-                            onChange={(e) => updateParameter(index, 'variable_key', e.target.value)}
-                          />
+                          <Select
+                            value={param.parameter_key || ''}
+                            onValueChange={(value) => updateParameter(index, 'parameter_key', value)}
+                            disabled={!param.deviceId}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder={!param.deviceId ? "Selecione um dispositivo primeiro" : "Selecione uma variável"} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {getDeviceVariables(param.deviceId).length === 0 ? (
+                                <SelectItem value="__none__" disabled>
+                                  Nenhuma variável disponível
+                                </SelectItem>
+                              ) : (
+                                getDeviceVariables(param.deviceId).map((variable) => (
+                                  <SelectItem key={variable.id} value={variable.tag}>
+                                    <div className="flex items-center gap-2">
+                                      <div className={`w-2 h-2 rounded-full ${variable.is_online ? 'bg-green-500' : 'bg-gray-400'}`} />
+                                      <span className="font-medium">{variable.name || variable.tag}</span>
+                                      {variable.last_value !== null && (
+                                        <span className="text-xs text-muted-foreground">
+                                          ({variable.last_value} {variable.unit})
+                                        </span>
+                                      )}
+                                    </div>
+                                  </SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
+                          {param.parameter_key && param.deviceId && (
+                            <p className="text-[10px] text-muted-foreground">
+                              Tag: {param.parameter_key} {param.unit && `• Unidade: ${param.unit}`}
+                            </p>
+                          )}
                         </div>
                       </div>
 
