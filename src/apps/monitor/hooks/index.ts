@@ -7,3 +7,4 @@
 export * from './useDevicesQuery';
 export * from './useAssetsQuery';
 export * from './useRulesQuery';
+export * from './useSitesQuery';

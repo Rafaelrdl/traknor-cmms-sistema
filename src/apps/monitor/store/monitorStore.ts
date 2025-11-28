@@ -6,12 +6,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-interface Site {
-  id: number;
-  name: string;
-  location?: string;
-}
+import type { Site } from '../types/site';
 
 interface MonitorState {
   // Site management

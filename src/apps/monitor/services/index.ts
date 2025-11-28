@@ -9,3 +9,4 @@
 export { devicesService } from './devicesService';
 export { assetsService } from './assetsService';
 export { rulesService } from './rulesService';
+export { sitesService } from './sitesService';
