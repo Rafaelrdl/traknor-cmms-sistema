@@ -225,3 +225,456 @@ export interface ApiError {
   code?: string;
   errors?: Record<string, string[]>;
 }
+
+// ============================================
+// CMMS Types (Work Orders, Requests, Plans)
+// ============================================
+
+/**
+ * Checklist Item (parte de um template)
+ */
+export interface ApiChecklistItem {
+  id: string;
+  question: string;
+  type: 'TEXT' | 'NUMBER' | 'BOOLEAN' | 'MULTIPLE_CHOICE';
+  options?: string[];
+  required: boolean;
+}
+
+/**
+ * Checklist Response (resposta a um item)
+ */
+export interface ApiChecklistResponse {
+  item_id: string;
+  question: string;
+  response: string | number | boolean;
+  observations?: string;
+}
+
+/**
+ * Photo attached to Work Order
+ */
+export interface ApiPhoto {
+  id: number;
+  file: string;
+  caption: string;
+  uploaded_by: number | null;
+  uploaded_by_name: string | null;
+  created_at: string;
+}
+
+/**
+ * Stock item used in Work Order
+ */
+export interface ApiWorkOrderItem {
+  id: number;
+  item: number;
+  item_name: string;
+  item_sku: string;
+  quantity: number;
+  unit: string;
+}
+
+/**
+ * Work Order (Ordem de Serviço)
+ */
+export interface ApiWorkOrder {
+  id: number;
+  number: string;
+  asset: number;
+  asset_tag: string;
+  asset_name: string;
+  site_name: string;
+  type: 'PREVENTIVE' | 'CORRECTIVE' | 'EMERGENCY';
+  status: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  description: string;
+  scheduled_date: string;
+  completed_at: string | null;
+  assigned_to: number | null;
+  assigned_to_name: string | null;
+  execution_description: string | null;
+  estimated_hours: number | null;
+  actual_hours: number | null;
+  checklist_template: number | null;
+  checklist_responses: ApiChecklistResponse[];
+  photos: ApiPhoto[];
+  items: ApiWorkOrderItem[];
+  created_by: number | null;
+  created_by_name: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Request Item (item de estoque na solicitação)
+ */
+export interface ApiRequestItem {
+  id: number;
+  item: number;
+  item_name: string;
+  item_sku: string;
+  quantity: number;
+  unit: string;
+}
+
+/**
+ * Status change history
+ */
+export interface ApiStatusChange {
+  from_status: string | null;
+  to_status: string;
+  changed_at: string;
+  changed_by: number | null;
+  changed_by_name: string | null;
+}
+
+/**
+ * Request (Solicitação de Manutenção)
+ */
+export interface ApiRequest {
+  id: number;
+  number: string;
+  location: number;
+  location_name: string;
+  asset: number | null;
+  asset_tag: string | null;
+  asset_name: string | null;
+  requester: number;
+  requester_name: string;
+  status: 'NEW' | 'TRIAGING' | 'CONVERTED' | 'REJECTED';
+  note: string;
+  items: ApiRequestItem[];
+  status_history: ApiStatusChange[];
+  work_order: number | null;
+  work_order_number: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Maintenance Plan (Plano de Manutenção)
+ */
+export interface ApiMaintenancePlan {
+  id: number;
+  name: string;
+  description: string;
+  frequency: 'DAILY' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'SEMI_ANNUAL' | 'ANNUAL';
+  is_active: boolean;
+  assets: number[];
+  asset_tags: string[];
+  asset_names: string[];
+  checklist_template: number | null;
+  checklist_template_name: string | null;
+  next_execution: string | null;
+  last_execution: string | null;
+  auto_generate: boolean;
+  work_orders_generated: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================
+// Inventory Types
+// ============================================
+
+/**
+ * Inventory Category
+ */
+export interface ApiInventoryCategory {
+  id: number;
+  name: string;
+  description: string;
+  parent: number | null;
+  parent_name: string | null;
+  item_count: number;
+  children_count: number;
+}
+
+/**
+ * Inventory Item
+ */
+export interface ApiInventoryItem {
+  id: number;
+  sku: string;
+  name: string;
+  description: string;
+  category: number;
+  category_name: string;
+  unit: string;
+  quantity: number;
+  min_quantity: number;
+  max_quantity: number | null;
+  unit_cost: number;
+  total_value: number;
+  location: string;
+  is_active: boolean;
+  is_low_stock: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Inventory Movement
+ */
+export interface ApiInventoryMovement {
+  id: number;
+  item: number;
+  item_name: string;
+  item_sku: string;
+  movement_type: 'IN' | 'OUT' | 'ADJUSTMENT' | 'TRANSFER';
+  quantity: number;
+  quantity_before: number;
+  quantity_after: number;
+  reference_type: 'WORK_ORDER' | 'PURCHASE' | 'MANUAL' | 'INVENTORY' | null;
+  reference_id: number | null;
+  notes: string;
+  performed_by: number;
+  performed_by_name: string;
+  created_at: string;
+}
+
+// ============================================
+// Location Types (Companies, Sectors, Subsections)
+// ============================================
+
+/**
+ * Company (Empresa)
+ */
+export interface ApiCompany {
+  id: number;
+  name: string;
+  segment: string;
+  cnpj: string;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  responsible_name: string;
+  responsible_role: string;
+  phone: string;
+  email: string;
+  total_area: number;
+  occupants: number;
+  hvac_units: number;
+  notes: string;
+  sector_count: number;
+  asset_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Sector (Setor)
+ */
+export interface ApiSector {
+  id: number;
+  name: string;
+  company: number;
+  company_name: string;
+  responsible_name: string;
+  phone: string;
+  email: string;
+  area: number;
+  occupants: number;
+  hvac_units: number;
+  notes: string;
+  subsection_count: number;
+  asset_count: number;
+}
+
+/**
+ * Subsection (Subsetor)
+ */
+export interface ApiSubsection {
+  id: number;
+  name: string;
+  sector: number;
+  sector_name: string;
+  company_name: string;
+  responsible_name: string;
+  phone: string;
+  email: string;
+  area: number;
+  occupants: number;
+  hvac_units: number;
+  notes: string;
+  asset_count: number;
+}
+
+/**
+ * Location Tree Node
+ */
+export interface ApiLocationNode {
+  id: number;
+  name: string;
+  type: 'company' | 'sector' | 'subsection';
+  parent_id: number | null;
+  children: ApiLocationNode[];
+  asset_count: number;
+}
+
+// ============================================
+// Metrics & Reports Types
+// ============================================
+
+/**
+ * Dashboard KPIs
+ */
+export interface ApiDashboardKPIs {
+  open_work_orders: number;
+  overdue_work_orders: number;
+  in_progress_work_orders: number;
+  completed_this_month: number;
+  critical_assets: number;
+  maintenance_due_count: number;
+  mttr_hours: number;
+  mtbf_hours: number;
+  preventive_compliance: number; // percentage
+  backlog_rate: number; // percentage
+}
+
+/**
+ * Time series data point
+ */
+export interface ApiTimeSeriesPoint {
+  date: string;
+  value: number;
+}
+
+/**
+ * Metrics response
+ */
+export interface ApiMetricsResponse {
+  kpis: ApiDashboardKPIs;
+  work_orders_by_day: ApiTimeSeriesPoint[];
+  work_orders_by_type: {
+    preventive: number;
+    corrective: number;
+    emergency: number;
+  };
+  mttr_by_sector: {
+    sector_name: string;
+    mttr_hours: number;
+  }[];
+  backlog_trend: ApiTimeSeriesPoint[];
+  top_assets_by_work_orders: {
+    asset_id: number;
+    asset_tag: string;
+    work_order_count: number;
+  }[];
+}
+
+/**
+ * Technician Performance
+ */
+export interface ApiTechnicianPerformance {
+  user_id: number;
+  user_name: string;
+  preventive_count: number;
+  corrective_count: number;
+  emergency_count: number;
+  total_hours: number;
+  avg_completion_time: number;
+}
+
+// ============================================
+// Procedures Types
+// ============================================
+
+/**
+ * Procedure Category
+ */
+export interface ApiProcedureCategory {
+  id: number;
+  name: string;
+  description: string;
+  procedure_count: number;
+}
+
+/**
+ * Procedure Version
+ */
+export interface ApiProcedureVersion {
+  id: number;
+  version_number: string;
+  file_url: string;
+  file_type: 'PDF' | 'MARKDOWN' | 'DOCX';
+  file_size: number;
+  changelog: string;
+  created_by: number;
+  created_by_name: string;
+  created_at: string;
+}
+
+/**
+ * Procedure
+ */
+export interface ApiProcedure {
+  id: number;
+  title: string;
+  description: string;
+  category: number;
+  category_name: string;
+  status: 'DRAFT' | 'REVIEW' | 'APPROVED' | 'ARCHIVED';
+  current_version: string;
+  file_url: string;
+  file_type: 'PDF' | 'MARKDOWN' | 'DOCX';
+  versions: ApiProcedureVersion[];
+  tags: string[];
+  view_count: number;
+  created_by: number;
+  created_by_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================
+// Help Center Types
+// ============================================
+
+/**
+ * Help Category
+ */
+export interface ApiHelpCategory {
+  id: number;
+  name: string;
+  description: string;
+  icon: string;
+  content_count: number;
+  order: number;
+}
+
+/**
+ * Help Content
+ */
+export interface ApiHelpContent {
+  id: number;
+  title: string;
+  slug: string;
+  category: number;
+  category_name: string;
+  content_type: 'ARTICLE' | 'VIDEO' | 'FAQ' | 'TUTORIAL';
+  difficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+  content: string; // Markdown or HTML
+  video_url: string | null;
+  duration_minutes: number | null;
+  tags: string[];
+  is_featured: boolean;
+  is_popular: boolean;
+  view_count: number;
+  like_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * User Progress on Help Content
+ */
+export interface ApiHelpProgress {
+  content_id: number;
+  completed: boolean;
+  completed_at: string | null;
+  bookmarked: boolean;
+  liked: boolean;
+}

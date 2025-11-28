@@ -1,0 +1,276 @@
+/**
+ * Locations Service (Empresas, Setores, Subsetores)
+ * 
+ * Serviço para gerenciamento da hierarquia de locais
+ * 
+ * Endpoints:
+ * - GET /api/locations/companies/
+ * - GET /api/locations/sectors/
+ * - GET /api/locations/subsections/
+ * - GET /api/locations/tree/
+ */
+
+import { api } from '@/lib/api';
+import type { Company, Sector, SubSection, LocationNode } from '@/types';
+import type { ApiCompany, ApiSector, ApiSubsection, ApiLocationNode, PaginatedResponse } from '@/types/api';
+
+// ============================================
+// Mappers
+// ============================================
+
+const mapCompany = (c: ApiCompany): Company => ({
+  id: String(c.id),
+  name: c.name,
+  segment: c.segment,
+  cnpj: c.cnpj,
+  address: {
+    zip: c.zip_code,
+    city: c.city,
+    state: c.state,
+    fullAddress: c.address,
+  },
+  responsible: c.responsible_name,
+  role: c.responsible_role,
+  phone: c.phone,
+  email: c.email,
+  totalArea: c.total_area,
+  occupants: c.occupants,
+  hvacUnits: c.hvac_units,
+  notes: c.notes,
+  createdAt: c.created_at,
+});
+
+const mapSector = (s: ApiSector): Sector => ({
+  id: String(s.id),
+  name: s.name,
+  companyId: String(s.company),
+  responsible: s.responsible_name,
+  phone: s.phone,
+  email: s.email,
+  area: s.area,
+  occupants: s.occupants,
+  hvacUnits: s.hvac_units,
+  notes: s.notes,
+});
+
+const mapSubsection = (ss: ApiSubsection): SubSection => ({
+  id: String(ss.id),
+  name: ss.name,
+  sectorId: String(ss.sector),
+  responsible: ss.responsible_name,
+  phone: ss.phone,
+  email: ss.email,
+  area: ss.area,
+  occupants: ss.occupants,
+  hvacUnits: ss.hvac_units,
+  notes: ss.notes,
+});
+
+const mapLocationNode = (node: ApiLocationNode): LocationNode => ({
+  id: String(node.id),
+  name: node.name,
+  type: node.type,
+  parentId: node.parent_id ? String(node.parent_id) : undefined,
+  children: node.children?.map(mapLocationNode),
+  data: {} as Company | Sector | SubSection, // Preenchido separadamente se necessário
+});
+
+// ============================================
+// Service
+// ============================================
+
+export const locationsService = {
+  // ==========================================
+  // Companies
+  // ==========================================
+  
+  async getCompanies(): Promise<Company[]> {
+    const response = await api.get<PaginatedResponse<ApiCompany>>('/locations/companies/');
+    return response.data.results.map(mapCompany);
+  },
+
+  async getCompany(id: string): Promise<Company> {
+    const response = await api.get<ApiCompany>(`/locations/companies/${id}/`);
+    return mapCompany(response.data);
+  },
+
+  async createCompany(data: Omit<Company, 'id' | 'createdAt'>): Promise<Company> {
+    const payload = {
+      name: data.name,
+      segment: data.segment,
+      cnpj: data.cnpj,
+      address: data.address.fullAddress,
+      city: data.address.city,
+      state: data.address.state,
+      zip_code: data.address.zip,
+      responsible_name: data.responsible,
+      responsible_role: data.role,
+      phone: data.phone,
+      email: data.email,
+      total_area: data.totalArea,
+      occupants: data.occupants,
+      hvac_units: data.hvacUnits,
+      notes: data.notes || '',
+    };
+    const response = await api.post<ApiCompany>('/locations/companies/', payload);
+    return mapCompany(response.data);
+  },
+
+  async updateCompany(id: string, data: Partial<Company>): Promise<Company> {
+    const payload: Record<string, unknown> = {};
+    
+    if (data.name) payload.name = data.name;
+    if (data.segment) payload.segment = data.segment;
+    if (data.cnpj) payload.cnpj = data.cnpj;
+    if (data.address) {
+      payload.address = data.address.fullAddress;
+      payload.city = data.address.city;
+      payload.state = data.address.state;
+      payload.zip_code = data.address.zip;
+    }
+    if (data.responsible) payload.responsible_name = data.responsible;
+    if (data.role) payload.responsible_role = data.role;
+    if (data.phone) payload.phone = data.phone;
+    if (data.email) payload.email = data.email;
+    if (data.totalArea !== undefined) payload.total_area = data.totalArea;
+    if (data.occupants !== undefined) payload.occupants = data.occupants;
+    if (data.hvacUnits !== undefined) payload.hvac_units = data.hvacUnits;
+    if (data.notes !== undefined) payload.notes = data.notes;
+
+    const response = await api.patch<ApiCompany>(`/locations/companies/${id}/`, payload);
+    return mapCompany(response.data);
+  },
+
+  async deleteCompany(id: string): Promise<void> {
+    await api.delete(`/locations/companies/${id}/`);
+  },
+
+  // ==========================================
+  // Sectors
+  // ==========================================
+
+  async getSectors(companyId?: string): Promise<Sector[]> {
+    const params = companyId ? { company: companyId } : {};
+    const response = await api.get<PaginatedResponse<ApiSector>>('/locations/sectors/', { params });
+    return response.data.results.map(mapSector);
+  },
+
+  async getSector(id: string): Promise<Sector> {
+    const response = await api.get<ApiSector>(`/locations/sectors/${id}/`);
+    return mapSector(response.data);
+  },
+
+  async createSector(data: Omit<Sector, 'id'>): Promise<Sector> {
+    const payload = {
+      name: data.name,
+      company: Number(data.companyId),
+      responsible_name: data.responsible,
+      phone: data.phone,
+      email: data.email,
+      area: data.area,
+      occupants: data.occupants,
+      hvac_units: data.hvacUnits,
+      notes: data.notes || '',
+    };
+    const response = await api.post<ApiSector>('/locations/sectors/', payload);
+    return mapSector(response.data);
+  },
+
+  async updateSector(id: string, data: Partial<Sector>): Promise<Sector> {
+    const payload: Record<string, unknown> = {};
+    
+    if (data.name) payload.name = data.name;
+    if (data.companyId) payload.company = Number(data.companyId);
+    if (data.responsible) payload.responsible_name = data.responsible;
+    if (data.phone) payload.phone = data.phone;
+    if (data.email) payload.email = data.email;
+    if (data.area !== undefined) payload.area = data.area;
+    if (data.occupants !== undefined) payload.occupants = data.occupants;
+    if (data.hvacUnits !== undefined) payload.hvac_units = data.hvacUnits;
+    if (data.notes !== undefined) payload.notes = data.notes;
+
+    const response = await api.patch<ApiSector>(`/locations/sectors/${id}/`, payload);
+    return mapSector(response.data);
+  },
+
+  async deleteSector(id: string): Promise<void> {
+    await api.delete(`/locations/sectors/${id}/`);
+  },
+
+  // ==========================================
+  // Subsections
+  // ==========================================
+
+  async getSubsections(sectorId?: string): Promise<SubSection[]> {
+    const params = sectorId ? { sector: sectorId } : {};
+    const response = await api.get<PaginatedResponse<ApiSubsection>>('/locations/subsections/', { params });
+    return response.data.results.map(mapSubsection);
+  },
+
+  async getSubsection(id: string): Promise<SubSection> {
+    const response = await api.get<ApiSubsection>(`/locations/subsections/${id}/`);
+    return mapSubsection(response.data);
+  },
+
+  async createSubsection(data: Omit<SubSection, 'id'>): Promise<SubSection> {
+    const payload = {
+      name: data.name,
+      sector: Number(data.sectorId),
+      responsible_name: data.responsible,
+      phone: data.phone,
+      email: data.email,
+      area: data.area,
+      occupants: data.occupants,
+      hvac_units: data.hvacUnits,
+      notes: data.notes || '',
+    };
+    const response = await api.post<ApiSubsection>('/locations/subsections/', payload);
+    return mapSubsection(response.data);
+  },
+
+  async updateSubsection(id: string, data: Partial<SubSection>): Promise<SubSection> {
+    const payload: Record<string, unknown> = {};
+    
+    if (data.name) payload.name = data.name;
+    if (data.sectorId) payload.sector = Number(data.sectorId);
+    if (data.responsible) payload.responsible_name = data.responsible;
+    if (data.phone) payload.phone = data.phone;
+    if (data.email) payload.email = data.email;
+    if (data.area !== undefined) payload.area = data.area;
+    if (data.occupants !== undefined) payload.occupants = data.occupants;
+    if (data.hvacUnits !== undefined) payload.hvac_units = data.hvacUnits;
+    if (data.notes !== undefined) payload.notes = data.notes;
+
+    const response = await api.patch<ApiSubsection>(`/locations/subsections/${id}/`, payload);
+    return mapSubsection(response.data);
+  },
+
+  async deleteSubsection(id: string): Promise<void> {
+    await api.delete(`/locations/subsections/${id}/`);
+  },
+
+  // ==========================================
+  // Tree (Hierarquia completa)
+  // ==========================================
+
+  async getTree(): Promise<LocationNode[]> {
+    const response = await api.get<ApiLocationNode[]>('/locations/tree/');
+    return response.data.map(mapLocationNode);
+  },
+
+  /**
+   * Obtém contagens para validação
+   */
+  async getCounts(): Promise<{
+    companies: number;
+    sectors: number;
+    subsections: number;
+  }> {
+    const response = await api.get<{
+      companies: number;
+      sectors: number;
+      subsections: number;
+    }>('/locations/counts/');
+    return response.data;
+  },
+};
