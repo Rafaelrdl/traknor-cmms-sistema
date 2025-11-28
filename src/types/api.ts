@@ -384,11 +384,18 @@ export interface ApiMaintenancePlan {
 export interface ApiInventoryCategory {
   id: number;
   name: string;
+  code: string;
   description: string;
   parent: number | null;
   parent_name: string | null;
+  full_path: string;
+  icon: string;
+  color: string;
+  is_active: boolean;
   item_count: number;
-  children_count: number;
+  children?: ApiInventoryCategory[];
+  created_at: string;
+  updated_at: string;
 }
 
 /**
@@ -396,20 +403,35 @@ export interface ApiInventoryCategory {
  */
 export interface ApiInventoryItem {
   id: number;
-  sku: string;
+  code: string;
   name: string;
   description: string;
-  category: number;
-  category_name: string;
-  unit: string;
+  barcode: string;
+  category: number | null;
+  category_name: string | null;
+  unit: 'UN' | 'PC' | 'KG' | 'L' | 'M' | 'CX' | 'PCT' | 'JG';
+  unit_display: string;
   quantity: number;
   min_quantity: number;
   max_quantity: number | null;
+  reorder_point: number | null;
   unit_cost: number;
+  last_purchase_cost: number | null;
   total_value: number;
   location: string;
+  shelf: string;
+  bin: string;
+  supplier: string;
+  supplier_code: string;
+  lead_time_days: number | null;
+  image: string | null;
   is_active: boolean;
+  is_critical: boolean;
   is_low_stock: boolean;
+  is_out_of_stock: boolean;
+  needs_reorder: boolean;
+  stock_status: 'OK' | 'LOW' | 'OUT_OF_STOCK' | 'OVERSTOCKED';
+  notes: string;
   created_at: string;
   updated_at: string;
 }
@@ -420,15 +442,22 @@ export interface ApiInventoryItem {
 export interface ApiInventoryMovement {
   id: number;
   item: number;
+  item_code: string;
   item_name: string;
-  item_sku: string;
-  movement_type: 'IN' | 'OUT' | 'ADJUSTMENT' | 'TRANSFER';
+  type: 'IN' | 'OUT' | 'ADJUSTMENT' | 'TRANSFER' | 'RETURN';
+  type_display: string;
+  reason: 'PURCHASE' | 'WORK_ORDER' | 'ADJUSTMENT' | 'DAMAGE' | 'EXPIRY' | 'RETURN_SUPPLIER' | 'RETURN_STOCK' | 'TRANSFER' | 'OTHER';
+  reason_display: string;
   quantity: number;
   quantity_before: number;
   quantity_after: number;
-  reference_type: 'WORK_ORDER' | 'PURCHASE' | 'MANUAL' | 'INVENTORY' | null;
-  reference_id: number | null;
-  notes: string;
+  unit_cost: number | null;
+  total_value: number | null;
+  work_order: number | null;
+  work_order_number: string | null;
+  reference: string;
+  invoice_number: string;
+  note: string;
   performed_by: number;
   performed_by_name: string;
   created_at: string;

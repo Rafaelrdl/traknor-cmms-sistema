@@ -11,18 +11,20 @@
 | Sites | `/api/sites/` | - | - |
 | Auth | `/api/auth/login/`, `/api/auth/refresh/` | `lib/api.ts` (interceptors) | `useAuth.ts` |
 | Rules/Alerts | `/api/alerts/rules/` | `monitor/rulesService.ts` | `monitor/useRulesQuery.ts` |
+| **Work Orders** | ✅ `/api/cmms/work-orders/` | ✅ `workOrdersService.ts` | ✅ `useWorkOrdersQuery.ts` |
+| **Requests** | ✅ `/api/cmms/requests/` | ✅ `requestsService.ts` | ✅ `useRequestsQuery.ts` |
+| **Maintenance Plans** | ✅ `/api/cmms/plans/` | ✅ `plansService.ts` | ✅ `usePlansQuery.ts` |
+| **Locations** | ✅ `/api/locations/` | ✅ `locationsService.ts` | ✅ `useLocationsQuery.ts` |
+| **Inventory** | ✅ `/api/inventory/items/` | ⏳ Pendente | ⏳ Pendente |
+| **Checklist Templates** | ✅ `/api/cmms/checklist-templates/` | ⏳ Pendente | ⏳ Pendente |
 
-### ⏳ A Implementar
+### ⏳ A Implementar (Frontend)
 | Domínio | Backend | Frontend | Prioridade |
 |---------|---------|----------|------------|
-| Work Orders | ❌ Criar | ❌ Criar | 🔴 Alta |
-| Requests (Solicitações) | ❌ Criar | ❌ Criar | 🔴 Alta |
-| Maintenance Plans | ❌ Criar | ❌ Criar | 🔴 Alta |
-| Inventory | ❌ Criar | ❌ Criar | 🟡 Média |
+| Inventory | ✅ Pronto | ❌ Criar Service/Hook | 🟡 Média |
 | Procedures | ❌ Criar | ❌ Criar | 🟡 Média |
 | Reports/Metrics | ❌ Criar | ❌ Criar | 🟡 Média |
 | Help Center | ❌ Criar | ❌ Criar | 🟢 Baixa |
-| Companies/Sectors | ❌ Criar | ❌ Criar | 🟡 Média |
 
 ---
 
