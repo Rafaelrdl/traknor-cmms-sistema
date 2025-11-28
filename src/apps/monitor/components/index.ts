@@ -7,3 +7,4 @@
 export { DeviceCard } from './DeviceCard';
 export { WidgetCard } from './WidgetCard';
 export { WidgetPalette } from './WidgetPalette';
+export { RuleFormModal } from './RuleFormModal';

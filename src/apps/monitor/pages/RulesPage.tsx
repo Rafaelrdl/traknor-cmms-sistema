@@ -41,6 +41,7 @@ import {
   useDeleteRuleMutation 
 } from '../hooks/useRulesQuery';
 import { useAssetsQuery } from '../hooks/useAssetsQuery';
+import { RuleFormModal } from '../components';
 import type { Rule, Severity } from '../types/rule';
 
 // Helper para cores de severidade
@@ -71,6 +72,8 @@ const getOperatorLabel = (op: string) => {
 
 export function RulesPage() {
   const [selectedEquipmentId, setSelectedEquipmentId] = useState<string>('all');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingRule, setEditingRule] = useState<Rule | null>(null);
   
   // Queries
   const { data: rules = [], isLoading, refetch } = useRulesQuery();
@@ -90,11 +93,13 @@ export function RulesPage() {
 
   // Handlers
   const handleCreateRule = () => {
-    toast.info('Funcionalidade de criação de regras em desenvolvimento');
+    setEditingRule(null);
+    setIsModalOpen(true);
   };
 
   const handleEditRule = (rule: Rule) => {
-    toast.info(`Editar regra: ${rule.name}`);
+    setEditingRule(rule);
+    setIsModalOpen(true);
   };
 
   const handleDeleteRule = async (ruleId: number) => {
@@ -302,6 +307,13 @@ export function RulesPage() {
           </div>
         </div>
       </div>
+
+      {/* Rule Form Modal */}
+      <RuleFormModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        editingRule={editingRule}
+      />
     </div>
   );
 }
