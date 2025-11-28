@@ -4,6 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { locationsService } from '@/services/locationsService';
+import { isUserAuthenticated } from '@/hooks/useAuth';
 import type { Company, Sector, SubSection } from '@/types';
 
 // ============================================
@@ -42,6 +43,7 @@ export function useCompanies() {
     queryKey: locationKeys.companiesList(),
     queryFn: () => locationsService.getCompanies(),
     staleTime: 1000 * 60 * 10, // 10 minutos
+    enabled: isUserAuthenticated(),
   });
 }
 
@@ -49,7 +51,7 @@ export function useCompany(id: string | null | undefined) {
   return useQuery({
     queryKey: locationKeys.companyDetail(id!),
     queryFn: () => locationsService.getCompany(id!),
-    enabled: !!id,
+    enabled: !!id && isUserAuthenticated(),
   });
 }
 
@@ -103,6 +105,7 @@ export function useSectors(companyId?: string) {
     queryKey: locationKeys.sectorsList(companyId),
     queryFn: () => locationsService.getSectors(companyId),
     staleTime: 1000 * 60 * 10,
+    enabled: isUserAuthenticated(),
   });
 }
 
@@ -110,7 +113,7 @@ export function useSector(id: string | null | undefined) {
   return useQuery({
     queryKey: locationKeys.sectorDetail(id!),
     queryFn: () => locationsService.getSector(id!),
-    enabled: !!id,
+    enabled: !!id && isUserAuthenticated(),
   });
 }
 
@@ -165,6 +168,7 @@ export function useSubsections(sectorId?: string) {
     queryKey: locationKeys.subsectionsList(sectorId),
     queryFn: () => locationsService.getSubsections(sectorId),
     staleTime: 1000 * 60 * 10,
+    enabled: isUserAuthenticated(),
   });
 }
 
@@ -172,7 +176,7 @@ export function useSubsection(id: string | null | undefined) {
   return useQuery({
     queryKey: locationKeys.subsectionDetail(id!),
     queryFn: () => locationsService.getSubsection(id!),
-    enabled: !!id,
+    enabled: !!id && isUserAuthenticated(),
   });
 }
 
@@ -227,6 +231,7 @@ export function useLocationTree() {
     queryKey: locationKeys.tree(),
     queryFn: () => locationsService.getTree(),
     staleTime: 1000 * 60 * 10,
+    enabled: isUserAuthenticated(),
   });
 }
 
@@ -235,5 +240,6 @@ export function useLocationCounts() {
     queryKey: locationKeys.counts(),
     queryFn: () => locationsService.getCounts(),
     staleTime: 1000 * 60 * 10,
+    enabled: isUserAuthenticated(),
   });
 }

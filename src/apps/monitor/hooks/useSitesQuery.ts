@@ -6,6 +6,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { sitesService } from '../services/sitesService';
+import { isUserAuthenticated } from '@/hooks/useAuth';
 import type { SiteFilters } from '../types/site';
 
 /**
@@ -20,6 +21,7 @@ export const useSitesQuery = (filters?: SiteFilters) => {
     queryKey: ['sites', filters],
     queryFn: () => sitesService.list(filters),
     staleTime: 1000 * 60 * 5, // 5 minutos
+    enabled: isUserAuthenticated(),
   });
 };
 
@@ -30,7 +32,7 @@ export const useSiteQuery = (siteId: number | null | undefined) => {
   return useQuery({
     queryKey: ['sites', siteId],
     queryFn: () => sitesService.getById(siteId!),
-    enabled: !!siteId,
+    enabled: !!siteId && isUserAuthenticated(),
     staleTime: 1000 * 60 * 5,
   });
 };
@@ -42,7 +44,7 @@ export const useSiteStatsQuery = (siteId: number | null | undefined) => {
   return useQuery({
     queryKey: ['sites', siteId, 'stats'],
     queryFn: () => sitesService.getStats(siteId!),
-    enabled: !!siteId,
+    enabled: !!siteId && isUserAuthenticated(),
     staleTime: 1000 * 60, // 1 minuto
     refetchInterval: 1000 * 60, // Auto-refresh a cada 1 minuto
   });

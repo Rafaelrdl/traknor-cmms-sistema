@@ -16,6 +16,7 @@ import {
   type CreateMovementData,
   type CreateCountData,
 } from '@/services/inventoryService';
+import { isUserAuthenticated } from '@/hooks/useAuth';
 import type { ApiInventoryItem, ApiInventoryCategory } from '@/types/api';
 
 // ============================================================================
@@ -49,6 +50,7 @@ export function useInventoryCategories(params?: { is_active?: boolean; parent?: 
   return useQuery({
     queryKey: inventoryKeys.categories(),
     queryFn: () => inventoryCategoriesService.getAll(params),
+    enabled: isUserAuthenticated(),
   });
 }
 
@@ -56,6 +58,7 @@ export function useInventoryCategoryTree() {
   return useQuery({
     queryKey: inventoryKeys.categoryTree(),
     queryFn: () => inventoryCategoriesService.getTree(),
+    enabled: isUserAuthenticated(),
   });
 }
 
@@ -63,7 +66,7 @@ export function useInventoryCategory(id: number) {
   return useQuery({
     queryKey: inventoryKeys.category(id),
     queryFn: () => inventoryCategoriesService.getById(id),
-    enabled: !!id,
+    enabled: !!id && isUserAuthenticated(),
   });
 }
 
@@ -111,6 +114,7 @@ export function useInventoryItems(params?: InventoryItemParams) {
   return useQuery({
     queryKey: inventoryKeys.itemsList(params),
     queryFn: () => inventoryItemsService.getAll(params),
+    enabled: isUserAuthenticated(),
   });
 }
 
@@ -118,7 +122,7 @@ export function useInventoryItem(id: number) {
   return useQuery({
     queryKey: inventoryKeys.item(id),
     queryFn: () => inventoryItemsService.getById(id),
-    enabled: !!id,
+    enabled: !!id && isUserAuthenticated(),
   });
 }
 
@@ -126,6 +130,7 @@ export function useLowStockItems() {
   return useQuery({
     queryKey: inventoryKeys.lowStock(),
     queryFn: () => inventoryItemsService.getLowStock(),
+    enabled: isUserAuthenticated(),
   });
 }
 
@@ -133,6 +138,7 @@ export function useCriticalItems() {
   return useQuery({
     queryKey: inventoryKeys.critical(),
     queryFn: () => inventoryItemsService.getCritical(),
+    enabled: isUserAuthenticated(),
   });
 }
 
@@ -140,6 +146,7 @@ export function useInventoryStats() {
   return useQuery({
     queryKey: inventoryKeys.stats(),
     queryFn: () => inventoryItemsService.getStats(),
+    enabled: isUserAuthenticated(),
   });
 }
 
@@ -147,7 +154,7 @@ export function useInventoryItemMovements(id: number) {
   return useQuery({
     queryKey: inventoryKeys.itemMovements(id),
     queryFn: () => inventoryItemsService.getMovements(id),
-    enabled: !!id,
+    enabled: !!id && isUserAuthenticated(),
   });
 }
 
@@ -213,6 +220,7 @@ export function useInventoryMovements(params?: InventoryMovementParams) {
   return useQuery({
     queryKey: inventoryKeys.movementsList(params),
     queryFn: () => inventoryMovementsService.getAll(params),
+    enabled: isUserAuthenticated(),
   });
 }
 
@@ -220,6 +228,7 @@ export function useInventoryMovementsSummary(days: number = 30) {
   return useQuery({
     queryKey: inventoryKeys.movementsSummary(days),
     queryFn: () => inventoryMovementsService.getSummary(days),
+    enabled: isUserAuthenticated(),
   });
 }
 
@@ -246,6 +255,7 @@ export function useInventoryCounts(params?: { status?: string }) {
   return useQuery({
     queryKey: inventoryKeys.counts(),
     queryFn: () => inventoryCountsService.getAll(params),
+    enabled: isUserAuthenticated(),
   });
 }
 
@@ -253,7 +263,7 @@ export function useInventoryCount(id: number) {
   return useQuery({
     queryKey: inventoryKeys.count(id),
     queryFn: () => inventoryCountsService.getById(id),
-    enabled: !!id,
+    enabled: !!id && isUserAuthenticated(),
   });
 }
 

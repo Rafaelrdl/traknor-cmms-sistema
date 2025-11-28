@@ -1,8 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+
+/**
+ * Verifica se o usuário está autenticado (sync check)
+ * Útil para condições em queries
+ */
+export function isUserAuthenticated(): boolean {
+  return !!localStorage.getItem('auth:user');
+}
 
 export function useAuth() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  // Initialize with sync check to avoid flash of unauthenticated state
+  const [isAuthenticated, setIsAuthenticated] = useState(() => isUserAuthenticated());
+  const [isLoading, setIsLoading] = useState(() => {
+    // If we already have auth in localStorage, no need to show loading
+    return !isUserAuthenticated();
+  });
 
   useEffect(() => {
     const checkAuth = () => {

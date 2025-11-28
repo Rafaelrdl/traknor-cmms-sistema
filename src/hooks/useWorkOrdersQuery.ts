@@ -10,6 +10,7 @@
 
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { workOrdersService, type WorkOrderFilters, type CompleteWorkOrderData, type WorkOrderStats } from '@/services/workOrdersService';
+import { isUserAuthenticated } from '@/hooks/useAuth';
 import type { WorkOrder } from '@/types';
 
 // ============================================
@@ -40,6 +41,7 @@ export function useWorkOrders(filters?: WorkOrderFilters) {
     queryKey: workOrderKeys.list(filters),
     queryFn: () => workOrdersService.getAll(filters),
     staleTime: 1000 * 60 * 2, // 2 minutos
+    enabled: isUserAuthenticated(),
   });
 }
 
@@ -51,6 +53,7 @@ export function useWorkOrdersPaginated(filters?: WorkOrderFilters) {
     queryKey: [...workOrderKeys.list(filters), 'paginated'],
     queryFn: () => workOrdersService.getAllPaginated(filters),
     staleTime: 1000 * 60 * 2,
+    enabled: isUserAuthenticated(),
   });
 }
 
@@ -70,6 +73,7 @@ export function useWorkOrdersInfinite(filters?: Omit<WorkOrderFilters, 'page'>) 
       return undefined;
     },
     staleTime: 1000 * 60 * 2,
+    enabled: isUserAuthenticated(),
   });
 }
 
@@ -80,7 +84,7 @@ export function useWorkOrder(id: string | null | undefined) {
   return useQuery({
     queryKey: workOrderKeys.detail(id!),
     queryFn: () => workOrdersService.getById(id!),
-    enabled: !!id,
+    enabled: !!id && isUserAuthenticated(),
     staleTime: 1000 * 60 * 5,
   });
 }
@@ -93,6 +97,7 @@ export function useWorkOrderStats() {
     queryKey: workOrderKeys.stats(),
     queryFn: () => workOrdersService.getStats(),
     staleTime: 1000 * 60 * 5,
+    enabled: isUserAuthenticated(),
   });
 }
 
@@ -103,7 +108,7 @@ export function useWorkOrdersByAsset(assetId: string | null | undefined) {
   return useQuery({
     queryKey: workOrderKeys.byAsset(assetId!),
     queryFn: () => workOrdersService.getByAsset(assetId!),
-    enabled: !!assetId,
+    enabled: !!assetId && isUserAuthenticated(),
     staleTime: 1000 * 60 * 5,
   });
 }
@@ -116,6 +121,7 @@ export function useOverdueWorkOrders() {
     queryKey: workOrderKeys.overdue(),
     queryFn: () => workOrdersService.getOverdue(),
     staleTime: 1000 * 60 * 5,
+    enabled: isUserAuthenticated(),
   });
 }
 

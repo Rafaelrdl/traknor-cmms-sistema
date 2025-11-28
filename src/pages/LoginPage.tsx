@@ -1,14 +1,12 @@
 import { useState } from 'react';
+import { AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { AxiosError } from 'axios';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { toast } from 'sonner';
-import { usersStore } from '@/data/usersStore';
-import { credentialsStore } from '@/data/credentialsStore';
-// Importar inicialização dos stores
-import '@/data/initializeStores';
+import { login as loginService } from '@/services/authService';
 
 export function LoginPage() {
   const [formData, setFormData] = useState({
@@ -38,6 +36,22 @@ export function LoginPage() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const getErrorMessage = (error: unknown) => {
+    if (error instanceof AxiosError && error.response?.data) {
+      const data: any = error.response.data;
+      if (typeof data.detail === 'string') return data.detail;
+      if (typeof data.error === 'string') return data.error;
+      
+      const emailError = Array.isArray(data.username_or_email) ? data.username_or_email[0] : null;
+      const passwordError = Array.isArray(data.password) ? data.password[0] : null;
+      
+      if (typeof emailError === 'string') return emailError;
+      if (typeof passwordError === 'string') return passwordError;
+    }
+    
+    return 'Erro ao fazer login. Verifique suas credenciais.';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -48,42 +62,15 @@ export function LoginPage() {
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await loginService(formData.email, formData.password);
+      toast.success('Login realizado com sucesso!');
       
-      // Validar credenciais usando o credentialsStore
-      const isValidCredentials = credentialsStore.validateCredentials(formData.email, formData.password);
-      
-      if (isValidCredentials) {
-        // Buscar dados do usuário no usersStore
-        const user = usersStore.getUserByEmail(formData.email);
-        
-        if (user && user.status === 'active') {
-          localStorage.setItem('auth:role', user.role);
-          localStorage.setItem('auth:user', JSON.stringify({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role
-          }));
-          
-          // Dispara evento customizado para notificar mudança na autenticação
-          window.dispatchEvent(new Event('authChange'));
-          
-          toast.success('Login realizado com sucesso!');
-          
-          // Forçar redirecionamento com window.location para garantir a navegação
-          setTimeout(() => {
-            window.location.href = '/';
-          }, 300);
-        } else {
-          toast.error('Usuário não encontrado ou inativo');
-        }
-      } else {
-        toast.error('E-mail ou senha incorretos');
-      }
-    } catch {
-      toast.error('Erro ao fazer login. Tente novamente.');
+      // Forçar redirecionamento com window.location para garantir a navegação
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 300);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
@@ -191,8 +178,8 @@ export function LoginPage() {
                 <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                   <p className="text-xs font-medium text-muted-foreground">Credenciais de demonstração:</p>
                   <div className="space-y-1 text-xs text-muted-foreground">
-                    <div>Admin: admin@traknor.com / admin123</div>
-                    <div>Técnico: tecnico@traknor.com / tecnico123</div>
+                    <div>Admin: admin@umc.com / admin123</div>
+                    <div>Técnico: tecnico@umc.com / tecnico123</div>
                   </div>
                 </div>
 

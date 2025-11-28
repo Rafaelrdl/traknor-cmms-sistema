@@ -7,6 +7,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { devicesService } from '../services/devicesService';
+import { isUserAuthenticated } from '@/hooks/useAuth';
 import type { DeviceFilters } from '../types/device';
 
 /**
@@ -25,7 +26,7 @@ export const useDevicesSummaryQuery = (
   return useQuery({
     queryKey: ['devices', 'summary', siteId, filters],
     queryFn: () => devicesService.getSummaryBySite(siteId!, filters),
-    enabled: !!siteId,
+    enabled: !!siteId && isUserAuthenticated(),
     staleTime: 1000 * 20, // 20 segundos
     refetchInterval: 1000 * 30, // Auto-refresh a cada 30s
   });
@@ -38,7 +39,7 @@ export const useDeviceSummaryQuery = (deviceId: number | null) => {
   return useQuery({
     queryKey: ['devices', 'summary', deviceId],
     queryFn: () => devicesService.getSummaryById(deviceId!),
-    enabled: !!deviceId,
+    enabled: !!deviceId && isUserAuthenticated(),
     staleTime: 1000 * 20,
   });
 };
@@ -53,7 +54,7 @@ export const useDevicesQuery = (
   return useQuery({
     queryKey: ['devices', siteId, filters],
     queryFn: () => devicesService.listBySite(siteId!, filters),
-    enabled: !!siteId,
+    enabled: !!siteId && isUserAuthenticated(),
     staleTime: 1000 * 60 * 5, // 5 minutos
   });
 };
@@ -65,7 +66,7 @@ export const useDeviceQuery = (deviceId: number | null) => {
   return useQuery({
     queryKey: ['devices', deviceId],
     queryFn: () => devicesService.getById(deviceId!),
-    enabled: !!deviceId,
+    enabled: !!deviceId && isUserAuthenticated(),
     staleTime: 1000 * 60 * 5,
   });
 };

@@ -4,6 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { plansService, type PlanFilters, type CreatePlanData } from '@/services/plansService';
+import { isUserAuthenticated } from '@/hooks/useAuth';
 import { workOrderKeys } from './useWorkOrdersQuery';
 
 // ============================================
@@ -31,6 +32,7 @@ export function usePlans(filters?: PlanFilters) {
     queryKey: planKeys.list(filters),
     queryFn: () => plansService.getAll(filters),
     staleTime: 1000 * 60 * 5,
+    enabled: isUserAuthenticated(),
   });
 }
 
@@ -48,7 +50,7 @@ export function usePlan(id: string | null | undefined) {
   return useQuery({
     queryKey: planKeys.detail(id!),
     queryFn: () => plansService.getById(id!),
-    enabled: !!id,
+    enabled: !!id && isUserAuthenticated(),
   });
 }
 
@@ -60,6 +62,7 @@ export function usePlanStats() {
     queryKey: planKeys.stats(),
     queryFn: () => plansService.getStats(),
     staleTime: 1000 * 60 * 5,
+    enabled: isUserAuthenticated(),
   });
 }
 

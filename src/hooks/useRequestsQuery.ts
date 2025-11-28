@@ -4,6 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { requestsService, type RequestFilters, type CreateRequestData, type ConvertToWorkOrderData } from '@/services/requestsService';
+import { isUserAuthenticated } from '@/hooks/useAuth';
 import { workOrderKeys } from './useWorkOrdersQuery';
 
 // ============================================
@@ -31,6 +32,7 @@ export function useRequests(filters?: RequestFilters) {
     queryKey: requestKeys.list(filters),
     queryFn: () => requestsService.getAll(filters),
     staleTime: 1000 * 60 * 2,
+    enabled: isUserAuthenticated(),
   });
 }
 
@@ -41,7 +43,7 @@ export function useRequest(id: string | null | undefined) {
   return useQuery({
     queryKey: requestKeys.detail(id!),
     queryFn: () => requestsService.getById(id!),
-    enabled: !!id,
+    enabled: !!id && isUserAuthenticated(),
   });
 }
 
@@ -53,6 +55,7 @@ export function useRequestStatusCounts() {
     queryKey: requestKeys.counts(),
     queryFn: () => requestsService.getStatusCounts(),
     staleTime: 1000 * 60 * 2,
+    enabled: isUserAuthenticated(),
   });
 }
 

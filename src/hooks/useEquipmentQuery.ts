@@ -7,6 +7,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { equipmentService, type EquipmentFilters } from '@/services/equipmentService';
+import { isUserAuthenticated } from '@/hooks/useAuth';
 import type { Equipment } from '@/types';
 
 // ============================================
@@ -35,6 +36,7 @@ export function useEquipments(filters?: EquipmentFilters) {
     queryKey: equipmentKeys.list(filters),
     queryFn: () => equipmentService.getAll(filters),
     staleTime: 1000 * 60 * 5, // 5 minutos
+    enabled: isUserAuthenticated(),
   });
 }
 
@@ -46,6 +48,7 @@ export function useEquipmentsComplete(filters?: EquipmentFilters) {
     queryKey: equipmentKeys.listComplete(filters),
     queryFn: () => equipmentService.getAllComplete(filters),
     staleTime: 1000 * 60 * 2, // 2 minutos (dados mais dinâmicos)
+    enabled: isUserAuthenticated(),
   });
 }
 
@@ -56,7 +59,7 @@ export function useEquipment(id: string | null | undefined) {
   return useQuery({
     queryKey: equipmentKeys.detail(id!),
     queryFn: () => equipmentService.getById(id!),
-    enabled: !!id,
+    enabled: !!id && isUserAuthenticated(),
     staleTime: 1000 * 60 * 5,
   });
 }
@@ -69,6 +72,7 @@ export function useEquipmentStats() {
     queryKey: equipmentKeys.stats(),
     queryFn: () => equipmentService.getStats(),
     staleTime: 1000 * 60 * 5,
+    enabled: isUserAuthenticated(),
   });
 }
 

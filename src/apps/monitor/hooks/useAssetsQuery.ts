@@ -4,6 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { assetsService } from '../services/assetsService';
+import { isUserAuthenticated } from '@/hooks/useAuth';
 import type { AssetFilters, Asset } from '../types/asset';
 
 /**
@@ -14,6 +15,7 @@ export const useAssetsQuery = (filters: AssetFilters = {}) => {
     queryKey: ['monitor-assets', filters],
     queryFn: () => assetsService.getAllComplete(filters),
     staleTime: 1000 * 60 * 10, // 10 minutos
+    enabled: isUserAuthenticated(),
   });
 };
 
@@ -24,7 +26,7 @@ export const useAssetDetailsQuery = (assetId: number | null) => {
   return useQuery({
     queryKey: ['monitor-assets', assetId],
     queryFn: () => assetsService.getById(assetId!),
-    enabled: !!assetId,
+    enabled: !!assetId && isUserAuthenticated(),
     staleTime: 1000 * 60 * 5,
   });
 };
@@ -36,7 +38,7 @@ export const useAssetSensorsQuery = (assetId: number | null) => {
   return useQuery({
     queryKey: ['monitor-assets', assetId, 'sensors'],
     queryFn: () => assetsService.getSensors(assetId!),
-    enabled: !!assetId,
+    enabled: !!assetId && isUserAuthenticated(),
     staleTime: 1000 * 60 * 5,
   });
 };

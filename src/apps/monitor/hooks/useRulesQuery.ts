@@ -4,6 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { rulesService } from '../services/rulesService';
+import { isUserAuthenticated } from '@/hooks/useAuth';
 import type { RuleFilters, CreateRuleRequest, UpdateRuleRequest } from '../types/rule';
 
 /**
@@ -17,6 +18,7 @@ export const useRulesQuery = (filters: RuleFilters = {}) => {
       return response.results || [];
     },
     staleTime: 1000 * 60 * 5, // 5 minutos
+    enabled: isUserAuthenticated(),
   });
 };
 
@@ -27,7 +29,7 @@ export const useRuleQuery = (ruleId: number | null) => {
   return useQuery({
     queryKey: ['monitor-rules', ruleId],
     queryFn: () => rulesService.get(ruleId!),
-    enabled: !!ruleId,
+    enabled: !!ruleId && isUserAuthenticated(),
   });
 };
 
@@ -39,6 +41,7 @@ export const useRulesStatisticsQuery = () => {
     queryKey: ['monitor-rules', 'statistics'],
     queryFn: rulesService.statistics,
     staleTime: 1000 * 60 * 2, // 2 minutos
+    enabled: isUserAuthenticated(),
   });
 };
 

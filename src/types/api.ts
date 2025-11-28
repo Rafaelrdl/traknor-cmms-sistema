@@ -189,9 +189,11 @@ export interface ApiUser {
   full_name: string;
   role: 'OWNER' | 'ADMIN' | 'MANAGER' | 'TECHNICIAN' | 'VIEWER';
   avatar_url: string | null;
+  avatar?: string | null;
   phone: string | null;
   is_active: boolean;
   last_login: string | null;
+  updated_at?: string | null;
   created_at: string;
 }
 
@@ -204,7 +206,10 @@ export interface AuthResponse {
     id: string;
     slug: string;
     name: string;
+    api_base_url?: string;
+    domain?: string;
   };
+  message?: string;
   access_token?: string; // Only if not using HttpOnly cookies
   refresh_token?: string; // Only if not using HttpOnly cookies
 }

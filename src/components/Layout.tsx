@@ -12,6 +12,7 @@ import { FirstTimeGuide, useFirstTimeGuide } from '@/components/onboarding/First
 import { TourHint } from '@/components/tour/TourHint';
 import { useAutomaticWorkOrderGeneration } from '@/hooks/useWorkOrderGeneration';
 import { ProductSwitcher } from '@/components/ProductSwitcher';
+import { logout as logoutService } from '@/services/authService';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -36,11 +37,9 @@ export function Layout({ children }: LayoutProps) {
   }
 
   const handleLogout = () => {
-    // Clear authentication data
-    localStorage.removeItem('auth:user');
-    localStorage.removeItem('auth:role');
-    // Redirect to login page
-    navigate('/login');
+    logoutService().finally(() => {
+      navigate('/login');
+    });
   };
 
   return (
