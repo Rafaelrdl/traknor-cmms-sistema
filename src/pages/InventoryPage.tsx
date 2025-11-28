@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, Warehouse, Plus, AlertTriangle } from 'lucide-react';
+import { Search, Warehouse, Plus, AlertTriangle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { InventoryTabs } from '@/components/inventory/InventoryTabs';
 import { InventoryTable } from '@/components/inventory/InventoryTable';
@@ -19,14 +19,71 @@ import { IfCan } from '@/components/auth/IfCan';
 import { useRoleBasedData, DataFilterInfo } from '@/components/data/FilteredDataProvider';
 import { useAbility } from '@/hooks/useAbility';
 import type { InventoryItem, InventoryCategory } from '@/models/inventory';
-import { loadItems, loadCategories, searchItems, deleteItem } from '@/data/inventoryStore';
+import { 
+  useInventoryItems, 
+  useInventoryCategories,
+  useCreateInventoryItem,
+  useUpdateInventoryItem,
+  useDeleteInventoryItem
+} from '@/hooks/useInventoryQuery';
+import type { ApiInventoryItem, ApiInventoryCategory } from '@/types/api';
+
+// Mappers
+const mapApiItemToInventoryItem = (item: ApiInventoryItem): InventoryItem => ({
+  id: String(item.id),
+  code: item.code,
+  name: item.name,
+  description: item.description,
+  category_id: item.category ? String(item.category) : null,
+  category_name: item.category_name || null,
+  unit: item.unit,
+  quantity: item.quantity,
+  minimum_quantity: item.min_quantity,
+  maximum_quantity: item.max_quantity ?? undefined,
+  location: item.location,
+  shelf: item.shelf,
+  bin: item.bin,
+  supplier: item.supplier,
+  supplier_code: item.supplier_code,
+  unit_cost: item.unit_cost,
+  is_active: item.is_active,
+  is_critical: item.is_critical,
+  created_at: item.created_at,
+  updated_at: item.updated_at,
+});
+
+const mapApiCategoryToCategory = (cat: ApiInventoryCategory): InventoryCategory => ({
+  id: String(cat.id),
+  code: cat.code,
+  name: cat.name,
+  description: cat.description || '',
+  parent_id: cat.parent ? String(cat.parent) : null,
+  is_active: cat.is_active,
+  created_at: cat.created_at,
+  updated_at: cat.updated_at,
+});
 
 export function InventoryPage() {
   const { role } = useAbility();
   
-  // State
-  const [items, setItems] = useState<InventoryItem[]>([]);
-  const [categories, setCategories] = useState<InventoryCategory[]>([]);
+  // React Query hooks
+  const { data: itemsData, isLoading: loadingItems, error: itemsError } = useInventoryItems();
+  const { data: categoriesData, isLoading: loadingCategories } = useInventoryCategories();
+  
+  // Mutations
+  const deleteMutation = useDeleteInventoryItem();
+  
+  // Map API data to frontend types
+  const items = useMemo(() => 
+    (itemsData?.results || []).map(mapApiItemToInventoryItem), 
+    [itemsData]
+  );
+  const categories = useMemo(() => 
+    (categoriesData || []).map(mapApiCategoryToCategory), 
+    [categoriesData]
+  );
+  
+  // Local state
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showActiveOnly, setShowActiveOnly] = useState<boolean>(true);
@@ -44,68 +101,67 @@ export function InventoryPage() {
     filterOptions
   );
   
-  const [filteredItems, setFilteredItems] = useState<InventoryItem[]>(filteredInventoryData);
+  // Filter items when search/filters change
+  const filteredItems = useMemo(() => {
+    let result = filteredInventoryData;
+    
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(item => 
+        item.name.toLowerCase().includes(query) ||
+        item.code.toLowerCase().includes(query) ||
+        item.description?.toLowerCase().includes(query)
+      );
+    }
+    
+    // Apply category filter
+    if (selectedCategory !== 'all') {
+      result = result.filter(item => item.category_id === selectedCategory);
+    }
+    
+    // Apply active filter
+    if (showActiveOnly) {
+      result = result.filter(item => item.is_active);
+    }
+    
+    return result;
+  }, [filteredInventoryData, searchQuery, selectedCategory, showActiveOnly]);
   
   // Modal states
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [movingItem, setMovingItem] = useState<InventoryItem | null>(null);
   const [deletingItem, setDeletingItem] = useState<InventoryItem | null>(null);
 
-  // Load initial data
-  useEffect(() => {
-    const loadedItems = loadItems();
-    const loadedCategories = loadCategories();
-    setItems(loadedItems);
-    setCategories(loadedCategories);
-  }, []);
-
-  // Update filtered items when role-based data changes
-  useEffect(() => {
-    setFilteredItems(filteredInventoryData);
-  }, [filteredInventoryData]);
-
-  // Filter items when search/filters change (applied to already role-filtered data)
-  useEffect(() => {
-    const baseData = filteredInventoryData;
-    const filtered = searchItems(searchQuery, {
-      category_id: selectedCategory === 'all' ? undefined : selectedCategory,
-      active: showActiveOnly
-    }, baseData); // Pass the role-filtered data as the base
-    setFilteredItems(filtered);
-  }, [filteredInventoryData, searchQuery, selectedCategory, showActiveOnly]);
-
   // Handlers
   const handleItemCreated = (newItem: InventoryItem) => {
-    setItems(prev => [...prev, newItem]);
+    // React Query will automatically invalidate and refetch
     toast.success('Item adicionado ao inventário');
   };
 
   const handleItemUpdated = (updatedItem: InventoryItem) => {
-    setItems(prev => prev.map(item => 
-      item.id === updatedItem.id ? updatedItem : item
-    ));
+    // React Query will automatically invalidate and refetch
     toast.success('Item atualizado');
   };
 
   const handleItemMoved = () => {
-    // Refresh items from storage to get updated quantities
-    const refreshedItems = loadItems();
-    setItems(refreshedItems);
+    // React Query will automatically invalidate and refetch via mutations
     toast.success('Estoque atualizado');
   };
 
   const handleDeleteConfirm = () => {
     if (!deletingItem) return;
     
-    try {
-      deleteItem(deletingItem.id);
-      setItems(prev => prev.filter(item => item.id !== deletingItem.id));
-      toast.success('Item removido do inventário');
-      setDeletingItem(null);
-    } catch (error) {
-      console.error('Error deleting item:', error);
-      toast.error('Erro ao remover item');
-    }
+    deleteMutation.mutate(Number(deletingItem.id), {
+      onSuccess: () => {
+        toast.success('Item removido do inventário');
+        setDeletingItem(null);
+      },
+      onError: (error) => {
+        console.error('Error deleting item:', error);
+        toast.error('Erro ao remover item');
+      }
+    });
   };
 
   const handleEdit = (item: InventoryItem) => {
@@ -217,6 +273,7 @@ export function InventoryPage() {
             </CardTitle>
             
             {/* Filters */}
+            {!loadingItems && !itemsError && (
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               {/* Search */}
               <div className="relative min-w-0 flex-1 sm:flex-initial sm:w-64">
@@ -258,10 +315,25 @@ export function InventoryPage() {
                 </SelectContent>
               </Select>
             </div>
+            )}
           </div>
         </CardHeader>
         <CardContent>
-          <InventoryTabs tabs={tabs} />
+          {loadingItems && (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-muted-foreground">Carregando itens...</span>
+            </div>
+          )}
+          
+          {itemsError && (
+            <div className="text-center py-12 text-destructive">
+              <p>Erro ao carregar itens de estoque.</p>
+              <p className="text-sm text-muted-foreground mt-1">Tente novamente mais tarde.</p>
+            </div>
+          )}
+          
+          {!loadingItems && !itemsError && <InventoryTabs tabs={tabs} />}
         </CardContent>
       </Card>
 

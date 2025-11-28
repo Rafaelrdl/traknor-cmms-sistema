@@ -12,7 +12,8 @@ import { Plus, Trash2, CheckSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import type { MaintenancePlan, PlanTask } from '@/models/plan';
 import { createPlan, updatePlan } from '@/data/plansStore';
-import { useCompanies, useSectors, useEquipment } from '@/hooks/useDataTemp';
+import { useCompanies, useSectors } from '@/hooks/useLocationsQuery';
+import { useEquipments } from '@/hooks/useEquipmentQuery';
 
 interface PlanFormModalProps {
   open: boolean;
@@ -22,9 +23,9 @@ interface PlanFormModalProps {
 }
 
 export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModalProps) {
-  const [companies] = useCompanies();
-  const [sectors] = useSectors();
-  const [equipment] = useEquipment();
+  const { data: companies = [] } = useCompanies();
+  const { data: sectors = [] } = useSectors();
+  const { data: equipment = [] } = useEquipments();
 
   // Form state
   const [formData, setFormData] = useState<{

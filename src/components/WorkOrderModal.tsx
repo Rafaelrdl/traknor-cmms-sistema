@@ -15,8 +15,21 @@ import { CalendarIcon, Save, ChevronLeft, ChevronRight, Plus, Minus, X } from 'l
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useEquipment, useStockItems } from '@/hooks/useDataTemp';
+import { useEquipments } from '@/hooks/useEquipmentQuery';
+import { useStockItems } from '@/hooks/useInventoryQuery';
 import type { WorkOrder, StockItem } from '@/types';
+import type { ApiInventoryItem } from '@/types/api';
+
+// Mapper
+const mapToStockItem = (item: ApiInventoryItem): StockItem => ({
+  id: String(item.id),
+  code: item.code,
+  description: item.name,
+  unit: item.unit_display || item.unit,
+  quantity: item.quantity,
+  minimum: item.min_quantity,
+  maximum: item.max_quantity ?? 0
+});
 
 interface WorkOrderModalProps {
   isOpen: boolean;
@@ -33,8 +46,9 @@ interface StockItemSelection {
 type Step = 'basic' | 'materials' | 'preview';
 
 export function WorkOrderModal({ isOpen, onClose, onSave }: WorkOrderModalProps) {
-  const [equipment] = useEquipment();
-  const [stockItems] = useStockItems();
+  const { data: equipment = [] } = useEquipments();
+  const { data: stockItemsData } = useStockItems();
+  const stockItems = (stockItemsData?.results || []).map(mapToStockItem);
   
   const [currentStep, setCurrentStep] = useState<Step>('basic');
   const [isLoading, setIsLoading] = useState(false);

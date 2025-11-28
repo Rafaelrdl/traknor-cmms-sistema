@@ -5,11 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileText, Download, Eye } from 'lucide-react';
-import { useCompanies, useSectors } from '@/hooks/useDataTemp';
+import { useCompanies, useSectors } from '@/hooks/useLocationsQuery';
 
 export function ReportsPage() {
-  const [companies] = useCompanies();
-  const [sectors] = useSectors();
+  const { data: companies = [] } = useCompanies();
+  const { data: sectors = [] } = useSectors();
 
   return (
     <div className="space-y-6">

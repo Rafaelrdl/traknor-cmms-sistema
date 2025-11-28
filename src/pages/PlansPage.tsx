@@ -4,17 +4,28 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Plus, Edit, Play, CheckCircle } from 'lucide-react';
+import { Calendar, Plus, Edit, Play, CheckCircle, Loader2 } from 'lucide-react';
 import { PlanFormModal } from '@/components/PlanFormModal';
-import { useMaintenancePlansNew, updatePlanInList } from '@/hooks/useMaintenancePlans';
+import { 
+  useMaintenancePlans, 
+  useCreatePlan, 
+  useUpdatePlan,
+  useGenerateWorkOrders 
+} from '@/hooks/usePlansQuery';
 import { IfCanCreate, IfCanEdit } from '@/components/auth/IfCan';
-import { generateWorkOrdersFromPlan } from '@/data/workOrdersStore';
-import { updatePlanNextExecution } from '@/data/plansStore';
 import { toast } from 'sonner';
 import type { MaintenancePlan } from '@/models/plan';
 
 export function PlansPage() {
-  const [plans, setPlans] = useMaintenancePlansNew();
+  // React Query hooks
+  const { data: plans = [], isLoading, error } = useMaintenancePlans();
+  
+  // Mutations
+  const createMutation = useCreatePlan();
+  const updateMutation = useUpdatePlan();
+  const generateMutation = useGenerateWorkOrders();
+  
+  // Local state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<MaintenancePlan | undefined>();
 
@@ -30,37 +41,43 @@ export function PlansPage() {
 
   const handlePlanSave = (savedPlan: MaintenancePlan) => {
     if (selectedPlan) {
-      // Update existing plan in list
-      setPlans(currentPlans => updatePlanInList(currentPlans, savedPlan));
+      // Update via mutation
+      updateMutation.mutate({ id: savedPlan.id, data: savedPlan as any }, {
+        onSuccess: () => {
+          setIsModalOpen(false);
+          toast.success('Plano atualizado com sucesso!');
+        }
+      });
     } else {
-      // Add new plan to list
-      setPlans(currentPlans => [...currentPlans, savedPlan]);
+      // Create via mutation
+      createMutation.mutate(savedPlan as any, {
+        onSuccess: () => {
+          setIsModalOpen(false);
+          toast.success('Plano criado com sucesso!');
+        }
+      });
     }
   };
 
   const handleGenerateWorkOrders = async (plan: MaintenancePlan) => {
-    try {
-      const equipmentIds = plan.scope.equipment_ids || [];
-      if (equipmentIds.length === 0) {
-        toast.error('Este plano não possui equipamentos selecionados.');
-        return;
-      }
-
-      const workOrders = generateWorkOrdersFromPlan(plan);
-      
-      // Update plan's next execution date
-      const updatedPlan = updatePlanNextExecution(plan.id);
-      if (updatedPlan) {
-        setPlans(currentPlans => updatePlanInList(currentPlans, updatedPlan));
-      }
-
-      toast.success(`${workOrders.length} ordem(ns) de serviço gerada(s) com sucesso!`, {
-        description: `Próxima execução programada para ${updatedPlan?.next_execution_date ? new Date(updatedPlan.next_execution_date).toLocaleDateString('pt-BR') : 'data não definida'}`
-      });
-    } catch (error) {
-      console.error('Error generating work orders:', error);
-      toast.error('Erro ao gerar ordens de serviço: ' + (error as Error).message);
+    const equipmentIds = plan.scope.equipment_ids || [];
+    if (equipmentIds.length === 0) {
+      toast.error('Este plano não possui equipamentos selecionados.');
+      return;
     }
+
+    generateMutation.mutate(plan.id, {
+      onSuccess: (data) => {
+        toast.success(`${data.work_orders_created || 0} ordem(ns) de serviço gerada(s) com sucesso!`, {
+          description: data.next_execution_date 
+            ? `Próxima execução programada para ${new Date(data.next_execution_date).toLocaleDateString('pt-BR')}`
+            : undefined
+        });
+      },
+      onError: (error) => {
+        toast.error('Erro ao gerar ordens de serviço: ' + (error as Error).message);
+      }
+    });
   };
 
   const formatDate = (dateString?: string) => {
@@ -112,6 +129,21 @@ export function PlansPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {isLoading && (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-muted-foreground">Carregando planos...</span>
+            </div>
+          )}
+          
+          {error && (
+            <div className="text-center py-12 text-destructive">
+              <p>Erro ao carregar planos.</p>
+              <p className="text-sm text-muted-foreground mt-1">Tente novamente mais tarde.</p>
+            </div>
+          )}
+          
+          {!isLoading && !error && (
           <Table role="grid">
             <TableHeader>
               <TableRow>
@@ -228,6 +260,7 @@ export function PlansPage() {
               )}
             </TableBody>
           </Table>
+          )}
         </CardContent>
       </Card>
 

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 
 import { Play, Edit } from 'lucide-react';
 import { format } from 'date-fns';
-import { useEquipment } from '@/hooks/useDataTemp';
+import { useEquipments } from '@/hooks/useEquipmentQuery';
 import type { WorkOrder } from '@/types';
 import {
   DndContext,
@@ -48,7 +48,7 @@ function WorkOrderCard({
   onStartWorkOrder, 
   onEditWorkOrder 
 }: WorkOrderCardProps) {
-  const [equipment] = useEquipment();
+  const { data: equipment = [] } = useEquipments();
   
   const {
     attributes,

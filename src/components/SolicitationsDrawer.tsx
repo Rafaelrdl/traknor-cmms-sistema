@@ -11,14 +11,26 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { toast } from 'sonner';
 import { IfCan } from '@/components/auth/IfCan';
 import type { Solicitation, SolicitationItem, StockItem } from '@/types';
-import {
-  canAdvanceStatus,
-  getNextStatus,
-  advanceSolicitationStatus,
-  addSolicitationItem,
-  removeSolicitationItem,
-  convertSolicitationToWorkOrder
-} from '@/hooks/useDataTemp';
+// Helper functions para status de solicitação
+const canAdvanceStatus = (status: string) => status !== 'Convertida em OS';
+const getNextStatus = (status: string) => {
+  if (status === 'Nova') return 'Em triagem';
+  if (status === 'Em triagem') return 'Convertida em OS';
+  return status;
+};
+const advanceSolicitationStatus = (solicitation: any) => ({
+  ...solicitation,
+  status: getNextStatus(solicitation.status),
+  status_history: [...(solicitation.status_history || []), { from: solicitation.status, to: getNextStatus(solicitation.status), at: new Date().toISOString() }]
+});
+const addSolicitationItem = (solicitation: any, stockItem: any, qty: number) => ({
+  ...solicitation,
+  items: [...(solicitation.items || []), { id: String(Date.now()), stock_item_id: stockItem.id, stock_item_name: stockItem.description || stockItem.name, unit: stockItem.unit, qty }]
+});
+const removeSolicitationItem = (solicitation: any, itemId: string) => ({
+  ...solicitation,
+  items: (solicitation.items || []).filter((i: any) => i.id !== itemId)
+});
 
 interface SolicitationsDrawerProps {
   solicitation: Solicitation | null;

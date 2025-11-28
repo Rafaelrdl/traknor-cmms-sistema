@@ -6,7 +6,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useCompanies, useSectors, useSubSections } from '@/hooks/useDataTemp';
+import { 
+  useCompanies, 
+  useSectors, 
+  useSubsections,
+  useCreateCompany,
+  useUpdateCompany,
+  useCreateSector,
+  useUpdateSector,
+  useCreateSubsection,
+  useUpdateSubsection
+} from '@/hooks/useLocationsQuery';
 import { useLocation as useLocationContext } from '@/contexts/LocationContext';
 import { Building2, MapPin, Users, Phone, Mail, Calendar, FileText, LayoutGrid } from 'lucide-react';
 import type { Company, Sector, SubSection } from '@/types';
@@ -31,11 +41,19 @@ export function LocationFormModal({
   type, 
   initialData 
 }: LocationFormModalProps) {
-  // Hooks para gerenciar os dados de empresas, setores e subseções
-  const [companies, setCompanies] = useCompanies();
-  const [sectors, setSectors] = useSectors();
-  const [subSections, setSubSections] = useSubSections();
+  // React Query hooks para dados
+  const { data: companies = [] } = useCompanies();
+  const { data: sectors = [] } = useSectors();
+  const { data: subSections = [] } = useSubsections();
   const { selectedNode, setSelectedNode } = useLocationContext();
+  
+  // Mutations para criar/atualizar localizações
+  const createCompanyMutation = useCreateCompany();
+  const updateCompanyMutation = useUpdateCompany();
+  const createSectorMutation = useCreateSector();
+  const updateSectorMutation = useUpdateSector();
+  const createSubsectionMutation = useCreateSubsection();
+  const updateSubsectionMutation = useUpdateSubsection();
 
   // Estado do formulário para empresas
   const [companyForm, setCompanyForm] = useState<Partial<Company>>({
@@ -147,74 +165,100 @@ export function LocationFormModal({
    */
   const handleSubmit = () => {
     if (type === 'company') {
-      // Criação/edição de empresa
-      const newCompany: Company = {
-        ...(companyForm as Omit<Company, 'id'>),
-        id: mode === 'edit' ? (initialData as Company).id : Date.now().toString(),
-        createdAt: mode === 'edit' ? (initialData as Company).createdAt : new Date().toISOString()
-      };
-
       if (mode === 'edit') {
-        // Atualiza empresa existente na lista
-        setCompanies((current) => current?.map(c => c.id === newCompany.id ? newCompany : c) || [newCompany]);
-        // Atualiza nó selecionado se for o mesmo
-        if (selectedNode?.id === newCompany.id) {
-          setSelectedNode({ ...selectedNode, data: newCompany });
-        }
+        // Atualiza empresa existente via API
+        const companyId = (initialData as Company).id;
+        updateCompanyMutation.mutate(
+          { id: companyId, data: companyForm },
+          {
+            onSuccess: (updatedCompany) => {
+              // Atualiza nó selecionado se for o mesmo
+              if (selectedNode?.id === companyId) {
+                setSelectedNode({ ...selectedNode, data: updatedCompany });
+              }
+              onClose();
+            }
+          }
+        );
       } else {
-        // Adiciona nova empresa à lista
-        setCompanies((current) => [...(current || []), newCompany]);
+        // Cria nova empresa via API
+        createCompanyMutation.mutate(
+          companyForm as Omit<Company, 'id' | 'createdAt'>,
+          {
+            onSuccess: () => {
+              onClose();
+            }
+          }
+        );
       }
+      return;
     } else if (type === 'sector') {
       // Validação: não permite salvar sem empresa selecionada
       if (!sectorForm.companyId || sectorForm.companyId === 'no-company') {
         return;
       }
       
-      // Criação/edição de setor
-      const newSector: Sector = {
-        ...(sectorForm as Omit<Sector, 'id'>),
-        id: mode === 'edit' ? (initialData as Sector).id : Date.now().toString()
-      };
-
       if (mode === 'edit') {
-        // Atualiza setor existente na lista
-        setSectors((current) => current?.map(s => s.id === newSector.id ? newSector : s) || [newSector]);
-        // Atualiza nó selecionado se for o mesmo
-        if (selectedNode?.id === newSector.id) {
-          setSelectedNode({ ...selectedNode, data: newSector });
-        }
+        // Atualiza setor existente via API
+        const sectorId = (initialData as Sector).id;
+        updateSectorMutation.mutate(
+          { id: sectorId, data: sectorForm },
+          {
+            onSuccess: (updatedSector) => {
+              // Atualiza nó selecionado se for o mesmo
+              if (selectedNode?.id === sectorId) {
+                setSelectedNode({ ...selectedNode, data: updatedSector });
+              }
+              onClose();
+            }
+          }
+        );
       } else {
-        // Adiciona novo setor à lista
-        setSectors((current) => [...(current || []), newSector]);
+        // Cria novo setor via API
+        createSectorMutation.mutate(
+          sectorForm as Omit<Sector, 'id'>,
+          {
+            onSuccess: () => {
+              onClose();
+            }
+          }
+        );
       }
+      return;
     } else if (type === 'subsection') {
       // Validação: não permite salvar sem setor selecionado
       if (!subSectionForm.sectorId || subSectionForm.sectorId === 'no-sector') {
         return;
       }
       
-      // Criação/edição de subseção
-      const newSubSection: SubSection = {
-        ...(subSectionForm as Omit<SubSection, 'id'>),
-        id: mode === 'edit' ? (initialData as SubSection).id : Date.now().toString()
-      };
-
       if (mode === 'edit') {
-        // Atualiza subseção existente na lista
-        setSubSections((current) => current?.map(ss => ss.id === newSubSection.id ? newSubSection : ss) || [newSubSection]);
-        // Atualiza nó selecionado se for o mesmo
-        if (selectedNode?.id === newSubSection.id) {
-          setSelectedNode({ ...selectedNode, data: newSubSection });
-        }
+        // Atualiza subseção existente via API
+        const subsectionId = (initialData as SubSection).id;
+        updateSubsectionMutation.mutate(
+          { id: subsectionId, data: subSectionForm },
+          {
+            onSuccess: (updatedSubsection) => {
+              // Atualiza nó selecionado se for o mesmo
+              if (selectedNode?.id === subsectionId) {
+                setSelectedNode({ ...selectedNode, data: updatedSubsection });
+              }
+              onClose();
+            }
+          }
+        );
       } else {
-        // Adiciona nova subseção à lista
-        setSubSections((current) => [...(current || []), newSubSection]);
+        // Cria nova subseção via API
+        createSubsectionMutation.mutate(
+          subSectionForm as Omit<SubSection, 'id'>,
+          {
+            onSuccess: () => {
+              onClose();
+            }
+          }
+        );
       }
+      return;
     }
-
-    // Fecha o modal após salvar
-    onClose();
   };
 
   /**

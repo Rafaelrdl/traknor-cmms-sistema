@@ -141,3 +141,16 @@ export function useRemoveRequestItem() {
     },
   });
 }
+
+// ============================================
+// Aliases para compatibilidade com frontend
+// ============================================
+
+/**
+ * Alias para useRequests - mantém compatibilidade com código que usa Solicitation
+ */
+export const useSolicitations = useRequests;
+export const useSolicitationStatusCounts = useRequestStatusCounts;
+export const useCreateSolicitation = useCreateRequest;
+export const useUpdateSolicitationStatus = useUpdateRequestStatus;
+export const useConvertSolicitationToWorkOrder = useConvertRequestToWorkOrder;

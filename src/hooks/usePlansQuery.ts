@@ -178,3 +178,12 @@ export function useRemoveAssetFromPlan() {
     },
   });
 }
+
+// ============================================
+// Aliases para compatibilidade
+// ============================================
+
+/**
+ * Alias para usePlans - mantém compatibilidade com código que usa MaintenancePlans
+ */
+export const useMaintenancePlans = usePlans;

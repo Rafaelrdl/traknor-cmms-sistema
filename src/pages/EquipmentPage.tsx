@@ -13,7 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Building2, MapPin, Users, Search, BarChart3, Activity, Info, Calendar, FileText } from 'lucide-react';
-import { useEquipment, useSectors, useSubSections, useCompanies } from '@/hooks/useDataTemp';
+import { useEquipments } from '@/hooks/useEquipmentQuery';
+import { useSectors, useSubsections, useCompanies } from '@/hooks/useLocationsQuery';
 import { LocationProvider, useLocation as useLocationContext } from '@/contexts/LocationContext';
 import { IfCan } from '@/components/auth/IfCan';
 import { useRoleBasedData, DataFilterInfo } from '@/components/data/FilteredDataProvider';
@@ -43,12 +44,11 @@ import type { Equipment, SubSection } from '@/types';
  */
 function AssetsContent() {
   // ========== HOOKS PARA DADOS ==========
-  // Obtém dados dos equipamentos e permite modificações
-  const [equipment, setEquipment] = useEquipment();
-  // Obtém dados estáticos de setores, subsetores e empresas
-  const [sectors] = useSectors();
-  const [subSections] = useSubSections();
-  const [companies] = useCompanies();
+  // React Query hooks
+  const { data: equipment = [] } = useEquipments();
+  const { data: sectors = [] } = useSectors();
+  const { data: subSections = [] } = useSubsections();
+  const { data: companies = [] } = useCompanies();
   
   // ========== CONTEXTO E PERMISSÕES ==========
   // Obtém o nó/local selecionado na árvore de locais
@@ -221,7 +221,9 @@ function AssetsContent() {
     };
     
     // Adiciona o novo equipamento à lista existente
-    setEquipment((current) => [...(current || []), equipment_data]);
+    // TODO: Implementar useCreateEquipment mutation quando API estiver pronta
+    console.log('TODO: Criar equipamento via API:', equipment_data);
+    // setEquipment((current) => [...(current || []), equipment_data]);
     
     // Reset do formulário para valores iniciais
     setNewEquipment({

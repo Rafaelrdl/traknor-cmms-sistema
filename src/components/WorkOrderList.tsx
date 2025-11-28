@@ -3,7 +3,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Play, Edit, ClipboardList, AlertTriangle, User, FileText } from 'lucide-react';
-import { useEquipment, useSectors, useCompanies } from '@/hooks/useDataTemp';
+import { useEquipments } from '@/hooks/useEquipmentQuery';
+import { useSectors, useCompanies } from '@/hooks/useLocationsQuery';
 import { useWorkOrderStore } from '@/store/useWorkOrderStore';
 import { printWorkOrder } from '@/utils/printWorkOrder';
 import type { WorkOrder } from '@/types';
@@ -22,9 +23,9 @@ export function WorkOrderList({
   onEditWorkOrder,
   compact = false
 }: WorkOrderListProps) {
-  const [equipment] = useEquipment();
-  const [sectors] = useSectors();
-  const [companies] = useCompanies();
+  const { data: equipment = [] } = useEquipments();
+  const { data: sectors = [] } = useSectors();
+  const { data: companies = [] } = useCompanies();
   const { selectedWorkOrderId, setSelectedWorkOrder } = useWorkOrderStore();
 
   const handlePrintWorkOrder = (workOrder: WorkOrder) => {

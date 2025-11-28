@@ -22,9 +22,23 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useEquipment, useSectors, useCompanies, useStockItems } from '@/hooks/useDataTemp';
+import { useEquipments } from '@/hooks/useEquipmentQuery';
+import { useSectors, useCompanies } from '@/hooks/useLocationsQuery';
+import { useStockItems } from '@/hooks/useInventoryQuery';
 import { printWorkOrder } from '@/utils/printWorkOrder';
-import type { WorkOrder } from '@/types';
+import type { WorkOrder, StockItem } from '@/types';
+import type { ApiInventoryItem } from '@/types/api';
+
+// Mapper
+const mapToStockItem = (item: ApiInventoryItem): StockItem => ({
+  id: String(item.id),
+  code: item.code,
+  description: item.name,
+  unit: item.unit_display || item.unit,
+  quantity: item.quantity,
+  minimum: item.min_quantity,
+  maximum: item.max_quantity ?? 0
+});
 
 interface WorkOrderDetailViewProps {
   workOrder: WorkOrder | null;
@@ -49,11 +63,15 @@ export function WorkOrderDetailView({
   );
   const [isDirty, setIsDirty] = useState(false);
   
-  // Hooks de dados - retornam arrays memoizados
-  const [equipment] = useEquipment();
-  const [sectors] = useSectors();
-  const [companies] = useCompanies();
-  const [stockItems] = useStockItems();
+  // React Query hooks
+  const { data: equipment = [] } = useEquipments();
+  const { data: sectors = [] } = useSectors();
+  const { data: companies = [] } = useCompanies();
+  const { data: stockItemsData } = useStockItems();
+  const stockItems = useMemo(() => 
+    (stockItemsData?.results || []).map(mapToStockItem), 
+    [stockItemsData]
+  );
   
   // Memoizar arrays para evitar re-renders
   const equipmentList = useMemo(() => equipment, [equipment]);

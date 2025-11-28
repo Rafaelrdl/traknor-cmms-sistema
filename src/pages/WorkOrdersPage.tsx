@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,14 +9,21 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, ClipboardList, CheckCircle, Camera } from 'lucide-react';
+import { Plus, Search, ClipboardList, CheckCircle, Camera, Loader2 } from 'lucide-react';
 import { ViewToggle } from '@/components/ViewToggle';
 import { WorkOrderList } from '@/components/WorkOrderList';
 import { WorkOrderKanban } from '@/components/WorkOrderKanban';
 import { WorkOrderPanel } from '@/components/WorkOrderPanel';
 import { WorkOrderEditModal } from '@/components/WorkOrderEditModal';
 import { WorkOrderModal } from '@/components/WorkOrderModal';
-import { useWorkOrders, useEquipment } from '@/hooks/useDataTemp';
+import { 
+  useWorkOrders, 
+  useCreateWorkOrder, 
+  useUpdateWorkOrder,
+  useStartWorkOrder,
+  useCompleteWorkOrder 
+} from '@/hooks/useWorkOrdersQuery';
+import { useEquipments } from '@/hooks/useEquipmentQuery';
 import { useWorkOrderView } from '@/hooks/useWorkOrderView';
 import type { WorkOrder, ChecklistItem } from '@/types';
 
@@ -49,8 +56,17 @@ const mockChecklist: ChecklistItem[] = [
 ];
 
 export function WorkOrdersPage() {
-  const [workOrders, setWorkOrders] = useWorkOrders();
-  const [equipment] = useEquipment();
+  // React Query hooks
+  const { data: workOrders = [], isLoading, error } = useWorkOrders();
+  const { data: equipment = [] } = useEquipments();
+  
+  // Mutations
+  const createMutation = useCreateWorkOrder();
+  const updateMutation = useUpdateWorkOrder();
+  const startMutation = useStartWorkOrder();
+  const completeMutation = useCompleteWorkOrder();
+  
+  // Local state
   const [view, setView] = useWorkOrderView();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -59,59 +75,47 @@ export function WorkOrdersPage() {
   const [showNewOrderModal, setShowNewOrderModal] = useState(false);
   const [checklist, setChecklist] = useState<ChecklistItem[]>(mockChecklist);
 
-  // Filter work orders
-  const filteredOrders = (workOrders || []).filter(wo => {
-    const matchesSearch = wo.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         wo.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'ALL' || wo.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  // Filter work orders with useMemo for performance
+  const filteredOrders = useMemo(() => {
+    return workOrders.filter(wo => {
+      const matchesSearch = wo.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           wo.description.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === 'ALL' || wo.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [workOrders, searchTerm, statusFilter]);
 
   const startWorkOrder = (id: string) => {
-    setWorkOrders((current) =>
-      current?.map(wo => 
-        wo.id === id ? { ...wo, status: 'IN_PROGRESS' as const } : wo
-      ) || []
-    );
+    startMutation.mutate(id);
   };
 
   const completeWorkOrder = (id: string) => {
-    setWorkOrders((current) =>
-      current?.map(wo => 
-        wo.id === id ? { 
-          ...wo, 
-          status: 'COMPLETED' as const,
-          completedAt: new Date().toISOString()
-        } : wo
-      ) || []
-    );
-    setSelectedOrder(null);
+    completeMutation.mutate({ 
+      id, 
+      data: { 
+        checklist_responses: checklist.map(item => ({
+          question_id: item.id,
+          response: item.response,
+          observations: item.observations
+        }))
+      } 
+    }, {
+      onSuccess: () => setSelectedOrder(null)
+    });
   };
 
   const updateWorkOrder = (id: string, updates: Partial<WorkOrder>) => {
-    setWorkOrders((current) =>
-      current?.map(wo => 
-        wo.id === id ? { ...wo, ...updates } : wo
-      ) || []
-    );
+    updateMutation.mutate({ id, data: updates });
   };
 
   const handleSaveWorkOrder = (workOrder: WorkOrder) => {
-    setWorkOrders((current) =>
-      current?.map(wo => 
-        wo.id === workOrder.id ? workOrder : wo
-      ) || []
-    );
+    updateMutation.mutate({ id: workOrder.id, data: workOrder });
   };
 
   const handleCreateWorkOrder = (newWorkOrderData: Omit<WorkOrder, 'id' | 'number'>) => {
-    const newWorkOrder: WorkOrder = {
-      ...newWorkOrderData,
-      id: `wo-${Date.now()}`,
-      number: `OS-${String(Date.now()).slice(-6)}`
-    };
-
-    setWorkOrders((current) => [newWorkOrder, ...(current || [])]);
+    createMutation.mutate(newWorkOrderData as WorkOrder, {
+      onSuccess: () => setShowNewOrderModal(false)
+    });
   };
 
   const updateChecklistResponse = (questionId: string, response: any) => {
@@ -175,7 +179,21 @@ export function WorkOrdersPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {view === 'list' && (
+          {isLoading && (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-muted-foreground">Carregando ordens de serviço...</span>
+            </div>
+          )}
+          
+          {error && (
+            <div className="text-center py-12 text-destructive">
+              <p>Erro ao carregar ordens de serviço.</p>
+              <p className="text-sm text-muted-foreground mt-1">Tente novamente mais tarde.</p>
+            </div>
+          )}
+          
+          {!isLoading && !error && view === 'list' && (
             <WorkOrderList
               workOrders={filteredOrders}
               onStartWorkOrder={startWorkOrder}
@@ -183,7 +201,7 @@ export function WorkOrdersPage() {
             />
           )}
           
-          {view === 'kanban' && (
+          {!isLoading && !error && view === 'kanban' && (
             <WorkOrderKanban
               workOrders={filteredOrders}
               onUpdateWorkOrder={updateWorkOrder}
@@ -192,7 +210,7 @@ export function WorkOrdersPage() {
             />
           )}
           
-          {view === 'panel' && (
+          {!isLoading && !error && view === 'panel' && (
             <WorkOrderPanel
               workOrders={filteredOrders}
               onStartWorkOrder={startWorkOrder}

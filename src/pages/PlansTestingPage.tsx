@@ -18,13 +18,14 @@ import {
 } from 'lucide-react';
 import { PlansTestingSuite } from '@/components/PlansTestingSuite';
 import { PlanTestScenarios } from '@/components/PlanTestScenarios';
-import { useCompanies, useSectors, useEquipment } from '@/hooks/useDataTemp';
+import { useCompanies, useSectors } from '@/hooks/useLocationsQuery';
+import { useEquipments } from '@/hooks/useEquipmentQuery';
 import { useMaintenancePlansNew } from '@/hooks/useMaintenancePlans';
 
 export function PlansTestingPage() {
-  const [companies] = useCompanies();
-  const [sectors] = useSectors();
-  const [equipment] = useEquipment();
+  const { data: companies = [] } = useCompanies();
+  const { data: sectors = [] } = useSectors();
+  const { data: equipment = [] } = useEquipments();
   const [plans] = useMaintenancePlansNew();
   
   const [activeTab, setActiveTab] = useState('overview');

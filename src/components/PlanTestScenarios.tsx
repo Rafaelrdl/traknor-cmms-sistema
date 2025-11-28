@@ -14,7 +14,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PlanFormModal } from '@/components/PlanFormModal';
-import { useCompanies, useSectors, useEquipment } from '@/hooks/useDataTemp';
+import { useCompanies, useSectors } from '@/hooks/useLocationsQuery';
+import { useEquipments } from '@/hooks/useEquipmentQuery';
 import { useMaintenancePlansNew } from '@/hooks/useMaintenancePlans';
 import { generateWorkOrdersFromPlan } from '@/data/workOrdersStore';
 import type { MaintenancePlan } from '@/models/plan';
@@ -35,9 +36,9 @@ interface TestScenario {
 }
 
 export function PlanTestScenarios() {
-  const [companies] = useCompanies();
-  const [sectors] = useSectors();
-  const [equipment] = useEquipment();
+  const { data: companies = [] } = useCompanies();
+  const { data: sectors = [] } = useSectors();
+  const { data: equipment = [] } = useEquipments();
   const [plans, setPlans] = useMaintenancePlansNew();
   
   const [isModalOpen, setIsModalOpen] = useState(false);

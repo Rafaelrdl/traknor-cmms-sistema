@@ -16,7 +16,10 @@ import {
   TrendingUp,
   User
 } from 'lucide-react';
-import { useDashboardKPIs, useChartData, useWorkOrders, useEquipment, useSectors } from '@/hooks/useDataTemp';
+import { useDashboardKPIs, useChartData } from '@/hooks/useDataTemp';
+import { useWorkOrders } from '@/hooks/useWorkOrdersQuery';
+import { useEquipments } from '@/hooks/useEquipmentQuery';
+import { useSectors } from '@/hooks/useLocationsQuery';
 import { useDashboardFiltering } from '@/hooks/useDashboardFiltering';
 import { useAbility } from '@/hooks/useAbility';
 import { useMemo } from 'react';
@@ -26,10 +29,10 @@ export function Dashboard() {
   const [chartData] = useChartData();
   const { role } = useAbility();
   
-  // Usar as mesmas ordens de serviço do sistema
-  const [workOrders] = useWorkOrders();
-  const [equipment] = useEquipment();
-  const [sectors] = useSectors();
+  // Usar as mesmas ordens de serviço do sistema (React Query)
+  const { data: workOrders = [] } = useWorkOrders();
+  const { data: equipment = [] } = useEquipments();
+  const { data: sectors = [] } = useSectors();
   
   const {
     filterDashboard,

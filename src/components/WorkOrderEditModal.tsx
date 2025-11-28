@@ -31,10 +31,24 @@ import {
   ClipboardCheck
 } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
-import { useCompanies, useSectors, useEquipment, useStockItems } from '@/hooks/useDataTemp';
+import { useCompanies, useSectors } from '@/hooks/useLocationsQuery';
+import { useEquipments } from '@/hooks/useEquipmentQuery';
+import { useStockItems } from '@/hooks/useInventoryQuery';
 import { printWorkOrder } from '@/utils/printWorkOrder';
-import type { WorkOrder, WorkOrderStockItem, ChecklistResponse, UploadedPhoto } from '@/types';
+import type { WorkOrder, WorkOrderStockItem, ChecklistResponse, UploadedPhoto, StockItem } from '@/types';
+import type { ApiInventoryItem } from '@/types/api';
 import { cn } from '@/lib/utils';
+
+// Mapper
+const mapToStockItem = (item: ApiInventoryItem): StockItem => ({
+  id: String(item.id),
+  code: item.code,
+  description: item.name,
+  unit: item.unit_display || item.unit,
+  quantity: item.quantity,
+  minimum: item.min_quantity,
+  maximum: item.max_quantity ?? 0
+});
 
 interface WorkOrderEditModalProps {
   isOpen: boolean;
@@ -88,10 +102,11 @@ export function WorkOrderEditModal({
   const [checklistResponses, setChecklistResponses] = useState<ChecklistResponse[]>([]);
   const [executionDescription, setExecutionDescription] = useState('');
   
-  const [equipment] = useEquipment();
-  const [sectors] = useSectors();
-  const [companies] = useCompanies();
-  const [stockItems] = useStockItems();
+  const { data: equipment = [] } = useEquipments();
+  const { data: sectors = [] } = useSectors();
+  const { data: companies = [] } = useCompanies();
+  const { data: stockItemsData } = useStockItems();
+  const stockItems = (stockItemsData?.results || []).map(mapToStockItem);
   
   // Simulação do hook de autenticação - substituir pela implementação real
   const user = { name: 'Usuário Atual', role: 'ADMIN' }; // Placeholder

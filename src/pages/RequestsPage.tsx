@@ -3,24 +3,48 @@ import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Users, Calendar, ExternalLink } from 'lucide-react';
+import { MessageSquare, Users, Calendar, Loader2 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { SolicitationsDrawer } from '@/components/SolicitationsDrawer';
 import { SolicitationFilters, type SolicitationFilters as SolicitationFiltersType } from '@/components/SolicitationFilters';
 import { toast } from 'sonner';
 import {
   useSolicitations,
-  useWorkOrders,
-  useStockItems,
-  convertSolicitationToWorkOrder
-} from '@/hooks/useDataTemp';
+  useConvertSolicitationToWorkOrder,
+  useUpdateSolicitationStatus
+} from '@/hooks/useRequestsQuery';
+import { useStockItems } from '@/hooks/useInventoryQuery';
 import { filterSolicitations, getFilterOptions } from '@/utils/solicitationFilters';
-import type { Solicitation } from '@/types';
+import type { Solicitation, StockItem } from '@/types';
+import type { ApiInventoryItem } from '@/types/api';
+
+// Mapper: ApiInventoryItem → StockItem
+const mapToStockItem = (item: ApiInventoryItem): StockItem => ({
+  id: String(item.id),
+  code: item.code,
+  description: item.name,
+  unit: item.unit_display || item.unit,
+  quantity: item.quantity,
+  minimum: item.min_quantity,
+  maximum: item.max_quantity ?? 0
+});
 
 export function RequestsPage() {
-  const [solicitations, setSolicitations] = useSolicitations();
-  const [workOrders, setWorkOrders] = useWorkOrders();
-  const [stockItems] = useStockItems();
+  // React Query hooks
+  const { data: solicitations = [], isLoading, error } = useSolicitations();
+  const { data: stockItemsData } = useStockItems();
+  
+  // Map API items to frontend StockItem format
+  const stockItems = useMemo(() => 
+    (stockItemsData?.results || []).map(mapToStockItem), 
+    [stockItemsData]
+  );
+  
+  // Mutations
+  const convertMutation = useConvertSolicitationToWorkOrder();
+  const updateStatusMutation = useUpdateSolicitationStatus();
+  
+  // Local state
   const [selectedSolicitation, setSelectedSolicitation] = useState<Solicitation | null>(null);
   const [filters, setFilters] = useState<SolicitationFiltersType>({});
 
@@ -38,38 +62,38 @@ export function RequestsPage() {
   };
 
   const handleUpdateSolicitation = (updatedSolicitation: Solicitation) => {
-    setSolicitations(current =>
-      current.map(s =>
-        s.id === updatedSolicitation.id ? updatedSolicitation : s
-      )
-    );
+    // Status update via API mutation - the cache will be invalidated automatically
+    const newStatus = updatedSolicitation.status === 'Nova' ? 'NEW' :
+                      updatedSolicitation.status === 'Em triagem' ? 'TRIAGING' : 'NEW';
+    updateStatusMutation.mutate({ id: updatedSolicitation.id, status: newStatus as 'NEW' | 'TRIAGING' | 'REJECTED' });
   };
 
   const handleConvertToWorkOrder = (solicitation: Solicitation) => {
-    try {
-      // Convert solicitation to work order
-      const workOrder = convertSolicitationToWorkOrder(solicitation);
-      
-      // Add to work orders
-      setWorkOrders(current => [workOrder, ...current]);
-      
-      // Close drawer
-      setSelectedSolicitation(null);
-      
-      toast.success('Solicitação convertida em OS com sucesso!', {
-        description: `Ordem de serviço ${workOrder.number} criada.`,
-        action: {
-          label: 'Ver OS',
-          onClick: () => {
-            // Navigate to work orders page - this would be handled by routing
-            console.log('Navigate to work orders page');
+    convertMutation.mutate({
+      id: solicitation.id,
+      data: {
+        type: 'CORRECTIVE',
+        priority: 'MEDIUM',
+        scheduled_date: new Date().toISOString().split('T')[0],
+      }
+    }, {
+      onSuccess: (workOrder) => {
+        setSelectedSolicitation(null);
+        toast.success('Solicitação convertida em OS com sucesso!', {
+          description: `Ordem de serviço ${workOrder.number} criada.`,
+          action: {
+            label: 'Ver OS',
+            onClick: () => {
+              // Navigate to work orders page
+              window.location.href = '/work-orders';
+            }
           }
-        }
-      });
-    } catch (error) {
-      console.error('Error converting solicitation:', error);
-      toast.error('Erro ao converter solicitação em OS.');
-    }
+        });
+      },
+      onError: () => {
+        toast.error('Erro ao converter solicitação em OS.');
+      }
+    });
   };
 
   const handleCloseDrawer = () => {
@@ -186,7 +210,21 @@ export function RequestsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {filteredSolicitations.length > 0 ? (
+          {isLoading && (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-muted-foreground">Carregando solicitações...</span>
+            </div>
+          )}
+          
+          {error && (
+            <div className="text-center py-12 text-destructive">
+              <p>Erro ao carregar solicitações.</p>
+              <p className="text-sm text-muted-foreground mt-1">Tente novamente mais tarde.</p>
+            </div>
+          )}
+          
+          {!isLoading && !error && filteredSolicitations.length > 0 ? (
             <div className="overflow-x-auto">
               <table 
                 className="w-full" 
@@ -274,7 +312,7 @@ export function RequestsPage() {
                 </tbody>
               </table>
             </div>
-          ) : (
+          ) : !isLoading && !error ? (
             <div className="text-center py-12">
               <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
               <h3 className="text-lg font-medium mb-2">
@@ -297,7 +335,7 @@ export function RequestsPage() {
                 </Button>
               )}
             </div>
-          )}
+          ) : null}
         </CardContent>
       </Card>
 

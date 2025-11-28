@@ -13,7 +13,8 @@ import {
   Edit,
   Play
 } from 'lucide-react';
-import { useEquipment, useSectors } from '@/hooks/useDataTemp';
+import { useEquipments } from '@/hooks/useEquipmentQuery';
+import { useSectors } from '@/hooks/useLocationsQuery';
 import type { WorkOrder } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -32,8 +33,8 @@ export function WorkOrderDetails({
   onEditWorkOrder,
   className 
 }: WorkOrderDetailsProps) {
-  const [equipment] = useEquipment();
-  const [sectors] = useSectors();
+  const { data: equipment = [] } = useEquipments();
+  const { data: sectors = [] } = useSectors();
 
   // Loading skeleton
   if (loading) {

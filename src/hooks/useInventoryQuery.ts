@@ -339,3 +339,12 @@ export function useCountInventoryItem() {
     },
   });
 }
+
+// ============================================================================
+// ALIASES para compatibilidade
+// ============================================================================
+
+/**
+ * Alias para useInventoryItems - mantém compatibilidade com código que usa StockItems
+ */
+export const useStockItems = useInventoryItems;
