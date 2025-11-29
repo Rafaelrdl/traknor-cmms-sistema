@@ -42,7 +42,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useAssetDetailsQuery, useAssetSensorsQuery } from '../hooks/useAssetsQuery';
 import { useAlertsQuery } from '../hooks/useAlertsQuery';
 import { useWorkOrdersByAsset } from '@/hooks/useWorkOrdersQuery';
-import { telemetryService } from '../services/telemetryService';
+import { telemetryService } from '../services';
 import { MultiSeriesTelemetryChart } from '../components/charts/MultiSeriesTelemetryChart';
 
 // KPI Card Component
