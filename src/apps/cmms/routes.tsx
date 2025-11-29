@@ -3,6 +3,8 @@ import { Dashboard } from '@/pages/Dashboard';
 import { EquipmentPage } from '@/pages/EquipmentPage';
 import { AssetDetailPage } from '@/pages/AssetDetailPage';
 import { WorkOrdersPage } from '@/pages/WorkOrdersPage';
+import { WorkOrderCalendarPage } from '@/pages/WorkOrderCalendarPage';
+import { WorkOrderSchedulingPage } from '@/pages/WorkOrderSchedulingPage';
 import { RequestsPage } from '@/pages/RequestsPage';
 import { PlansPage } from '@/pages/PlansPage';
 import { MetricsPage } from '@/pages/MetricsPage';
@@ -30,6 +32,8 @@ export function CmmsRoutes() {
       <Route path="ativos" element={<EquipmentPage />} />
       <Route path="ativos/:id" element={<AssetDetailPage />} />
       <Route path="work-orders" element={<WorkOrdersPage />} />
+      <Route path="work-orders/calendar" element={<WorkOrderCalendarPage />} />
+      <Route path="work-orders/scheduling" element={<WorkOrderSchedulingPage />} />
       <Route path="work-orders/:id" element={<WorkOrdersPage />} />
       <Route path="requests" element={<RequestsPage />} />
       <Route path="plans" element={<PlansPage />} />

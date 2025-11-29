@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, ClipboardList, CheckCircle, Camera, Loader2 } from 'lucide-react';
+import { Plus, Search, ClipboardList, CheckCircle, Camera, Loader2, Calendar, LayoutGrid } from 'lucide-react';
 import { ViewToggle } from '@/components/ViewToggle';
 import { WorkOrderList } from '@/components/WorkOrderList';
 import { WorkOrderKanban } from '@/components/WorkOrderKanban';
@@ -161,13 +161,35 @@ export function WorkOrdersPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Ordens de Serviço">
-        <Button 
-          className="flex items-center gap-2"
-          onClick={() => setShowNewOrderModal(true)}
-        >
-          <Plus className="h-4 w-4" />
-          Nova OS
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline"
+            className="flex items-center gap-2"
+            asChild
+          >
+            <Link to="/cmms/work-orders/calendar">
+              <Calendar className="h-4 w-4" />
+              Calendário
+            </Link>
+          </Button>
+          <Button 
+            variant="outline"
+            className="flex items-center gap-2"
+            asChild
+          >
+            <Link to="/cmms/work-orders/scheduling">
+              <LayoutGrid className="h-4 w-4" />
+              Programação
+            </Link>
+          </Button>
+          <Button 
+            className="flex items-center gap-2"
+            onClick={() => setShowNewOrderModal(true)}
+          >
+            <Plus className="h-4 w-4" />
+            Nova OS
+          </Button>
+        </div>
       </PageHeader>
 
       <Card>
