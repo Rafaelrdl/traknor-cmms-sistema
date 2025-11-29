@@ -4,6 +4,7 @@ import {
   AlertsList, 
   SensorsPage, 
   MonitorAssetsPage, 
+  MonitorAssetDetailPage,
   RulesPage,
   ReportsPage,
   EditableOverviewPage
@@ -43,6 +44,12 @@ export function MonitorRoutes() {
       
       {/* Lista de ativos HVAC */}
       <Route path="/ativos" element={<MonitorAssetsPage />} />
+      
+      {/* Detalhes de um ativo específico */}
+      <Route path="/ativos/:id" element={<MonitorAssetDetailPage />} />
+      
+      {/* Rota legacy - redireciona equipamentos para ativos */}
+      <Route path="/equipamentos/:id" element={<MonitorAssetDetailPage />} />
       
       {/* Configuração de regras */}
       <Route path="/regras" element={<RulesPage />} />

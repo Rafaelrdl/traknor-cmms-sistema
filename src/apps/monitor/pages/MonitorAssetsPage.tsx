@@ -250,7 +250,7 @@ export function MonitorAssetsPage() {
                       <div className="text-2xl">{getTypeIcon(asset.type)}</div>
                       <div>
                         <Link
-                          to={`/monitor/equipamentos/${asset.id}`}
+                          to={`/monitor/ativos/${asset.id}`}
                           className="font-semibold text-primary hover:text-primary/80"
                         >
                           {asset.tag}
@@ -304,7 +304,7 @@ export function MonitorAssetsPage() {
                   <td className="py-4 px-6">
                     <div className="flex items-center space-x-3">
                       <Link
-                        to={`/monitor/equipamentos/${asset.id}`}
+                        to={`/monitor/ativos/${asset.id}`}
                         className="text-primary hover:text-primary/80 text-sm font-medium"
                       >
                         Detalhes
