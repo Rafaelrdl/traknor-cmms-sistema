@@ -123,6 +123,32 @@ export function TeamPage() {
     }
   }, [teamMembers, updateMemberMutation]);
 
+  const handleChangeUserRole = useCallback(async (userId: string, newRole: string) => {
+    try {
+      // Encontrar o membro pelo user ID
+      const member = teamMembers.find(m => String(m.user.id) === userId);
+      if (!member) {
+        toast.error('Membro não encontrado');
+        return;
+      }
+      
+      await updateMemberMutation.mutateAsync({ 
+        memberId: member.id, 
+        data: { role: newRole as any } 
+      });
+      toast.success('Permissão alterada com sucesso');
+    } catch (error: any) {
+      toast.error('Erro ao alterar permissão do usuário');
+    }
+  }, [teamMembers, updateMemberMutation]);
+
+  // Verificar se o usuário atual é admin
+  const isCurrentUserAdmin = useMemo(() => {
+    if (!currentUser) return false;
+    const member = teamMembers.find(m => String(m.user.id) === currentUser.id);
+    return member?.role === 'admin' || member?.role === 'owner';
+  }, [currentUser, teamMembers]);
+
   const isLoading = isLoadingMembers || isLoadingInvites;
 
   return (
@@ -205,7 +231,9 @@ export function TeamPage() {
                 onResendInvite={handleResendInvite}
                 onRevokeInvite={handleRevokeInvite}
                 onToggleUserStatus={handleToggleUserStatus}
+                onChangeUserRole={handleChangeUserRole}
                 currentUserId={currentUser?.id || ''}
+                isAdmin={isCurrentUserAdmin}
               />
             )}
           </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MoreHorizontal, Mail, UserCheck, UserX, RotateCcw } from 'lucide-react';
+import { MoreHorizontal, Mail, UserCheck, UserX, RotateCcw, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -8,6 +8,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -26,7 +33,9 @@ interface TeamTableProps {
   onResendInvite: (inviteId: string) => void;
   onRevokeInvite: (inviteId: string) => void;
   onToggleUserStatus: (userId: string, currentStatus: User['status']) => void;
+  onChangeUserRole?: (userId: string, newRole: User['role']) => void;
   currentUserId: string;
+  isAdmin?: boolean;
 }
 
 const statusVariants = {
@@ -35,16 +44,28 @@ const statusVariants = {
   disabled: 'destructive',
 } as const;
 
-const roleLabels = {
+const roleLabels: Record<string, string> = {
+  owner: 'Proprietário',
   admin: 'Administrador',
+  operator: 'Operador',
   technician: 'Técnico',
-  requester: 'Solicitante',
+  viewer: 'Visualizador',
 };
 
-const statusLabels = {
+const roleColors: Record<string, string> = {
+  owner: 'text-purple-500',
+  admin: 'text-red-500',
+  operator: 'text-blue-500',
+  technician: 'text-green-500',
+  viewer: 'text-gray-500',
+};
+
+const statusLabels: Record<string, string> = {
   active: 'Ativo',
   invited: 'Convidado',
   disabled: 'Desativado',
+  inactive: 'Inativo',
+  suspended: 'Suspenso',
 };
 
 export function TeamTable({
@@ -53,7 +74,9 @@ export function TeamTable({
   onResendInvite,
   onRevokeInvite,
   onToggleUserStatus,
+  onChangeUserRole,
   currentUserId,
+  isAdmin = false,
 }: TeamTableProps) {
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
 
@@ -130,9 +153,57 @@ export function TeamTable({
                   </TableCell>
                   <TableCell>{data.email}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">
-                      {roleLabels[data.role]}
-                    </Badge>
+                    {isUser && isAdmin && data.id !== currentUserId && onChangeUserRole ? (
+                      <Select
+                        value={data.role}
+                        onValueChange={(newRole) => {
+                          handleAction(
+                            `role-${data.id}`,
+                            () => onChangeUserRole(data.id, newRole as User['role'])
+                          );
+                        }}
+                        disabled={loadingStates[`role-${data.id}`]}
+                      >
+                        <SelectTrigger className="h-8 w-[140px]">
+                          <SelectValue>
+                            <div className="flex items-center gap-1.5">
+                              <Shield className={`h-3 w-3 ${roleColors[data.role] || 'text-gray-500'}`} />
+                              {roleLabels[data.role] || data.role}
+                            </div>
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="admin">
+                            <div className="flex items-center gap-2">
+                              <Shield className="h-4 w-4 text-red-500" />
+                              Administrador
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="operator">
+                            <div className="flex items-center gap-2">
+                              <Shield className="h-4 w-4 text-blue-500" />
+                              Operador
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="technician">
+                            <div className="flex items-center gap-2">
+                              <Shield className="h-4 w-4 text-green-500" />
+                              Técnico
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="viewer">
+                            <div className="flex items-center gap-2">
+                              <Shield className="h-4 w-4 text-gray-500" />
+                              Visualizador
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Badge variant="outline">
+                        {roleLabels[data.role] || data.role}
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Badge 

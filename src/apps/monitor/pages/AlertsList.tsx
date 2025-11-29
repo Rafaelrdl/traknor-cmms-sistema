@@ -12,7 +12,7 @@
 
 import { useState, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { PageHeader, StatusBadge, Card, CardContent } from '@/shared/ui';
+import { PageHeader, StatusBadge, Card, CardContent, ConfirmDialog } from '@/shared/ui';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -147,6 +147,10 @@ export function AlertsList() {
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [pendingAlertForOS, setPendingAlertForOS] = useState<Alert | null>(null);
   const [selectedTechnicianId, setSelectedTechnicianId] = useState<string>('');
+  
+  // Estado para o dialog de confirmação de exclusão
+  const [alertToDelete, setAlertToDelete] = useState<Alert | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Queries para dados reais da API
   const { data: alerts = [], isLoading, isError, refetch } = useAlertsQuery({ status: filterStatus || undefined });
@@ -198,10 +202,16 @@ export function AlertsList() {
     resolveMutation.mutate({ id: alert.id });
   };
 
-  // Handler para excluir um alerta
+  // Handler para abrir dialog de exclusão
   const handleDelete = (alert: Alert) => {
-    if (window.confirm(`Tem certeza que deseja excluir o alerta "${alert.rule_name || 'Alerta'}"?`)) {
-      deleteAlertMutation.mutate(alert.id);
+    setAlertToDelete(alert);
+    setIsDeleteDialogOpen(true);
+  };
+  
+  // Handler para confirmar exclusão
+  const confirmDelete = () => {
+    if (alertToDelete) {
+      deleteAlertMutation.mutate(alertToDelete.id);
     }
   };
 
@@ -839,6 +849,20 @@ export function AlertsList() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog de confirmação de exclusão */}
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title="Excluir Alerta"
+        description={`Tem certeza que deseja excluir o alerta "${alertToDelete?.rule_name || 'Alerta'}"? Esta ação não pode ser desfeita.`}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        variant="destructive"
+        loading={deleteAlertMutation.isPending}
+        onConfirm={confirmDelete}
+        onCancel={() => setAlertToDelete(null)}
+      />
     </div>
   );
 }
