@@ -45,6 +45,12 @@ interface ApiAsset {
   alert_count?: number;
   created_at?: string;
   updated_at?: string;
+  // Campos de localização (Company/Sector/Subsection)
+  sector?: number | null;
+  subsection?: number | null;
+  company_id?: number | null;
+  sector_name?: string | null;
+  subsection_name?: string | null;
 }
 
 interface PaginatedResponse<T> {
@@ -103,15 +109,23 @@ const mapCriticidade = (healthScore: number): Equipment['criticidade'] => {
 /**
  * Converte ApiAsset para Equipment do CMMS
  */
-const apiAssetToEquipment = (asset: ApiAsset): Equipment => ({
+const apiAssetToEquipment = (asset: ApiAsset): Equipment & {
+  companyId?: string;
+  sectorName?: string;
+  subsectionName?: string;
+} => ({
   id: String(asset.id),
   tag: asset.tag,
   model: asset.model || '',
   brand: asset.manufacturer || '',
   type: mapAssetType(asset.asset_type),
   capacity: (asset.specifications?.capacity as number) || 0,
-  sectorId: undefined, // TODO: Mapear do site
-  subSectionId: undefined,
+  sectorId: asset.sector ? String(asset.sector) : undefined,
+  subSectionId: asset.subsection ? String(asset.subsection) : undefined,
+  // Campos extras para o modal
+  companyId: asset.company_id ? String(asset.company_id) : undefined,
+  sectorName: asset.sector_name || undefined,
+  subsectionName: asset.subsection_name || undefined,
   installDate: asset.installation_date || '',
   nextMaintenance: '', // TODO: Calcular próxima manutenção
   status: mapAssetStatus(asset.status),
@@ -123,6 +137,8 @@ const apiAssetToEquipment = (asset: ApiAsset): Equipment => ({
   serialNumber: asset.serial_number,
   location: asset.location_description || asset.full_location,
   notes: asset.name,
+  // Incluir specifications para poder ler no modal
+  specifications: asset.specifications,
 });
 
 /**
@@ -139,6 +155,11 @@ const equipmentToApiAsset = (equipment: Partial<Equipment>): Partial<ApiAsset> =
   if (equipment.lastMaintenance) data.last_maintenance = equipment.lastMaintenance;
   if (equipment.location) data.location_description = equipment.location;
   if (equipment.notes) data.name = equipment.notes;
+  
+  // Incluir specifications se fornecido
+  if (equipment.specifications) {
+    data.specifications = equipment.specifications;
+  }
   
   // Mapear status reverso
   if (equipment.status) {

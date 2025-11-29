@@ -63,6 +63,10 @@ export interface Equipment {
   capacity: number;
   sectorId?: string;
   subSectionId?: string;
+  // Campos extras de localização
+  companyId?: string;
+  sectorName?: string;
+  subsectionName?: string;
   installDate: string;
   nextMaintenance: string;
   status: 'FUNCTIONING' | 'MAINTENANCE' | 'STOPPED';
@@ -74,6 +78,7 @@ export interface Equipment {
   serialNumber?: string;
   location?: string;
   notes?: string;
+  specifications?: Record<string, unknown>;
 }
 
 export interface LocationNode {
