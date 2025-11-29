@@ -147,14 +147,23 @@ const apiAssetToEquipment = (asset: ApiAsset): Equipment & {
 const equipmentToApiAsset = (equipment: Partial<Equipment>): Partial<ApiAsset> => {
   const data: Partial<ApiAsset> = {};
   
-  if (equipment.tag) data.tag = equipment.tag;
-  if (equipment.model) data.model = equipment.model;
-  if (equipment.brand) data.manufacturer = equipment.brand;
-  if (equipment.serialNumber) data.serial_number = equipment.serialNumber;
-  if (equipment.installDate) data.installation_date = equipment.installDate;
-  if (equipment.lastMaintenance) data.last_maintenance = equipment.lastMaintenance;
-  if (equipment.location) data.location_description = equipment.location;
-  if (equipment.notes) data.name = equipment.notes;
+  // Campos de texto - enviar mesmo se vazios para permitir limpar valores
+  if (equipment.tag !== undefined) data.tag = equipment.tag;
+  if (equipment.model !== undefined) data.model = equipment.model;
+  if (equipment.brand !== undefined) data.manufacturer = equipment.brand;
+  if (equipment.serialNumber !== undefined) data.serial_number = equipment.serialNumber;
+  if (equipment.installDate !== undefined) data.installation_date = equipment.installDate;
+  if (equipment.lastMaintenance !== undefined) data.last_maintenance = equipment.lastMaintenance;
+  if (equipment.location !== undefined) data.location_description = equipment.location;
+  if (equipment.notes !== undefined) data.name = equipment.notes;
+  
+  // Campos de localização (sector e subsection)
+  if (equipment.sectorId !== undefined) {
+    data.sector = equipment.sectorId ? parseInt(equipment.sectorId, 10) : null;
+  }
+  if (equipment.subSectionId !== undefined) {
+    data.subsection = equipment.subSectionId ? parseInt(equipment.subSectionId, 10) : null;
+  }
   
   // Incluir specifications se fornecido
   if (equipment.specifications) {

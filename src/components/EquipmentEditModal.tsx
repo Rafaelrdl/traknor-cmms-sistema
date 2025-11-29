@@ -56,6 +56,13 @@ const EQUIPMENT_TYPES = [
   { value: 'OTHER', label: 'Outros' },
 ];
 
+// Opções de status do equipamento
+const STATUS_OPTIONS = [
+  { value: 'FUNCTIONING', label: '🟢 Ativo' },
+  { value: 'MAINTENANCE', label: '🟡 Em Manutenção' },
+  { value: 'STOPPED', label: '🔴 Desativado' },
+];
+
 // Opções de fases
 const PHASES_OPTIONS = [
   { value: 'monofasico', label: 'Monofásico' },
@@ -90,6 +97,7 @@ export function EquipmentEditModal({ equipment, open, onOpenChange }: EquipmentE
   // Informações Básicas
   const [tag, setTag] = useState('');
   const [equipmentType, setEquipmentType] = useState('CHILLER');
+  const [equipmentStatus, setEquipmentStatus] = useState<'FUNCTIONING' | 'MAINTENANCE' | 'STOPPED'>('FUNCTIONING');
   const [brand, setBrand] = useState('');
   const [model, setModel] = useState('');
   const [serialNumber, setSerialNumber] = useState('');
@@ -137,6 +145,7 @@ export function EquipmentEditModal({ equipment, open, onOpenChange }: EquipmentE
     if (equipment && open) {
       setTag(equipment.tag || '');
       setEquipmentType(equipment.type || 'CHILLER');
+      setEquipmentStatus(equipment.status || 'FUNCTIONING');
       setBrand(equipment.brand || '');
       setModel(equipment.model || '');
       setSerialNumber(equipment.serialNumber || '');
@@ -244,10 +253,13 @@ export function EquipmentEditModal({ equipment, open, onOpenChange }: EquipmentE
         data: {
           tag: tag.trim(),
           type: equipmentType as Equipment['type'],
+          status: equipmentStatus,
           brand: brand.trim(),
           model: model.trim(),
           serialNumber: serialNumber.trim(),
           location: fullLocation,
+          sectorId: sectorId || undefined,
+          subSectionId: subsectorId || undefined,
           capacity: capacity ? parseFloat(capacity) : undefined,
           specifications: {
             voltage: voltage ? parseFloat(voltage) : undefined,
@@ -329,6 +341,24 @@ export function EquipmentEditModal({ equipment, open, onOpenChange }: EquipmentE
                       {EQUIPMENT_TYPES.map((type) => (
                         <SelectItem key={type.value} value={type.value}>
                           {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="equipmentStatus">
+                    Estado do Equipamento <span className="text-red-500">*</span>
+                  </Label>
+                  <Select value={equipmentStatus} onValueChange={(value: 'FUNCTIONING' | 'MAINTENANCE' | 'STOPPED') => setEquipmentStatus(value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o estado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATUS_OPTIONS.map((status) => (
+                        <SelectItem key={status.value} value={status.value}>
+                          {status.label}
                         </SelectItem>
                       ))}
                     </SelectContent>

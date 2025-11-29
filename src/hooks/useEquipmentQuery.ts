@@ -35,7 +35,7 @@ export function useEquipments(filters?: EquipmentFilters) {
   return useQuery({
     queryKey: equipmentKeys.list(filters),
     queryFn: () => equipmentService.getAll(filters),
-    staleTime: 1000 * 60 * 5, // 5 minutos
+    staleTime: 1000 * 30, // 30 segundos - dados ficam stale rapidamente após edição
     enabled: isUserAuthenticated(),
   });
 }
@@ -96,8 +96,22 @@ export function useUpdateEquipment() {
         updatedEquipment
       );
       
-      // Invalida listas para refetch
-      queryClient.invalidateQueries({ queryKey: equipmentKeys.lists() });
+      // Atualiza o equipamento na lista em cache (otimistic update)
+      queryClient.setQueriesData(
+        { queryKey: equipmentKeys.lists() },
+        (oldData: Equipment[] | undefined) => {
+          if (!oldData) return oldData;
+          return oldData.map(eq => 
+            eq.id === updatedEquipment.id ? updatedEquipment : eq
+          );
+        }
+      );
+      
+      // Invalida e refetch imediato para garantir dados atualizados
+      queryClient.invalidateQueries({ 
+        queryKey: equipmentKeys.lists(),
+        refetchType: 'all'
+      });
       queryClient.invalidateQueries({ queryKey: equipmentKeys.stats() });
     },
   });

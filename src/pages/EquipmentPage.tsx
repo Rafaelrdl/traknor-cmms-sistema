@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { LocationTree } from '@/components/LocationTree';
 import { LocationDetails } from '@/components/LocationDetails';
@@ -14,12 +15,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Building2, MapPin, Users, Search, BarChart3, Activity, Info, Calendar, FileText } from 'lucide-react';
-import { useEquipments } from '@/hooks/useEquipmentQuery';
+import { useEquipments, equipmentKeys } from '@/hooks/useEquipmentQuery';
 import { useSectors, useSubsections, useCompanies } from '@/hooks/useLocationsQuery';
 import { LocationProvider, useLocation as useLocationContext } from '@/contexts/LocationContext';
 import { IfCan } from '@/components/auth/IfCan';
 import { useRoleBasedData, DataFilterInfo } from '@/components/data/FilteredDataProvider';
 import { useAbility } from '@/hooks/useAbility';
+import { equipmentService } from '@/services/equipmentService';
 import type { Equipment, SubSection } from '@/types';
 
 /**
@@ -46,7 +48,8 @@ import type { Equipment, SubSection } from '@/types';
 function AssetsContent() {
   // ========== HOOKS PARA DADOS ==========
   // React Query hooks
-  const { data: equipment = [] } = useEquipments();
+  const queryClient = useQueryClient();
+  const { data: equipment = [], refetch: refetchEquipments } = useEquipments();
   const { data: sectors = [] } = useSectors();
   const { data: subSections = [] } = useSubsections();
   const { data: companies = [] } = useCompanies();
@@ -173,6 +176,7 @@ function AssetsContent() {
     model: '',         // Modelo do equipamento
     brand: '',         // Marca do equipamento
     type: 'SPLIT' as Equipment['type'], // Tipo do equipamento (SPLIT, CENTRAL, VRF, CHILLER)
+    status: 'FUNCTIONING' as Equipment['status'], // Status do equipamento (FUNCTIONING, MAINTENANCE, STOPPED)
     capacity: '',      // Capacidade em BTUs
     criticidade: 'MEDIA' as Equipment['criticidade'], // Criticidade do equipamento (BAIXA, MEDIA, ALTA)
     sectorId: '',      // ID do setor onde o equipamento está localizado
@@ -215,7 +219,7 @@ function AssetsContent() {
       id: Date.now().toString(), // ID único baseado no timestamp
       ...newEquipment,
       capacity: parseInt(newEquipment.capacity), // Converte capacidade para número
-      status: 'FUNCTIONING', // Status inicial como "funcionando"
+      status: newEquipment.status, // Usa o status selecionado no formulário
       totalOperatingHours: 0, // Horas de operação inicial
       energyConsumption: Math.floor(Math.random() * 200) + 150, // Consumo de energia mockado
       // Auto-vinculação ao local selecionado na árvore usando IDs originais
@@ -236,6 +240,7 @@ function AssetsContent() {
       model: '',
       brand: '',
       type: 'SPLIT',
+      status: 'FUNCTIONING',
       capacity: '',
       criticidade: 'MEDIA',
       sectorId: '',
@@ -256,13 +261,23 @@ function AssetsContent() {
    * EDITAR EQUIPAMENTO EXISTENTE
    * 
    * Abre o modal para edição de um equipamento existente.
+   * Busca dados frescos da API para garantir informações atualizadas.
    * 
    * @param equipment - Equipamento a ser editado
    */
-  const handleEditEquipment = (equipment: Equipment) => {
-    setEditingEquipment(equipment);
-    setIsEquipmentEditModalOpen(true);
-  };
+  const handleEditEquipment = useCallback(async (equipment: Equipment) => {
+    try {
+      // Buscar dados frescos da API para garantir que temos as informações mais recentes
+      const freshEquipment = await equipmentService.getById(equipment.id);
+      setEditingEquipment(freshEquipment);
+      setIsEquipmentEditModalOpen(true);
+    } catch (error) {
+      console.error('Erro ao buscar equipamento:', error);
+      // Fallback para dados do cache se a busca falhar
+      setEditingEquipment(equipment);
+      setIsEquipmentEditModalOpen(true);
+    }
+  }, []);
 
   /**
    * CRIAR NOVO LOCAL
@@ -596,6 +611,31 @@ function AssetsContent() {
                       <SelectItem value="BAIXA">🟢 Baixa</SelectItem>
                       <SelectItem value="MEDIA">🟡 Média</SelectItem>
                       <SelectItem value="ALTA">🔴 Alta</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Status do equipamento */}
+                <div>
+                  <Label htmlFor="status" className="mb-2 block">
+                    Status *
+                    <span className="text-xs text-muted-foreground ml-2 font-normal">
+                      Estado operacional do equipamento
+                    </span>
+                  </Label>
+                  <Select 
+                    value={newEquipment.status} 
+                    onValueChange={(value: Equipment['status']) => 
+                      setNewEquipment(prev => ({ ...prev, status: value }))
+                    }
+                  >
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="Selecione o status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="FUNCTIONING">🟢 Ativo</SelectItem>
+                      <SelectItem value="MAINTENANCE">🟡 Em Manutenção</SelectItem>
+                      <SelectItem value="STOPPED">🔴 Desativado</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
