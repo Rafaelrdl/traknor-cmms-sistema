@@ -201,14 +201,14 @@ export function WorkOrderList({
                         )}
                       </div>
                       
-                      {wo.assignedTo && (
+                      {(wo.assignedToName || wo.assignedTo) && (
                         <div className={cn(
                           "flex items-center gap-1 text-xs",
                           isSelected ? "text-white/90" : "text-muted-foreground"
                         )}>
                           <User className="h-3 w-3" />
-                          <span className="truncate max-w-20" title={wo.assignedTo}>
-                            {wo.assignedTo.split(' ')[0]}
+                          <span className="truncate max-w-20" title={wo.assignedToName || wo.assignedTo}>
+                            {(wo.assignedToName || wo.assignedTo || '').split(' ')[0]}
                           </span>
                         </div>
                       )}
@@ -271,7 +271,7 @@ export function WorkOrderList({
               <TableCell>
                 {new Date(wo.scheduledDate).toLocaleDateString('pt-BR')}
               </TableCell>
-              <TableCell>{wo.assignedTo || '-'}</TableCell>
+              <TableCell>{wo.assignedToName || wo.assignedTo || '-'}</TableCell>
               <TableCell>
                 <StatusBadge status={wo.status} />
               </TableCell>

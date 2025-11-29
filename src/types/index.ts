@@ -101,6 +101,7 @@ export interface WorkOrder {
   status: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED';
   scheduledDate: string;
   assignedTo?: string;
+  assignedToName?: string;
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   description: string;
   completedAt?: string;

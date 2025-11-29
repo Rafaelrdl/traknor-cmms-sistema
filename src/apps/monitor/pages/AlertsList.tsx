@@ -75,7 +75,7 @@ import {
 } from '../hooks';
 import { useCreateWorkOrder } from '@/hooks/useWorkOrdersQuery';
 import { useEquipments } from '@/hooks/useEquipmentQuery';
-import { useUsers } from '@/data/usersStore';
+import { useTechnicians } from '@/hooks/useTeamQuery';
 import type { Alert, AlertFilters, AlertSeverity } from '../types';
 import type { WorkOrder } from '@/types';
 import { format } from 'date-fns';
@@ -153,13 +153,8 @@ export function AlertsList() {
   const { data: statistics } = useAlertsStatisticsQuery();
   const { data: equipments = [] } = useEquipments();
   
-  // Lista de usuários/técnicos
-  const { listUsers } = useUsers();
-  const technicians = useMemo(() => {
-    return listUsers().filter(user => 
-      user.status === 'active' && (user.role === 'technician' || user.role === 'admin')
-    );
-  }, [listUsers]);
+  // Lista de técnicos da API
+  const { data: technicians = [] } = useTechnicians();
   
   // Mutations para ações
   const acknowledgeMutation = useAcknowledgeAlertMutation();
@@ -811,7 +806,7 @@ export function AlertsList() {
           </DialogHeader>
           
           <div className="py-4">
-            <label className="text-sm font-medium mb-2 block">Técnico Responsável</label>
+            <label className="text-sm font-medium mb-2 block">Técnico Executor</label>
             <Select value={selectedTechnicianId} onValueChange={setSelectedTechnicianId}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione um técnico" />
@@ -819,8 +814,8 @@ export function AlertsList() {
               <SelectContent>
                 <SelectItem value="none">Sem técnico designado</SelectItem>
                 {technicians.map((tech) => (
-                  <SelectItem key={tech.id} value={tech.id}>
-                    {tech.name}
+                  <SelectItem key={tech.user.id} value={String(tech.user.id)}>
+                    {tech.user.full_name || tech.user.email}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -130,9 +130,9 @@ function WorkOrderCard({
           </p>
 
           {/* Responsável (se houver) */}
-          {workOrder.assignedTo && (
-            <div className="text-[10px] text-muted-foreground mb-1 truncate" title={workOrder.assignedTo}>
-              👤 {workOrder.assignedTo}
+          {(workOrder.assignedToName || workOrder.assignedTo) && (
+            <div className="text-[10px] text-muted-foreground mb-1 truncate" title={workOrder.assignedToName || workOrder.assignedTo}>
+              👤 {workOrder.assignedToName || workOrder.assignedTo}
             </div>
           )}
 

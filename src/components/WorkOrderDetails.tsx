@@ -208,12 +208,12 @@ export function WorkOrderDetails({
                 </div>
               </div>
               
-              {workOrder.assignedTo && (
+              {(workOrder.assignedToName || workOrder.assignedTo) && (
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <span className="text-muted-foreground">Responsável:</span>
-                    <p className="font-medium">{workOrder.assignedTo}</p>
+                    <p className="font-medium">{workOrder.assignedToName || workOrder.assignedTo}</p>
                   </div>
                 </div>
               )}

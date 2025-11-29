@@ -541,7 +541,7 @@ export function generateWorkOrderPrintContent({
               </div>
               <div class="info-item">
                 <span class="info-label">Técnico Responsável</span>
-                <span class="info-value">${workOrder.assignedTo || 'Não atribuído'}</span>
+                <span class="info-value">${workOrder.assignedToName || workOrder.assignedTo || 'Não atribuído'}</span>
               </div>
               ${workOrder.completedAt ? `
               <div class="info-item">
@@ -726,7 +726,7 @@ export function generateWorkOrderPrintContent({
               <div class="signature-block">
                 <div class="signature-line"></div>
                 <div class="signature-name">Técnico Responsável</div>
-                ${workOrder.assignedTo ? `<div class="signature-title">${workOrder.assignedTo}</div>` : ''}
+                ${(workOrder.assignedToName || workOrder.assignedTo) ? `<div class="signature-title">${workOrder.assignedToName || workOrder.assignedTo}</div>` : ''}
                 <div class="signature-cpf">CPF: ___ . ___ . ___ - __</div>
               </div>
               <div class="signature-block">

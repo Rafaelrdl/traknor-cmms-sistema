@@ -34,7 +34,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { useCompanies, useSectors } from '@/hooks/useLocationsQuery';
 import { useEquipments } from '@/hooks/useEquipmentQuery';
 import { useStockItems } from '@/hooks/useInventoryQuery';
-import { useUsers } from '@/data/usersStore';
+import { useTechnicians } from '@/hooks/useTeamQuery';
 import { printWorkOrder } from '@/utils/printWorkOrder';
 import type { WorkOrder, WorkOrderStockItem, ChecklistResponse, UploadedPhoto, StockItem } from '@/types';
 import type { ApiInventoryItem } from '@/types/api';
@@ -109,13 +109,8 @@ export function WorkOrderEditModal({
   const { data: stockItemsData } = useStockItems();
   const stockItems = (stockItemsData?.results || []).map(mapToStockItem);
   
-  // Lista de técnicos para o dropdown
-  const { listUsers } = useUsers();
-  const technicians = useMemo(() => {
-    return listUsers().filter(user => 
-      user.status === 'active' && (user.role === 'technician' || user.role === 'admin')
-    );
-  }, [listUsers]);
+  // Lista de técnicos da API
+  const { data: technicians = [] } = useTechnicians();
   
   // Simulação do hook de autenticação - substituir pela implementação real
   const user = { name: 'Usuário Atual', role: 'ADMIN' }; // Placeholder
@@ -651,8 +646,8 @@ export function WorkOrderEditModal({
                                   <SelectContent>
                                     <SelectItem value="none">Sem técnico designado</SelectItem>
                                     {technicians.map((tech) => (
-                                      <SelectItem key={tech.id} value={tech.id}>
-                                        {tech.name}
+                                      <SelectItem key={tech.user.id} value={String(tech.user.id)}>
+                                        {tech.user.full_name || tech.user.email}
                                       </SelectItem>
                                     ))}
                                   </SelectContent>

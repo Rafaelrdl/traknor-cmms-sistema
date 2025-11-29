@@ -92,7 +92,8 @@ const mapWorkOrder = (wo: ApiWorkOrder): WorkOrder => ({
   description: wo.description,
   scheduledDate: wo.scheduled_date,
   completedAt: wo.completed_at || undefined,
-  assignedTo: wo.assigned_to_name || undefined,
+  assignedTo: wo.assigned_to ? String(wo.assigned_to) : undefined,
+  assignedToName: wo.assigned_to_name || undefined,
   executionDescription: wo.execution_description || undefined,
   photos: Array.isArray(wo.photos) ? wo.photos.map((p): UploadedPhoto => ({
     id: String(p.id),
