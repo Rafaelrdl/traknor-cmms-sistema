@@ -16,13 +16,22 @@ import { PageHeader, StatusBadge, Card, CardContent } from '@/shared/ui';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { 
   Table,
   TableBody,
@@ -53,7 +62,8 @@ import {
   FileText,
   Activity,
   Target,
-  Trash2
+  Trash2,
+  UserPlus
 } from 'lucide-react';
 import { 
   useAlertsQuery, 
@@ -65,6 +75,7 @@ import {
 } from '../hooks';
 import { useCreateWorkOrder } from '@/hooks/useWorkOrdersQuery';
 import { useEquipments } from '@/hooks/useEquipmentQuery';
+import { useUsers } from '@/data/usersStore';
 import type { Alert, AlertFilters, AlertSeverity } from '../types';
 import type { WorkOrder } from '@/types';
 import { format } from 'date-fns';
@@ -131,11 +142,24 @@ export function AlertsList() {
   // Estado para criação de OS a partir do alerta
   const [alertForWorkOrder, setAlertForWorkOrder] = useState<Alert | null>(null);
   const [isCreatingWorkOrder, setIsCreatingWorkOrder] = useState(false);
+  
+  // Estado para o modal de seleção de técnico
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [pendingAlertForOS, setPendingAlertForOS] = useState<Alert | null>(null);
+  const [selectedTechnicianId, setSelectedTechnicianId] = useState<string>('');
 
   // Queries para dados reais da API
   const { data: alerts = [], isLoading, isError, refetch } = useAlertsQuery({ status: filterStatus || undefined });
   const { data: statistics } = useAlertsStatisticsQuery();
   const { data: equipments = [] } = useEquipments();
+  
+  // Lista de usuários/técnicos
+  const { listUsers } = useUsers();
+  const technicians = useMemo(() => {
+    return listUsers().filter(user => 
+      user.status === 'active' && (user.role === 'technician' || user.role === 'admin')
+    );
+  }, [listUsers]);
   
   // Mutations para ações
   const acknowledgeMutation = useAcknowledgeAlertMutation();
@@ -186,11 +210,21 @@ export function AlertsList() {
     }
   };
 
-  // Handler para criar OS a partir de um alerta
-  // Encontra o equipamento correspondente ao asset_tag do alerta
-  const handleCreateWorkOrder = async (alert: Alert) => {
+  // Handler para abrir modal de designação de técnico
+  const handleCreateWorkOrder = (alert: Alert) => {
+    setPendingAlertForOS(alert);
+    setSelectedTechnicianId('none');
+    setIsAssignModalOpen(true);
+  };
+
+  // Handler para confirmar criação da OS com técnico selecionado
+  const confirmCreateWorkOrder = async () => {
+    if (!pendingAlertForOS) return;
+    
+    const alert = pendingAlertForOS;
     setAlertForWorkOrder(alert);
     setIsCreatingWorkOrder(true);
+    setIsAssignModalOpen(false);
     
     // Encontra o equipamento pelo asset_tag
     const equipment = equipments.find(eq => eq.tag === alert.asset_tag);
@@ -198,6 +232,7 @@ export function AlertsList() {
     if (!equipment) {
       console.error('Equipamento não encontrado para o asset_tag:', alert.asset_tag);
       setIsCreatingWorkOrder(false);
+      setPendingAlertForOS(null);
       return;
     }
     
@@ -218,7 +253,7 @@ export function AlertsList() {
         scheduledDate: new Date().toISOString().split('T')[0],
         description: `Alerta: ${formatMessageNumbers(alert.message)}\n\nParâmetro: ${alert.parameter_key}\nValor: ${formatNumber(alert.parameter_value)}\nLimite: ${formatNumber(alert.threshold)}\nEquipamento: ${alert.equipment_name || alert.asset_tag}`,
         status: 'OPEN' as const,
-        assignedTo: '',
+        assignedTo: selectedTechnicianId === 'none' ? '' : selectedTechnicianId,
         stockItems: []
       };
       
@@ -231,6 +266,7 @@ export function AlertsList() {
               onSuccess: () => {
                 setIsCreatingWorkOrder(false);
                 setAlertForWorkOrder(null);
+                setPendingAlertForOS(null);
                 setIsDetailModalOpen(false);
                 refetch();
               },
@@ -758,6 +794,54 @@ export function AlertsList() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para designar técnico */}
+      <Dialog open={isAssignModalOpen} onOpenChange={setIsAssignModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5" />
+              Designar Técnico
+            </DialogTitle>
+            <DialogDescription>
+              Selecione um técnico para executar a ordem de serviço ou deixe sem designação.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <label className="text-sm font-medium mb-2 block">Técnico Responsável</label>
+            <Select value={selectedTechnicianId} onValueChange={setSelectedTechnicianId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um técnico" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem técnico designado</SelectItem>
+                {technicians.map((tech) => (
+                  <SelectItem key={tech.id} value={tech.id}>
+                    {tech.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsAssignModalOpen(false);
+                setPendingAlertForOS(null);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={confirmCreateWorkOrder}>
+              <Wrench className="h-4 w-4 mr-1" />
+              Criar Ordem de Serviço
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
