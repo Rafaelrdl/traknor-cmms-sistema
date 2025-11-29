@@ -158,16 +158,20 @@ export const locationsService = {
     const payload = {
       name: data.name,
       company: Number(data.companyId),
-      responsible_name: data.responsible,
-      phone: data.phone,
-      email: data.email,
-      area: data.area,
-      occupants: data.occupants,
-      hvac_units: data.hvacUnits,
-      notes: data.notes || '',
+      description: data.notes || '',
     };
-    const response = await api.post<ApiSector>('/locations/sectors/', payload);
-    return mapSector(response.data);
+    console.log('Creating sector with payload:', payload);
+    try {
+      const response = await api.post<ApiSector>('/locations/sectors/', payload);
+      return mapSector(response.data);
+    } catch (error: unknown) {
+      console.error('Error creating sector:', error);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data?: unknown } };
+        console.error('Response data:', axiosError.response?.data);
+      }
+      throw error;
+    }
   },
 
   async updateSector(id: string, data: Partial<Sector>): Promise<Sector> {
@@ -175,13 +179,7 @@ export const locationsService = {
     
     if (data.name) payload.name = data.name;
     if (data.companyId) payload.company = Number(data.companyId);
-    if (data.responsible) payload.responsible_name = data.responsible;
-    if (data.phone) payload.phone = data.phone;
-    if (data.email) payload.email = data.email;
-    if (data.area !== undefined) payload.area = data.area;
-    if (data.occupants !== undefined) payload.occupants = data.occupants;
-    if (data.hvacUnits !== undefined) payload.hvac_units = data.hvacUnits;
-    if (data.notes !== undefined) payload.notes = data.notes;
+    if (data.notes !== undefined) payload.description = data.notes;
 
     const response = await api.patch<ApiSector>(`/locations/sectors/${id}/`, payload);
     return mapSector(response.data);

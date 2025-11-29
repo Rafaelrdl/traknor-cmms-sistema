@@ -459,9 +459,6 @@ export function LocationFormModal({
         <div>
           <Label htmlFor="sectorName" className="mb-2 block">
             Nome do Setor *
-            <span className="text-xs text-muted-foreground ml-2 font-normal">
-              Identificação da área
-            </span>
           </Label>
           <Input
             id="sectorName"
@@ -499,9 +496,6 @@ export function LocationFormModal({
           <div>
             <Label htmlFor="sectorResponsible" className="mb-2 block">
               Responsável *
-              <span className="text-xs text-muted-foreground ml-2 font-normal">
-                Nome do responsável
-              </span>
             </Label>
             <Input
               id="sectorResponsible"
@@ -544,9 +538,6 @@ export function LocationFormModal({
           <div>
             <Label htmlFor="sectorArea" className="mb-2 block">
               Área (m²) *
-              <span className="text-xs text-muted-foreground ml-2 font-normal">
-                Metragem do setor
-              </span>
             </Label>
             <Input
               id="sectorArea"
@@ -562,9 +553,6 @@ export function LocationFormModal({
           <div>
             <Label htmlFor="sectorOccupants" className="mb-2 block">
               Ocupantes *
-              <span className="text-xs text-muted-foreground ml-2 font-normal">
-                Número de pessoas
-              </span>
             </Label>
             <Input
               id="sectorOccupants"
@@ -580,9 +568,6 @@ export function LocationFormModal({
           <div>
             <Label htmlFor="sectorHvacUnits" className="mb-2 block">
               Unidades HVAC *
-              <span className="text-xs text-muted-foreground ml-2 font-normal">
-                Sistemas de climatização
-              </span>
             </Label>
             <Input
               id="sectorHvacUnits"
@@ -600,10 +585,7 @@ export function LocationFormModal({
         {/* Observações */}
         <div>
           <Label htmlFor="sectorNotes" className="mb-2 block">
-            Observações Adicionais
-            <span className="text-xs text-muted-foreground ml-2 font-normal">
-              (opcional)
-            </span>
+            Observações Adicionais (opcional)
           </Label>
           <Textarea
             id="sectorNotes"
@@ -640,9 +622,6 @@ export function LocationFormModal({
           <div>
             <Label htmlFor="subSectionName" className="mb-2 block">
               Nome do Subsetor *
-              <span className="text-xs text-muted-foreground ml-2 font-normal">
-                Identificação da subárea
-              </span>
             </Label>
             <Input
               id="subSectionName"
@@ -711,9 +690,6 @@ export function LocationFormModal({
             <div>
               <Label htmlFor="subSectionResponsible" className="mb-2 block">
                 Responsável *
-                <span className="text-xs text-muted-foreground ml-2 font-normal">
-                  Nome do responsável
-                </span>
               </Label>
               <Input
                 id="subSectionResponsible"
@@ -756,9 +732,6 @@ export function LocationFormModal({
             <div>
               <Label htmlFor="subSectionArea" className="mb-2 block">
                 Área (m²) *
-                <span className="text-xs text-muted-foreground ml-2 font-normal">
-                  Metragem do subsetor
-                </span>
               </Label>
               <Input
                 id="subSectionArea"
@@ -774,9 +747,6 @@ export function LocationFormModal({
             <div>
               <Label htmlFor="subSectionOccupants" className="mb-2 block">
                 Ocupantes *
-                <span className="text-xs text-muted-foreground ml-2 font-normal">
-                  Número de pessoas
-                </span>
               </Label>
               <Input
                 id="subSectionOccupants"
@@ -792,9 +762,6 @@ export function LocationFormModal({
             <div>
               <Label htmlFor="subSectionHvacUnits" className="mb-2 block">
                 Unidades HVAC *
-                <span className="text-xs text-muted-foreground ml-2 font-normal">
-                  Sistemas de climatização
-                </span>
               </Label>
               <Input
                 id="subSectionHvacUnits"
@@ -812,10 +779,7 @@ export function LocationFormModal({
           {/* Observações */}
           <div>
             <Label htmlFor="subSectionNotes" className="mb-2 block">
-              Observações Adicionais
-              <span className="text-xs text-muted-foreground ml-2 font-normal">
-                (opcional)
-              </span>
+              Observações Adicionais (opcional)
             </Label>
             <Textarea
               id="subSectionNotes"
