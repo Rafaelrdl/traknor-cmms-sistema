@@ -13,6 +13,7 @@ import { TourHint } from '@/components/tour/TourHint';
 import { useAutomaticWorkOrderGeneration } from '@/hooks/useWorkOrderGeneration';
 import { ProductSwitcher } from '@/components/ProductSwitcher';
 import { logout as logoutService } from '@/services/authService';
+import { AlertsNotificationDropdown } from '@/components/AlertsNotificationDropdown';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -55,7 +56,7 @@ export function Layout({ children }: LayoutProps) {
           {/* Desktop Navigation - Flex grows, can shrink */}
           <DesktopNavbar className="flex-1 min-w-0 mx-2 sm:mx-4 lg:mx-6" data-tour="navigation" />
 
-          {/* Right Side: Mobile Menu + User Menu - Always visible, never shrinks */}
+          {/* Right Side: Mobile Menu + Alerts + User Menu - Always visible, never shrinks */}
           <div className="flex items-center gap-2 flex-shrink-0 min-w-fit">
             {/* Mobile Navigation */}
             {isMobile && (
@@ -65,6 +66,9 @@ export function Layout({ children }: LayoutProps) {
                 data-tour="mobile-menu"
               />
             )}
+
+            {/* Alerts Notification Dropdown */}
+            <AlertsNotificationDropdown />
 
             {/* User Menu - Always visible */}
             <DropdownMenu>

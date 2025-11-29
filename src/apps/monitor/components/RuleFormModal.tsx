@@ -126,6 +126,17 @@ export function RuleFormModal({ open, onOpenChange, editingRule }: RuleFormModal
     return device?.variables || [];
   };
 
+  // Encontrar deviceId a partir do parameter_key (variável tag)
+  const findDeviceIdByParameterKey = (parameterKey: string): number | undefined => {
+    for (const device of devices) {
+      const variable = device.variables.find(v => v.tag === parameterKey);
+      if (variable) {
+        return device.id;
+      }
+    }
+    return undefined;
+  };
+
   // Reset/Preencher formulário quando modal abre
   useEffect(() => {
     if (open) {
@@ -138,13 +149,20 @@ export function RuleFormModal({ open, onOpenChange, editingRule }: RuleFormModal
         
         // Carregar parâmetros
         if (editingRule.parameters && editingRule.parameters.length > 0) {
-          setParameters(editingRule.parameters.map(param => ({
-            ...param,
-            severity: param.severity?.toUpperCase() as Severity || 'MEDIUM',
-          })));
+          setParameters(editingRule.parameters.map(param => {
+            // Encontrar o deviceId a partir do parameter_key
+            const deviceId = findDeviceIdByParameterKey(param.parameter_key);
+            return {
+              ...param,
+              deviceId,
+              severity: param.severity?.toUpperCase() as Severity || 'MEDIUM',
+            };
+          }));
         } else if (editingRule.parameter_key) {
           // Formato legado
+          const deviceId = findDeviceIdByParameterKey(editingRule.parameter_key);
           setParameters([{
+            deviceId,
             parameter_key: editingRule.parameter_key,
             variable_key: editingRule.variable_key || '',
             operator: editingRule.operator || '>',
@@ -166,7 +184,7 @@ export function RuleFormModal({ open, onOpenChange, editingRule }: RuleFormModal
         setParameters([]);
       }
     }
-  }, [open, editingRule]);
+  }, [open, editingRule, devices]);
 
   // Adicionar novo parâmetro
   const addParameter = () => {
@@ -546,7 +564,7 @@ export function RuleFormModal({ open, onOpenChange, editingRule }: RuleFormModal
                                       <span className="font-medium">{variable.name || variable.tag}</span>
                                       {variable.last_value !== null && (
                                         <span className="text-xs text-muted-foreground">
-                                          ({variable.last_value} {variable.unit})
+                                          ({typeof variable.last_value === 'number' ? variable.last_value.toFixed(2) : variable.last_value} {variable.unit})
                                         </span>
                                       )}
                                     </div>

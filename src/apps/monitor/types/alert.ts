@@ -33,9 +33,10 @@ export interface Alert {
   resolved_at: string | null;
   resolved_by: number | null;
   resolved_by_email: string | null;
+  work_order: number | null;
+  work_order_number: string | null;
   notes: string | null;
   is_active: boolean;
-  work_order_id?: string | null;
 }
 
 /**

@@ -78,3 +78,19 @@ export const useResolveAlertMutation = () => {
     },
   });
 };
+
+/**
+ * Mutation hook para vincular uma ordem de serviço a um alerta
+ * Também reconhece o alerta automaticamente
+ */
+export const useLinkWorkOrderMutation = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ alertId, workOrderId }: { alertId: number; workOrderId: number }) => 
+      alertsService.linkWorkOrder(alertId, workOrderId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['monitor-alerts'] });
+    },
+  });
+};

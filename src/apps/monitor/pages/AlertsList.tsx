@@ -16,6 +16,13 @@ import { PageHeader, StatusBadge, Card, CardContent } from '@/shared/ui';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { 
   Table,
   TableBody,
@@ -24,6 +31,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Separator } from '@/components/ui/separator';
 import { 
   AlertTriangle, 
   AlertCircle,
@@ -36,21 +44,27 @@ import {
   Bell,
   BellOff,
   Thermometer,
-  Zap,
-  Wifi,
   Wrench,
   ClipboardList,
   ExternalLink,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  User,
+  FileText,
+  Activity,
+  Target
 } from 'lucide-react';
 import { 
   useAlertsQuery, 
   useAlertsStatisticsQuery,
   useAcknowledgeAlertMutation,
-  useResolveAlertMutation 
+  useResolveAlertMutation,
+  useLinkWorkOrderMutation
 } from '../hooks';
+import { useCreateWorkOrder } from '@/hooks/useWorkOrdersQuery';
+import { useEquipments } from '@/hooks/useEquipmentQuery';
 import type { Alert, AlertFilters, AlertSeverity } from '../types';
+import type { WorkOrder } from '@/types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -95,14 +109,25 @@ export function AlertsList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSeverity, setFilterSeverity] = useState<AlertSeverity | null>(null);
   const [filterStatus, setFilterStatus] = useState<AlertFilters['status'] | null>(null);
+  
+  // Estado para o modal de detalhes
+  const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  
+  // Estado para criação de OS a partir do alerta
+  const [alertForWorkOrder, setAlertForWorkOrder] = useState<Alert | null>(null);
+  const [isCreatingWorkOrder, setIsCreatingWorkOrder] = useState(false);
 
   // Queries para dados reais da API
   const { data: alerts = [], isLoading, isError, refetch } = useAlertsQuery({ status: filterStatus || undefined });
   const { data: statistics } = useAlertsStatisticsQuery();
+  const { data: equipments = [] } = useEquipments();
   
   // Mutations para ações
   const acknowledgeMutation = useAcknowledgeAlertMutation();
   const resolveMutation = useResolveAlertMutation();
+  const linkWorkOrderMutation = useLinkWorkOrderMutation();
+  const createWorkOrderMutation = useCreateWorkOrder();
 
   // Filtra alertas localmente (para busca por texto e severidade)
   const filteredAlerts = useMemo(() => {
@@ -123,6 +148,12 @@ export function AlertsList() {
   const activeCount = statistics?.active || 0;
   const criticalCount = statistics?.by_severity?.CRITICAL || 0;
 
+  // Handler para ver detalhes do alerta
+  const handleViewDetails = (alert: Alert) => {
+    setSelectedAlert(alert);
+    setIsDetailModalOpen(true);
+  };
+
   // Handler para reconhecer um alerta
   const handleAcknowledge = (alert: Alert) => {
     acknowledgeMutation.mutate({ id: alert.id });
@@ -134,8 +165,69 @@ export function AlertsList() {
   };
 
   // Handler para criar OS a partir de um alerta
-  const handleCreateWorkOrder = (alert: Alert) => {
-    navigate(`/cmms/work-orders/new?alertId=${alert.id}&assetId=${alert.asset_tag}&title=Alerta: ${encodeURIComponent(alert.message)}`);
+  // Encontra o equipamento correspondente ao asset_tag do alerta
+  const handleCreateWorkOrder = async (alert: Alert) => {
+    setAlertForWorkOrder(alert);
+    setIsCreatingWorkOrder(true);
+    
+    // Encontra o equipamento pelo asset_tag
+    const equipment = equipments.find(eq => eq.tag === alert.asset_tag);
+    
+    if (!equipment) {
+      console.error('Equipamento não encontrado para o asset_tag:', alert.asset_tag);
+      setIsCreatingWorkOrder(false);
+      return;
+    }
+    
+    // Mapeia severidade do alerta para prioridade da OS
+    const priorityMap: Record<string, WorkOrder['priority']> = {
+      'Critical': 'CRITICAL',
+      'High': 'HIGH',
+      'Medium': 'MEDIUM',
+      'Low': 'LOW'
+    };
+    
+    try {
+      // Cria a OS
+      const workOrderData = {
+        equipmentId: equipment.id,
+        type: 'CORRECTIVE' as const,
+        priority: priorityMap[alert.severity] || 'MEDIUM',
+        scheduledDate: new Date().toISOString().split('T')[0],
+        description: `Alerta: ${alert.message}\n\nParâmetro: ${alert.parameter_key}\nValor: ${formatNumber(alert.parameter_value)}\nLimite: ${formatNumber(alert.threshold)}\nEquipamento: ${alert.equipment_name || alert.asset_tag}`,
+        status: 'OPEN' as const,
+        assignedTo: '',
+        stockItems: []
+      };
+      
+      createWorkOrderMutation.mutate(workOrderData as WorkOrder, {
+        onSuccess: (newWorkOrder: WorkOrder) => {
+          // Vincula a OS ao alerta (isso também reconhece o alerta automaticamente)
+          linkWorkOrderMutation.mutate(
+            { alertId: alert.id, workOrderId: parseInt(newWorkOrder.id) },
+            {
+              onSuccess: () => {
+                setIsCreatingWorkOrder(false);
+                setAlertForWorkOrder(null);
+                setIsDetailModalOpen(false);
+                refetch();
+              },
+              onError: (error) => {
+                console.error('Erro ao vincular OS ao alerta:', error);
+                setIsCreatingWorkOrder(false);
+              }
+            }
+          );
+        },
+        onError: (error) => {
+          console.error('Erro ao criar OS:', error);
+          setIsCreatingWorkOrder(false);
+        }
+      });
+    } catch (error) {
+      console.error('Erro ao criar OS:', error);
+      setIsCreatingWorkOrder(false);
+    }
   };
 
   // Estado de loading
@@ -387,13 +479,13 @@ export function AlertsList() {
                     
                     {/* Ordem de Serviço */}
                     <TableCell>
-                      {alert.work_order_id ? (
+                      {alert.work_order && alert.work_order_number ? (
                         <Link 
-                          to={`/cmms/work-orders/${alert.work_order_id}`}
+                          to={`/cmms/work-orders/${alert.work_order}`}
                           className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 hover:underline"
                         >
                           <ClipboardList className="h-3 w-3" />
-                          {alert.work_order_id}
+                          #{alert.work_order_number}
                           <ExternalLink className="h-3 w-3" />
                         </Link>
                       ) : !alert.resolved ? (
@@ -402,9 +494,19 @@ export function AlertsList() {
                           size="sm"
                           className="text-xs border-blue-300 text-blue-700 hover:bg-blue-50"
                           onClick={() => handleCreateWorkOrder(alert)}
+                          disabled={isCreatingWorkOrder && alertForWorkOrder?.id === alert.id}
                         >
-                          <Wrench className="h-3 w-3 mr-1" />
-                          Criar OS
+                          {isCreatingWorkOrder && alertForWorkOrder?.id === alert.id ? (
+                            <>
+                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                              Criando...
+                            </>
+                          ) : (
+                            <>
+                              <Wrench className="h-3 w-3 mr-1" />
+                              Criar OS
+                            </>
+                          )}
                         </Button>
                       ) : (
                         <span className="text-xs text-muted-foreground">-</span>
@@ -414,31 +516,14 @@ export function AlertsList() {
                     {/* Ações */}
                     <TableCell>
                       <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="sm" title="Ver detalhes">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          title="Ver detalhes"
+                          onClick={() => handleViewDetails(alert)}
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {!alert.acknowledged && !alert.resolved && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            title="Reconhecer"
-                            onClick={() => handleAcknowledge(alert)}
-                            disabled={acknowledgeMutation.isPending}
-                          >
-                            <CheckCircle2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {!alert.resolved && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            title="Resolver"
-                            onClick={() => handleResolve(alert)}
-                            disabled={resolveMutation.isPending}
-                          >
-                            <BellOff className="h-4 w-4" />
-                          </Button>
-                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -448,6 +533,201 @@ export function AlertsList() {
           )}
         </CardContent>
       </Card>
+
+      {/* Modal de Detalhes do Alerta */}
+      <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {selectedAlert?.severity === 'Critical' ? (
+                <AlertCircle className="h-5 w-5 text-red-500" />
+              ) : selectedAlert?.severity === 'High' || selectedAlert?.severity === 'Medium' ? (
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+              ) : (
+                <Info className="h-5 w-5 text-blue-500" />
+              )}
+              Detalhes do Alerta
+            </DialogTitle>
+            <DialogDescription>
+              Informações completas sobre o alerta #{selectedAlert?.id}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedAlert && (
+            <div className="space-y-6">
+              {/* Status e Severidade */}
+              <div className="flex items-center gap-3">
+                <Badge variant={getSeverityColor(selectedAlert.severity)}>
+                  {selectedAlert.severity_display}
+                </Badge>
+                <StatusBadge
+                  status={selectedAlert.resolved ? 'RESOLVED' : selectedAlert.is_active ? 'ACTIVE' : 'ACKNOWLEDGED'}
+                  type="alert"
+                />
+              </div>
+
+              {/* Mensagem */}
+              <div className="bg-muted/50 rounded-lg p-4">
+                <p className="text-sm font-medium">{selectedAlert.message}</p>
+              </div>
+
+              <Separator />
+
+              {/* Informações do Alerta */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Thermometer className="h-3 w-3" />
+                    Equipamento
+                  </p>
+                  <p className="text-sm font-medium">{selectedAlert.equipment_name || selectedAlert.asset_tag}</p>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <FileText className="h-3 w-3" />
+                    Regra
+                  </p>
+                  <p className="text-sm font-medium">{selectedAlert.rule_name || '-'}</p>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Activity className="h-3 w-3" />
+                    Parâmetro
+                  </p>
+                  <p className="text-sm font-medium">{selectedAlert.parameter_key || '-'}</p>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Target className="h-3 w-3" />
+                    Valor / Limite
+                  </p>
+                  <p className="text-sm font-medium">
+                    {formatNumber(selectedAlert.parameter_value)} / {formatNumber(selectedAlert.threshold)}
+                  </p>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Timestamps */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    Disparado em
+                  </p>
+                  <p className="text-sm font-medium">{formatDateTime(selectedAlert.triggered_at)}</p>
+                </div>
+
+                {selectedAlert.acknowledged_at && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Reconhecido em
+                    </p>
+                    <p className="text-sm font-medium">{formatDateTime(selectedAlert.acknowledged_at)}</p>
+                    {selectedAlert.acknowledged_by_email && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <User className="h-3 w-3" />
+                        {selectedAlert.acknowledged_by_email}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {selectedAlert.resolved_at && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <BellOff className="h-3 w-3" />
+                      Resolvido em
+                    </p>
+                    <p className="text-sm font-medium">{formatDateTime(selectedAlert.resolved_at)}</p>
+                    {selectedAlert.resolved_by_email && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <User className="h-3 w-3" />
+                        {selectedAlert.resolved_by_email}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Notas */}
+              {selectedAlert.notes && (
+                <>
+                  <Separator />
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <FileText className="h-3 w-3" />
+                      Notas
+                    </p>
+                    <p className="text-sm whitespace-pre-wrap bg-muted/50 rounded-lg p-3">
+                      {selectedAlert.notes}
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {/* Ações */}
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {!selectedAlert.acknowledged && !selectedAlert.resolved && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        handleAcknowledge(selectedAlert);
+                        setIsDetailModalOpen(false);
+                      }}
+                      disabled={acknowledgeMutation.isPending}
+                    >
+                      <CheckCircle2 className="h-4 w-4 mr-1" />
+                      Reconhecer
+                    </Button>
+                  )}
+                </div>
+                
+                {!selectedAlert.resolved && !selectedAlert.work_order && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => handleCreateWorkOrder(selectedAlert)}
+                    disabled={isCreatingWorkOrder}
+                  >
+                    {isCreatingWorkOrder ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                        Criando OS...
+                      </>
+                    ) : (
+                      <>
+                        <Wrench className="h-4 w-4 mr-1" />
+                        Criar Ordem de Serviço
+                      </>
+                    )}
+                  </Button>
+                )}
+
+                {selectedAlert.work_order && selectedAlert.work_order_number && (
+                  <Link 
+                    to={`/cmms/work-orders/${selectedAlert.work_order}`}
+                    className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                    onClick={() => setIsDetailModalOpen(false)}
+                  >
+                    <ClipboardList className="h-4 w-4" />
+                    Ver OS: #{selectedAlert.work_order_number}
+                    <ExternalLink className="h-3 w-3" />
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

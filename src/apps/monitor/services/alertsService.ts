@@ -8,6 +8,7 @@
  * - GET /api/alerts/alerts/{id}/ - Detalhes do alerta
  * - POST /api/alerts/alerts/{id}/acknowledge/ - Reconhecer alerta
  * - POST /api/alerts/alerts/{id}/resolve/ - Resolver alerta
+ * - POST /api/alerts/alerts/{id}/link_work_order/ - Vincular OS ao alerta
  * - GET /api/alerts/alerts/statistics/ - Estatísticas
  */
 
@@ -23,6 +24,12 @@ import type {
 interface PaginatedResponse<T> {
   results: T[];
   count: number;
+}
+
+interface LinkWorkOrderResponse {
+  status: string;
+  alert: Alert;
+  work_order_number: string;
 }
 
 export const alertsService = {
@@ -55,6 +62,17 @@ export const alertsService = {
    */
   async resolve(id: number, data?: ResolveAlertRequest): Promise<{ status: string; alert: Alert }> {
     const response = await api.post<{ status: string; alert: Alert }>(`/alerts/alerts/${id}/resolve/`, data || {});
+    return response.data;
+  },
+
+  /**
+   * Vincula uma ordem de serviço ao alerta e o reconhece automaticamente
+   */
+  async linkWorkOrder(alertId: number, workOrderId: number): Promise<LinkWorkOrderResponse> {
+    const response = await api.post<LinkWorkOrderResponse>(
+      `/alerts/alerts/${alertId}/link_work_order/`,
+      { work_order_id: workOrderId }
+    );
     return response.data;
   },
 
