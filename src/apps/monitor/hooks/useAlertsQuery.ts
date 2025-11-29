@@ -94,3 +94,18 @@ export const useLinkWorkOrderMutation = () => {
     },
   });
 };
+
+/**
+ * Mutation hook para excluir um alerta
+ */
+export const useDeleteAlertMutation = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: number) => alertsService.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['monitor-alerts'] });
+      queryClient.invalidateQueries({ queryKey: ['alerts-notifications'] });
+    },
+  });
+};

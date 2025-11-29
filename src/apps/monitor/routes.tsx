@@ -8,6 +8,8 @@ import {
   ReportsPage,
   EditableOverviewPage
 } from './pages';
+import { ProfilePage } from '@/pages/ProfilePage';
+import { TeamPage } from '@/pages/TeamPage';
 
 /**
  * Rotas do módulo Monitor (TrakSense)
@@ -21,6 +23,8 @@ import {
  * - /monitor/ativos         → Lista de Ativos HVAC
  * - /monitor/regras         → Configuração de Regras
  * - /monitor/relatorios     → Relatórios de Monitoramento
+ * - /monitor/profile        → Perfil do Usuário
+ * - /monitor/admin/team     → Gerenciamento de Equipe
  */
 export function MonitorRoutes() {
   return (
@@ -45,6 +49,12 @@ export function MonitorRoutes() {
 
       {/* Relatórios */}
       <Route path="/relatorios" element={<ReportsPage />} />
+      
+      {/* Perfil do usuário (compartilhado) */}
+      <Route path="/profile" element={<ProfilePage />} />
+      
+      {/* Gerenciamento de equipe (compartilhado) */}
+      <Route path="/admin/team" element={<TeamPage />} />
       
       {/* Fallback - redireciona para dashboard */}
       <Route path="/*" element={<Navigate to="/monitor" replace />} />

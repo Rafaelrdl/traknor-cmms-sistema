@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
@@ -24,7 +24,12 @@ export function Layout({ children }: LayoutProps) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const location = useLocation();
   const { shouldShow, handleComplete, handleSkip } = useFirstTimeGuide();
+  
+  // Detect current module based on URL
+  const isMonitorModule = location.pathname.startsWith('/monitor');
+  const modulePrefix = isMonitorModule ? '/monitor' : '/cmms';
   
   // Initialize automatic work order generation
   useAutomaticWorkOrderGeneration();
@@ -95,14 +100,14 @@ export function Layout({ children }: LayoutProps) {
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link to="/cmms/profile" className="w-full">
+                  <Link to={`${modulePrefix}/profile`} className="w-full">
                     <User className="mr-2 h-4 w-4" />
                     <span>Perfil</span>
                   </Link>
                 </DropdownMenuItem>
                 <IfCan action="manage" subject="user">
                   <DropdownMenuItem asChild>
-                    <Link to="/cmms/admin/team" className="w-full">
+                    <Link to={`${modulePrefix}/admin/team`} className="w-full">
                       <Users className="mr-2 h-4 w-4" />
                       <span>Equipe</span>
                     </Link>

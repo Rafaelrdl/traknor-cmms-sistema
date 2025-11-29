@@ -66,6 +66,13 @@ export const alertsService = {
   },
 
   /**
+   * Exclui um alerta
+   */
+  async delete(id: number): Promise<void> {
+    await api.delete(`/alerts/alerts/${id}/`);
+  },
+
+  /**
    * Vincula uma ordem de serviço ao alerta e o reconhece automaticamente
    */
   async linkWorkOrder(alertId: number, workOrderId: number): Promise<LinkWorkOrderResponse> {

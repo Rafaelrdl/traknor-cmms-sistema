@@ -52,14 +52,16 @@ import {
   User,
   FileText,
   Activity,
-  Target
+  Target,
+  Trash2
 } from 'lucide-react';
 import { 
   useAlertsQuery, 
   useAlertsStatisticsQuery,
   useAcknowledgeAlertMutation,
   useResolveAlertMutation,
-  useLinkWorkOrderMutation
+  useLinkWorkOrderMutation,
+  useDeleteAlertMutation
 } from '../hooks';
 import { useCreateWorkOrder } from '@/hooks/useWorkOrdersQuery';
 import { useEquipments } from '@/hooks/useEquipmentQuery';
@@ -140,6 +142,7 @@ export function AlertsList() {
   const resolveMutation = useResolveAlertMutation();
   const linkWorkOrderMutation = useLinkWorkOrderMutation();
   const createWorkOrderMutation = useCreateWorkOrder();
+  const deleteAlertMutation = useDeleteAlertMutation();
 
   // Filtra alertas localmente (para busca por texto e severidade)
   const filteredAlerts = useMemo(() => {
@@ -174,6 +177,13 @@ export function AlertsList() {
   // Handler para resolver um alerta
   const handleResolve = (alert: Alert) => {
     resolveMutation.mutate({ id: alert.id });
+  };
+
+  // Handler para excluir um alerta
+  const handleDelete = (alert: Alert) => {
+    if (window.confirm(`Tem certeza que deseja excluir o alerta "${alert.rule_name || 'Alerta'}"?`)) {
+      deleteAlertMutation.mutate(alert.id);
+    }
   };
 
   // Handler para criar OS a partir de um alerta
@@ -535,6 +545,16 @@ export function AlertsList() {
                           onClick={() => handleViewDetails(alert)}
                         >
                           <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          title="Excluir alerta"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => handleDelete(alert)}
+                          disabled={deleteAlertMutation.isPending}
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
