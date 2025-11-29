@@ -314,7 +314,7 @@ export function WorkOrderModal({ isOpen, onClose, onSave }: WorkOrderModalProps)
             </SelectTrigger>
             <SelectContent>
               {technicians.map((tech) => (
-                <SelectItem key={tech.id} value={tech.user.full_name || `${tech.user.first_name} ${tech.user.last_name}`.trim()}>
+                <SelectItem key={tech.id} value={String(tech.user.id)}>
                   {tech.user.full_name || `${tech.user.first_name} ${tech.user.last_name}`.trim()}
                 </SelectItem>
               ))}
@@ -402,7 +402,11 @@ export function WorkOrderModal({ isOpen, onClose, onSave }: WorkOrderModalProps)
             {formData.assignedTo && (
               <div>
                 <span className="text-sm font-medium">Responsável:</span>
-                <p className="text-sm text-muted-foreground">{formData.assignedTo}</p>
+                <p className="text-sm text-muted-foreground">
+                  {technicians.find(t => String(t.user.id) === formData.assignedTo)?.user.full_name || 
+                   technicians.find(t => String(t.user.id) === formData.assignedTo)?.user.first_name || 
+                   formData.assignedTo}
+                </p>
               </div>
             )}
 

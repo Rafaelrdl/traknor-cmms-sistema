@@ -385,7 +385,7 @@ export function WorkOrderList({
               <TableCell>
                 <div className="flex items-center gap-2">
                   <TooltipProvider>
-                    {wo.status === 'OPEN' && onStartWorkOrder && (
+                    {wo.status === 'OPEN' && !wo.assignedTo && onStartWorkOrder && (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button 
