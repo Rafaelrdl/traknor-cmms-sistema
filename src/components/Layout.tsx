@@ -14,7 +14,6 @@ import { useAutomaticWorkOrderGeneration } from '@/hooks/useWorkOrderGeneration'
 import { ProductSwitcher } from '@/components/ProductSwitcher';
 import { logout as logoutService } from '@/services/authService';
 import { AlertsNotificationDropdown } from '@/components/AlertsNotificationDropdown';
-import { SLAConfigModal } from '@/components/SLAConfigModal';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -23,7 +22,6 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const { getCurrentUser } = useUsers();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-  const [isSLAModalOpen, setIsSLAModalOpen] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
@@ -115,9 +113,11 @@ export function Layout({ children }: LayoutProps) {
                     </Link>
                   </DropdownMenuItem>
                 </IfCan>
-                <DropdownMenuItem onClick={() => setIsSLAModalOpen(true)}>
-                  <Settings2 className="mr-2 h-4 w-4" />
-                  <span>Configurar SLA</span>
+                <DropdownMenuItem asChild>
+                  <Link to={`${modulePrefix}/settings`} className="w-full">
+                    <Settings2 className="mr-2 h-4 w-4" />
+                    <span>Configuração</span>
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
@@ -142,9 +142,6 @@ export function Layout({ children }: LayoutProps) {
       
       {/* Tour Hint - contextual help */}
       <TourHint />
-      
-      {/* SLA Config Modal */}
-      <SLAConfigModal open={isSLAModalOpen} onOpenChange={setIsSLAModalOpen} />
     </div>
   );
 }

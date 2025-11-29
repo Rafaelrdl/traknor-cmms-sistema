@@ -11,6 +11,7 @@ import {
 } from './pages';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { TeamPage } from '@/pages/TeamPage';
+import { SettingsPage } from '@/pages/SettingsPage';
 
 /**
  * Rotas do módulo Monitor (TrakSense)
@@ -62,6 +63,9 @@ export function MonitorRoutes() {
       
       {/* Gerenciamento de equipe (compartilhado) */}
       <Route path="/admin/team" element={<TeamPage />} />
+      
+      {/* Configurações */}
+      <Route path="/settings" element={<SettingsPage />} />
       
       {/* Fallback - redireciona para dashboard */}
       <Route path="/*" element={<Navigate to="/monitor" replace />} />

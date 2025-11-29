@@ -14,6 +14,7 @@ import { TeamPage } from '@/pages/TeamPage';
 import { HelpCenterPage } from '@/pages/HelpCenterPage';
 import { HelpContentViewPage } from '@/pages/HelpContentViewPage';
 import { PlansTestingPage } from '@/pages/PlansTestingPage';
+import { SettingsPage } from '@/pages/SettingsPage';
 
 /**
  * Rotas do módulo CMMS (TrakNor)
@@ -38,6 +39,7 @@ export function CmmsRoutes() {
       <Route path="reports" element={<ReportsPage />} />
       <Route path="profile" element={<ProfilePage />} />
       <Route path="admin/team" element={<TeamPage />} />
+      <Route path="settings" element={<SettingsPage />} />
       <Route path="help" element={<HelpCenterPage />} />
       <Route path="help/:contentId" element={<HelpContentViewPage />} />
       <Route path="plans-testing" element={<PlansTestingPage />} />
