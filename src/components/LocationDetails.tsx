@@ -1,10 +1,23 @@
 // Importações dos componentes de UI e ícones
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Building2, MapPin, Users, Edit } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Building2, MapPin, Users, Edit, Trash2 } from 'lucide-react';
 import { useLocation as useLocationContext } from '@/contexts/LocationContext';
 import { IfCanEdit } from '@/components/auth/IfCan';
+import { useDeleteCompany, useDeleteSector, useDeleteSubsection } from '@/hooks/useLocationsQuery';
+import { toast } from 'sonner';
 import type { Company, Sector, SubSection } from '@/types';
 
 // Interface para as props do componente
@@ -18,7 +31,52 @@ interface LocationDetailsProps {
  */
 export function LocationDetails({ onEdit }: LocationDetailsProps) {
   // Obtém o nó selecionado do contexto de localização
-  const { selectedNode } = useLocationContext();
+  const { selectedNode, setSelectedNode } = useLocationContext();
+  
+  // Estado para controlar o dialog de confirmação de exclusão
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Mutations para deletar localizações
+  const deleteCompanyMutation = useDeleteCompany();
+  const deleteSectorMutation = useDeleteSector();
+  const deleteSubsectionMutation = useDeleteSubsection();
+
+  /**
+   * Função para excluir a localização selecionada
+   */
+  const handleDelete = async () => {
+    if (!selectedNode) return;
+    
+    // O ID real está no objeto data, não no nó da árvore
+    const realId = selectedNode.data.id;
+    
+    setIsDeleting(true);
+    try {
+      switch (selectedNode.type) {
+        case 'company':
+          await deleteCompanyMutation.mutateAsync(realId);
+          break;
+        case 'sector':
+          await deleteSectorMutation.mutateAsync(realId);
+          break;
+        case 'subsection':
+          await deleteSubsectionMutation.mutateAsync(realId);
+          break;
+      }
+      
+      toast.success(`${getTypeLabel()} "${selectedNode.name}" foi excluído.`);
+      
+      // Limpa a seleção após excluir
+      setSelectedNode(null);
+    } catch (error) {
+      console.error('Erro ao excluir:', error);
+      toast.error('Não foi possível excluir. Verifique se não há itens vinculados.');
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+    }
+  };
 
   // Estado vazio: quando nenhuma localização foi selecionada
   if (!selectedNode) {
@@ -259,6 +317,20 @@ export function LocationDetails({ onEdit }: LocationDetailsProps) {
               Editar
             </Button>
           </IfCanEdit>
+          
+          {/* Botão Excluir localização */}
+          <IfCanEdit subject="asset">
+            <Button 
+              variant="outline" 
+              onClick={() => setDeleteDialogOpen(true)}
+              className="btn-press flex items-center gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+              aria-label="Excluir localização"
+              data-testid="asset-delete"
+            >
+              <Trash2 className="h-4 w-4" />
+              Excluir
+            </Button>
+          </IfCanEdit>
         </div>
       </div>
 
@@ -266,6 +338,39 @@ export function LocationDetails({ onEdit }: LocationDetailsProps) {
       {selectedNode.type === 'company' && renderCompanyDetails(selectedNode.data as Company)}
       {selectedNode.type === 'sector' && renderSectorDetails(selectedNode.data as Sector)}
       {selectedNode.type === 'subsection' && renderSubSectionDetails(selectedNode.data as SubSection)}
+
+      {/* Dialog de confirmação de exclusão */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir {getTypeLabel().toLowerCase()} <strong>"{selectedNode.name}"</strong>?
+              {selectedNode.type === 'company' && (
+                <span className="block mt-2 text-destructive">
+                  Atenção: Todos os setores e subsetores vinculados também serão excluídos.
+                </span>
+              )}
+              {selectedNode.type === 'sector' && (
+                <span className="block mt-2 text-destructive">
+                  Atenção: Todos os subsetores vinculados também serão excluídos.
+                </span>
+              )}
+              <span className="block mt-2">Esta ação não pode ser desfeita.</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,25 +11,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarIcon, Save, ChevronLeft, ChevronRight, Plus, Minus, X } from 'lucide-react';
+import { CalendarIcon, Save, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useEquipments } from '@/hooks/useEquipmentQuery';
-import { useStockItems } from '@/hooks/useInventoryQuery';
-import type { WorkOrder, StockItem } from '@/types';
-import type { ApiInventoryItem } from '@/types/api';
-
-// Mapper
-const mapToStockItem = (item: ApiInventoryItem): StockItem => ({
-  id: String(item.id),
-  code: item.code,
-  description: item.name,
-  unit: item.unit_display || item.unit,
-  quantity: item.quantity,
-  minimum: item.min_quantity,
-  maximum: item.max_quantity ?? 0
-});
+import { useTechnicians } from '@/hooks/useTeamQuery';
+import { useCompanies, useSectors, useSubsections } from '@/hooks/useLocationsQuery';
+import type { WorkOrder } from '@/types';
 
 interface WorkOrderModalProps {
   isOpen: boolean;
@@ -37,21 +26,45 @@ interface WorkOrderModalProps {
   onSave: (workOrder: Omit<WorkOrder, 'id' | 'number'>) => void;
 }
 
-interface StockItemSelection {
-  stockItemId: string;
-  quantity: number;
-  stockItem: StockItem;
-}
-
-type Step = 'basic' | 'materials' | 'preview';
+type Step = 'basic' | 'preview';
 
 export function WorkOrderModal({ isOpen, onClose, onSave }: WorkOrderModalProps) {
   const { data: equipment = [] } = useEquipments();
-  const { data: stockItemsData } = useStockItems();
-  const stockItems = (stockItemsData?.results || []).map(mapToStockItem);
+  const { data: technicians = [] } = useTechnicians();
+  const { data: companies = [] } = useCompanies();
   
   const [currentStep, setCurrentStep] = useState<Step>('basic');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Location filters state
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
+  const [selectedSectorId, setSelectedSectorId] = useState<string>('');
+  const [selectedSubsectionId, setSelectedSubsectionId] = useState<string>('');
+
+  // Fetch sectors and subsections based on selection
+  const { data: sectors = [] } = useSectors(selectedCompanyId || undefined);
+  const { data: subsections = [] } = useSubsections(selectedSectorId || undefined);
+
+  // Filter equipment based on selected location
+  const filteredEquipment = useMemo(() => {
+    let filtered = equipment;
+
+    // Equipamentos podem ter companyId, sectorId ou subSectionId
+    if (selectedSubsectionId) {
+      filtered = filtered.filter(eq => eq.subSectionId === selectedSubsectionId);
+    } else if (selectedSectorId) {
+      filtered = filtered.filter(eq => eq.sectorId === selectedSectorId);
+    } else if (selectedCompanyId) {
+      // Filtrar por empresa - usando companyId direto ou via setores
+      const sectorIds = sectors.map(s => s.id);
+      filtered = filtered.filter(eq => 
+        eq.companyId === selectedCompanyId || 
+        (eq.sectorId && sectorIds.includes(eq.sectorId))
+      );
+    }
+
+    return filtered;
+  }, [equipment, selectedCompanyId, selectedSectorId, selectedSubsectionId, sectors]);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -64,8 +77,6 @@ export function WorkOrderModal({ isOpen, onClose, onSave }: WorkOrderModalProps)
     status: 'OPEN' as WorkOrder['status']
   });
 
-  const [selectedStockItems, setSelectedStockItems] = useState<StockItemSelection[]>([]);
-
   const resetForm = () => {
     setFormData({
       equipmentId: '',
@@ -76,7 +87,9 @@ export function WorkOrderModal({ isOpen, onClose, onSave }: WorkOrderModalProps)
       description: '',
       status: 'OPEN'
     });
-    setSelectedStockItems([]);
+    setSelectedCompanyId('');
+    setSelectedSectorId('');
+    setSelectedSubsectionId('');
     setCurrentStep('basic');
   };
 
@@ -89,17 +102,7 @@ export function WorkOrderModal({ isOpen, onClose, onSave }: WorkOrderModalProps)
     setIsLoading(true);
     
     try {
-      const workOrderData = {
-        ...formData,
-        stockItems: selectedStockItems.map(item => ({
-          id: `temp-${Date.now()}-${item.stockItemId}`,
-          workOrderId: '',
-          stockItemId: item.stockItemId,
-          quantity: item.quantity
-        }))
-      };
-
-      onSave(workOrderData);
+      onSave(formData);
       handleClose();
     } catch (error) {
       console.error('Error saving work order:', error);
@@ -108,39 +111,10 @@ export function WorkOrderModal({ isOpen, onClose, onSave }: WorkOrderModalProps)
     }
   };
 
-  const addStockItem = (stockItemId: string) => {
-    const stockItem = stockItems.find(si => si.id === stockItemId);
-    if (!stockItem) return;
-
-    const newStockItem: StockItemSelection = {
-      stockItemId,
-      quantity: 1,
-      stockItem
-    };
-
-    setSelectedStockItems(prev => [...prev, newStockItem]);
-  };
-
-  const updateStockItemQuantity = (stockItemId: string, quantity: number) => {
-    setSelectedStockItems(prev => 
-      prev.map(item => 
-        item.stockItemId === stockItemId ? { ...item, quantity: Math.max(0, quantity) } : item
-      )
-    );
-  };
-
-  const removeStockItem = (stockItemId: string) => {
-    setSelectedStockItems(prev => prev.filter(item => item.stockItemId !== stockItemId));
-  };
-
-  const availableStockItems = stockItems.filter(
-    si => !selectedStockItems.some(selected => selected.stockItemId === si.id)
-  );
-
   const selectedEquipment = equipment.find(eq => eq.id === formData.equipmentId);
 
   const isBasicStepValid = () => {
-    return formData.equipmentId && formData.description && formData.scheduledDate;
+    return formData.equipmentId && formData.description;
   };
 
   const canGoNext = () => {
@@ -151,6 +125,80 @@ export function WorkOrderModal({ isOpen, onClose, onSave }: WorkOrderModalProps)
   const renderBasicStep = () => (
     <div className="space-y-6">
       <div className="space-y-4">
+        {/* Location filters */}
+        <div className="space-y-2">
+          <Label htmlFor="company">Empresa</Label>
+          <Select
+            value={selectedCompanyId}
+            onValueChange={(value) => {
+              setSelectedCompanyId(value);
+              setSelectedSectorId('');
+              setSelectedSubsectionId('');
+              setFormData(prev => ({ ...prev, equipmentId: '' }));
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione..." />
+            </SelectTrigger>
+            <SelectContent>
+              {companies.map(company => (
+                <SelectItem key={company.id} value={company.id}>
+                  {company.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="sector">Setor</Label>
+            <Select
+              value={selectedSectorId}
+              onValueChange={(value) => {
+                setSelectedSectorId(value);
+                setSelectedSubsectionId('');
+                setFormData(prev => ({ ...prev, equipmentId: '' }));
+              }}
+              disabled={!selectedCompanyId}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={selectedCompanyId ? "Selecione..." : "Selecione empresa"} />
+              </SelectTrigger>
+              <SelectContent>
+                {sectors.map(sector => (
+                  <SelectItem key={sector.id} value={sector.id}>
+                    {sector.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="subsection">Subsetor</Label>
+            <Select
+              value={selectedSubsectionId}
+              onValueChange={(value) => {
+                setSelectedSubsectionId(value);
+                setFormData(prev => ({ ...prev, equipmentId: '' }));
+              }}
+              disabled={!selectedSectorId}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={selectedSectorId ? "Selecione..." : "Selecione setor"} />
+              </SelectTrigger>
+              <SelectContent>
+                {subsections.map(sub => (
+                  <SelectItem key={sub.id} value={sub.id}>
+                    {sub.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="equipmentId">Equipamento *</Label>
           <Select
@@ -163,13 +211,18 @@ export function WorkOrderModal({ isOpen, onClose, onSave }: WorkOrderModalProps)
               <SelectValue placeholder="Selecione um equipamento" />
             </SelectTrigger>
             <SelectContent>
-              {equipment.map(eq => (
+              {filteredEquipment.map(eq => (
                 <SelectItem key={eq.id} value={eq.id}>
                   {eq.tag} - {eq.brand} {eq.model}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          {filteredEquipment.length === 0 && (selectedCompanyId || selectedSectorId || selectedSubsectionId) && (
+            <p className="text-sm text-muted-foreground">
+              Nenhum equipamento encontrado para esta localização
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -213,7 +266,7 @@ export function WorkOrderModal({ isOpen, onClose, onSave }: WorkOrderModalProps)
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="scheduledDate">Data Agendada *</Label>
+          <Label htmlFor="scheduledDate">Data Agendada</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -250,14 +303,23 @@ export function WorkOrderModal({ isOpen, onClose, onSave }: WorkOrderModalProps)
 
         <div className="space-y-2">
           <Label htmlFor="assignedTo">Responsável</Label>
-          <Input
-            id="assignedTo"
+          <Select
             value={formData.assignedTo}
-            onChange={(e) => 
-              setFormData(prev => ({ ...prev, assignedTo: e.target.value }))
+            onValueChange={(value) => 
+              setFormData(prev => ({ ...prev, assignedTo: value }))
             }
-            placeholder="Nome do responsável"
-          />
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione um responsável" />
+            </SelectTrigger>
+            <SelectContent>
+              {technicians.map((tech) => (
+                <SelectItem key={tech.id} value={tech.user.full_name || `${tech.user.first_name} ${tech.user.last_name}`.trim()}>
+                  {tech.user.full_name || `${tech.user.first_name} ${tech.user.last_name}`.trim()}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">
@@ -276,82 +338,9 @@ export function WorkOrderModal({ isOpen, onClose, onSave }: WorkOrderModalProps)
     </div>
   );
 
-  const renderMaterialsStep = () => (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h4 className="font-medium">Materiais Necessários</h4>
-          {availableStockItems.length > 0 && (
-            <Select onValueChange={addStockItem}>
-              <SelectTrigger className="w-64">
-                <SelectValue placeholder="Adicionar material" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableStockItems.map(item => (
-                  <SelectItem key={item.id} value={item.id}>
-                    {item.code} - {item.description}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        </div>
-
-        <div className="space-y-3 max-h-80 overflow-y-auto">
-          {selectedStockItems.map(item => (
-            <div key={item.stockItemId} className="flex items-center gap-3 p-3 border rounded-lg">
-              <div className="flex-1">
-                <div className="font-medium text-sm">{item.stockItem.code}</div>
-                <div className="text-xs text-muted-foreground">
-                  {item.stockItem.description}
-                </div>
-                <Badge variant="outline" className="text-xs mt-1">
-                  Disponível: {item.stockItem.quantity} {item.stockItem.unit}
-                </Badge>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => updateStockItemQuantity(item.stockItemId, item.quantity - 1)}
-                  disabled={item.quantity <= 0}
-                  className="h-8 w-8 p-0"
-                >
-                  <Minus className="h-3 w-3" />
-                </Button>
-                <span className="w-12 text-center text-sm">{item.quantity}</span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => updateStockItemQuantity(item.stockItemId, item.quantity + 1)}
-                  className="h-8 w-8 p-0"
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeStockItem(item.stockItemId)}
-                  className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-          ))}
-          
-          {selectedStockItems.length === 0 && (
-            <div className="text-center text-muted-foreground text-sm py-8 border-2 border-dashed rounded-lg">
-              Nenhum material selecionado
-              <p className="text-xs mt-1">
-                Você pode adicionar materiais posteriormente
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+  const selectedCompany = companies.find(c => c.id === selectedCompanyId);
+  const selectedSector = sectors.find(s => s.id === selectedSectorId);
+  const selectedSubsection = subsections.find(s => s.id === selectedSubsectionId);
 
   const renderPreviewStep = () => (
     <div className="space-y-6">
@@ -361,6 +350,18 @@ export function WorkOrderModal({ isOpen, onClose, onSave }: WorkOrderModalProps)
             <CardTitle className="text-base">Resumo da Ordem de Serviço</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Localização */}
+            {(selectedCompany || selectedSector || selectedSubsection) && (
+              <div>
+                <h5 className="font-medium text-sm mb-2">Localização</h5>
+                <div className="text-sm text-muted-foreground">
+                  {[selectedCompany?.name, selectedSector?.name, selectedSubsection?.name]
+                    .filter(Boolean)
+                    .join(' → ')}
+                </div>
+              </div>
+            )}
+
             {selectedEquipment && (
               <div>
                 <h5 className="font-medium text-sm mb-2">Equipamento</h5>
@@ -409,23 +410,6 @@ export function WorkOrderModal({ isOpen, onClose, onSave }: WorkOrderModalProps)
               <span className="text-sm font-medium">Descrição:</span>
               <p className="text-sm text-muted-foreground">{formData.description}</p>
             </div>
-
-            {selectedStockItems.length > 0 && (
-              <>
-                <Separator />
-                <div>
-                  <span className="text-sm font-medium">Materiais ({selectedStockItems.length}):</span>
-                  <div className="space-y-2 mt-2">
-                    {selectedStockItems.map(item => (
-                      <div key={item.stockItemId} className="flex justify-between text-sm">
-                        <span>{item.stockItem.code} - {item.stockItem.description}</span>
-                        <span className="text-muted-foreground">{item.quantity} {item.stockItem.unit}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
           </CardContent>
         </Card>
       </div>
@@ -435,7 +419,6 @@ export function WorkOrderModal({ isOpen, onClose, onSave }: WorkOrderModalProps)
   const getStepTitle = () => {
     switch (currentStep) {
       case 'basic': return 'Informações Básicas';
-      case 'materials': return 'Materiais';
       case 'preview': return 'Revisão';
       default: return '';
     }
@@ -444,7 +427,6 @@ export function WorkOrderModal({ isOpen, onClose, onSave }: WorkOrderModalProps)
   const getStepDescription = () => {
     switch (currentStep) {
       case 'basic': return 'Preencha as informações básicas da ordem de serviço';
-      case 'materials': return 'Selecione os materiais necessários (opcional)';
       case 'preview': return 'Revise as informações antes de salvar';
       default: return '';
     }
@@ -462,25 +444,23 @@ export function WorkOrderModal({ isOpen, onClose, onSave }: WorkOrderModalProps)
 
         {/* Step indicator */}
         <div className="flex items-center gap-2 pb-6">
-          {(['basic', 'materials', 'preview'] as Step[]).map((step, index) => (
+          {(['basic', 'preview'] as Step[]).map((step, index) => (
             <div key={step} className="flex items-center">
               <div
                 className={cn(
                   "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
                   currentStep === step && "bg-primary text-primary-foreground",
-                  (currentStep === 'materials' && step === 'basic') ||
-                  (currentStep === 'preview' && (step === 'basic' || step === 'materials'))
+                  (currentStep === 'preview' && step === 'basic')
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground"
                 )}
               >
                 {index + 1}
               </div>
-              {index < 2 && (
+              {index < 1 && (
                 <div className={cn(
                   "w-12 h-0.5 mx-2",
-                  (currentStep === 'materials' && step === 'basic') ||
-                  (currentStep === 'preview' && step === 'materials')
+                  currentStep === 'preview'
                     ? "bg-primary"
                     : "bg-muted"
                 )} />
@@ -491,7 +471,6 @@ export function WorkOrderModal({ isOpen, onClose, onSave }: WorkOrderModalProps)
 
         <ScrollArea className="max-h-96">
           {currentStep === 'basic' && renderBasicStep()}
-          {currentStep === 'materials' && renderMaterialsStep()}
           {currentStep === 'preview' && renderPreviewStep()}
         </ScrollArea>
 
@@ -502,8 +481,7 @@ export function WorkOrderModal({ isOpen, onClose, onSave }: WorkOrderModalProps)
               <Button
                 variant="outline"
                 onClick={() => {
-                  if (currentStep === 'materials') setCurrentStep('basic');
-                  if (currentStep === 'preview') setCurrentStep('materials');
+                  if (currentStep === 'preview') setCurrentStep('basic');
                 }}
               >
                 <ChevronLeft className="h-4 w-4 mr-2" />
@@ -525,8 +503,7 @@ export function WorkOrderModal({ isOpen, onClose, onSave }: WorkOrderModalProps)
             ) : (
               <Button
                 onClick={() => {
-                  if (currentStep === 'basic') setCurrentStep('materials');
-                  if (currentStep === 'materials') setCurrentStep('preview');
+                  if (currentStep === 'basic') setCurrentStep('preview');
                 }}
                 disabled={!canGoNext()}
               >

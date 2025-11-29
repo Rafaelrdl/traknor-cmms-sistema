@@ -202,7 +202,6 @@ export function WorkOrderEditModal({
     if (!formData.priority) newErrors.priority = 'Prioridade é obrigatória';
     if (!formData.description) newErrors.description = 'Descrição é obrigatória';
     if (!formData.equipmentId) newErrors.equipmentId = 'Equipamento é obrigatório';
-    if (!formData.scheduledDate) newErrors.scheduledDate = 'Data programada é obrigatória';
     if (!formData.status) newErrors.status = 'Status é obrigatório';
     
     // Validações específicas para status concluído
@@ -616,7 +615,7 @@ export function WorkOrderEditModal({
                               <div className="space-y-2">
                                 <Label htmlFor="scheduledDate" className="text-xs font-medium flex items-center gap-1">
                                   <Calendar className="h-3 w-3" />
-                                  Data Programada <span className="text-destructive">*</span>
+                                  Data Programada
                                 </Label>
                                 <DatePicker
                                   date={formData.scheduledDate ? new Date(formData.scheduledDate) : undefined}
