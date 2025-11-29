@@ -1,7 +1,7 @@
 // Importações dos tipos e dados necessários
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useMemo } from 'react';
 import type { LocationNode } from '@/types';
-import { MOCK_COMPANIES, MOCK_SECTORS, MOCK_SUBSECTIONS } from '@/data/mockData';
+import { useCompanies, useSectors, useSubsections } from '@/hooks/useLocationsQuery';
 
 /**
  * Interface que define o tipo do contexto de localização
@@ -31,6 +31,11 @@ interface LocationProviderProps {
  * Gerencia todo o estado relacionado ao menu hierárquico de locais
  */
 export function LocationProvider({ children }: LocationProviderProps) {
+  // Dados reais da API via React Query
+  const { data: companies = [] } = useCompanies();
+  const { data: sectors = [] } = useSectors();
+  const { data: subsections = [] } = useSubsections();
+
   // Estados principais do contexto
   const [selectedNode, setSelectedNode] = useState<LocationNode | null>(null);  // Nó selecionado
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());   // Nós expandidos
@@ -42,17 +47,17 @@ export function LocationProvider({ children }: LocationProviderProps) {
    * Usa IDs únicos para evitar conflitos de seleção
    * @returns Array de nós raiz (empresas) com seus filhos (setores > subsetores)
    */
-  const buildTree = (): LocationNode[] => {
-    return MOCK_COMPANIES.map(company => {
+  const tree = useMemo((): LocationNode[] => {
+    return companies.map(company => {
       // Busca todos os setores desta empresa
-      const companySectors = MOCK_SECTORS.filter(sector => sector.companyId === company.id);
+      const companySectors = sectors.filter(sector => sector.companyId === company.id);
       
       // Constrói os nós dos setores
       const sectorNodes: LocationNode[] = companySectors.map(sector => {
         const sectorUniqueId = `company-${company.id}-sector-${sector.id}`;
         
         // Busca todas as subseções deste setor
-        const sectorSubSections = MOCK_SUBSECTIONS.filter(subSection => subSection.sectorId === sector.id);
+        const sectorSubSections = subsections.filter(subSection => subSection.sectorId === sector.id);
         
         // Constrói os nós das subseções (folhas da árvore)
         const subSectionNodes: LocationNode[] = sectorSubSections.map(subSection => ({
@@ -84,10 +89,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
         children: sectorNodes
       };
     });
-  };
-
-  // Constrói a árvore completa
-  const tree = buildTree();
+  }, [companies, sectors, subsections]);
 
   /**
    * Função auxiliar para filtrar a árvore com base no termo de busca

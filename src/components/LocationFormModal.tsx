@@ -66,10 +66,6 @@ export function LocationFormModal({
       state: '',       // Estado
       fullAddress: ''  // Endereço completo
     },
-    responsible: '',   // Responsável
-    role: '',         // Cargo do responsável
-    phone: '',        // Telefone
-    email: '',        // Email
     totalArea: 0,     // Área total em m²
     occupants: 0,     // Número de ocupantes
     hvacUnits: 0,     // Unidades HVAC
@@ -124,10 +120,6 @@ export function LocationFormModal({
           segment: '',
           cnpj: '',
           address: { zip: '', city: '', state: '', fullAddress: '' },
-          responsible: '',
-          role: '',
-          phone: '',
-          email: '',
           totalArea: 0,
           occupants: 0,
           hvacUnits: 0,
@@ -368,69 +360,6 @@ export function LocationFormModal({
               }))}
               placeholder="Estado"
               className="h-10"
-            />
-          </div>
-        </div>
-
-        {/* Responsável e Cargo */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="responsible" className="mb-2 block">
-              Responsável *
-              <span className="text-xs text-muted-foreground ml-2 font-normal">
-                Nome do responsável
-              </span>
-            </Label>
-            <Input
-              id="responsible"
-              value={companyForm.responsible}
-              onChange={(e) => setCompanyForm(prev => ({ ...prev, responsible: e.target.value }))}
-              placeholder="Ex: João Silva"
-              className="h-10"
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="role" className="mb-2 block">
-              Cargo *
-              <span className="text-xs text-muted-foreground ml-2 font-normal">
-                Função do responsável
-              </span>
-            </Label>
-            <Input
-              id="role"
-              value={companyForm.role}
-              onChange={(e) => setCompanyForm(prev => ({ ...prev, role: e.target.value }))}
-              placeholder="Ex: Gerente Geral"
-              className="h-10"
-              required
-            />
-          </div>
-        </div>
-
-        {/* Telefone e Email */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="phone" className="mb-2 block">Telefone *</Label>
-            <Input
-              id="phone"
-              value={companyForm.phone}
-              onChange={(e) => setCompanyForm(prev => ({ ...prev, phone: e.target.value }))}
-              placeholder="(11) 99999-9999"
-              className="h-10"
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="email" className="mb-2 block">Email *</Label>
-            <Input
-              id="email"
-              type="email"
-              value={companyForm.email}
-              onChange={(e) => setCompanyForm(prev => ({ ...prev, email: e.target.value }))}
-              placeholder="email@empresa.com"
-              className="h-10"
-              required
             />
           </div>
         </div>
