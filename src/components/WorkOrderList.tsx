@@ -392,13 +392,13 @@ export function WorkOrderList({
                             variant="outline" 
                             size="sm"
                             onClick={() => handleStartWorkOrderClick(wo)}
-                            aria-label={`Executar ordem de serviço ${wo.number}`}
+                            aria-label={`Atribuir ordem de serviço ${wo.number}`}
                           >
-                            <Play className="h-4 w-4" />
+                            <UserPlus className="h-4 w-4" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Executar OS</p>
+                          <p>Atribuir OS</p>
                         </TooltipContent>
                       </Tooltip>
                     )}
@@ -450,26 +450,26 @@ export function WorkOrderList({
       </TableBody>
     </Table>
 
-    {/* Modal para designar técnico ao executar OS */}
+    {/* Modal para designar técnico à OS */}
     <Dialog open={isAssignModalOpen} onOpenChange={setIsAssignModalOpen}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5" />
-            Executar Ordem de Serviço
+            Atribuir Ordem de Serviço
           </DialogTitle>
           <DialogDescription>
             {pendingWorkOrder && (
               <span>OS: <strong>{pendingWorkOrder.number}</strong></span>
             )}
             <br />
-            Selecione um técnico para executar a ordem de serviço ou atribua a si mesmo.
+            Selecione um técnico para atribuir a ordem de serviço.
           </DialogDescription>
         </DialogHeader>
         
         <div className="py-4 space-y-4">
           <div>
-            <label className="text-sm font-medium mb-2 block">Técnico Executor</label>
+            <label className="text-sm font-medium mb-2 block">Técnico Responsável</label>
             <Select value={selectedTechnicianId} onValueChange={setSelectedTechnicianId}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione um técnico" />
@@ -508,8 +508,8 @@ export function WorkOrderList({
             Cancelar
           </Button>
           <Button onClick={confirmStartWorkOrder}>
-            <Play className="h-4 w-4 mr-1" />
-            Executar OS
+            <UserPlus className="h-4 w-4 mr-1" />
+            Atribuir OS
           </Button>
         </DialogFooter>
       </DialogContent>
