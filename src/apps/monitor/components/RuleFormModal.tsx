@@ -91,7 +91,7 @@ const NOTIFICATION_ACTIONS: { value: NotificationAction; label: string; descript
 ];
 
 // Template padrão de mensagem
-const DEFAULT_MESSAGE_TEMPLATE = "{sensor} está {operator} {threshold}{unit} (valor atual: {value}{unit})";
+const DEFAULT_MESSAGE_TEMPLATE = "{variavel} está {operator} {threshold}{unit} (valor atual: {value}{unit})";
 
 // Interface estendida para parâmetros com deviceId
 interface RuleParameterWithDevice extends RuleParameter {
@@ -484,12 +484,12 @@ export function RuleFormModal({ open, onOpenChange, editingRule }: RuleFormModal
                     </CardHeader>
                     <CardContent className="space-y-4 p-4">
                       
-                      {/* Dispositivo (Sensor) e Variável */}
+                      {/* Dispositivo e Variável */}
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-2">
                           <Label className="text-xs flex items-center gap-1">
                             <Cpu className="w-3 h-3" />
-                            Dispositivo (Sensor) <span className="text-destructive">*</span>
+                            Dispositivo <span className="text-destructive">*</span>
                           </Label>
                           <Select
                             value={param.deviceId ? String(param.deviceId) : ''}
@@ -642,13 +642,13 @@ export function RuleFormModal({ open, onOpenChange, editingRule }: RuleFormModal
                           Mensagem do Alerta
                         </Label>
                         <Textarea
-                          placeholder="Ex: {sensor} ultrapassou o limite de {threshold}"
+                          placeholder="Ex: {variavel} ultrapassou o limite de {threshold}"
                           value={param.message_template}
                           onChange={(e) => updateParameter(index, 'message_template', e.target.value)}
                           rows={2}
                         />
                         <p className="text-[10px] text-muted-foreground">
-                          Variáveis: {'{sensor}'}, {'{value}'}, {'{threshold}'}, {'{operator}'}, {'{unit}'}
+                          Variáveis: {'{variavel}'}, {'{value}'}, {'{threshold}'}, {'{operator}'}, {'{unit}'}
                         </p>
                       </div>
 

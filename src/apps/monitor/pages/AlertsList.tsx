@@ -82,6 +82,14 @@ const formatDateTime = (dateString: string | null): string => {
   }
 };
 
+/**
+ * Formata número com no máximo 2 casas decimais
+ */
+const formatNumber = (value: number | null): string => {
+  if (value === null || value === undefined) return '-';
+  return Number(value).toFixed(2).replace(/\.?0+$/, '') || '0';
+};
+
 export function AlertsList() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
@@ -333,7 +341,7 @@ export function AlertsList() {
                     <TableCell>
                       <span className="text-sm">
                         {alert.parameter_value !== null 
-                          ? `${alert.parameter_value}${alert.threshold ? ` (limite: ${alert.threshold})` : ''}`
+                          ? `${formatNumber(alert.parameter_value)}${alert.threshold ? ` (limite: ${formatNumber(alert.threshold)})` : ''}`
                           : '-'}
                       </span>
                       {alert.parameter_key && (
