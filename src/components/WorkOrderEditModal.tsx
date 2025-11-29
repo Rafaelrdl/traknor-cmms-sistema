@@ -106,8 +106,12 @@ export function WorkOrderEditModal({
   const { data: equipment = [] } = useEquipments();
   const { data: sectors = [] } = useSectors();
   const { data: companies = [] } = useCompanies();
-  const { data: stockItemsData = [] } = useStockItems();
-  const stockItems = stockItemsData.map(mapToStockItem);
+  const { data: stockItemsData } = useStockItems();
+  // Garantir que stockItemsData seja um array (pode vir como objeto paginado em alguns casos)
+  const stockItemsArray = Array.isArray(stockItemsData) 
+    ? stockItemsData 
+    : (stockItemsData as any)?.results || [];
+  const stockItems = stockItemsArray.map(mapToStockItem);
   
   // Lista de técnicos da API
   const { data: technicians = [] } = useTechnicians();
