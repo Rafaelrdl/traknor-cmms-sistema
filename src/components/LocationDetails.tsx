@@ -77,15 +77,15 @@ export function LocationDetails({ onEdit }: LocationDetailsProps) {
           <CardContent className="space-y-3">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Nome da Empresa</label>
-              <p className="font-medium">{company.name}</p>
+              <p className="font-medium">{company.name || '-'}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Segmento</label>
-              <p>{company.segment}</p>
+              <p>{company.segment || '-'}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">CNPJ</label>
-              <p>{company.cnpj}</p>
+              <p>{company.cnpj || '-'}</p>
             </div>
           </CardContent>
         </Card>
@@ -97,16 +97,16 @@ export function LocationDetails({ onEdit }: LocationDetailsProps) {
           <CardContent className="space-y-3">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Endereço Completo</label>
-              <p className="break-words">{company.address.fullAddress}</p>
+              <p className="break-words">{company.address?.fullAddress || '-'}</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Cidade</label>
-                <p>{company.address.city}</p>
+                <p>{company.address?.city || '-'}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Estado</label>
-                <p>{company.address.state}</p>
+                <p>{company.address?.state || '-'}</p>
               </div>
             </div>
           </CardContent>
@@ -119,19 +119,19 @@ export function LocationDetails({ onEdit }: LocationDetailsProps) {
           <CardContent className="space-y-3">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Responsável</label>
-              <p className="font-medium">{company.responsible}</p>
+              <p className="font-medium">{company.responsible || '-'}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Cargo</label>
-              <p>{company.role}</p>
+              <p>{company.role || '-'}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Telefone</label>
-              <p>{company.phone}</p>
+              <p>{company.phone || '-'}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Email</label>
-              <p className="break-all">{company.email}</p>
+              <p className="break-all">{company.email || '-'}</p>
             </div>
           </CardContent>
         </Card>
@@ -144,15 +144,15 @@ export function LocationDetails({ onEdit }: LocationDetailsProps) {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Área Total</label>
-                <p className="font-medium">{company.totalArea.toLocaleString()} m²</p>
+                <p className="font-medium">{company.totalArea?.toLocaleString() || '0'} m²</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Ocupantes</label>
-                <p className="font-medium">{company.occupants}</p>
+                <p className="font-medium">{company.occupants || '0'}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Unidades HVAC</label>
-                <p className="font-medium">{company.hvacUnits}</p>
+                <p className="font-medium">{company.hvacUnits || '0'}</p>
               </div>
             </div>
             {company.notes && (
@@ -183,15 +183,15 @@ export function LocationDetails({ onEdit }: LocationDetailsProps) {
           <CardContent className="space-y-3">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Responsável</label>
-              <p className="font-medium">{sector.responsible}</p>
+              <p className="font-medium">{sector.responsible || '-'}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Telefone</label>
-              <p>{sector.phone}</p>
+              <p>{sector.phone || '-'}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Email</label>
-              <p className="break-all">{sector.email}</p>
+              <p className="break-all">{sector.email || '-'}</p>
             </div>
           </CardContent>
         </Card>
@@ -204,15 +204,15 @@ export function LocationDetails({ onEdit }: LocationDetailsProps) {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Área</label>
-                <p className="font-medium">{sector.area.toLocaleString()} m²</p>
+                <p className="font-medium">{sector.area?.toLocaleString() || '0'} m²</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Ocupantes</label>
-                <p className="font-medium">{sector.occupants}</p>
+                <p className="font-medium">{sector.occupants || '0'}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Unidades HVAC</label>
-                <p className="font-medium">{sector.hvacUnits}</p>
+                <p className="font-medium">{sector.hvacUnits || '0'}</p>
               </div>
             </div>
             {sector.notes && (
@@ -243,15 +243,15 @@ export function LocationDetails({ onEdit }: LocationDetailsProps) {
           <CardContent className="space-y-3">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Responsável</label>
-              <p className="font-medium">{subSection.responsible}</p>
+              <p className="font-medium">{subSection.responsible || '-'}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Telefone</label>
-              <p>{subSection.phone}</p>
+              <p>{subSection.phone || '-'}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Email</label>
-              <p className="break-all">{subSection.email}</p>
+              <p className="break-all">{subSection.email || '-'}</p>
             </div>
           </CardContent>
         </Card>
@@ -264,15 +264,15 @@ export function LocationDetails({ onEdit }: LocationDetailsProps) {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Área</label>
-                <p className="font-medium">{subSection.area.toLocaleString()} m²</p>
+                <p className="font-medium">{subSection.area?.toLocaleString() || '0'} m²</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Ocupantes</label>
-                <p className="font-medium">{subSection.occupants}</p>
+                <p className="font-medium">{subSection.occupants || '0'}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Unidades HVAC</label>
-                <p className="font-medium">{subSection.hvacUnits}</p>
+                <p className="font-medium">{subSection.hvacUnits || '0'}</p>
               </div>
             </div>
             {subSection.notes && (
