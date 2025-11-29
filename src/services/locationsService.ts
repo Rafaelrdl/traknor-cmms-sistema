@@ -21,49 +21,47 @@ import type { ApiCompany, ApiSector, ApiSubsection, ApiLocationNode, PaginatedRe
 const mapCompany = (c: ApiCompany): Company => ({
   id: String(c.id),
   name: c.name,
-  segment: c.segment,
-  cnpj: c.cnpj,
+  segment: c.description || c.segment || '',  // description é usado como segmento no banco
+  cnpj: c.cnpj || '',
   address: {
-    zip: c.zip_code,
-    city: c.city,
-    state: c.state,
-    fullAddress: c.address,
+    zip: c.zip_code || '',
+    city: c.city || '',
+    state: c.state || '',
+    fullAddress: c.address || '',
   },
-  responsible: c.responsible_name,
-  role: c.responsible_role,
-  phone: c.phone,
-  email: c.email,
-  totalArea: c.total_area,
-  occupants: c.occupants,
-  hvacUnits: c.hvac_units,
-  notes: c.notes,
-  createdAt: c.created_at,
+  responsible: c.manager_name || c.responsible_name || '',
+  role: c.responsible_role || '',
+  totalArea: c.total_area || 0,
+  occupants: c.occupants || 0,
+  hvacUnits: c.hvac_units || 0,
+  notes: c.notes || '',
+  createdAt: c.created_at || new Date().toISOString(),
 });
 
 const mapSector = (s: ApiSector): Sector => ({
   id: String(s.id),
   name: s.name,
   companyId: String(s.company),
-  responsible: s.responsible_name,
-  phone: s.phone,
-  email: s.email,
-  area: s.area,
-  occupants: s.occupants,
-  hvacUnits: s.hvac_units,
-  notes: s.notes,
+  responsible: s.supervisor_name || s.responsible_name || '',
+  phone: s.phone || '',
+  email: s.email || '',
+  area: typeof s.area === 'number' ? s.area : (parseInt(String(s.area)) || 0),
+  occupants: s.occupants || 0,
+  hvacUnits: s.hvac_units || 0,
+  notes: s.description || s.notes || '',
 });
 
 const mapSubsection = (ss: ApiSubsection): SubSection => ({
   id: String(ss.id),
   name: ss.name,
   sectorId: String(ss.sector),
-  responsible: ss.responsible_name,
-  phone: ss.phone,
-  email: ss.email,
-  area: ss.area,
-  occupants: ss.occupants,
-  hvacUnits: ss.hvac_units,
-  notes: ss.notes,
+  responsible: ss.responsible_name || '',
+  phone: ss.phone || '',
+  email: ss.email || '',
+  area: typeof ss.area === 'number' ? ss.area : (parseInt(String(ss.area)) || 0),
+  occupants: ss.occupants || 0,
+  hvacUnits: ss.hvac_units || 0,
+  notes: ss.description || ss.notes || '',
 });
 
 const mapLocationNode = (node: ApiLocationNode): LocationNode => ({
@@ -97,11 +95,17 @@ export const locationsService = {
   async createCompany(data: Omit<Company, 'id' | 'createdAt'>): Promise<Company> {
     const payload = {
       name: data.name || '',
-      description: data.segment || data.notes || '',  // Usando segment ou notes como description
+      description: data.segment || '',  // segment é mapeado para description
       cnpj: data.cnpj || '',
       address: data.address?.fullAddress || '',
       city: data.address?.city || '',
       state: data.address?.state || '',
+      zip_code: data.address?.zip || '',
+      responsible_name: data.responsible || '',
+      responsible_role: data.role || '',
+      total_area: data.totalArea || null,
+      occupants: data.occupants || 0,
+      hvac_units: data.hvacUnits || 0,
     };
     console.log('Creating company with payload:', payload);
     try {
@@ -120,16 +124,27 @@ export const locationsService = {
   async updateCompany(id: string, data: Partial<Company>): Promise<Company> {
     const payload: Record<string, unknown> = {};
     
-    if (data.name) payload.name = data.name;
-    if (data.segment) payload.description = data.segment;
-    if (data.cnpj) payload.cnpj = data.cnpj;
+    // Campos básicos
+    if (data.name !== undefined) payload.name = data.name;
+    if (data.segment !== undefined) payload.description = data.segment;  // segment -> description
+    if (data.cnpj !== undefined) payload.cnpj = data.cnpj;
+    
+    // Endereço
     if (data.address) {
-      payload.address = data.address.fullAddress || '';
-      payload.city = data.address.city || '';
-      payload.state = data.address.state || '';
+      if (data.address.fullAddress !== undefined) payload.address = data.address.fullAddress;
+      if (data.address.city !== undefined) payload.city = data.address.city;
+      if (data.address.state !== undefined) payload.state = data.address.state;
+      if (data.address.zip !== undefined) payload.zip_code = data.address.zip;
     }
-    if (data.phone) payload.phone = data.phone;
-    if (data.email) payload.email = data.email;
+    
+    // Dados operacionais
+    if (data.responsible !== undefined) payload.responsible_name = data.responsible;
+    if (data.role !== undefined) payload.responsible_role = data.role;
+    if (data.totalArea !== undefined) payload.total_area = data.totalArea || null;
+    if (data.occupants !== undefined) payload.occupants = data.occupants;
+    if (data.hvacUnits !== undefined) payload.hvac_units = data.hvacUnits;
+    
+    console.log('Updating company with payload:', payload);
 
     const response = await api.patch<ApiCompany>(`/locations/companies/${id}/`, payload);
     return mapCompany(response.data);

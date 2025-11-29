@@ -19,8 +19,6 @@ export interface Company {
   };
   responsible: string;
   role: string;
-  phone: string;
-  email: string;
   totalArea: number;
   occupants: number;
   hvacUnits: number;

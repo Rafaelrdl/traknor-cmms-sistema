@@ -479,24 +479,34 @@ export interface ApiInventoryMovement {
 export interface ApiCompany {
   id: number;
   name: string;
-  segment: string;
-  cnpj: string;
-  address: string;
-  city: string;
-  state: string;
-  zip_code: string;
-  responsible_name: string;
-  responsible_role: string;
-  phone: string;
-  email: string;
-  total_area: number;
-  occupants: number;
-  hvac_units: number;
-  notes: string;
-  sector_count: number;
-  asset_count: number;
-  created_at: string;
-  updated_at: string;
+  code?: string;
+  description?: string;
+  is_active?: boolean;
+  // Campos de localização
+  cnpj?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  phone?: string;
+  email?: string;
+  // Campos de responsável (podem vir de diferentes fontes)
+  manager?: number;
+  manager_name?: string;
+  responsible_name?: string;
+  responsible_role?: string;
+  // Campos operacionais (podem não existir no backend)
+  segment?: string;
+  total_area?: number;
+  occupants?: number;
+  hvac_units?: number;
+  notes?: string;
+  // Contadores
+  sector_count?: number;
+  asset_count?: number;
+  // Timestamps
+  created_at?: string;
+  updated_at?: string;
 }
 
 /**
@@ -505,17 +515,30 @@ export interface ApiCompany {
 export interface ApiSector {
   id: number;
   name: string;
+  code?: string;
+  description?: string;
+  is_active?: boolean;
   company: number;
-  company_name: string;
-  responsible_name: string;
-  phone: string;
-  email: string;
-  area: number;
-  occupants: number;
-  hvac_units: number;
-  notes: string;
-  subsection_count: number;
-  asset_count: number;
+  company_name?: string;
+  // Campos de responsável
+  supervisor?: number;
+  supervisor_name?: string;
+  responsible_name?: string;
+  phone?: string;
+  email?: string;
+  // Localização física
+  floor?: string;
+  building?: string;
+  area?: number | string;
+  occupants?: number;
+  hvac_units?: number;
+  notes?: string;
+  // Contadores
+  subsection_count?: number;
+  asset_count?: number;
+  // Timestamps
+  created_at?: string;
+  updated_at?: string;
 }
 
 /**
@@ -524,17 +547,29 @@ export interface ApiSector {
 export interface ApiSubsection {
   id: number;
   name: string;
+  code?: string;
+  description?: string;
+  is_active?: boolean;
   sector: number;
-  sector_name: string;
-  company_name: string;
-  responsible_name: string;
-  phone: string;
-  email: string;
-  area: number;
-  occupants: number;
-  hvac_units: number;
-  notes: string;
-  asset_count: number;
+  sector_name?: string;
+  company_name?: string;
+  company_id?: number;
+  // Campos de responsável
+  responsible_name?: string;
+  phone?: string;
+  email?: string;
+  // Localização física
+  position?: string;
+  reference?: string;
+  area?: number | string;
+  occupants?: number;
+  hvac_units?: number;
+  notes?: string;
+  // Contadores
+  asset_count?: number;
+  // Timestamps
+  created_at?: string;
+  updated_at?: string;
 }
 
 /**

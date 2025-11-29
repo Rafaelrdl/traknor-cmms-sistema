@@ -114,30 +114,6 @@ export function LocationDetails({ onEdit }: LocationDetailsProps) {
 
         <Card className="location-card">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Informações de Contato</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Responsável</label>
-              <p className="font-medium">{company.responsible || '-'}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Cargo</label>
-              <p>{company.role || '-'}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Telefone</label>
-              <p>{company.phone || '-'}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Email</label>
-              <p className="break-all">{company.email || '-'}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="location-card">
-          <CardHeader className="pb-3">
             <CardTitle className="text-base">Dados Operacionais</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
