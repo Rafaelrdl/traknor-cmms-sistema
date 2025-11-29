@@ -5,7 +5,7 @@
  */
 
 import { cn } from '@/lib/utils';
-import { Clock, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
+import { Clock, Check, AlertTriangle, X } from 'lucide-react';
 import { 
   Tooltip, 
   TooltipContent, 
@@ -36,30 +36,30 @@ const statusConfig = {
   },
   'warning': {
     icon: AlertTriangle,
-    bgColor: 'bg-primary',
+    bgColor: 'bg-amber-500',
     textColor: 'text-white',
     iconColor: 'text-white/90',
-    borderColor: 'border-primary',
+    borderColor: 'border-amber-600',
     label: 'Atenção',
-    progressColor: 'bg-primary',
+    progressColor: 'bg-amber-500',
   },
   'breached': {
-    icon: XCircle,
-    bgColor: 'bg-primary',
+    icon: X,
+    bgColor: 'bg-red-500',
     textColor: 'text-white',
-    iconColor: 'text-white/90',
-    borderColor: 'border-primary',
+    iconColor: 'text-white',
+    borderColor: 'border-red-600',
     label: 'Atrasado',
-    progressColor: 'bg-primary',
+    progressColor: 'bg-red-500',
   },
   'completed': {
-    icon: CheckCircle2,
-    bgColor: 'bg-primary',
+    icon: Check,
+    bgColor: 'bg-emerald-500',
     textColor: 'text-white',
-    iconColor: 'text-white/90',
-    borderColor: 'border-primary',
-    label: 'Concluído',
-    progressColor: 'bg-primary',
+    iconColor: 'text-white',
+    borderColor: 'border-emerald-600',
+    label: 'Concluído no prazo',
+    progressColor: 'bg-emerald-500',
   },
 };
 
@@ -98,31 +98,79 @@ export function SLABadge({ status, timeRemaining, percentage, type, className }:
   const Icon = config.icon;
   const typeLabel = type === 'response' ? 'Atendimento' : 'Fechamento';
   const time = formatTimeCompact(timeRemaining);
+  
+  // Para status 'completed' ou 'breached', mostrar apenas o ícone
+  const isFinalized = status === 'completed' || status === 'breached';
+
+  if (isFinalized) {
+    const isCompleted = status === 'completed';
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex justify-center w-full">
+              <div
+                className={cn(
+                  'inline-flex items-center justify-center',
+                  'w-7 h-7 rounded-full',
+                  'shadow-sm transition-all duration-200',
+                  'hover:scale-110 hover:shadow-md cursor-default',
+                  isCompleted 
+                    ? 'bg-emerald-500 ring-2 ring-emerald-200' 
+                    : 'bg-red-500 ring-2 ring-red-200',
+                  className
+                )}
+              >
+                <Icon 
+                  className={cn(
+                    'text-white',
+                    isCompleted ? 'h-4 w-4' : 'h-3.5 w-3.5',
+                    isCompleted ? 'stroke-[3]' : 'stroke-[2.5]'
+                  )} 
+                />
+              </div>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top" className={cn('p-3', config.bgColor, config.borderColor, 'border')}>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Icon className="h-4 w-4 text-white" />
+                <span className="font-medium text-white">SLA de {typeLabel}</span>
+              </div>
+              <p className="text-sm text-white/90">{config.label}</p>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
 
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div
-            className={cn(
-              'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all',
-              'hover:shadow-sm cursor-default w-[100px] justify-center',
-              config.bgColor,
-              config.borderColor,
-              className
-            )}
-          >
-            <Icon className={cn('h-3.5 w-3.5 flex-shrink-0', config.iconColor)} />
-            <div className="flex items-baseline gap-0.5 min-w-[60px] justify-center">
-              {time.isNegative && (
-                <span className={cn('text-xs font-medium', config.textColor)}>-</span>
+          <div className="flex justify-center w-full">
+            <div
+              className={cn(
+                'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all',
+                'hover:shadow-sm cursor-default w-[100px] justify-center',
+                config.bgColor,
+                config.borderColor,
+                className
               )}
-              <span className={cn('text-sm font-semibold tabular-nums', config.textColor)}>
-                {time.value}
-              </span>
-              <span className={cn('text-xs font-medium', config.textColor)}>
-                {time.unit}
-              </span>
+            >
+              <Icon className={cn('h-3.5 w-3.5 flex-shrink-0', config.iconColor)} />
+              <div className="flex items-baseline gap-0.5 min-w-[60px] justify-center">
+                {time.isNegative && (
+                  <span className={cn('text-xs font-medium', config.textColor)}>-</span>
+                )}
+                <span className={cn('text-sm font-semibold tabular-nums', config.textColor)}>
+                  {time.value}
+                </span>
+                <span className={cn('text-xs font-medium', config.textColor)}>
+                  {time.unit}
+                </span>
+              </div>
             </div>
           </div>
         </TooltipTrigger>
@@ -133,24 +181,22 @@ export function SLABadge({ status, timeRemaining, percentage, type, className }:
               <span className="font-medium text-white">SLA de {typeLabel}</span>
             </div>
             <p className="text-sm text-white/90">{config.label}</p>
-            {status !== 'completed' && (
-              <div className="pt-1">
-                <div className="flex justify-between text-xs text-white/80 mb-1.5">
-                  <span>Progresso</span>
-                  <span className="font-medium">{Math.round(percentage)}%</span>
-                </div>
-                <div className="w-36 h-2 bg-white/20 rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all bg-white/80"
-                    style={{ width: `${Math.min(100, percentage)}%` }}
-                  />
-                </div>
-                <p className="text-xs text-white/80 mt-1.5">
-                  {time.isNegative ? 'Atrasado: ' : 'Restante: '}
-                  <span className="font-medium text-white">{formatTimeRemaining(timeRemaining)}</span>
-                </p>
+            <div className="pt-1">
+              <div className="flex justify-between text-xs text-white/80 mb-1.5">
+                <span>Progresso</span>
+                <span className="font-medium">{Math.round(percentage)}%</span>
               </div>
-            )}
+              <div className="w-36 h-2 bg-white/20 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all bg-white/80"
+                  style={{ width: `${Math.min(100, percentage)}%` }}
+                />
+              </div>
+              <p className="text-xs text-white/80 mt-1.5">
+                {time.isNegative ? 'Atrasado: ' : 'Restante: '}
+                <span className="font-medium text-white">{formatTimeRemaining(timeRemaining)}</span>
+              </p>
+            </div>
           </div>
         </TooltipContent>
       </Tooltip>

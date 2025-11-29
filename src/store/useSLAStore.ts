@@ -78,7 +78,8 @@ export function calculateSLAStatus(
   startedAt: string | null | undefined,
   completedAt: string | null | undefined,
   priority: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW',
-  settings: SLASettings
+  settings: SLASettings,
+  workOrderStatus?: string
 ): {
   responseStatus: 'on-time' | 'warning' | 'breached' | 'completed';
   resolutionStatus: 'on-time' | 'warning' | 'breached' | 'completed';
@@ -98,9 +99,13 @@ export function calculateSLAStatus(
   
   const responseDeadline = new Date(created.getTime() + config.responseTime * 60 * 60 * 1000);
   
-  if (startedAt) {
+  // Considera que a OS foi atendida se tem startedAt OU se está em execução/concluída
+  const wasStarted = startedAt || workOrderStatus === 'IN_PROGRESS' || workOrderStatus === 'COMPLETED';
+  
+  if (wasStarted) {
     // OS já foi iniciada
-    const started = new Date(startedAt);
+    // Se temos startedAt, usamos ele; senão, assumimos que foi agora (para OS antigas)
+    const started = startedAt ? new Date(startedAt) : now;
     if (started <= responseDeadline) {
       responseStatus = 'completed';
       responsePercentage = 100;

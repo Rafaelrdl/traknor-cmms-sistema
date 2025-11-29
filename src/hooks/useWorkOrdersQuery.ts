@@ -199,8 +199,9 @@ export function useStartWorkOrder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => workOrdersService.start(id),
-    onSuccess: (updatedWO, id) => {
+    mutationFn: ({ id, technicianId }: { id: string; technicianId?: string }) => 
+      workOrdersService.start(id, technicianId),
+    onSuccess: (updatedWO, { id }) => {
       queryClient.setQueryData(workOrderKeys.detail(id), updatedWO);
       queryClient.invalidateQueries({ queryKey: workOrderKeys.lists() });
       queryClient.invalidateQueries({ queryKey: workOrderKeys.stats() });

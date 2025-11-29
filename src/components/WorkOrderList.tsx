@@ -1,12 +1,36 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/StatusBadge';
-import { Play, Edit, ClipboardList, AlertTriangle, User, FileText } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Play, Edit, ClipboardList, AlertTriangle, User, FileText, UserPlus } from 'lucide-react';
 import { useEquipments } from '@/hooks/useEquipmentQuery';
 import { useSectors, useCompanies } from '@/hooks/useLocationsQuery';
+import { useTechnicians } from '@/hooks/useTeamQuery';
 import { useWorkOrderStore } from '@/store/useWorkOrderStore';
 import { useSLAStore, calculateSLAStatus } from '@/store/useSLAStore';
+import { useUsers } from '@/data/usersStore';
 import { SLABadge } from '@/components/SLABadge';
 import { printWorkOrder } from '@/utils/printWorkOrder';
 import type { WorkOrder } from '@/types';
@@ -14,7 +38,7 @@ import { cn } from '@/lib/utils';
 
 interface WorkOrderListProps {
   workOrders: WorkOrder[];
-  onStartWorkOrder?: (id: string) => void;
+  onStartWorkOrder?: (id: string, technicianId?: string) => void;
   onEditWorkOrder?: (wo: WorkOrder) => void;
   compact?: boolean;
 }
@@ -28,8 +52,17 @@ export function WorkOrderList({
   const { data: equipment = [] } = useEquipments();
   const { data: sectors = [] } = useSectors();
   const { data: companies = [] } = useCompanies();
+  const { data: technicians = [] } = useTechnicians();
   const { selectedWorkOrderId, setSelectedWorkOrder } = useWorkOrderStore();
   const { settings: slaSettings } = useSLAStore();
+  const { getCurrentUser } = useUsers();
+  
+  // Estado para modal de seleção de técnico
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [pendingWorkOrder, setPendingWorkOrder] = useState<WorkOrder | null>(null);
+  const [selectedTechnicianId, setSelectedTechnicianId] = useState<string>('none');
+
+  const currentUser = getCurrentUser();
 
   const handlePrintWorkOrder = (workOrder: WorkOrder) => {
     printWorkOrder({
@@ -38,6 +71,30 @@ export function WorkOrderList({
       sectors,
       companies
     });
+  };
+
+  // Handler para abrir modal de seleção de técnico
+  const handleStartWorkOrderClick = (workOrder: WorkOrder) => {
+    setPendingWorkOrder(workOrder);
+    setSelectedTechnicianId('none');
+    setIsAssignModalOpen(true);
+  };
+
+  // Handler para atribuir a si mesmo
+  const handleAssignToMe = () => {
+    if (currentUser) {
+      setSelectedTechnicianId(String(currentUser.id));
+    }
+  };
+
+  // Handler para confirmar início da OS com técnico
+  const confirmStartWorkOrder = () => {
+    if (pendingWorkOrder && onStartWorkOrder) {
+      const techId = selectedTechnicianId !== 'none' ? selectedTechnicianId : undefined;
+      onStartWorkOrder(pendingWorkOrder.id, techId);
+    }
+    setIsAssignModalOpen(false);
+    setPendingWorkOrder(null);
   };
 
   const handleWorkOrderClick = (workOrder: WorkOrder) => {
@@ -237,6 +294,7 @@ export function WorkOrderList({
 
   // Regular table mode
   return (
+    <>
     <Table>
       <TableHeader>
         <TableRow>
@@ -249,8 +307,8 @@ export function WorkOrderList({
           <TableHead>Status</TableHead>
           {slaSettings.enabled && (
             <>
-              <TableHead>SLA Atendimento</TableHead>
-              <TableHead>SLA Fechamento</TableHead>
+              <TableHead className="text-center">SLA Atendimento</TableHead>
+              <TableHead className="text-center">SLA Fechamento</TableHead>
             </>
           )}
           <TableHead>Ações</TableHead>
@@ -268,7 +326,8 @@ export function WorkOrderList({
                 wo.startedAt,
                 wo.completedAt,
                 wo.priority,
-                slaSettings
+                slaSettings,
+                wo.status
               )
             : null;
           
@@ -297,7 +356,7 @@ export function WorkOrderList({
               </TableCell>
               {slaSettings.enabled && (
                 <>
-                  <TableCell>
+                  <TableCell className="text-center">
                     {slaStatus ? (
                       <SLABadge
                         status={slaStatus.responseStatus}
@@ -309,7 +368,7 @@ export function WorkOrderList({
                       <span className="text-muted-foreground text-sm">-</span>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     {slaStatus ? (
                       <SLABadge
                         status={slaStatus.resolutionStatus}
@@ -325,35 +384,57 @@ export function WorkOrderList({
               )}
               <TableCell>
                 <div className="flex items-center gap-2">
-                  {wo.status === 'OPEN' && onStartWorkOrder && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => onStartWorkOrder(wo.id)}
-                      aria-label={`Iniciar ordem de serviço ${wo.number}`}
-                    >
-                      <Play className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {onEditWorkOrder && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => onEditWorkOrder(wo)}
-                      aria-label={`Editar ordem de serviço ${wo.number}`}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => handlePrintWorkOrder(wo)}
-                    aria-label={`Imprimir ordem de serviço ${wo.number}`}
-                    title="Imprimir OS"
-                  >
-                    <FileText className="h-4 w-4" />
-                  </Button>
+                  <TooltipProvider>
+                    {wo.status === 'OPEN' && onStartWorkOrder && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleStartWorkOrderClick(wo)}
+                            aria-label={`Executar ordem de serviço ${wo.number}`}
+                          >
+                            <Play className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Executar OS</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                    {onEditWorkOrder && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => onEditWorkOrder(wo)}
+                            aria-label={`Editar ordem de serviço ${wo.number}`}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Editar OS</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handlePrintWorkOrder(wo)}
+                          aria-label={`Imprimir ordem de serviço ${wo.number}`}
+                        >
+                          <FileText className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Imprimir OS</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
               </TableCell>
             </TableRow>
@@ -368,5 +449,71 @@ export function WorkOrderList({
         )}
       </TableBody>
     </Table>
+
+    {/* Modal para designar técnico ao executar OS */}
+    <Dialog open={isAssignModalOpen} onOpenChange={setIsAssignModalOpen}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5" />
+            Executar Ordem de Serviço
+          </DialogTitle>
+          <DialogDescription>
+            {pendingWorkOrder && (
+              <span>OS: <strong>{pendingWorkOrder.number}</strong></span>
+            )}
+            <br />
+            Selecione um técnico para executar a ordem de serviço ou atribua a si mesmo.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="py-4 space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-2 block">Técnico Executor</label>
+            <Select value={selectedTechnicianId} onValueChange={setSelectedTechnicianId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um técnico" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem técnico designado</SelectItem>
+                {technicians.map((tech) => (
+                  <SelectItem key={tech.user.id} value={String(tech.user.id)}>
+                    {tech.user.full_name || tech.user.email}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {currentUser && (
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={handleAssignToMe}
+            >
+              <User className="h-4 w-4 mr-2" />
+              Atribuir a mim ({currentUser.name})
+            </Button>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setIsAssignModalOpen(false);
+              setPendingWorkOrder(null);
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button onClick={confirmStartWorkOrder}>
+            <Play className="h-4 w-4 mr-1" />
+            Executar OS
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

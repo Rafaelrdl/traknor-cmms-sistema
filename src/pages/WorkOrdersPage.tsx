@@ -109,8 +109,8 @@ export function WorkOrdersPage() {
     });
   }, [workOrders, searchTerm, statusFilter]);
 
-  const startWorkOrder = (id: string) => {
-    startMutation.mutate(id);
+  const startWorkOrder = (id: string, technicianId?: string) => {
+    startMutation.mutate({ id, technicianId });
   };
 
   const completeWorkOrder = (id: string) => {

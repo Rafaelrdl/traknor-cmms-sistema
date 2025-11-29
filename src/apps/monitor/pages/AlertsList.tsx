@@ -250,6 +250,9 @@ export function AlertsList() {
     };
     
     try {
+      // Define o status: se tem técnico atribuído, já inicia em execução
+      const hasTechnician = selectedTechnicianId !== 'none' && selectedTechnicianId !== '';
+      
       // Cria a OS
       const workOrderData = {
         equipmentId: equipment.id,
@@ -257,8 +260,9 @@ export function AlertsList() {
         priority: priorityMap[alert.severity] || 'MEDIUM',
         scheduledDate: new Date().toISOString().split('T')[0],
         description: `Alerta: ${formatMessageNumbers(alert.message)}\n\nParâmetro: ${alert.parameter_key}\nValor: ${formatNumber(alert.parameter_value)}\nLimite: ${formatNumber(alert.threshold)}\nEquipamento: ${alert.equipment_name || alert.asset_tag}`,
-        status: 'OPEN' as const,
-        assignedTo: selectedTechnicianId === 'none' ? '' : selectedTechnicianId,
+        status: hasTechnician ? 'IN_PROGRESS' as const : 'OPEN' as const,
+        assignedTo: hasTechnician ? selectedTechnicianId : '',
+        startedAt: hasTechnician ? new Date().toISOString() : undefined,
         stockItems: []
       };
       

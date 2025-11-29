@@ -132,6 +132,7 @@ const mapToApi = (data: Partial<WorkOrder>): Record<string, unknown> => {
   if (data.scheduledDate) payload.scheduled_date = data.scheduledDate;
   if (data.assignedTo) payload.assigned_to = Number(data.assignedTo);
   if (data.executionDescription) payload.execution_description = data.executionDescription;
+  if (data.startedAt) payload.started_at = data.startedAt;
   
   return payload;
 };
@@ -231,8 +232,9 @@ export const workOrdersService = {
   /**
    * Inicia uma ordem de serviço (muda status para IN_PROGRESS)
    */
-  async start(id: string): Promise<WorkOrder> {
-    const response = await api.post<ApiWorkOrder>(`/cmms/work-orders/${id}/start/`);
+  async start(id: string, technicianId?: string): Promise<WorkOrder> {
+    const data = technicianId ? { assigned_to: Number(technicianId) } : {};
+    const response = await api.post<ApiWorkOrder>(`/cmms/work-orders/${id}/start/`, data);
     return mapWorkOrder(response.data);
   },
 
