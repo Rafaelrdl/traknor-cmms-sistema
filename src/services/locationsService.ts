@@ -96,22 +96,14 @@ export const locationsService = {
 
   async createCompany(data: Omit<Company, 'id' | 'createdAt'>): Promise<Company> {
     const payload = {
-      name: data.name,
-      segment: data.segment,
-      cnpj: data.cnpj,
-      address: data.address.fullAddress,
-      city: data.address.city,
-      state: data.address.state,
-      zip_code: data.address.zip,
-      responsible_name: data.responsible,
-      responsible_role: data.role,
-      phone: data.phone,
-      email: data.email,
-      total_area: data.totalArea,
-      occupants: data.occupants,
-      hvac_units: data.hvacUnits,
-      notes: data.notes || '',
+      name: data.name || '',
+      description: data.segment || data.notes || '',  // Usando segment ou notes como description
+      cnpj: data.cnpj || '',
+      address: data.address?.fullAddress || '',
+      city: data.address?.city || '',
+      state: data.address?.state || '',
     };
+    console.log('Creating company with payload:', payload);
     const response = await api.post<ApiCompany>('/locations/companies/', payload);
     return mapCompany(response.data);
   },
@@ -120,22 +112,15 @@ export const locationsService = {
     const payload: Record<string, unknown> = {};
     
     if (data.name) payload.name = data.name;
-    if (data.segment) payload.segment = data.segment;
+    if (data.segment) payload.description = data.segment;
     if (data.cnpj) payload.cnpj = data.cnpj;
     if (data.address) {
-      payload.address = data.address.fullAddress;
-      payload.city = data.address.city;
-      payload.state = data.address.state;
-      payload.zip_code = data.address.zip;
+      payload.address = data.address.fullAddress || '';
+      payload.city = data.address.city || '';
+      payload.state = data.address.state || '';
     }
-    if (data.responsible) payload.responsible_name = data.responsible;
-    if (data.role) payload.responsible_role = data.role;
     if (data.phone) payload.phone = data.phone;
     if (data.email) payload.email = data.email;
-    if (data.totalArea !== undefined) payload.total_area = data.totalArea;
-    if (data.occupants !== undefined) payload.occupants = data.occupants;
-    if (data.hvacUnits !== undefined) payload.hvac_units = data.hvacUnits;
-    if (data.notes !== undefined) payload.notes = data.notes;
 
     const response = await api.patch<ApiCompany>(`/locations/companies/${id}/`, payload);
     return mapCompany(response.data);
