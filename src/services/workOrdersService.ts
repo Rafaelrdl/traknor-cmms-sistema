@@ -91,6 +91,8 @@ const mapWorkOrder = (wo: ApiWorkOrder): WorkOrder => ({
   priority: wo.priority,
   description: wo.description,
   scheduledDate: wo.scheduled_date,
+  createdAt: wo.created_at,
+  startedAt: wo.started_at || undefined,
   completedAt: wo.completed_at || undefined,
   assignedTo: wo.assigned_to ? String(wo.assigned_to) : undefined,
   assignedToName: wo.assigned_to_name || undefined,

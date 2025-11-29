@@ -295,6 +295,7 @@ export interface ApiWorkOrder {
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   description: string;
   scheduled_date: string;
+  started_at: string | null;
   completed_at: string | null;
   assigned_to: number | null;
   assigned_to_name: string | null;

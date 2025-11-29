@@ -104,6 +104,8 @@ export interface WorkOrder {
   assignedToName?: string;
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   description: string;
+  createdAt?: string;
+  startedAt?: string;
   completedAt?: string;
   stockItems?: WorkOrderStockItem[];
   executionDescription?: string;

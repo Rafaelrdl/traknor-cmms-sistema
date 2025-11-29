@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { LogOut, User, Users } from 'lucide-react';
+import { LogOut, User, Users, Settings2 } from 'lucide-react';
 import { useUsers } from '@/data/usersStore';
 import { IfCan } from '@/components/auth/IfCan';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -14,6 +14,7 @@ import { useAutomaticWorkOrderGeneration } from '@/hooks/useWorkOrderGeneration'
 import { ProductSwitcher } from '@/components/ProductSwitcher';
 import { logout as logoutService } from '@/services/authService';
 import { AlertsNotificationDropdown } from '@/components/AlertsNotificationDropdown';
+import { SLAConfigModal } from '@/components/SLAConfigModal';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -22,6 +23,7 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const { getCurrentUser } = useUsers();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [isSLAModalOpen, setIsSLAModalOpen] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
@@ -113,6 +115,10 @@ export function Layout({ children }: LayoutProps) {
                     </Link>
                   </DropdownMenuItem>
                 </IfCan>
+                <DropdownMenuItem onClick={() => setIsSLAModalOpen(true)}>
+                  <Settings2 className="mr-2 h-4 w-4" />
+                  <span>Configurar SLA</span>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
@@ -136,6 +142,9 @@ export function Layout({ children }: LayoutProps) {
       
       {/* Tour Hint - contextual help */}
       <TourHint />
+      
+      {/* SLA Config Modal */}
+      <SLAConfigModal open={isSLAModalOpen} onOpenChange={setIsSLAModalOpen} />
     </div>
   );
 }

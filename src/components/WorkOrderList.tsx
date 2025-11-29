@@ -6,6 +6,8 @@ import { Play, Edit, ClipboardList, AlertTriangle, User, FileText } from 'lucide
 import { useEquipments } from '@/hooks/useEquipmentQuery';
 import { useSectors, useCompanies } from '@/hooks/useLocationsQuery';
 import { useWorkOrderStore } from '@/store/useWorkOrderStore';
+import { useSLAStore, calculateSLAStatus } from '@/store/useSLAStore';
+import { SLABadge } from '@/components/SLABadge';
 import { printWorkOrder } from '@/utils/printWorkOrder';
 import type { WorkOrder } from '@/types';
 import { cn } from '@/lib/utils';
@@ -27,6 +29,7 @@ export function WorkOrderList({
   const { data: sectors = [] } = useSectors();
   const { data: companies = [] } = useCompanies();
   const { selectedWorkOrderId, setSelectedWorkOrder } = useWorkOrderStore();
+  const { settings: slaSettings } = useSLAStore();
 
   const handlePrintWorkOrder = (workOrder: WorkOrder) => {
     printWorkOrder({
@@ -244,6 +247,12 @@ export function WorkOrderList({
           <TableHead>Data Agendada</TableHead>
           <TableHead>Responsável</TableHead>
           <TableHead>Status</TableHead>
+          {slaSettings.enabled && (
+            <>
+              <TableHead>SLA Atendimento</TableHead>
+              <TableHead>SLA Fechamento</TableHead>
+            </>
+          )}
           <TableHead>Ações</TableHead>
         </TableRow>
       </TableHeader>
@@ -251,6 +260,17 @@ export function WorkOrderList({
         {workOrders.map((wo) => {
           const eq = equipment.find(e => e.id === wo.equipmentId);
           const sector = sectors.find(s => s.id === eq?.sectorId);
+          
+          // Calcula status do SLA
+          const slaStatus = slaSettings.enabled && wo.createdAt
+            ? calculateSLAStatus(
+                wo.createdAt,
+                wo.startedAt,
+                wo.completedAt,
+                wo.priority,
+                slaSettings
+              )
+            : null;
           
           return (
             <TableRow key={wo.id}>
@@ -275,6 +295,34 @@ export function WorkOrderList({
               <TableCell>
                 <StatusBadge status={wo.status} />
               </TableCell>
+              {slaSettings.enabled && (
+                <>
+                  <TableCell>
+                    {slaStatus ? (
+                      <SLABadge
+                        status={slaStatus.responseStatus}
+                        timeRemaining={slaStatus.responseTimeRemaining}
+                        percentage={slaStatus.responsePercentage}
+                        type="response"
+                      />
+                    ) : (
+                      <span className="text-muted-foreground text-sm">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {slaStatus ? (
+                      <SLABadge
+                        status={slaStatus.resolutionStatus}
+                        timeRemaining={slaStatus.resolutionTimeRemaining}
+                        percentage={slaStatus.resolutionPercentage}
+                        type="resolution"
+                      />
+                    ) : (
+                      <span className="text-muted-foreground text-sm">-</span>
+                    )}
+                  </TableCell>
+                </>
+              )}
               <TableCell>
                 <div className="flex items-center gap-2">
                   {wo.status === 'OPEN' && onStartWorkOrder && (
@@ -313,7 +361,7 @@ export function WorkOrderList({
         })}
         {workOrders.length === 0 && (
           <TableRow>
-            <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+            <TableCell colSpan={slaSettings.enabled ? 10 : 8} className="text-center py-8 text-muted-foreground">
               Nenhuma ordem de serviço encontrada
             </TableCell>
           </TableRow>
