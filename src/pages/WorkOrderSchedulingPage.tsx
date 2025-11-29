@@ -12,14 +12,14 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   format, 
-  startOfMonth, 
-  endOfMonth, 
   eachDayOfInterval, 
-  addMonths,
-  subMonths,
+  addWeeks,
+  subWeeks,
   parseISO,
   isSameDay,
-  isWeekend
+  isWeekend,
+  startOfWeek,
+  endOfWeek
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -180,7 +180,7 @@ function DroppableCell({ id, children, className, isHighlighted }: DroppableCell
 // ============================================
 export function WorkOrderSchedulingPage() {
   const navigate = useNavigate();
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [currentWeekStart, setCurrentWeekStart] = useState(() => startOfWeek(new Date(), { locale: ptBR }));
   const [activeWorkOrder, setActiveWorkOrder] = useState<WorkOrder | null>(null);
   
   const { data: workOrders = [], isLoading: isLoadingWO } = useWorkOrders();
@@ -197,12 +197,11 @@ export function WorkOrderSchedulingPage() {
     })
   );
 
-  // Dias do mês atual
-  const monthDays = useMemo(() => {
-    const monthStart = startOfMonth(currentMonth);
-    const monthEnd = endOfMonth(currentMonth);
-    return eachDayOfInterval({ start: monthStart, end: monthEnd });
-  }, [currentMonth]);
+  // Dias da semana atual (7 dias)
+  const weekDays = useMemo(() => {
+    const weekEnd = endOfWeek(currentWeekStart, { locale: ptBR });
+    return eachDayOfInterval({ start: currentWeekStart, end: weekEnd });
+  }, [currentWeekStart]);
 
   // OS pendentes (sem técnico atribuído)
   const pendingWorkOrders = useMemo(() => {
@@ -238,9 +237,9 @@ export function WorkOrderSchedulingPage() {
     return eq ? eq.tag : 'N/A';
   };
 
-  const goToPreviousMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
-  const goToNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
-  const goToToday = () => setCurrentMonth(new Date());
+  const goToPreviousWeek = () => setCurrentWeekStart(subWeeks(currentWeekStart, 1));
+  const goToNextWeek = () => setCurrentWeekStart(addWeeks(currentWeekStart, 1));
+  const goToToday = () => setCurrentWeekStart(startOfWeek(new Date(), { locale: ptBR }));
 
   // Handlers de drag and drop
   const handleDragStart = (event: DragStartEvent) => {
@@ -379,13 +378,13 @@ export function WorkOrderSchedulingPage() {
                   Programação
                 </CardTitle>
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="icon" onClick={goToPreviousMonth}>
+                  <Button variant="outline" size="icon" onClick={goToPreviousWeek}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <span className="text-sm font-medium min-w-[140px] text-center capitalize">
-                    {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
+                  <span className="text-sm font-medium min-w-[200px] text-center">
+                    {format(currentWeekStart, "dd 'de' MMM", { locale: ptBR })} - {format(endOfWeek(currentWeekStart, { locale: ptBR }), "dd 'de' MMM yyyy", { locale: ptBR })}
                   </span>
-                  <Button variant="outline" size="icon" onClick={goToNextMonth}>
+                  <Button variant="outline" size="icon" onClick={goToNextWeek}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                   <Button variant="outline" size="sm" onClick={goToToday}>
@@ -404,7 +403,7 @@ export function WorkOrderSchedulingPage() {
                       <User className="h-4 w-4" />
                       Técnico
                     </div>
-                    {monthDays.map(day => {
+                    {weekDays.map(day => {
                       const isToday = isSameDay(day, new Date());
                       const isWeekendDay = isWeekend(day);
                       
@@ -412,19 +411,22 @@ export function WorkOrderSchedulingPage() {
                         <div
                           key={day.toISOString()}
                           className={cn(
-                            "w-[100px] flex-shrink-0 p-2 border-r text-center",
+                            "flex-1 min-w-[120px] p-3 border-r text-center",
                             isToday && "bg-primary/10",
                             isWeekendDay && "bg-muted/30"
                           )}
                         >
-                          <div className="text-xs text-muted-foreground">
-                            {format(day, 'EEE', { locale: ptBR })}
+                          <div className="text-xs text-muted-foreground uppercase">
+                            {format(day, 'EEEE', { locale: ptBR })}
                           </div>
                           <div className={cn(
-                            "text-sm font-medium",
+                            "text-lg font-semibold",
                             isToday && "text-primary"
                           )}>
                             {format(day, 'd')}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {format(day, 'MMM', { locale: ptBR })}
                           </div>
                         </div>
                       );
@@ -441,9 +443,9 @@ export function WorkOrderSchedulingPage() {
                     technicians.map(tech => (
                       <div key={tech.id} className="flex border-b hover:bg-muted/20">
                         {/* Nome do técnico */}
-                        <div className="w-[180px] flex-shrink-0 p-3 border-r bg-muted/30">
+                        <div className="w-[180px] flex-shrink-0 p-2 border-r bg-muted/30 min-h-[80px] flex items-center">
                           <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                               <User className="h-4 w-4 text-primary" />
                             </div>
                             <div className="min-w-0">
@@ -458,7 +460,7 @@ export function WorkOrderSchedulingPage() {
                         </div>
 
                         {/* Células para cada dia */}
-                        {monthDays.map(day => {
+                        {weekDays.map(day => {
                           const dateKey = format(day, 'yyyy-MM-dd');
                           const cellId = `tech-${tech.user.id}-date-${dateKey}`;
                           const cellOrders = scheduledWorkOrders[String(tech.user.id)]?.[dateKey] || [];
@@ -470,7 +472,7 @@ export function WorkOrderSchedulingPage() {
                               key={cellId}
                               id={cellId}
                               className={cn(
-                                "w-[100px] flex-shrink-0 border-r",
+                                "flex-1 min-w-[120px] border-r",
                                 isWeekendDay && "bg-muted/20",
                                 isToday && "bg-primary/5"
                               )}
