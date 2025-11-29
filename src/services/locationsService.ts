@@ -43,9 +43,9 @@ const mapSector = (s: ApiSector): Sector => ({
   name: s.name,
   companyId: String(s.company),
   responsible: s.supervisor_name || s.responsible_name || '',
-  phone: s.phone || '',
-  email: s.email || '',
-  area: typeof s.area === 'number' ? s.area : (parseInt(String(s.area)) || 0),
+  phone: s.responsible_phone || '',
+  email: s.responsible_email || '',
+  area: typeof s.area === 'number' ? s.area : (parseFloat(String(s.area)) || 0),
   occupants: s.occupants || 0,
   hvacUnits: s.hvac_units || 0,
   notes: s.description || s.notes || '',
@@ -55,12 +55,6 @@ const mapSubsection = (ss: ApiSubsection): SubSection => ({
   id: String(ss.id),
   name: ss.name,
   sectorId: String(ss.sector),
-  responsible: ss.responsible_name || '',
-  phone: ss.phone || '',
-  email: ss.email || '',
-  area: typeof ss.area === 'number' ? ss.area : (parseInt(String(ss.area)) || 0),
-  occupants: ss.occupants || 0,
-  hvacUnits: ss.hvac_units || 0,
   notes: ss.description || ss.notes || '',
 });
 
@@ -174,6 +168,12 @@ export const locationsService = {
       name: data.name,
       company: Number(data.companyId),
       description: data.notes || '',
+      responsible_name: data.responsible || '',
+      responsible_phone: data.phone || '',
+      responsible_email: data.email || '',
+      area: data.area || null,
+      occupants: data.occupants || 0,
+      hvac_units: data.hvacUnits || 0,
     };
     console.log('Creating sector with payload:', payload);
     try {
@@ -195,6 +195,14 @@ export const locationsService = {
     if (data.name) payload.name = data.name;
     if (data.companyId) payload.company = Number(data.companyId);
     if (data.notes !== undefined) payload.description = data.notes;
+    if (data.responsible !== undefined) payload.responsible_name = data.responsible;
+    if (data.phone !== undefined) payload.responsible_phone = data.phone;
+    if (data.email !== undefined) payload.responsible_email = data.email;
+    if (data.area !== undefined) payload.area = data.area || null;
+    if (data.occupants !== undefined) payload.occupants = data.occupants;
+    if (data.hvacUnits !== undefined) payload.hvac_units = data.hvacUnits;
+    
+    console.log('Updating sector with payload:', payload);
 
     const response = await api.patch<ApiSector>(`/locations/sectors/${id}/`, payload);
     return mapSector(response.data);
@@ -223,14 +231,10 @@ export const locationsService = {
     const payload = {
       name: data.name,
       sector: Number(data.sectorId),
-      responsible_name: data.responsible,
-      phone: data.phone,
-      email: data.email,
-      area: data.area,
-      occupants: data.occupants,
-      hvac_units: data.hvacUnits,
-      notes: data.notes || '',
+      code: '',  // Campo obrigatório para unique_together
+      description: data.notes || '',
     };
+    console.log('Creating subsection with payload:', payload);
     const response = await api.post<ApiSubsection>('/locations/subsections/', payload);
     return mapSubsection(response.data);
   },
@@ -240,13 +244,9 @@ export const locationsService = {
     
     if (data.name) payload.name = data.name;
     if (data.sectorId) payload.sector = Number(data.sectorId);
-    if (data.responsible) payload.responsible_name = data.responsible;
-    if (data.phone) payload.phone = data.phone;
-    if (data.email) payload.email = data.email;
-    if (data.area !== undefined) payload.area = data.area;
-    if (data.occupants !== undefined) payload.occupants = data.occupants;
-    if (data.hvacUnits !== undefined) payload.hvac_units = data.hvacUnits;
-    if (data.notes !== undefined) payload.notes = data.notes;
+    if (data.notes !== undefined) payload.description = data.notes;
+    
+    console.log('Updating subsection with payload:', payload);
 
     const response = await api.patch<ApiSubsection>(`/locations/subsections/${id}/`, payload);
     return mapSubsection(response.data);

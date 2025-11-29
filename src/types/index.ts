@@ -43,12 +43,6 @@ export interface SubSection {
   id: string;
   name: string;
   sectorId: string;
-  responsible: string;
-  phone: string;
-  email: string;
-  area: number;
-  occupants: number;
-  hvacUnits: number;
   notes?: string;
 }
 

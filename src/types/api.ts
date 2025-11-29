@@ -524,8 +524,8 @@ export interface ApiSector {
   supervisor?: number;
   supervisor_name?: string;
   responsible_name?: string;
-  phone?: string;
-  email?: string;
+  responsible_phone?: string;
+  responsible_email?: string;
   // Localização física
   floor?: string;
   building?: string;

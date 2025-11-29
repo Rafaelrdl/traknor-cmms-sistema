@@ -77,8 +77,8 @@ export function LocationFormModal({
     name: '',                    // Nome do setor
     companyId: 'no-company',     // ID da empresa (inicialmente vazio)
     responsible: '',             // Responsável
-    phone: '',                   // Telefone
-    email: '',                   // Email
+    phone: '',                   // Telefone do responsável
+    email: '',                   // Email do responsável
     area: 0,                     // Área em m²
     occupants: 0,               // Número de ocupantes
     hvacUnits: 0,               // Unidades HVAC
@@ -89,13 +89,7 @@ export function LocationFormModal({
   const [subSectionForm, setSubSectionForm] = useState<Partial<SubSection>>({
     name: '',                   // Nome da subseção
     sectorId: 'no-sector',      // ID do setor (inicialmente vazio)
-    responsible: '',            // Responsável
-    phone: '',                  // Telefone
-    email: '',                  // Email
-    area: 0,                    // Área em m²
-    occupants: 0,              // Número de ocupantes
-    hvacUnits: 0,              // Unidades HVAC
-    notes: ''                  // Observações
+    notes: ''                   // Observações
   });
 
   /**
@@ -105,13 +99,42 @@ export function LocationFormModal({
   useEffect(() => {
     if (isOpen) {
       if (mode === 'edit' && initialData) {
-        // Modo edição: carrega dados existentes
+        // Modo edição: carrega dados existentes com valores padrão para evitar undefined
         if (type === 'company') {
-          setCompanyForm(initialData as Company);
+          const company = initialData as Company;
+          setCompanyForm({
+            ...company,
+            name: company.name || '',
+            segment: company.segment || '',
+            cnpj: company.cnpj || '',
+            address: company.address || { zip: '', city: '', state: '', fullAddress: '' },
+            totalArea: company.totalArea || 0,
+            occupants: company.occupants || 0,
+            hvacUnits: company.hvacUnits || 0,
+            notes: company.notes || ''
+          });
         } else if (type === 'sector') {
-          setSectorForm(initialData as Sector);
+          const sector = initialData as Sector;
+          setSectorForm({
+            ...sector,
+            name: sector.name || '',
+            companyId: sector.companyId || 'no-company',
+            responsible: sector.responsible || '',
+            phone: sector.phone || '',
+            email: sector.email || '',
+            area: sector.area || 0,
+            occupants: sector.occupants || 0,
+            hvacUnits: sector.hvacUnits || 0,
+            notes: sector.notes || ''
+          });
         } else if (type === 'subsection') {
-          setSubSectionForm(initialData as SubSection);
+          const subsection = initialData as SubSection;
+          setSubSectionForm({
+            ...subsection,
+            name: subsection.name || '',
+            sectorId: subsection.sectorId || 'no-sector',
+            notes: subsection.notes || ''
+          });
         }
       } else {
         // Modo criação: reseta formulários
@@ -139,12 +162,6 @@ export function LocationFormModal({
         setSubSectionForm({
           name: '',
           sectorId: 'no-sector',
-          responsible: '',
-          phone: '',
-          email: '',
-          area: 0,
-          occupants: 0,
-          hvacUnits: 0,
           notes: ''
         });
       }
@@ -491,93 +508,91 @@ export function LocationFormModal({
           </Select>
         </div>
 
-        {/* Responsável e Telefone */}
+        {/* Responsável */}
+        <div>
+          <Label htmlFor="sectorResponsible" className="mb-2 block">
+            Responsável
+          </Label>
+          <Input
+            id="sectorResponsible"
+            value={sectorForm.responsible || ''}
+            onChange={(e) => setSectorForm(prev => ({ ...prev, responsible: e.target.value }))}
+            placeholder="Ex: Maria Santos"
+            className="h-10"
+          />
+        </div>
+
+        {/* Telefone e Email do Responsável */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="sectorResponsible" className="mb-2 block">
-              Responsável *
+            <Label htmlFor="sectorPhone" className="mb-2 block">
+              Telefone
             </Label>
             <Input
-              id="sectorResponsible"
-              value={sectorForm.responsible}
-              onChange={(e) => setSectorForm(prev => ({ ...prev, responsible: e.target.value }))}
-              placeholder="Ex: Maria Santos"
-              className="h-10"
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="sectorPhone" className="mb-2 block">Telefone *</Label>
-            <Input
               id="sectorPhone"
-              value={sectorForm.phone}
+              value={sectorForm.phone || ''}
               onChange={(e) => setSectorForm(prev => ({ ...prev, phone: e.target.value }))}
               placeholder="(11) 99999-9999"
               className="h-10"
-              required
             />
           </div>
-        </div>
-
-        {/* Email */}
-        <div>
-          <Label htmlFor="sectorEmail" className="mb-2 block">Email *</Label>
-          <Input
-            id="sectorEmail"
-            type="email"
-            value={sectorForm.email}
-            onChange={(e) => setSectorForm(prev => ({ ...prev, email: e.target.value }))}
-            placeholder="setor@empresa.com"
-            className="h-10"
-            required
-          />
+          <div>
+            <Label htmlFor="sectorEmail" className="mb-2 block">
+              E-mail
+            </Label>
+            <Input
+              id="sectorEmail"
+              type="email"
+              value={sectorForm.email || ''}
+              onChange={(e) => setSectorForm(prev => ({ ...prev, email: e.target.value }))}
+              placeholder="responsavel@empresa.com"
+              className="h-10"
+            />
+          </div>
         </div>
 
         {/* Área, Ocupantes e Unidades HVAC */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <Label htmlFor="sectorArea" className="mb-2 block">
-              Área (m²) *
+              Área (m²)
             </Label>
             <Input
               id="sectorArea"
               type="number"
-              value={sectorForm.area}
+              value={sectorForm.area ?? 0}
               onChange={(e) => setSectorForm(prev => ({ ...prev, area: Number(e.target.value) }))}
               placeholder="0"
               className="h-10"
               min="0"
-              required
             />
           </div>
           <div>
             <Label htmlFor="sectorOccupants" className="mb-2 block">
-              Ocupantes *
+              Ocupantes
             </Label>
             <Input
               id="sectorOccupants"
               type="number"
-              value={sectorForm.occupants}
+              value={sectorForm.occupants ?? 0}
               onChange={(e) => setSectorForm(prev => ({ ...prev, occupants: Number(e.target.value) }))}
               placeholder="0"
               className="h-10"
               min="0"
-              required
             />
           </div>
           <div>
             <Label htmlFor="sectorHvacUnits" className="mb-2 block">
-              Unidades HVAC *
+              Unidades HVAC
             </Label>
             <Input
               id="sectorHvacUnits"
               type="number"
-              value={sectorForm.hvacUnits}
+              value={sectorForm.hvacUnits ?? 0}
               onChange={(e) => setSectorForm(prev => ({ ...prev, hvacUnits: Number(e.target.value) }))}
               placeholder="0"
               className="h-10"
               min="0"
-              required
             />
           </div>
         </div>
@@ -589,7 +604,7 @@ export function LocationFormModal({
           </Label>
           <Textarea
             id="sectorNotes"
-            value={sectorForm.notes}
+            value={sectorForm.notes || ''}
             onChange={(e) => setSectorForm(prev => ({ ...prev, notes: e.target.value }))}
             placeholder="Informações adicionais sobre o setor..."
             className="min-h-[80px] resize-none"
@@ -685,97 +700,6 @@ export function LocationFormModal({
             </Select>
           </div>
 
-          {/* Responsável e Telefone */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="subSectionResponsible" className="mb-2 block">
-                Responsável *
-              </Label>
-              <Input
-                id="subSectionResponsible"
-                value={subSectionForm.responsible}
-                onChange={(e) => setSubSectionForm(prev => ({ ...prev, responsible: e.target.value }))}
-                placeholder="Ex: Ana Costa"
-                className="h-10"
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="subSectionPhone" className="mb-2 block">Telefone *</Label>
-              <Input
-                id="subSectionPhone"
-                value={subSectionForm.phone}
-                onChange={(e) => setSubSectionForm(prev => ({ ...prev, phone: e.target.value }))}
-                placeholder="(11) 99999-9999"
-                className="h-10"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Email */}
-          <div>
-            <Label htmlFor="subSectionEmail" className="mb-2 block">Email *</Label>
-            <Input
-              id="subSectionEmail"
-              type="email"
-              value={subSectionForm.email}
-              onChange={(e) => setSubSectionForm(prev => ({ ...prev, email: e.target.value }))}
-              placeholder="subsetor@empresa.com"
-              className="h-10"
-              required
-            />
-          </div>
-
-          {/* Área, Ocupantes e Unidades HVAC */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="subSectionArea" className="mb-2 block">
-                Área (m²) *
-              </Label>
-              <Input
-                id="subSectionArea"
-                type="number"
-                value={subSectionForm.area}
-                onChange={(e) => setSubSectionForm(prev => ({ ...prev, area: Number(e.target.value) }))}
-                placeholder="0"
-                className="h-10"
-                min="0"
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="subSectionOccupants" className="mb-2 block">
-                Ocupantes *
-              </Label>
-              <Input
-                id="subSectionOccupants"
-                type="number"
-                value={subSectionForm.occupants}
-                onChange={(e) => setSubSectionForm(prev => ({ ...prev, occupants: Number(e.target.value) }))}
-                placeholder="0"
-                className="h-10"
-                min="0"
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="subSectionHvacUnits" className="mb-2 block">
-                Unidades HVAC *
-              </Label>
-              <Input
-                id="subSectionHvacUnits"
-                type="number"
-                value={subSectionForm.hvacUnits}
-                onChange={(e) => setSubSectionForm(prev => ({ ...prev, hvacUnits: Number(e.target.value) }))}
-                placeholder="0"
-                className="h-10"
-                min="0"
-                required
-              />
-            </div>
-          </div>
-
           {/* Observações */}
           <div>
             <Label htmlFor="subSectionNotes" className="mb-2 block">
@@ -783,7 +707,7 @@ export function LocationFormModal({
             </Label>
             <Textarea
               id="subSectionNotes"
-              value={subSectionForm.notes}
+              value={subSectionForm.notes || ''}
               onChange={(e) => setSubSectionForm(prev => ({ ...prev, notes: e.target.value }))}
               placeholder="Informações adicionais sobre o subsetor..."
               className="min-h-[80px] resize-none"

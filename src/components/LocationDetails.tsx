@@ -151,14 +151,14 @@ export function LocationDetails({ onEdit }: LocationDetailsProps) {
   const renderSectorDetails = (sector: Sector) => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-        {/* Cartão 1: Informações de Contato */}
+        {/* Cartão 1: Responsável */}
         <Card className="location-card">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Informações de Contato</CardTitle>
+            <CardTitle className="text-base">Responsável</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Responsável</label>
+              <label className="text-sm font-medium text-muted-foreground">Nome</label>
               <p className="font-medium">{sector.responsible || '-'}</p>
             </div>
             <div>
@@ -166,7 +166,7 @@ export function LocationDetails({ onEdit }: LocationDetailsProps) {
               <p>{sector.phone || '-'}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Email</label>
+              <label className="text-sm font-medium text-muted-foreground">E-mail</label>
               <p className="break-all">{sector.email || '-'}</p>
             </div>
           </CardContent>
@@ -205,57 +205,25 @@ export function LocationDetails({ onEdit }: LocationDetailsProps) {
 
   /**
    * Renderiza os detalhes específicos para uma subseção
-   * Exibe informações em 2 cartões: Contato e Dados Operacionais
+   * Exibe informações em 1 cartão com observações
    * @param subSection - Dados da subseção
    */
   const renderSubSectionDetails = (subSection: SubSection) => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-        {/* Cartão 1: Informações de Contato */}
+      <div className="grid grid-cols-1 gap-4 lg:gap-6">
+        {/* Cartão: Informações */}
         <Card className="location-card">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Informações de Contato</CardTitle>
+            <CardTitle className="text-base">Informações</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Responsável</label>
-              <p className="font-medium">{subSection.responsible || '-'}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Telefone</label>
-              <p>{subSection.phone || '-'}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Email</label>
-              <p className="break-all">{subSection.email || '-'}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="location-card">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Dados Operacionais</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {subSection.notes ? (
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Área</label>
-                <p className="font-medium">{subSection.area?.toLocaleString() || '0'} m²</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Ocupantes</label>
-                <p className="font-medium">{subSection.occupants || '0'}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Unidades HVAC</label>
-                <p className="font-medium">{subSection.hvacUnits || '0'}</p>
-              </div>
-            </div>
-            {subSection.notes && (
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Observações Adicionais</label>
+                <label className="text-sm font-medium text-muted-foreground">Observações</label>
                 <p className="break-words">{subSection.notes}</p>
               </div>
+            ) : (
+              <p className="text-muted-foreground text-sm">Nenhuma observação cadastrada.</p>
             )}
           </CardContent>
         </Card>
