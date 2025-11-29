@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +34,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { useCompanies, useSectors } from '@/hooks/useLocationsQuery';
 import { useEquipments } from '@/hooks/useEquipmentQuery';
 import { useStockItems } from '@/hooks/useInventoryQuery';
+import { useUsers } from '@/data/usersStore';
 import { printWorkOrder } from '@/utils/printWorkOrder';
 import type { WorkOrder, WorkOrderStockItem, ChecklistResponse, UploadedPhoto, StockItem } from '@/types';
 import type { ApiInventoryItem } from '@/types/api';
@@ -107,6 +108,14 @@ export function WorkOrderEditModal({
   const { data: companies = [] } = useCompanies();
   const { data: stockItemsData } = useStockItems();
   const stockItems = (stockItemsData?.results || []).map(mapToStockItem);
+  
+  // Lista de técnicos para o dropdown
+  const { listUsers } = useUsers();
+  const technicians = useMemo(() => {
+    return listUsers().filter(user => 
+      user.status === 'active' && (user.role === 'technician' || user.role === 'admin')
+    );
+  }, [listUsers]);
   
   // Simulação do hook de autenticação - substituir pela implementação real
   const user = { name: 'Usuário Atual', role: 'ADMIN' }; // Placeholder
@@ -630,15 +639,24 @@ export function WorkOrderEditModal({
                               <div className="space-y-2">
                                 <Label htmlFor="assignedTo" className="text-xs font-medium flex items-center gap-1">
                                   <User className="h-3 w-3" />
-                                  Técnico Responsável
+                                  Técnico Executor
                                 </Label>
-                                <Input 
-                                  id="assignedTo"
-                                  value={formData.assignedTo || ''} 
-                                  onChange={(e) => setFormData(prev => ({ ...prev, assignedTo: e.target.value }))}
-                                  placeholder="Nome do técnico"
-                                  className="h-9 text-sm"
-                                />
+                                <Select 
+                                  value={formData.assignedTo || 'none'} 
+                                  onValueChange={(value) => setFormData(prev => ({ ...prev, assignedTo: value === 'none' ? '' : value }))}
+                                >
+                                  <SelectTrigger className="h-9 text-sm">
+                                    <SelectValue placeholder="Selecione um técnico" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="none">Sem técnico designado</SelectItem>
+                                    {technicians.map((tech) => (
+                                      <SelectItem key={tech.id} value={tech.id}>
+                                        {tech.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                               </div>
                             </div>
 

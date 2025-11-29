@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,6 +57,10 @@ const mockChecklist: ChecklistItem[] = [
 ];
 
 export function WorkOrdersPage() {
+  // URL params para abrir OS diretamente
+  const { id: workOrderIdFromUrl } = useParams<{ id?: string }>();
+  const navigate = useNavigate();
+  
   // React Query hooks
   const { data: workOrders = [], isLoading, error } = useWorkOrders();
   const { data: equipment = [] } = useEquipments();
@@ -74,6 +79,25 @@ export function WorkOrdersPage() {
   const [editingOrder, setEditingOrder] = useState<WorkOrder | null>(null);
   const [showNewOrderModal, setShowNewOrderModal] = useState(false);
   const [checklist, setChecklist] = useState<ChecklistItem[]>(mockChecklist);
+
+  // Efeito para abrir o modal quando há ID na URL (ex: /cmms/work-orders/5)
+  useEffect(() => {
+    if (workOrderIdFromUrl && workOrders.length > 0 && !isLoading) {
+      const workOrder = workOrders.find(wo => wo.id === workOrderIdFromUrl);
+      if (workOrder) {
+        setEditingOrder(workOrder);
+      }
+    }
+  }, [workOrderIdFromUrl, workOrders, isLoading]);
+
+  // Limpa a URL quando fecha o modal de edição
+  const handleCloseEditModal = () => {
+    setEditingOrder(null);
+    // Se veio de um link direto, volta para a listagem
+    if (workOrderIdFromUrl) {
+      navigate('/cmms/work-orders', { replace: true });
+    }
+  };
 
   // Filter work orders with useMemo for performance
   const filteredOrders = useMemo(() => {
@@ -374,7 +398,7 @@ export function WorkOrdersPage() {
       <WorkOrderEditModal
         workOrder={editingOrder}
         isOpen={!!editingOrder}
-        onClose={() => setEditingOrder(null)}
+        onClose={handleCloseEditModal}
         onSave={handleSaveWorkOrder}
       />
 

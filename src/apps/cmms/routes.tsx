@@ -29,6 +29,7 @@ export function CmmsRoutes() {
       <Route path="ativos" element={<EquipmentPage />} />
       <Route path="ativos/:id" element={<AssetDetailPage />} />
       <Route path="work-orders" element={<WorkOrdersPage />} />
+      <Route path="work-orders/:id" element={<WorkOrdersPage />} />
       <Route path="requests" element={<RequestsPage />} />
       <Route path="plans" element={<PlansPage />} />
       <Route path="metrics" element={<MetricsPage />} />
