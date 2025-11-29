@@ -59,6 +59,16 @@ export interface Asset {
   site: number;
   site_name: string;
   site_company?: string;
+  site_sector?: string;
+  site_subsector?: string;
+  
+  // Localização via locations app
+  sector_id?: number | null;
+  sector_name?: string | null;
+  subsection_id?: number | null;
+  subsection_name?: string | null;
+  company_id?: number | null;
+  company_name?: string | null;
   
   // Localização
   full_location?: string;

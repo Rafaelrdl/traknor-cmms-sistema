@@ -15,7 +15,8 @@ import {
   AlertCircle,
   RefreshCw,
   Filter,
-  Box
+  Box,
+  Pencil
 } from 'lucide-react';
 import { PageHeader } from '@/shared/ui';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useAssetsQuery } from '../hooks/useAssetsQuery';
+import { AssetEditModal } from '../components/AssetEditModal';
 import type { Asset, AssetStatus, AssetType } from '../types/asset';
 
 // Helper para cor do status
@@ -80,6 +82,10 @@ export function MonitorAssetsPage() {
   const [filterType, setFilterType] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
+  // Modal de edição
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+
   // Construir filtros para a API
   const filters = {
     asset_type: filterType !== 'all' ? filterType : undefined,
@@ -109,6 +115,12 @@ export function MonitorAssetsPage() {
     alert: assets.filter(a => a.status === 'Alert' || a.status === 'WARNING').length,
     stopped: assets.filter(a => a.status === 'Stopped' || a.status === 'INACTIVE' || a.status === 'ERROR').length,
   }), [assets]);
+
+  // Função para abrir modal de edição
+  const handleEditAsset = (asset: Asset) => {
+    setSelectedAsset(asset);
+    setEditModalOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -303,6 +315,15 @@ export function MonitorAssetsPage() {
                   
                   <td className="py-4 px-6">
                     <div className="flex items-center space-x-3">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditAsset(asset)}
+                        className="h-8 px-2"
+                        title="Editar ativo"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
                       <Link
                         to={`/monitor/ativos/${asset.id}`}
                         className="text-primary hover:text-primary/80 text-sm font-medium"
@@ -336,6 +357,13 @@ export function MonitorAssetsPage() {
           </div>
         )}
       </div>
+
+      {/* Modal de Edição */}
+      <AssetEditModal
+        asset={selectedAsset}
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+      />
     </div>
   );
 }

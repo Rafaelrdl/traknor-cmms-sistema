@@ -22,13 +22,45 @@ const normalizeAsset = (asset: any): Asset => ({
   ...asset,
   // Aliases para compatibilidade
   type: asset.asset_type,
-  location: asset.location_description || asset.full_location,
+  // Construir location a partir dos dados reais: company > sector > subsection
+  location: buildLocationString(asset),
   siteId: asset.site,
   siteName: asset.site_name,
   healthScore: asset.health_score,
   createdAt: asset.created_at,
   updatedAt: asset.updated_at,
 });
+
+// Helper para construir string de localização
+const buildLocationString = (asset: any): string => {
+  const parts: string[] = [];
+  
+  // Priorizar dados do relacionamento direto (locations app)
+  if (asset.company_name) {
+    parts.push(asset.company_name);
+  } else if (asset.site_company) {
+    parts.push(asset.site_company);
+  }
+  
+  if (asset.sector_name) {
+    parts.push(asset.sector_name);
+  } else if (asset.site_sector) {
+    parts.push(asset.site_sector);
+  }
+  
+  if (asset.subsection_name) {
+    parts.push(asset.subsection_name);
+  } else if (asset.site_subsector) {
+    parts.push(asset.site_subsector);
+  }
+  
+  // Fallback para location_description ou full_location
+  if (parts.length === 0) {
+    return asset.location_description || asset.full_location || '';
+  }
+  
+  return parts.join(' > ');
+};
 
 export const assetsService = {
   /**
