@@ -6,11 +6,13 @@
  * - Ações de acknowledge e resolução
  * - Detalhes expandíveis
  * - Navegação cruzada para OS no CMMS
+ * 
+ * ✅ Integrado com a API real via useAlertsQuery
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { PageHeader, StatusBadge, Card, CardContent, CardHeader, CardTitle } from '@/shared/ui';
+import { PageHeader, StatusBadge, Card, CardContent } from '@/shared/ui';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -38,131 +40,124 @@ import {
   Wifi,
   Wrench,
   ClipboardList,
-  ExternalLink
+  ExternalLink,
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
+import { 
+  useAlertsQuery, 
+  useAlertsStatisticsQuery,
+  useAcknowledgeAlertMutation,
+  useResolveAlertMutation 
+} from '../hooks';
+import type { Alert, AlertFilters, AlertSeverity } from '../types';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
-// Dados mockados para demonstração
-const mockAlerts = [
-  {
-    id: 1,
-    severity: 'critical',
-    status: 'active',
-    message: 'Temperatura acima do limite crítico',
-    equipment: 'Condensadora Externa',
-    equipmentId: 'asset-002',
-    value: '42.5°C (limite: 40°C)',
-    timestamp: '2024-01-15 14:32:15',
-    acknowledged: false,
-    icon: 'temperature',
-    workOrderId: null, // Sem OS criada
-  },
-  {
-    id: 2,
-    severity: 'critical',
-    status: 'active',
-    message: 'Consumo energético acima do esperado',
-    equipment: 'Chiller Principal',
-    equipmentId: 'asset-001',
-    value: '156 kW (limite: 140 kW)',
-    timestamp: '2024-01-15 14:25:00',
-    acknowledged: true,
-    icon: 'energy',
-    workOrderId: 'WO-002', // OS já criada
-  },
-  {
-    id: 3,
-    severity: 'warning',
-    status: 'active',
-    message: 'Sensor desconectado',
-    equipment: 'Fan Coil - Sala 3',
-    equipmentId: 'asset-003',
-    value: 'Sem comunicação há 45 min',
-    timestamp: '2024-01-15 13:47:22',
-    acknowledged: false,
-    icon: 'connection',
-    workOrderId: null,
-  },
-  {
-    id: 4,
-    severity: 'warning',
-    status: 'resolved',
-    message: 'Pressão alta detectada',
-    equipment: 'Chiller Principal',
-    equipmentId: 'asset-001',
-    value: '19.2 bar (limite: 19 bar)',
-    timestamp: '2024-01-15 12:15:00',
-    resolvedAt: '2024-01-15 12:45:00',
-    acknowledged: true,
-    icon: 'temperature',
-    workOrderId: 'WO-001',
-  },
-  {
-    id: 5,
-    severity: 'info',
-    status: 'resolved',
-    message: 'Manutenção preventiva programada',
-    equipment: 'Split - Recepção',
-    equipmentId: 'asset-004',
-    value: 'Próxima: 20/01/2024',
-    timestamp: '2024-01-15 09:00:00',
-    resolvedAt: '2024-01-15 09:30:00',
-    acknowledged: true,
-    icon: 'info',
-    workOrderId: null,
-  },
-];
-
-const getAlertIcon = (iconType: string) => {
-  switch (iconType) {
-    case 'temperature':
-      return <Thermometer className="h-4 w-4" />;
-    case 'energy':
-      return <Zap className="h-4 w-4" />;
-    case 'connection':
-      return <Wifi className="h-4 w-4" />;
+/**
+ * Retorna a cor do badge de severidade
+ */
+const getSeverityColor = (severity: AlertSeverity): 'destructive' | 'secondary' | 'outline' => {
+  switch (severity) {
+    case 'Critical':
+      return 'destructive';
+    case 'High':
+    case 'Medium':
+      return 'secondary';
+    case 'Low':
     default:
-      return <Info className="h-4 w-4" />;
+      return 'outline';
   }
 };
 
-const getSeverityColor = (severity: string) => {
-  switch (severity) {
-    case 'critical':
-      return 'destructive';
-    case 'warning':
-      return 'secondary';
-    case 'info':
-      return 'outline';
-    default:
-      return 'secondary';
+/**
+ * Formata data/hora para exibição
+ */
+const formatDateTime = (dateString: string | null): string => {
+  if (!dateString) return '-';
+  try {
+    return format(new Date(dateString), "dd/MM/yyyy HH:mm", { locale: ptBR });
+  } catch {
+    return dateString;
   }
 };
 
 export function AlertsList() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterSeverity, setFilterSeverity] = useState<string | null>(null);
-  const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [filterSeverity, setFilterSeverity] = useState<AlertSeverity | null>(null);
+  const [filterStatus, setFilterStatus] = useState<AlertFilters['status'] | null>(null);
 
-  const filteredAlerts = mockAlerts.filter((alert) => {
-    const matchesSearch = 
-      alert.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      alert.equipment.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesSeverity = !filterSeverity || alert.severity === filterSeverity;
-    const matchesStatus = !filterStatus || alert.status === filterStatus;
+  // Queries para dados reais da API
+  const { data: alerts = [], isLoading, isError, refetch } = useAlertsQuery({ status: filterStatus || undefined });
+  const { data: statistics } = useAlertsStatisticsQuery();
+  
+  // Mutations para ações
+  const acknowledgeMutation = useAcknowledgeAlertMutation();
+  const resolveMutation = useResolveAlertMutation();
 
-    return matchesSearch && matchesSeverity && matchesStatus;
-  });
+  // Filtra alertas localmente (para busca por texto e severidade)
+  const filteredAlerts = useMemo(() => {
+    return alerts.filter((alert: Alert) => {
+      const matchesSearch = searchTerm === '' ||
+        alert.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        alert.equipment_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        alert.rule_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        alert.asset_tag?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesSeverity = !filterSeverity || alert.severity === filterSeverity;
 
-  const activeCount = mockAlerts.filter(a => a.status === 'active').length;
-  const criticalCount = mockAlerts.filter(a => a.severity === 'critical' && a.status === 'active').length;
+      return matchesSearch && matchesSeverity;
+    });
+  }, [alerts, searchTerm, filterSeverity]);
+
+  // Contadores de alertas
+  const activeCount = statistics?.active || 0;
+  const criticalCount = statistics?.by_severity?.CRITICAL || 0;
+
+  // Handler para reconhecer um alerta
+  const handleAcknowledge = (alert: Alert) => {
+    acknowledgeMutation.mutate({ id: alert.id });
+  };
+
+  // Handler para resolver um alerta
+  const handleResolve = (alert: Alert) => {
+    resolveMutation.mutate({ id: alert.id });
+  };
 
   // Handler para criar OS a partir de um alerta
-  const handleCreateWorkOrder = (alert: typeof mockAlerts[0]) => {
-    // Em produção, chamaria o backend para criar a OS e depois redirecionar
-    navigate(`/cmms/work-orders/new?alertId=${alert.id}&assetId=${alert.equipmentId}&title=Alerta: ${encodeURIComponent(alert.message)}`);
+  const handleCreateWorkOrder = (alert: Alert) => {
+    navigate(`/cmms/work-orders/new?alertId=${alert.id}&assetId=${alert.asset_tag}&title=Alerta: ${encodeURIComponent(alert.message)}`);
   };
+
+  // Estado de loading
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Carregando alertas...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Estado de erro
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <AlertTriangle className="h-12 w-12 text-amber-500" />
+          <p className="font-medium">Erro ao carregar alertas</p>
+          <p className="text-sm text-muted-foreground">Verifique sua conexão e tente novamente</p>
+          <Button variant="outline" onClick={() => refetch()}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Tentar novamente
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -178,6 +173,9 @@ export function AlertsList() {
           <Badge variant="secondary" className="text-sm">
             {activeCount} ativo{activeCount !== 1 ? 's' : ''}
           </Badge>
+          <Button variant="ghost" size="sm" onClick={() => refetch()} title="Atualizar">
+            <RefreshCw className="h-4 w-4" />
+          </Button>
         </div>
       </PageHeader>
 
@@ -189,7 +187,7 @@ export function AlertsList() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por mensagem ou equipamento..."
+                placeholder="Buscar por mensagem, equipamento ou regra..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -210,18 +208,25 @@ export function AlertsList() {
                   Todos
                 </Button>
                 <Button
-                  variant={filterSeverity === 'critical' ? 'destructive' : 'outline'}
+                  variant={filterSeverity === 'Critical' ? 'destructive' : 'outline'}
                   size="sm"
-                  onClick={() => setFilterSeverity(filterSeverity === 'critical' ? null : 'critical')}
+                  onClick={() => setFilterSeverity(filterSeverity === 'Critical' ? null : 'Critical')}
                 >
                   Crítico
                 </Button>
                 <Button
-                  variant={filterSeverity === 'warning' ? 'secondary' : 'outline'}
+                  variant={filterSeverity === 'High' ? 'secondary' : 'outline'}
                   size="sm"
-                  onClick={() => setFilterSeverity(filterSeverity === 'warning' ? null : 'warning')}
+                  onClick={() => setFilterSeverity(filterSeverity === 'High' ? null : 'High')}
                 >
-                  Aviso
+                  Alto
+                </Button>
+                <Button
+                  variant={filterSeverity === 'Medium' ? 'secondary' : 'outline'}
+                  size="sm"
+                  onClick={() => setFilterSeverity(filterSeverity === 'Medium' ? null : 'Medium')}
+                >
+                  Médio
                 </Button>
               </div>
 
@@ -230,11 +235,25 @@ export function AlertsList() {
               {/* Status Filter */}
               <div className="flex gap-1">
                 <Button
+                  variant={filterStatus === null ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFilterStatus(null)}
+                >
+                  Todos
+                </Button>
+                <Button
                   variant={filterStatus === 'active' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setFilterStatus(filterStatus === 'active' ? null : 'active')}
                 >
                   Ativos
+                </Button>
+                <Button
+                  variant={filterStatus === 'acknowledged' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFilterStatus(filterStatus === 'acknowledged' ? null : 'acknowledged')}
+                >
+                  Reconhecidos
                 </Button>
                 <Button
                   variant={filterStatus === 'resolved' ? 'default' : 'outline'}
@@ -256,7 +275,11 @@ export function AlertsList() {
             <div className="text-center py-12 text-muted-foreground">
               <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p className="font-medium">Nenhum alerta encontrado</p>
-              <p className="text-sm mt-1">Não há alertas que correspondam aos filtros aplicados</p>
+              <p className="text-sm mt-1">
+                {alerts.length === 0 
+                  ? 'Não há alertas registrados no sistema'
+                  : 'Não há alertas que correspondam aos filtros aplicados'}
+              </p>
             </div>
           ) : (
             <Table>
@@ -272,21 +295,20 @@ export function AlertsList() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredAlerts.map((alert) => (
+                {filteredAlerts.map((alert: Alert) => (
                   <TableRow key={alert.id}>
                     {/* Severidade */}
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        {alert.severity === 'critical' ? (
+                        {alert.severity === 'Critical' ? (
                           <AlertCircle className="h-4 w-4 text-red-500" />
-                        ) : alert.severity === 'warning' ? (
+                        ) : alert.severity === 'High' || alert.severity === 'Medium' ? (
                           <AlertTriangle className="h-4 w-4 text-amber-500" />
                         ) : (
                           <Info className="h-4 w-4 text-blue-500" />
                         )}
-                        <Badge variant={getSeverityColor(alert.severity) as 'destructive' | 'secondary' | 'outline'}>
-                          {alert.severity === 'critical' ? 'Crítico' :
-                           alert.severity === 'warning' ? 'Aviso' : 'Info'}
+                        <Badge variant={getSeverityColor(alert.severity)}>
+                          {alert.severity_display}
                         </Badge>
                       </div>
                     </TableCell>
@@ -296,25 +318,37 @@ export function AlertsList() {
                       <div>
                         <p className="font-medium">{alert.message}</p>
                         <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                          {getAlertIcon(alert.icon)}
-                          {alert.equipment}
+                          <Thermometer className="h-3 w-3" />
+                          {alert.equipment_name || alert.asset_tag}
                         </p>
+                        {alert.rule_name && (
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Regra: {alert.rule_name}
+                          </p>
+                        )}
                       </div>
                     </TableCell>
                     
                     {/* Valor */}
                     <TableCell>
-                      <span className="text-sm">{alert.value}</span>
+                      <span className="text-sm">
+                        {alert.parameter_value !== null 
+                          ? `${alert.parameter_value}${alert.threshold ? ` (limite: ${alert.threshold})` : ''}`
+                          : '-'}
+                      </span>
+                      {alert.parameter_key && (
+                        <p className="text-xs text-muted-foreground">{alert.parameter_key}</p>
+                      )}
                     </TableCell>
                     
                     {/* Status */}
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         <StatusBadge
-                          status={alert.status === 'active' ? 'ACTIVE' : 'RESOLVED'}
+                          status={alert.resolved ? 'RESOLVED' : alert.is_active ? 'ACTIVE' : 'ACKNOWLEDGED'}
                           type="alert"
                         />
-                        {alert.acknowledged && (
+                        {alert.acknowledged && !alert.resolved && (
                           <span className="text-xs text-muted-foreground flex items-center gap-1">
                             <CheckCircle2 className="h-3 w-3" />
                             Reconhecido
@@ -328,11 +362,16 @@ export function AlertsList() {
                       <div className="text-sm">
                         <p className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {alert.timestamp}
+                          {formatDateTime(alert.triggered_at)}
                         </p>
-                        {alert.resolvedAt && (
+                        {alert.resolved_at && (
                           <p className="text-xs text-muted-foreground mt-1">
-                            Resolvido: {alert.resolvedAt}
+                            Resolvido: {formatDateTime(alert.resolved_at)}
+                          </p>
+                        )}
+                        {alert.acknowledged_at && !alert.resolved && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Reconhecido: {formatDateTime(alert.acknowledged_at)}
                           </p>
                         )}
                       </div>
@@ -340,16 +379,16 @@ export function AlertsList() {
                     
                     {/* Ordem de Serviço */}
                     <TableCell>
-                      {alert.workOrderId ? (
+                      {alert.work_order_id ? (
                         <Link 
-                          to={`/cmms/work-orders/${alert.workOrderId}`}
+                          to={`/cmms/work-orders/${alert.work_order_id}`}
                           className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 hover:underline"
                         >
                           <ClipboardList className="h-3 w-3" />
-                          {alert.workOrderId}
+                          {alert.work_order_id}
                           <ExternalLink className="h-3 w-3" />
                         </Link>
-                      ) : alert.status === 'active' ? (
+                      ) : !alert.resolved ? (
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -370,13 +409,25 @@ export function AlertsList() {
                         <Button variant="ghost" size="sm" title="Ver detalhes">
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {alert.status === 'active' && !alert.acknowledged && (
-                          <Button variant="ghost" size="sm" title="Reconhecer">
+                        {!alert.acknowledged && !alert.resolved && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            title="Reconhecer"
+                            onClick={() => handleAcknowledge(alert)}
+                            disabled={acknowledgeMutation.isPending}
+                          >
                             <CheckCircle2 className="h-4 w-4" />
                           </Button>
                         )}
-                        {alert.status === 'active' && (
-                          <Button variant="ghost" size="sm" title="Silenciar">
+                        {!alert.resolved && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            title="Resolver"
+                            onClick={() => handleResolve(alert)}
+                            disabled={resolveMutation.isPending}
+                          >
                             <BellOff className="h-4 w-4" />
                           </Button>
                         )}

@@ -283,31 +283,6 @@ export function RulesPage() {
         )}
       </div>
 
-      {/* Info Card */}
-      <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
-        <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-2 flex items-center gap-2">
-          <Zap className="w-5 h-5" />
-          Como funcionam as regras?
-        </h3>
-        <div className="text-sm text-blue-800 dark:text-blue-400 space-y-3">
-          <p>
-            As regras são avaliadas sobre <strong>parâmetros do Equipamento IoT</strong> vinculado ao equipamento cadastrado.
-            Quando as condições são atendidas, alertas automáticos são gerados.
-          </p>
-          
-          <div className="space-y-2">
-            <h4 className="font-semibold text-blue-900 dark:text-blue-300">Principais características:</h4>
-            <ul className="list-disc list-inside space-y-1 ml-2">
-              <li><strong>Equipamento-based:</strong> Regras vinculadas a equipamentos específicos cadastrados</li>
-              <li><strong>Tipo de ativo derivado:</strong> Automaticamente obtido do equipamento (não editável)</li>
-              <li><strong>Parâmetros IoT:</strong> Apenas parâmetros disponíveis no dispositivo IoT do equipamento</li>
-              <li><strong>Variáveis:</strong> Detalhamento de como observar o parâmetro (ex: média, pico, atual)</li>
-              <li><strong>Ações disponíveis:</strong> E-mail e Notificação in-app</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
       {/* Rule Form Modal */}
       <RuleFormModal
         open={isModalOpen}

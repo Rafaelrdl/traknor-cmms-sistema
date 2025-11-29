@@ -7,5 +7,6 @@
 export * from './device';
 export * from './asset';
 export * from './rule';
+export * from './alert';
 export * from './dashboard';
 export * from './site';
