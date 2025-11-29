@@ -104,8 +104,17 @@ export const locationsService = {
       state: data.address?.state || '',
     };
     console.log('Creating company with payload:', payload);
-    const response = await api.post<ApiCompany>('/locations/companies/', payload);
-    return mapCompany(response.data);
+    try {
+      const response = await api.post<ApiCompany>('/locations/companies/', payload);
+      return mapCompany(response.data);
+    } catch (error: unknown) {
+      console.error('Error creating company:', error);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data?: unknown } };
+        console.error('Response data:', axiosError.response?.data);
+      }
+      throw error;
+    }
   },
 
   async updateCompany(id: string, data: Partial<Company>): Promise<Company> {
