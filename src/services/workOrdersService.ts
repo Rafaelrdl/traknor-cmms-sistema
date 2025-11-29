@@ -94,25 +94,25 @@ const mapWorkOrder = (wo: ApiWorkOrder): WorkOrder => ({
   completedAt: wo.completed_at || undefined,
   assignedTo: wo.assigned_to_name || undefined,
   executionDescription: wo.execution_description || undefined,
-  photos: wo.photos?.map((p): UploadedPhoto => ({
+  photos: Array.isArray(wo.photos) ? wo.photos.map((p): UploadedPhoto => ({
     id: String(p.id),
     url: p.file,
     name: p.caption || 'Foto',
     uploadedAt: p.created_at,
     uploadedBy: p.uploaded_by_name || undefined,
-  })) || [],
-  checklistResponses: wo.checklist_responses?.map((cr): ChecklistResponse => ({
+  })) : [],
+  checklistResponses: Array.isArray(wo.checklist_responses) ? wo.checklist_responses.map((cr): ChecklistResponse => ({
     taskId: cr.item_id,
     taskName: cr.question,
     completed: Boolean(cr.response),
     observations: cr.observations,
-  })) || [],
-  stockItems: wo.items?.map((i): WorkOrderStockItem => ({
+  })) : [],
+  stockItems: Array.isArray(wo.items) ? wo.items.map((i): WorkOrderStockItem => ({
     id: String(i.id),
     workOrderId: String(wo.id),
     stockItemId: String(i.item),
     quantity: i.quantity,
-  })) || [],
+  })) : [],
 });
 
 /**

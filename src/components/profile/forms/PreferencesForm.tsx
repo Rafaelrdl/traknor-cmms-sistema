@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Monitor, Sun, Moon, Mail, Bell } from 'lucide-react';
+import { Monitor, Sun, Moon, Mail, Bell, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -17,6 +17,7 @@ const defaultPreferences = {
   language: 'pt-BR' as const,
   date_format: 'DD/MM/YYYY' as const,
   time_format: '24h' as const,
+  alert_cooldown_minutes: 60,
   notifications: {
     email: true,
     push: true,
@@ -80,6 +81,17 @@ export function PreferencesForm({ preferences, onSave }: PreferencesFormProps) {
   const timeFormatOptions = [
     { value: '24h', label: '24 horas (14:30)' },
     { value: '12h', label: '12 horas (2:30 PM)' },
+  ];
+
+  const alertCooldownOptions = [
+    { value: '15', label: '15 minutos' },
+    { value: '30', label: '30 minutos' },
+    { value: '60', label: '1 hora' },
+    { value: '120', label: '2 horas' },
+    { value: '180', label: '3 horas' },
+    { value: '360', label: '6 horas' },
+    { value: '720', label: '12 horas' },
+    { value: '1440', label: '24 horas' },
   ];
 
   return (
@@ -184,6 +196,33 @@ export function PreferencesForm({ preferences, onSave }: PreferencesFormProps) {
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Intervalo de Alertas */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-muted-foreground" />
+            <Label className="text-sm font-medium">Intervalo entre Alertas</Label>
+          </div>
+          <Select
+            value={String(formData.alert_cooldown_minutes || 60)}
+            onValueChange={(value) => handleSelectChange('alert_cooldown_minutes', value)}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {alertCooldownOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Define o tempo mínimo entre alertas da mesma variável. Após um alerta ser gerado, 
+            a regra não gerará novos alertas para essa variável durante este período.
+          </p>
         </div>
 
         {/* Notificações */}

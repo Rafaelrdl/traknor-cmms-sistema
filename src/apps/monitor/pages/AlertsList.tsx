@@ -101,7 +101,19 @@ const formatDateTime = (dateString: string | null): string => {
  */
 const formatNumber = (value: number | null): string => {
   if (value === null || value === undefined) return '-';
-  return Number(value).toFixed(2).replace(/\.?0+$/, '') || '0';
+  return Number(value).toFixed(2);
+};
+
+/**
+ * Formata números dentro de uma string de mensagem para ter no máximo 2 casas decimais
+ * Exemplo: "valor atual: 8.620000000000005" -> "valor atual: 8.62"
+ */
+const formatMessageNumbers = (message: string): string => {
+  // Regex para encontrar números com muitas casas decimais
+  return message.replace(/(\d+\.\d{3,})/g, (match) => {
+    const num = parseFloat(match);
+    return isNaN(num) ? match : num.toFixed(2);
+  });
 };
 
 export function AlertsList() {
@@ -194,7 +206,7 @@ export function AlertsList() {
         type: 'CORRECTIVE' as const,
         priority: priorityMap[alert.severity] || 'MEDIUM',
         scheduledDate: new Date().toISOString().split('T')[0],
-        description: `Alerta: ${alert.message}\n\nParâmetro: ${alert.parameter_key}\nValor: ${formatNumber(alert.parameter_value)}\nLimite: ${formatNumber(alert.threshold)}\nEquipamento: ${alert.equipment_name || alert.asset_tag}`,
+        description: `Alerta: ${formatMessageNumbers(alert.message)}\n\nParâmetro: ${alert.parameter_key}\nValor: ${formatNumber(alert.parameter_value)}\nLimite: ${formatNumber(alert.threshold)}\nEquipamento: ${alert.equipment_name || alert.asset_tag}`,
         status: 'OPEN' as const,
         assignedTo: '',
         stockItems: []
@@ -416,7 +428,7 @@ export function AlertsList() {
                     {/* Mensagem */}
                     <TableCell>
                       <div>
-                        <p className="font-medium">{alert.message}</p>
+                        <p className="font-medium">{formatMessageNumbers(alert.message)}</p>
                         <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
                           <Thermometer className="h-3 w-3" />
                           {alert.equipment_name || alert.asset_tag}
@@ -568,7 +580,7 @@ export function AlertsList() {
 
               {/* Mensagem */}
               <div className="bg-muted/50 rounded-lg p-4">
-                <p className="text-sm font-medium">{selectedAlert.message}</p>
+                <p className="text-sm font-medium">{formatMessageNumbers(selectedAlert.message)}</p>
               </div>
 
               <Separator />

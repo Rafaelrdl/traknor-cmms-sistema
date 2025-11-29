@@ -18,6 +18,7 @@ export interface User {
     language: 'pt-BR' | 'en-US';
     date_format: 'DD/MM/YYYY' | 'YYYY-MM-DD';
     time_format: '24h' | '12h';
+    alert_cooldown_minutes: number;
     notifications: {
       email: boolean;
       push: boolean;
@@ -35,6 +36,7 @@ export const defaultPreferences = {
   language: 'pt-BR' as const,
   date_format: 'DD/MM/YYYY' as const,
   time_format: '24h' as const,
+  alert_cooldown_minutes: 60,
   notifications: {
     email: true,
     push: true,
