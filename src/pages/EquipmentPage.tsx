@@ -5,6 +5,7 @@ import { LocationDetails } from '@/components/LocationDetails';
 import { LocationFormModal } from '@/components/LocationFormModal';
 import { EquipmentSearch } from '@/components/EquipmentSearch';
 import { EquipmentStatusTracking } from '@/components/EquipmentStatusTracking';
+import { EquipmentEditModal } from '@/components/EquipmentEditModal';
 import { AssetUtilizationDashboard } from '@/components/AssetUtilizationDashboard';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -86,6 +87,10 @@ function AssetsContent() {
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
   // Controla a abertura do modal de rastreamento de status
   const [isStatusTrackingOpen, setIsStatusTrackingOpen] = useState(false);
+  // Controla a abertura do modal de edição de equipamento
+  const [isEquipmentEditModalOpen, setIsEquipmentEditModalOpen] = useState(false);
+  // Equipamento sendo editado
+  const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(null);
 
   // ========== EFEITO PARA ATUALIZAR EQUIPAMENTOS FILTRADOS ==========
   // Atualiza os equipamentos filtrados quando os dados baseados em função mudam
@@ -245,6 +250,18 @@ function AssetsContent() {
     
     // Fecha o modal de criação
     setIsEquipmentDialogOpen(false);
+  };
+
+  /**
+   * EDITAR EQUIPAMENTO EXISTENTE
+   * 
+   * Abre o modal para edição de um equipamento existente.
+   * 
+   * @param equipment - Equipamento a ser editado
+   */
+  const handleEditEquipment = (equipment: Equipment) => {
+    setEditingEquipment(equipment);
+    setIsEquipmentEditModalOpen(true);
   };
 
   /**
@@ -419,6 +436,7 @@ function AssetsContent() {
                     console.log('Create asset clicked, selectedNode:', selectedNode);
                     setIsEquipmentDialogOpen(true);
                   }}
+                  onEditAsset={handleEditEquipment}
                 />
               </TabsContent>
 
@@ -774,6 +792,14 @@ function AssetsContent() {
         mode={locationModalMode}
         type={locationModalType}
         initialData={locationModalMode === 'edit' ? selectedNode?.data : undefined}
+      />
+
+      {/* ========== MODAL DE EDIÇÃO DE EQUIPAMENTO ========== */}
+      {/* Modal para editar um equipamento existente */}
+      <EquipmentEditModal
+        equipment={editingEquipment}
+        open={isEquipmentEditModalOpen}
+        onOpenChange={setIsEquipmentEditModalOpen}
       />
     </div>
   );

@@ -18,7 +18,8 @@ import {
   Calendar,
   Zap,
   Settings,
-  Plus
+  Plus,
+  Pencil
 } from 'lucide-react';
 import type { Equipment, EquipmentFilter } from '@/types';
 import { MOCK_SECTORS } from '@/data/mockData';
@@ -30,6 +31,7 @@ interface EquipmentSearchProps {
   onEquipmentSelect: (equipment: Equipment) => void;
   showCreateButton?: boolean;
   onCreateAsset?: () => void;
+  onEditAsset?: (equipment: Equipment) => void;
 }
 
 export function EquipmentSearch({ 
@@ -38,7 +40,8 @@ export function EquipmentSearch({
   onFilteredResults, 
   onEquipmentSelect,
   showCreateButton = false,
-  onCreateAsset
+  onCreateAsset,
+  onEditAsset
 }: EquipmentSearchProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<EquipmentFilter>({});
@@ -501,6 +504,20 @@ export function EquipmentSearch({
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">{eq.tag}</CardTitle>
                   <div className="flex items-center gap-2">
+                    {onEditAsset && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditAsset(eq);
+                        }}
+                        title="Editar equipamento"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
                     {getStatusIcon(eq.status)}
                   </div>
                 </div>
