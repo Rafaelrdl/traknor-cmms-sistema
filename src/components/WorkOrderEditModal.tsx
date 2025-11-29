@@ -106,8 +106,8 @@ export function WorkOrderEditModal({
   const { data: equipment = [] } = useEquipments();
   const { data: sectors = [] } = useSectors();
   const { data: companies = [] } = useCompanies();
-  const { data: stockItemsData } = useStockItems();
-  const stockItems = (stockItemsData?.results || []).map(mapToStockItem);
+  const { data: stockItemsData = [] } = useStockItems();
+  const stockItems = stockItemsData.map(mapToStockItem);
   
   // Lista de técnicos da API
   const { data: technicians = [] } = useTechnicians();
