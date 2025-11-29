@@ -49,10 +49,28 @@ function AssetsContent() {
   // ========== HOOKS PARA DADOS ==========
   // React Query hooks
   const queryClient = useQueryClient();
-  const { data: equipment = [], refetch: refetchEquipments } = useEquipments();
+  const { data: equipment = [], refetch: refetchEquipments, isLoading, isFetching } = useEquipments();
   const { data: sectors = [] } = useSectors();
   const { data: subSections = [] } = useSubsections();
   const { data: companies = [] } = useCompanies();
+  
+  // Debug: log equipment data to check if location fields are present
+  useEffect(() => {
+    if (equipment.length > 0) {
+      console.log('[EquipmentPage] Equipment data sample:', {
+        tag: equipment[0].tag,
+        companyId: equipment[0].companyId,
+        sectorId: equipment[0].sectorId,
+        subSectionId: equipment[0].subSectionId,
+      });
+    }
+  }, [equipment]);
+  
+  // Force refetch on mount to get fresh data with location fields
+  useEffect(() => {
+    console.log('[EquipmentPage] Forcing refetch on mount...');
+    queryClient.invalidateQueries({ queryKey: ['equipment'] });
+  }, [queryClient]);
   
   // ========== CONTEXTO E PERMISSÕES ==========
   // Obtém o nó/local selecionado na árvore de locais

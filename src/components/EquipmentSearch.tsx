@@ -22,7 +22,6 @@ import {
   Pencil
 } from 'lucide-react';
 import type { Equipment, EquipmentFilter } from '@/types';
-import { MOCK_SECTORS } from '@/data/mockData';
 
 interface EquipmentSearchProps {
   equipment: Equipment[];
@@ -86,33 +85,32 @@ export function EquipmentSearch({
       console.log('Extracted IDs:', { originalSectorId, originalSubsectionId });
       
       filtered = filtered.filter(eq => {
-        // If selectedLocation is a sector node, match equipment's sectorId
-        if (originalSectorId && !selectedLocation.includes('subsection-')) {
-          const match = eq.sectorId === originalSectorId;
-          console.log(`Equipment ${eq.tag}: sectorId=${eq.sectorId}, matches=${match}`);
-          return match;
-        }
+        // Log equipment details for debugging
+        console.log(`Equipment ${eq.tag}: companyId=${eq.companyId}, sectorId=${eq.sectorId}, subSectionId=${eq.subSectionId}`);
         
         // If selectedLocation is a subsection node, match equipment's subSectionId  
         if (originalSubsectionId) {
           const match = eq.subSectionId === originalSubsectionId;
-          console.log(`Equipment ${eq.tag}: subSectionId=${eq.subSectionId}, matches=${match}`);
+          console.log(`  -> Filtering by subsection: ${originalSubsectionId}, matches=${match}`);
           return match;
         }
         
-        // If selectedLocation is a company node, show all equipment from sectors of that company
+        // If selectedLocation is a sector node, match equipment's sectorId
+        if (originalSectorId && !selectedLocation.includes('subsection-')) {
+          const match = eq.sectorId === originalSectorId;
+          console.log(`  -> Filtering by sector: ${originalSectorId}, matches=${match}`);
+          return match;
+        }
+        
+        // If selectedLocation is a company node, show all equipment from that company
+        // Company nodes format: "company-4"
         if (selectedLocation.includes('company-') && !selectedLocation.includes('sector-')) {
-          // Company nodes format: "company-1"
           const companyMatch = selectedLocation.match(/company-(\d+)$/);
           if (companyMatch) {
             const companyId = companyMatch[1];
-            // Find all sectors of this company from MOCK_SECTORS data
-            const companySectors = MOCK_SECTORS
-              .filter(sector => sector.companyId === companyId)
-              .map(sector => sector.id);
-            
-            const match = eq.sectorId && companySectors.includes(eq.sectorId);
-            console.log(`Equipment ${eq.tag}: sectorId=${eq.sectorId}, companySectors=${companySectors}, matches=${match}`);
+            // Use equipment's companyId directly instead of looking up in MOCK_SECTORS
+            const match = eq.companyId === companyId;
+            console.log(`  -> Filtering by company: ${companyId}, equipment companyId=${eq.companyId}, matches=${match}`);
             return match;
           }
         }

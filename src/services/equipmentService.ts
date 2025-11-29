@@ -113,33 +113,40 @@ const apiAssetToEquipment = (asset: ApiAsset): Equipment & {
   companyId?: string;
   sectorName?: string;
   subsectionName?: string;
-} => ({
-  id: String(asset.id),
-  tag: asset.tag,
-  model: asset.model || '',
-  brand: asset.manufacturer || '',
-  type: mapAssetType(asset.asset_type),
-  capacity: (asset.specifications?.capacity as number) || 0,
-  sectorId: asset.sector ? String(asset.sector) : undefined,
-  subSectionId: asset.subsection ? String(asset.subsection) : undefined,
-  // Campos extras para o modal
-  companyId: asset.company_id ? String(asset.company_id) : undefined,
-  sectorName: asset.sector_name || undefined,
-  subsectionName: asset.subsection_name || undefined,
-  installDate: asset.installation_date || '',
-  nextMaintenance: '', // TODO: Calcular próxima manutenção
-  status: mapAssetStatus(asset.status),
-  criticidade: mapCriticidade(asset.health_score),
-  lastMaintenance: asset.last_maintenance,
-  totalOperatingHours: undefined, // TODO: Calcular horas
-  energyConsumption: undefined, // TODO: Calcular consumo
-  warrantyExpiry: undefined,
-  serialNumber: asset.serial_number,
-  location: asset.location_description || asset.full_location,
-  notes: asset.name,
-  // Incluir specifications para poder ler no modal
-  specifications: asset.specifications,
-});
+} => {
+  // Debug: log para verificar o mapeamento de localização
+  if (asset.sector || asset.company_id) {
+    console.log(`[apiAssetToEquipment] ${asset.tag}: sector=${asset.sector}, company_id=${asset.company_id}`);
+  }
+  
+  return {
+    id: String(asset.id),
+    tag: asset.tag,
+    model: asset.model || '',
+    brand: asset.manufacturer || '',
+    type: mapAssetType(asset.asset_type),
+    capacity: (asset.specifications?.capacity as number) || 0,
+    sectorId: asset.sector ? String(asset.sector) : undefined,
+    subSectionId: asset.subsection ? String(asset.subsection) : undefined,
+    // Campos extras para o modal
+    companyId: asset.company_id ? String(asset.company_id) : undefined,
+    sectorName: asset.sector_name || undefined,
+    subsectionName: asset.subsection_name || undefined,
+    installDate: asset.installation_date || '',
+    nextMaintenance: '', // TODO: Calcular próxima manutenção
+    status: mapAssetStatus(asset.status),
+    criticidade: mapCriticidade(asset.health_score),
+    lastMaintenance: asset.last_maintenance,
+    totalOperatingHours: undefined, // TODO: Calcular horas
+    energyConsumption: undefined, // TODO: Calcular consumo
+    warrantyExpiry: undefined,
+    serialNumber: asset.serial_number,
+    location: asset.location_description || asset.full_location,
+    notes: asset.name,
+    // Incluir specifications para poder ler no modal
+    specifications: asset.specifications,
+  };
+};
 
 /**
  * Converte Equipment para dados parciais de ApiAsset (para updates)
@@ -244,6 +251,18 @@ export const equipmentService = {
     const assets = Array.isArray(response.data)
       ? response.data
       : response.data.results || [];
+    
+    // Debug: log para verificar campos de localização
+    if (assets.length > 0) {
+      console.log('[equipmentService] Sample asset from API:', {
+        tag: assets[0].tag,
+        sector: assets[0].sector,
+        subsection: assets[0].subsection,
+        company_id: assets[0].company_id,
+        sector_name: assets[0].sector_name,
+        subsection_name: assets[0].subsection_name,
+      });
+    }
     
     return assets.map(apiAssetToEquipment);
   },
