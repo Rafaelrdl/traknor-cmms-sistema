@@ -4,12 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import type { InventoryItem, InventoryCategory } from '@/models/inventory';
-import { createItem } from '@/data/inventoryStore';
+import { useCreateInventoryItem } from '@/hooks/useInventoryQuery';
 
 interface NewItemModalProps {
   categories: InventoryCategory[];
@@ -19,20 +18,45 @@ interface NewItemModalProps {
 
 export function NewItemModal({ categories, onItemCreated, trigger }: NewItemModalProps) {
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const createMutation = useCreateInventoryItem();
+  
   const [formData, setFormData] = useState({
     name: '',
-    sku: '',
-    category_id: 'uncategorized',
-    unit: 'un',
-    photo_url: '',
-    location_name: '',
-    reorder_point: 0,
-    min_qty: undefined as number | undefined,
-    max_qty: undefined as number | undefined,
-    unit_cost: undefined as number | undefined,
-    active: true
+    code: '',
+    description: '',
+    category_id: '',
+    unit: 'UN',
+    location: '',
+    shelf: '',
+    bin: '',
+    quantity: 0,
+    min_quantity: 0,
+    max_quantity: undefined as number | undefined,
+    unit_cost: 0,
+    supplier: '',
+    is_active: true,
+    is_critical: false
   });
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      code: '',
+      description: '',
+      category_id: '',
+      unit: 'UN',
+      location: '',
+      shelf: '',
+      bin: '',
+      quantity: 0,
+      min_quantity: 0,
+      max_quantity: undefined,
+      unit_cost: 0,
+      supplier: '',
+      is_active: true,
+      is_critical: false
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,63 +66,68 @@ export function NewItemModal({ categories, onItemCreated, trigger }: NewItemModa
       return;
     }
 
-    if (formData.name.length < 3) {
-      toast.error('Nome deve ter pelo menos 3 caracteres');
+    if (!formData.code.trim()) {
+      toast.error('Código é obrigatório');
       return;
     }
 
-    if (formData.reorder_point < 0) {
-      toast.error('Ponto de reposição deve ser maior ou igual a 0');
+    if (formData.min_quantity < 0) {
+      toast.error('Quantidade mínima deve ser maior ou igual a 0');
       return;
     }
 
-    if (formData.min_qty !== undefined && formData.max_qty !== undefined && formData.min_qty > formData.max_qty) {
-      toast.error('Quantidade mínima não pode ser maior que a máxima');
-      return;
-    }
-
-    setLoading(true);
-    
-    try {
-      const newItem = createItem({
-        name: formData.name.trim(),
-        sku: formData.sku.trim() || undefined,
-        category_id: formData.category_id === 'uncategorized' ? undefined : formData.category_id,
-        unit: formData.unit,
-        photo_url: formData.photo_url.trim() || undefined,
-        location_name: formData.location_name.trim() || undefined,
-        qty_on_hand: 0, // Start with 0, user can add initial stock via movement
-        reorder_point: formData.reorder_point,
-        min_qty: formData.min_qty,
-        max_qty: formData.max_qty,
-        unit_cost: formData.unit_cost,
-        active: formData.active
-      });
-
-      onItemCreated(newItem);
-      toast.success('Item criado com sucesso');
-      setOpen(false);
-      
-      // Reset form
-      setFormData({
-        name: '',
-        sku: '',
-        category_id: 'uncategorized',
-        unit: 'un',
-        photo_url: '',
-        location_name: '',
-        reorder_point: 0,
-        min_qty: undefined,
-        max_qty: undefined,
-        unit_cost: undefined,
-        active: true
-      });
-    } catch (error) {
-      console.error('Error creating item:', error);
-      toast.error('Erro ao criar item');
-    } finally {
-      setLoading(false);
-    }
+    createMutation.mutate({
+      name: formData.name.trim(),
+      code: formData.code.trim(),
+      description: formData.description.trim(),
+      category: formData.category_id ? Number(formData.category_id) : null,
+      unit: formData.unit as any,
+      location: formData.location.trim(),
+      shelf: formData.shelf.trim(),
+      bin: formData.bin.trim(),
+      quantity: formData.quantity,
+      min_quantity: formData.min_quantity,
+      max_quantity: formData.max_quantity,
+      unit_cost: formData.unit_cost,
+      supplier: formData.supplier.trim(),
+      is_active: formData.is_active,
+      is_critical: formData.is_critical
+    }, {
+      onSuccess: (data) => {
+        toast.success('Item criado com sucesso!');
+        setOpen(false);
+        resetForm();
+        // Map API response to frontend type
+        onItemCreated({
+          id: String(data.id),
+          code: data.code,
+          name: data.name,
+          description: data.description,
+          category_id: data.category ? String(data.category) : null,
+          category_name: data.category_name,
+          unit: data.unit,
+          qty_on_hand: data.quantity,
+          quantity: data.quantity,
+          min_qty: data.min_quantity,
+          minimum_quantity: data.min_quantity,
+          reorder_point: data.reorder_point ?? data.min_quantity,
+          location: data.location,
+          location_name: [data.location, data.shelf, data.bin].filter(Boolean).join(' / '),
+          shelf: data.shelf,
+          bin: data.bin,
+          supplier: data.supplier,
+          unit_cost: data.unit_cost,
+          is_active: data.is_active,
+          is_critical: data.is_critical,
+          created_at: data.created_at,
+          updated_at: data.updated_at,
+        });
+      },
+      onError: (error: any) => {
+        console.error('Error creating item:', error);
+        toast.error(error.response?.data?.detail || 'Erro ao criar item');
+      }
+    });
   };
 
   const defaultTrigger = (
@@ -117,7 +146,7 @@ export function NewItemModal({ categories, onItemCreated, trigger }: NewItemModa
         <DialogHeader>
           <DialogTitle>Novo Item de Estoque</DialogTitle>
           <DialogDescription>
-            Adicione um novo item ao inventário. O estoque inicial será 0 - use a função "Movimentar" para adicionar quantidade inicial.
+            Adicione um novo item ao inventário.
           </DialogDescription>
         </DialogHeader>
         
@@ -132,18 +161,18 @@ export function NewItemModal({ categories, onItemCreated, trigger }: NewItemModa
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 placeholder="Ex: Filtro de Ar G4 - 610x610x48mm"
                 required
-                minLength={3}
               />
             </div>
 
-            {/* SKU */}
+            {/* Código */}
             <div>
-              <Label htmlFor="sku">SKU</Label>
+              <Label htmlFor="code">Código *</Label>
               <Input
-                id="sku"
-                value={formData.sku}
-                onChange={(e) => setFormData(prev => ({ ...prev, sku: e.target.value }))}
-                placeholder="Ex: FLT-G4-610"
+                id="code"
+                value={formData.code}
+                onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
+                placeholder="Ex: FLT-001"
+                required
               />
             </div>
 
@@ -155,7 +184,6 @@ export function NewItemModal({ categories, onItemCreated, trigger }: NewItemModa
                   <SelectValue placeholder="Selecione uma categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="uncategorized">Sem categoria</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
@@ -167,58 +195,46 @@ export function NewItemModal({ categories, onItemCreated, trigger }: NewItemModa
 
             {/* Unidade */}
             <div>
-              <Label htmlFor="unit">Unidade</Label>
+              <Label htmlFor="unit">Unidade *</Label>
               <Select value={formData.unit} onValueChange={(value) => setFormData(prev => ({ ...prev, unit: value }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="un">Unidade</SelectItem>
-                  <SelectItem value="m">Metro</SelectItem>
-                  <SelectItem value="kg">Quilograma</SelectItem>
+                  <SelectItem value="UN">Unidade</SelectItem>
+                  <SelectItem value="PC">Peça</SelectItem>
+                  <SelectItem value="M">Metro</SelectItem>
+                  <SelectItem value="KG">Quilograma</SelectItem>
                   <SelectItem value="L">Litro</SelectItem>
-                  <SelectItem value="cx">Caixa</SelectItem>
-                  <SelectItem value="pç">Peça</SelectItem>
-                  <SelectItem value="rolo">Rolo</SelectItem>
-                  <SelectItem value="par">Par</SelectItem>
+                  <SelectItem value="CX">Caixa</SelectItem>
+                  <SelectItem value="PCT">Pacote</SelectItem>
+                  <SelectItem value="JG">Jogo</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Local */}
+            {/* Quantidade Inicial */}
             <div>
-              <Label htmlFor="location">Local</Label>
+              <Label htmlFor="quantity">Quantidade Inicial</Label>
               <Input
-                id="location"
-                value={formData.location_name}
-                onChange={(e) => setFormData(prev => ({ ...prev, location_name: e.target.value }))}
-                placeholder="Ex: Prateleira A-1"
-              />
-            </div>
-
-            {/* Ponto de Reposição */}
-            <div>
-              <Label htmlFor="reorder-point">Ponto de Reposição *</Label>
-              <Input
-                id="reorder-point"
+                id="quantity"
                 type="number"
                 min="0"
-                value={formData.reorder_point}
-                onChange={(e) => setFormData(prev => ({ ...prev, reorder_point: parseInt(e.target.value) || 0 }))}
-                required
+                value={formData.quantity}
+                onChange={(e) => setFormData(prev => ({ ...prev, quantity: parseInt(e.target.value) || 0 }))}
               />
             </div>
 
             {/* Quantidade Mínima */}
             <div>
-              <Label htmlFor="min-qty">Quantidade Mínima</Label>
+              <Label htmlFor="min-qty">Quantidade Mínima *</Label>
               <Input
                 id="min-qty"
                 type="number"
                 min="0"
-                value={formData.min_qty || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, min_qty: e.target.value ? parseInt(e.target.value) : undefined }))}
-                placeholder="Opcional"
+                value={formData.min_quantity}
+                onChange={(e) => setFormData(prev => ({ ...prev, min_quantity: parseInt(e.target.value) || 0 }))}
+                required
               />
             </div>
 
@@ -229,8 +245,8 @@ export function NewItemModal({ categories, onItemCreated, trigger }: NewItemModa
                 id="max-qty"
                 type="number"
                 min="0"
-                value={formData.max_qty || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, max_qty: e.target.value ? parseInt(e.target.value) : undefined }))}
+                value={formData.max_quantity || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, max_quantity: e.target.value ? parseInt(e.target.value) : undefined }))}
                 placeholder="Opcional"
               />
             </div>
@@ -244,41 +260,101 @@ export function NewItemModal({ categories, onItemCreated, trigger }: NewItemModa
                 min="0"
                 step="0.01"
                 value={formData.unit_cost || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, unit_cost: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                onChange={(e) => setFormData(prev => ({ ...prev, unit_cost: parseFloat(e.target.value) || 0 }))}
                 placeholder="0,00"
               />
             </div>
 
-            {/* URL da Foto */}
-            <div className="md:col-span-2">
-              <Label htmlFor="photo-url">URL da Foto</Label>
+            {/* Local */}
+            <div>
+              <Label htmlFor="location">Local</Label>
               <Input
-                id="photo-url"
-                type="url"
-                value={formData.photo_url}
-                onChange={(e) => setFormData(prev => ({ ...prev, photo_url: e.target.value }))}
-                placeholder="https://example.com/image.jpg"
+                id="location"
+                value={formData.location}
+                onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                placeholder="Ex: Almoxarifado A"
+              />
+            </div>
+
+            {/* Prateleira */}
+            <div>
+              <Label htmlFor="shelf">Prateleira</Label>
+              <Input
+                id="shelf"
+                value={formData.shelf}
+                onChange={(e) => setFormData(prev => ({ ...prev, shelf: e.target.value }))}
+                placeholder="Ex: A1"
+              />
+            </div>
+
+            {/* Posição */}
+            <div>
+              <Label htmlFor="bin">Posição</Label>
+              <Input
+                id="bin"
+                value={formData.bin}
+                onChange={(e) => setFormData(prev => ({ ...prev, bin: e.target.value }))}
+                placeholder="Ex: 01"
+              />
+            </div>
+
+            {/* Fornecedor */}
+            <div>
+              <Label htmlFor="supplier">Fornecedor</Label>
+              <Input
+                id="supplier"
+                value={formData.supplier}
+                onChange={(e) => setFormData(prev => ({ ...prev, supplier: e.target.value }))}
+                placeholder="Nome do fornecedor"
+              />
+            </div>
+
+            {/* Descrição */}
+            <div className="md:col-span-2">
+              <Label htmlFor="description">Descrição</Label>
+              <Input
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Descrição detalhada do item"
               />
             </div>
           </div>
 
-          {/* Ativo */}
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="active"
-              checked={formData.active}
-              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, active: checked as boolean }))}
-            />
-            <Label htmlFor="active">Item ativo</Label>
+          {/* Checkboxes */}
+          <div className="flex items-center gap-6">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="is_active"
+                checked={formData.is_active}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked as boolean }))}
+              />
+              <Label htmlFor="is_active">Item ativo</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="is_critical"
+                checked={formData.is_critical}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_critical: checked as boolean }))}
+              />
+              <Label htmlFor="is_critical">Item crítico</Label>
+            </div>
           </div>
 
           {/* Actions */}
           <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={createMutation.isPending}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Criando...' : 'Criar Item'}
+            <Button type="submit" disabled={createMutation.isPending}>
+              {createMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Criando...
+                </>
+              ) : (
+                'Criar Item'
+              )}
             </Button>
           </div>
         </form>

@@ -2,22 +2,47 @@ export type MovementType = 'entrada' | 'saida';
 
 export interface InventoryCategory {
   id: string;
+  code: string;
   name: string;
+  description?: string;
   parent_id?: string | null;
   color?: string;
+  icon?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface InventoryItem {
   id: string;
+  code: string;
   name: string;
   description?: string;
-  category_id: string;
-  current_qty: number;
-  min_qty: number;
-  reorder_point: number;
-  max_qty?: number;
+  sku?: string;
+  barcode?: string;
+  category_id: string | null;
+  category_name?: string | null;
   unit: string;
-  active: boolean;
+  photo_url?: string | null;
+  location_name?: string;
+  location?: string;
+  shelf?: string;
+  bin?: string;
+  qty_on_hand: number;
+  quantity: number;
+  min_qty: number;
+  minimum_quantity: number;
+  max_qty?: number;
+  maximum_quantity?: number;
+  reorder_point: number;
+  unit_cost: number;
+  supplier?: string;
+  supplier_code?: string;
+  is_active: boolean;
+  is_critical: boolean;
+  is_low_stock?: boolean;
+  stock_status?: 'OK' | 'LOW' | 'OUT_OF_STOCK' | 'OVERSTOCKED';
+  last_movement_at?: string;
   created_at: string;
   updated_at: string;
 }

@@ -6,8 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 import type { InventoryItem, InventoryCategory } from '@/models/inventory';
-import { updateItem } from '@/data/inventoryStore';
+import { useUpdateInventoryItem } from '@/hooks/useInventoryQuery';
 
 interface EditItemModalProps {
   item: InventoryItem | null;
@@ -18,19 +19,23 @@ interface EditItemModalProps {
 }
 
 export function EditItemModal({ item, categories, open, onOpenChange, onItemUpdated }: EditItemModalProps) {
-  const [loading, setLoading] = useState(false);
+  const updateMutation = useUpdateInventoryItem();
+  
   const [formData, setFormData] = useState({
     name: '',
-    sku: '',
-    category_id: 'uncategorized',
-    unit: 'un',
-    photo_url: '',
-    location_name: '',
-    reorder_point: 0,
-    min_qty: undefined as number | undefined,
-    max_qty: undefined as number | undefined,
-    unit_cost: undefined as number | undefined,
-    active: true
+    code: '',
+    description: '',
+    category_id: '',
+    unit: 'UN',
+    location: '',
+    shelf: '',
+    bin: '',
+    min_quantity: 0,
+    max_quantity: undefined as number | undefined,
+    unit_cost: 0,
+    supplier: '',
+    is_active: true,
+    is_critical: false
   });
 
   // Update form data when item changes
@@ -38,16 +43,19 @@ export function EditItemModal({ item, categories, open, onOpenChange, onItemUpda
     if (item) {
       setFormData({
         name: item.name,
-        sku: item.sku || '',
-        category_id: item.category_id || 'uncategorized',
-        unit: item.unit || 'un',
-        photo_url: item.photo_url || '',
-        location_name: item.location_name || '',
-        reorder_point: item.reorder_point,
-        min_qty: item.min_qty,
-        max_qty: item.max_qty,
-        unit_cost: item.unit_cost,
-        active: item.active
+        code: item.code || item.sku || '',
+        description: item.description || '',
+        category_id: item.category_id || '',
+        unit: item.unit || 'UN',
+        location: item.location || '',
+        shelf: item.shelf || '',
+        bin: item.bin || '',
+        min_quantity: item.min_qty || item.minimum_quantity || 0,
+        max_quantity: item.max_qty || item.maximum_quantity,
+        unit_cost: item.unit_cost || 0,
+        supplier: item.supplier || '',
+        is_active: item.is_active,
+        is_critical: item.is_critical || false
       });
     }
   }, [item]);
@@ -62,51 +70,63 @@ export function EditItemModal({ item, categories, open, onOpenChange, onItemUpda
       return;
     }
 
-    if (formData.name.length < 3) {
-      toast.error('Nome deve ter pelo menos 3 caracteres');
-      return;
-    }
-
-    if (formData.reorder_point < 0) {
-      toast.error('Ponto de reposição deve ser maior ou igual a 0');
-      return;
-    }
-
-    if (formData.min_qty !== undefined && formData.max_qty !== undefined && formData.min_qty > formData.max_qty) {
-      toast.error('Quantidade mínima não pode ser maior que a máxima');
-      return;
-    }
-
-    setLoading(true);
-    
-    try {
-      const updatedItem = updateItem({
-        ...item,
+    updateMutation.mutate({
+      id: Number(item.id),
+      data: {
         name: formData.name.trim(),
-        sku: formData.sku.trim() || undefined,
-        category_id: formData.category_id === 'uncategorized' ? undefined : formData.category_id,
-        unit: formData.unit,
-        photo_url: formData.photo_url.trim() || undefined,
-        location_name: formData.location_name.trim() || undefined,
-        reorder_point: formData.reorder_point,
-        min_qty: formData.min_qty,
-        max_qty: formData.max_qty,
+        code: formData.code.trim(),
+        description: formData.description.trim(),
+        category: formData.category_id ? Number(formData.category_id) : null,
+        unit: formData.unit as any,
+        location: formData.location.trim(),
+        shelf: formData.shelf.trim(),
+        bin: formData.bin.trim(),
+        min_quantity: formData.min_quantity,
+        max_quantity: formData.max_quantity,
         unit_cost: formData.unit_cost,
-        active: formData.active
-      });
-
-      onItemUpdated(updatedItem);
-      toast.success('Item atualizado com sucesso');
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Error updating item:', error);
-      toast.error('Erro ao atualizar item');
-    } finally {
-      setLoading(false);
-    }
+        supplier: formData.supplier.trim(),
+        is_active: formData.is_active,
+        is_critical: formData.is_critical
+      }
+    }, {
+      onSuccess: (data) => {
+        toast.success('Item atualizado com sucesso!');
+        onOpenChange(false);
+        // Map API response to frontend type
+        onItemUpdated({
+          ...item,
+          name: data.name,
+          code: data.code,
+          description: data.description,
+          category_id: data.category ? String(data.category) : null,
+          category_name: data.category_name,
+          unit: data.unit,
+          min_qty: data.min_quantity,
+          minimum_quantity: data.min_quantity,
+          max_qty: data.max_quantity ?? undefined,
+          maximum_quantity: data.max_quantity ?? undefined,
+          reorder_point: data.reorder_point ?? data.min_quantity,
+          location: data.location,
+          location_name: [data.location, data.shelf, data.bin].filter(Boolean).join(' / '),
+          shelf: data.shelf,
+          bin: data.bin,
+          supplier: data.supplier,
+          unit_cost: data.unit_cost,
+          is_active: data.is_active,
+          is_critical: data.is_critical,
+          updated_at: data.updated_at,
+        });
+      },
+      onError: (error: any) => {
+        console.error('Error updating item:', error);
+        toast.error(error.response?.data?.detail || 'Erro ao atualizar item');
+      }
+    });
   };
 
   if (!item) return null;
+
+  const currentQty = item.qty_on_hand ?? item.quantity ?? 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -114,7 +134,7 @@ export function EditItemModal({ item, categories, open, onOpenChange, onItemUpda
         <DialogHeader>
           <DialogTitle>Editar Item de Estoque</DialogTitle>
           <DialogDescription>
-            Edite as informações do item. Para alterar a quantidade em estoque, use a função "Movimentar".
+            Edite as informações do item. Para alterar a quantidade, use a função "Movimentar".
           </DialogDescription>
         </DialogHeader>
         
@@ -129,18 +149,17 @@ export function EditItemModal({ item, categories, open, onOpenChange, onItemUpda
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 placeholder="Ex: Filtro de Ar G4 - 610x610x48mm"
                 required
-                minLength={3}
               />
             </div>
 
-            {/* SKU */}
+            {/* Código */}
             <div>
-              <Label htmlFor="edit-sku">SKU</Label>
+              <Label htmlFor="edit-code">Código</Label>
               <Input
-                id="edit-sku"
-                value={formData.sku}
-                onChange={(e) => setFormData(prev => ({ ...prev, sku: e.target.value }))}
-                placeholder="Ex: FLT-G4-610"
+                id="edit-code"
+                value={formData.code}
+                onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
+                placeholder="Ex: FLT-001"
               />
             </div>
 
@@ -152,7 +171,6 @@ export function EditItemModal({ item, categories, open, onOpenChange, onItemUpda
                   <SelectValue placeholder="Selecione uma categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="uncategorized">Sem categoria</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
@@ -170,34 +188,23 @@ export function EditItemModal({ item, categories, open, onOpenChange, onItemUpda
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="un">Unidade</SelectItem>
-                  <SelectItem value="m">Metro</SelectItem>
-                  <SelectItem value="kg">Quilograma</SelectItem>
+                  <SelectItem value="UN">Unidade</SelectItem>
+                  <SelectItem value="PC">Peça</SelectItem>
+                  <SelectItem value="M">Metro</SelectItem>
+                  <SelectItem value="KG">Quilograma</SelectItem>
                   <SelectItem value="L">Litro</SelectItem>
-                  <SelectItem value="cx">Caixa</SelectItem>
-                  <SelectItem value="pç">Peça</SelectItem>
-                  <SelectItem value="rolo">Rolo</SelectItem>
-                  <SelectItem value="par">Par</SelectItem>
+                  <SelectItem value="CX">Caixa</SelectItem>
+                  <SelectItem value="PCT">Pacote</SelectItem>
+                  <SelectItem value="JG">Jogo</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            {/* Local */}
-            <div>
-              <Label htmlFor="edit-location">Local</Label>
-              <Input
-                id="edit-location"
-                value={formData.location_name}
-                onChange={(e) => setFormData(prev => ({ ...prev, location_name: e.target.value }))}
-                placeholder="Ex: Prateleira A-1"
-              />
             </div>
 
             {/* Estoque Atual (readonly) */}
             <div>
               <Label>Estoque Atual</Label>
               <div className="flex items-center gap-2 h-10 px-3 bg-muted rounded-md">
-                <span className="font-medium">{item.qty_on_hand}</span>
+                <span className="font-medium">{currentQty}</span>
                 <span className="text-muted-foreground">{item.unit}</span>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -205,29 +212,16 @@ export function EditItemModal({ item, categories, open, onOpenChange, onItemUpda
               </p>
             </div>
 
-            {/* Ponto de Reposição */}
-            <div>
-              <Label htmlFor="edit-reorder-point">Ponto de Reposição *</Label>
-              <Input
-                id="edit-reorder-point"
-                type="number"
-                min="0"
-                value={formData.reorder_point}
-                onChange={(e) => setFormData(prev => ({ ...prev, reorder_point: parseInt(e.target.value) || 0 }))}
-                required
-              />
-            </div>
-
             {/* Quantidade Mínima */}
             <div>
-              <Label htmlFor="edit-min-qty">Quantidade Mínima</Label>
+              <Label htmlFor="edit-min-qty">Quantidade Mínima *</Label>
               <Input
                 id="edit-min-qty"
                 type="number"
                 min="0"
-                value={formData.min_qty || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, min_qty: e.target.value ? parseInt(e.target.value) : undefined }))}
-                placeholder="Opcional"
+                value={formData.min_quantity}
+                onChange={(e) => setFormData(prev => ({ ...prev, min_quantity: parseInt(e.target.value) || 0 }))}
+                required
               />
             </div>
 
@@ -238,8 +232,8 @@ export function EditItemModal({ item, categories, open, onOpenChange, onItemUpda
                 id="edit-max-qty"
                 type="number"
                 min="0"
-                value={formData.max_qty || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, max_qty: e.target.value ? parseInt(e.target.value) : undefined }))}
+                value={formData.max_quantity || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, max_quantity: e.target.value ? parseInt(e.target.value) : undefined }))}
                 placeholder="Opcional"
               />
             </div>
@@ -253,41 +247,101 @@ export function EditItemModal({ item, categories, open, onOpenChange, onItemUpda
                 min="0"
                 step="0.01"
                 value={formData.unit_cost || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, unit_cost: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                onChange={(e) => setFormData(prev => ({ ...prev, unit_cost: parseFloat(e.target.value) || 0 }))}
                 placeholder="0,00"
               />
             </div>
 
-            {/* URL da Foto */}
-            <div className="md:col-span-2">
-              <Label htmlFor="edit-photo-url">URL da Foto</Label>
+            {/* Local */}
+            <div>
+              <Label htmlFor="edit-location">Local</Label>
               <Input
-                id="edit-photo-url"
-                type="url"
-                value={formData.photo_url}
-                onChange={(e) => setFormData(prev => ({ ...prev, photo_url: e.target.value }))}
-                placeholder="https://example.com/image.jpg"
+                id="edit-location"
+                value={formData.location}
+                onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                placeholder="Ex: Almoxarifado A"
+              />
+            </div>
+
+            {/* Prateleira */}
+            <div>
+              <Label htmlFor="edit-shelf">Prateleira</Label>
+              <Input
+                id="edit-shelf"
+                value={formData.shelf}
+                onChange={(e) => setFormData(prev => ({ ...prev, shelf: e.target.value }))}
+                placeholder="Ex: A1"
+              />
+            </div>
+
+            {/* Posição */}
+            <div>
+              <Label htmlFor="edit-bin">Posição</Label>
+              <Input
+                id="edit-bin"
+                value={formData.bin}
+                onChange={(e) => setFormData(prev => ({ ...prev, bin: e.target.value }))}
+                placeholder="Ex: 01"
+              />
+            </div>
+
+            {/* Fornecedor */}
+            <div>
+              <Label htmlFor="edit-supplier">Fornecedor</Label>
+              <Input
+                id="edit-supplier"
+                value={formData.supplier}
+                onChange={(e) => setFormData(prev => ({ ...prev, supplier: e.target.value }))}
+                placeholder="Nome do fornecedor"
+              />
+            </div>
+
+            {/* Descrição */}
+            <div className="md:col-span-2">
+              <Label htmlFor="edit-description">Descrição</Label>
+              <Input
+                id="edit-description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Descrição detalhada do item"
               />
             </div>
           </div>
 
-          {/* Ativo */}
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="edit-active"
-              checked={formData.active}
-              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, active: checked as boolean }))}
-            />
-            <Label htmlFor="edit-active">Item ativo</Label>
+          {/* Checkboxes */}
+          <div className="flex items-center gap-6">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="edit-is_active"
+                checked={formData.is_active}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked as boolean }))}
+              />
+              <Label htmlFor="edit-is_active">Item ativo</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="edit-is_critical"
+                checked={formData.is_critical}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_critical: checked as boolean }))}
+              />
+              <Label htmlFor="edit-is_critical">Item crítico</Label>
+            </div>
           </div>
 
           {/* Actions */}
           <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={updateMutation.isPending}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Atualizando...' : 'Atualizar Item'}
+            <Button type="submit" disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Atualizando...
+                </>
+              ) : (
+                'Atualizar Item'
+              )}
             </Button>
           </div>
         </form>

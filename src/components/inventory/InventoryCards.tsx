@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Edit, Package } from 'lucide-react';
-import { IfCanEdit, IfCanMove } from '@/components/auth/IfCan';
+import { AlertTriangle, Edit, Package, ArrowUpDown } from 'lucide-react';
 import type { InventoryItem, InventoryCategory } from '@/models/inventory';
 
 interface InventoryCardsProps {
@@ -14,13 +13,22 @@ interface InventoryCardsProps {
 }
 
 export function InventoryCards({ items, categories, onEdit, onMove }: InventoryCardsProps) {
-  const getCategoryName = (categoryId?: string) => {
+  const getCategoryName = (categoryId?: string | null) => {
     if (!categoryId) return 'Sem categoria';
     const category = categories.find(c => c.id === categoryId);
     return category?.name || 'Categoria desconhecida';
   };
 
-  const isLowStock = (item: InventoryItem) => item.qty_on_hand < item.reorder_point;
+  const isLowStock = (item: InventoryItem) => {
+    // Usar campo calculado pela API se disponível
+    if (item.is_low_stock !== undefined) {
+      return item.is_low_stock;
+    }
+    // Fallback: calcular manualmente
+    const qty = item.qty_on_hand ?? item.quantity ?? 0;
+    const reorder = item.reorder_point ?? item.min_qty ?? 0;
+    return qty > 0 && qty <= reorder;
+  };
 
   if (items.length === 0) {
     return (
@@ -77,7 +85,7 @@ export function InventoryCards({ items, categories, onEdit, onMove }: InventoryC
                 <div>
                   <div className="flex items-baseline gap-1">
                     <span className="text-lg font-semibold">
-                      {item.qty_on_hand}
+                      {item.qty_on_hand ?? item.quantity ?? 0}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {item.unit}
@@ -101,30 +109,26 @@ export function InventoryCards({ items, categories, onEdit, onMove }: InventoryC
 
               {/* Actions */}
               <div className="flex gap-2 pt-2">
-                <IfCanMove subject="inventory">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1"
-                    onClick={() => onMove(item)}
-                    aria-label={`Movimentar ${item.name}`}
-                    data-testid="inventory-move"
-                  >
-                    <Package className="h-3 w-3 mr-1" />
-                    Movimentar
-                  </Button>
-                </IfCanMove>
-                <IfCanEdit subject="inventory">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => onEdit(item)}
-                    aria-label={`Editar ${item.name}`}
-                    data-testid="inventory-edit"
-                  >
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                </IfCanEdit>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => onMove(item)}
+                  aria-label={`Movimentar ${item.name}`}
+                  data-testid="inventory-move"
+                >
+                  <ArrowUpDown className="h-3 w-3 mr-1" />
+                  Movimentar
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => onEdit(item)}
+                  aria-label={`Editar ${item.name}`}
+                  data-testid="inventory-edit"
+                >
+                  <Edit className="h-3 w-3" />
+                </Button>
               </div>
             </div>
           </CardContent>

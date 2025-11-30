@@ -2,8 +2,8 @@ import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Edit, Package, Trash2 } from 'lucide-react';
-import { IfCan, IfCanEdit, IfCanDelete, IfCanMove } from '@/components/auth/IfCan';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { AlertTriangle, Edit, Package, Trash2, ArrowUpDown } from 'lucide-react';
 import type { InventoryItem, InventoryCategory } from '@/models/inventory';
 
 interface InventoryTableProps {
@@ -15,24 +15,37 @@ interface InventoryTableProps {
 }
 
 export function InventoryTable({ items, categories, onEdit, onMove, onDelete }: InventoryTableProps) {
-  const getCategoryName = (categoryId?: string) => {
+  const getCategoryName = (categoryId?: string | null) => {
     if (!categoryId) return 'Sem categoria';
     const category = categories.find(c => c.id === categoryId);
     return category?.name || 'Categoria desconhecida';
   };
 
-  const isLowStock = (item: InventoryItem) => item.qty_on_hand < item.reorder_point;
+  const isLowStock = (item: InventoryItem) => {
+    // Usar campo calculado pela API se disponível
+    if (item.is_low_stock !== undefined) {
+      return item.is_low_stock;
+    }
+    // Fallback: calcular manualmente
+    const qty = item.qty_on_hand ?? item.quantity ?? 0;
+    const reorder = item.reorder_point ?? item.min_qty ?? 0;
+    return qty > 0 && qty <= reorder;
+  };
 
   const getStockBadge = (item: InventoryItem) => {
-    if (item.qty_on_hand <= 0) {
+    const qty = item.qty_on_hand ?? item.quantity ?? 0;
+    const reorder = item.reorder_point ?? item.min_qty ?? 0;
+    const minQty = item.min_qty ?? item.minimum_quantity ?? 0;
+    
+    if (item.stock_status === 'OUT_OF_STOCK' || qty <= 0) {
       return <Badge variant="destructive">Esgotado</Badge>;
     }
     
-    if (item.qty_on_hand < item.reorder_point) {
+    if (item.stock_status === 'LOW' || qty < reorder) {
       return <Badge variant="destructive">Baixo</Badge>;
     }
     
-    if (item.min_qty && item.qty_on_hand <= item.min_qty) {
+    if (qty <= minQty) {
       return <Badge variant="secondary">Crítico</Badge>;
     }
     
@@ -124,7 +137,7 @@ export function InventoryTable({ items, categories, onEdit, onMove, onDelete }: 
               <TableCell className="text-right">
                 <div className="flex items-center justify-end gap-2">
                   <span className="font-medium">
-                    {item.qty_on_hand}
+                    {item.qty_on_hand ?? item.quantity ?? 0}
                   </span>
                   {isLowStock(item) && (
                     <AlertTriangle 
@@ -141,7 +154,7 @@ export function InventoryTable({ items, categories, onEdit, onMove, onDelete }: 
               </TableCell>
               <TableCell className="text-right">
                 <span className="font-medium">
-                  {item.reorder_point}
+                  {item.reorder_point ?? item.min_qty ?? '-'}
                 </span>
               </TableCell>
               <TableCell>
@@ -158,42 +171,53 @@ export function InventoryTable({ items, categories, onEdit, onMove, onDelete }: 
                 </span>
               </TableCell>
               <TableCell className="text-right">
-                <div className="flex items-center justify-end gap-1">
-                  <IfCanMove subject="inventory">
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => onMove(item)}
-                      aria-label={`Movimentar ${item.name}`}
-                      data-testid="inventory-move"
-                    >
-                      <Package className="h-4 w-4" />
-                    </Button>
-                  </IfCanMove>
-                  <IfCanEdit subject="inventory">
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => onEdit(item)}
-                      aria-label={`Editar ${item.name}`}
-                      data-testid="inventory-edit"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </IfCanEdit>
-                  <IfCanDelete subject="inventory">
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => onDelete(item)}
-                      aria-label={`Excluir ${item.name}`}
-                      className="text-destructive hover:text-destructive"
-                      data-testid="inventory-delete"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </IfCanDelete>
-                </div>
+                <TooltipProvider>
+                  <div className="flex items-center justify-end gap-1">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => onMove(item)}
+                          aria-label={`Movimentar ${item.name}`}
+                          data-testid="inventory-move"
+                        >
+                          <ArrowUpDown className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Movimentar estoque</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => onEdit(item)}
+                          aria-label={`Editar ${item.name}`}
+                          data-testid="inventory-edit"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Editar item</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => onDelete(item)}
+                          aria-label={`Excluir ${item.name}`}
+                          className="text-destructive hover:text-destructive"
+                          data-testid="inventory-delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Excluir item</TooltipContent>
+                    </Tooltip>
+                  </div>
+                </TooltipProvider>
               </TableCell>
             </TableRow>
           ))}

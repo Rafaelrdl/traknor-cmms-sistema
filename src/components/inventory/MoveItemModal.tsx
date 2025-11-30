@@ -6,9 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { ArrowUp, ArrowDown } from 'lucide-react';
-import type { InventoryItem, MovementType } from '@/models/inventory';
-import { moveItem } from '@/data/inventoryStore';
+import { ArrowUp, ArrowDown, Loader2 } from 'lucide-react';
+import type { InventoryItem } from '@/models/inventory';
+import { inventoryMovementsService, type CreateMovementData } from '@/services/inventoryService';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface MoveItemModalProps {
   item: InventoryItem | null;
@@ -17,29 +18,42 @@ interface MoveItemModalProps {
   onItemMoved: (item: InventoryItem) => void;
 }
 
+type MovementType = 'IN' | 'OUT';
+type ReasonType = 'PURCHASE' | 'RETURN' | 'ADJUSTMENT' | 'WORK_ORDER' | 'TRANSFER' | 'OTHER';
+
+const reasonLabels: Record<ReasonType, string> = {
+  PURCHASE: 'Compra/Recebimento',
+  RETURN: 'Devolução',
+  ADJUSTMENT: 'Ajuste de Estoque',
+  WORK_ORDER: 'Ordem de Serviço',
+  TRANSFER: 'Transferência',
+  OTHER: 'Outro',
+};
+
 export function MoveItemModal({ item, open, onOpenChange, onItemMoved }: MoveItemModalProps) {
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    type: 'entrada' as MovementType,
-    qty: 1,
-    date: '',
+    type: 'IN' as MovementType,
+    quantity: 1,
+    reason: 'ADJUSTMENT' as ReasonType,
     note: '',
-    reference_type: 'none-reference',
-    reference_id: '',
+    reference: '',
     unit_cost: undefined as number | undefined
   });
+
+  // Get current quantity safely
+  const currentQty = item?.qty_on_hand ?? item?.quantity ?? 0;
 
   // Reset form when modal opens/closes or item changes
   useEffect(() => {
     if (open && item) {
-      const today = new Date().toISOString().split('T')[0];
       setFormData({
-        type: 'entrada',
-        qty: 1,
-        date: today,
+        type: 'IN',
+        quantity: 1,
+        reason: 'ADJUSTMENT',
         note: '',
-        reference_type: 'none-reference',
-        reference_id: '',
+        reference: '',
         unit_cost: undefined
       });
     }
@@ -50,45 +64,45 @@ export function MoveItemModal({ item, open, onOpenChange, onItemMoved }: MoveIte
     
     if (!item) return;
     
-    if (formData.qty <= 0) {
+    if (formData.quantity <= 0) {
       toast.error('Quantidade deve ser maior que 0');
       return;
     }
 
-    if (formData.type === 'saida' && item.qty_on_hand < formData.qty) {
+    if (formData.type === 'OUT' && currentQty < formData.quantity) {
       toast.error('Saldo insuficiente');
-      return;
-    }
-
-    if (!formData.date) {
-      toast.error('Data é obrigatória');
       return;
     }
 
     setLoading(true);
     
     try {
-      await moveItem({
-        item_id: item.id,
+      const movementData: CreateMovementData = {
+        item: Number(item.id),
         type: formData.type,
-        qty: formData.qty,
-        date: new Date(formData.date + 'T00:00:00.000Z').toISOString(),
+        reason: formData.reason,
+        quantity: formData.quantity,
         note: formData.note.trim() || undefined,
-        reference_type: formData.reference_type === 'none-reference' ? undefined : formData.reference_type,
-        reference_id: formData.reference_id.trim() || undefined,
-        unit_cost: formData.unit_cost
-      });
+        reference: formData.reference.trim() || undefined,
+        unit_cost: formData.type === 'IN' ? formData.unit_cost : undefined,
+      };
 
-      toast.success('Movimentação registrada');
+      await inventoryMovementsService.create(movementData);
+
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+
+      toast.success('Movimentação registrada com sucesso!');
       onOpenChange(false);
-      // Trigger refresh by passing the updated item (with new qty)
-      const newQty = formData.type === 'entrada' 
-        ? item.qty_on_hand + formData.qty
-        : item.qty_on_hand - formData.qty;
-      onItemMoved({ ...item, qty_on_hand: newQty });
+      
+      // Calculate new quantity and trigger refresh
+      const newQty = formData.type === 'IN' 
+        ? currentQty + formData.quantity
+        : currentQty - formData.quantity;
+      onItemMoved({ ...item, qty_on_hand: newQty, quantity: newQty });
     } catch (error: any) {
-      console.error('Error moving item:', error);
-      toast.error(error.message || 'Erro ao registrar movimentação');
+      console.error('Error creating movement:', error);
+      toast.error(error.response?.data?.detail || error.message || 'Erro ao registrar movimentação');
     } finally {
       setLoading(false);
     }
@@ -96,19 +110,19 @@ export function MoveItemModal({ item, open, onOpenChange, onItemMoved }: MoveIte
 
   if (!item) return null;
 
-  const projectedQty = formData.type === 'entrada' 
-    ? item.qty_on_hand + formData.qty
-    : item.qty_on_hand - formData.qty;
+  const projectedQty = formData.type === 'IN' 
+    ? currentQty + formData.quantity
+    : currentQty - formData.quantity;
 
-  const isInsufficientStock = formData.type === 'saida' && item.qty_on_hand < formData.qty;
+  const isInsufficientStock = formData.type === 'OUT' && currentQty < formData.quantity;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Movimentar Item</DialogTitle>
+          <DialogTitle>Movimentar Estoque</DialogTitle>
           <DialogDescription>
-            Registre uma entrada ou saída para {item.name}
+            Registre uma entrada ou saída para <strong>{item.name}</strong>
           </DialogDescription>
         </DialogHeader>
         
@@ -117,12 +131,12 @@ export function MoveItemModal({ item, open, onOpenChange, onItemMoved }: MoveIte
           <div className="bg-muted/50 rounded-lg p-3">
             <div className="text-sm text-muted-foreground">Estoque atual</div>
             <div className="text-lg font-semibold">
-              {item.qty_on_hand} {item.unit}
+              {currentQty} {item.unit}
             </div>
-            {projectedQty !== item.qty_on_hand && (
+            {projectedQty !== currentQty && (
               <div className="text-sm mt-1">
                 <span className="text-muted-foreground">Após movimentação: </span>
-                <span className={`font-medium ${isInsufficientStock ? 'text-destructive' : 'text-foreground'}`}>
+                <span className={`font-medium ${isInsufficientStock ? 'text-destructive' : formData.type === 'IN' ? 'text-green-600' : 'text-orange-600'}`}>
                   {projectedQty} {item.unit}
                 </span>
               </div>
@@ -140,18 +154,36 @@ export function MoveItemModal({ item, open, onOpenChange, onItemMoved }: MoveIte
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="entrada">
+                <SelectItem value="IN">
                   <div className="flex items-center gap-2">
                     <ArrowUp className="h-4 w-4 text-green-600" />
                     Entrada
                   </div>
                 </SelectItem>
-                <SelectItem value="saida">
+                <SelectItem value="OUT">
                   <div className="flex items-center gap-2">
                     <ArrowDown className="h-4 w-4 text-red-600" />
                     Saída
                   </div>
                 </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Reason */}
+          <div>
+            <Label htmlFor="move-reason">Motivo *</Label>
+            <Select 
+              value={formData.reason} 
+              onValueChange={(value: ReasonType) => setFormData(prev => ({ ...prev, reason: value }))}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(reasonLabels).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -163,9 +195,9 @@ export function MoveItemModal({ item, open, onOpenChange, onItemMoved }: MoveIte
               id="move-qty"
               type="number"
               min="1"
-              max={formData.type === 'saida' ? item.qty_on_hand : undefined}
-              value={formData.qty}
-              onChange={(e) => setFormData(prev => ({ ...prev, qty: parseInt(e.target.value) || 1 }))}
+              max={formData.type === 'OUT' ? currentQty : undefined}
+              value={formData.quantity}
+              onChange={(e) => setFormData(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
               required
               className={isInsufficientStock ? 'border-destructive' : ''}
             />
@@ -176,20 +208,8 @@ export function MoveItemModal({ item, open, onOpenChange, onItemMoved }: MoveIte
             )}
           </div>
 
-          {/* Date */}
-          <div>
-            <Label htmlFor="move-date">Data *</Label>
-            <Input
-              id="move-date"
-              type="date"
-              value={formData.date}
-              onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-              required
-            />
-          </div>
-
           {/* Unit Cost (only for entries) */}
-          {formData.type === 'entrada' && (
+          {formData.type === 'IN' && (
             <div>
               <Label htmlFor="move-unit-cost">Custo Unitário (R$)</Label>
               <Input
@@ -204,37 +224,16 @@ export function MoveItemModal({ item, open, onOpenChange, onItemMoved }: MoveIte
             </div>
           )}
 
-          {/* Reference Type */}
+          {/* Reference */}
           <div>
-            <Label htmlFor="move-ref-type">Tipo de Referência</Label>
-            <Select 
-              value={formData.reference_type} 
-              onValueChange={(value) => setFormData(prev => ({ ...prev, reference_type: value }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione (opcional)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none-reference">Nenhum</SelectItem>
-                <SelectItem value="os">Ordem de Serviço</SelectItem>
-                <SelectItem value="solicitation">Solicitação</SelectItem>
-                <SelectItem value="adjustment">Ajuste de Estoque</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label htmlFor="move-reference">Referência</Label>
+            <Input
+              id="move-reference"
+              value={formData.reference}
+              onChange={(e) => setFormData(prev => ({ ...prev, reference: e.target.value }))}
+              placeholder="Ex: NF-12345, OS-2024-001"
+            />
           </div>
-
-          {/* Reference ID */}
-          {formData.reference_type && (
-            <div>
-              <Label htmlFor="move-ref-id">ID da Referência</Label>
-              <Input
-                id="move-ref-id"
-                value={formData.reference_id}
-                onChange={(e) => setFormData(prev => ({ ...prev, reference_id: e.target.value }))}
-                placeholder="Ex: OS-2024-001"
-              />
-            </div>
-          )}
 
           {/* Note */}
           <div>
@@ -250,18 +249,22 @@ export function MoveItemModal({ item, open, onOpenChange, onItemMoved }: MoveIte
 
           {/* Actions */}
           <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
               Cancelar
             </Button>
             <Button 
               type="submit" 
               disabled={loading || isInsufficientStock}
-              className={formData.type === 'entrada' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
+              className={formData.type === 'IN' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
             >
-              {loading 
-                ? 'Processando...' 
-                : `Registrar ${formData.type === 'entrada' ? 'Entrada' : 'Saída'}`
-              }
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Processando...
+                </>
+              ) : (
+                `Registrar ${formData.type === 'IN' ? 'Entrada' : 'Saída'}`
+              )}
             </Button>
           </div>
         </form>
