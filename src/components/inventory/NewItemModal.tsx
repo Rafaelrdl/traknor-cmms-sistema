@@ -22,6 +22,7 @@ export function NewItemModal({ categories, onItemCreated, trigger }: NewItemModa
   
   const [formData, setFormData] = useState({
     name: '',
+    manufacturer: '',
     code: '',
     description: '',
     category_id: '',
@@ -42,6 +43,7 @@ export function NewItemModal({ categories, onItemCreated, trigger }: NewItemModa
   const resetForm = () => {
     setFormData({
       name: '',
+      manufacturer: '',
       code: '',
       description: '',
       category_id: '',
@@ -80,6 +82,7 @@ export function NewItemModal({ categories, onItemCreated, trigger }: NewItemModa
 
     createMutation.mutate({
       name: formData.name.trim(),
+      manufacturer: formData.manufacturer.trim(),
       code: formData.code.trim(),
       description: formData.description.trim(),
       category: formData.category_id ? Number(formData.category_id) : null,
@@ -164,6 +167,17 @@ export function NewItemModal({ categories, onItemCreated, trigger }: NewItemModa
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 placeholder="Ex: Filtro de Ar G4 - 610x610x48mm"
                 required
+              />
+            </div>
+
+            {/* Fabricante */}
+            <div className="md:col-span-2">
+              <Label htmlFor="manufacturer">Fabricante</Label>
+              <Input
+                id="manufacturer"
+                value={formData.manufacturer}
+                onChange={(e) => setFormData(prev => ({ ...prev, manufacturer: e.target.value }))}
+                placeholder="Ex: Siemens, WEG, Schneider"
               />
             </div>
 

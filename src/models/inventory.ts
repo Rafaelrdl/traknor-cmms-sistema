@@ -17,6 +17,7 @@ export interface InventoryItem {
   id: string;
   code: string;
   name: string;
+  manufacturer?: string;
   description?: string;
   sku?: string;
   barcode?: string;

@@ -30,19 +30,12 @@ import type { ApiInventoryItem, ApiInventoryCategory } from '@/types/api';
 
 // Mappers
 const mapApiItemToInventoryItem = (item: ApiInventoryItem): InventoryItem => {
-  // Debug log
-  if (item.code === 'RFG-001') {
-    console.log('API Item RFG-001:', {
-      max_quantity: item.max_quantity,
-      image_url: item.image_url ? item.image_url.substring(0, 50) + '...' : null
-    });
-  }
-  
   return {
     id: String(item.id),
     code: item.code,
     sku: item.code, // Use code as SKU
     name: item.name,
+    manufacturer: item.manufacturer || undefined,
     description: item.description,
     category_id: item.category ? String(item.category) : null,
     category_name: item.category_name || null,

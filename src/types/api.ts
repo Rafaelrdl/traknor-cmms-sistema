@@ -411,6 +411,7 @@ export interface ApiInventoryItem {
   id: number;
   code: string;
   name: string;
+  manufacturer: string;
   description: string;
   barcode: string;
   category: number | null;

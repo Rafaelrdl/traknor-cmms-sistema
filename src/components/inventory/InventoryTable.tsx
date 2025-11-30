@@ -34,20 +34,31 @@ export function InventoryTable({ items, categories, onEdit, onMove, onDelete }: 
   };
 
   const getStockBadge = (item: InventoryItem) => {
+    // Usar o status calculado pelo backend se disponível
+    if (item.stock_status) {
+      switch (item.stock_status) {
+        case 'OUT_OF_STOCK':
+          return <Badge variant="destructive">Esgotado</Badge>;
+        case 'LOW':
+          return <Badge variant="destructive">Baixo</Badge>;
+        case 'OVERSTOCKED':
+          return <Badge variant="secondary">Excesso</Badge>;
+        case 'OK':
+        default:
+          return <Badge variant="outline">Normal</Badge>;
+      }
+    }
+    
+    // Fallback: calcular manualmente se stock_status não estiver disponível
     const qty = item.qty_on_hand ?? item.quantity ?? 0;
-    const reorder = item.reorder_point ?? item.min_qty ?? 0;
     const minQty = item.min_qty ?? item.minimum_quantity ?? 0;
     
-    if (item.stock_status === 'OUT_OF_STOCK' || qty <= 0) {
+    if (qty <= 0) {
       return <Badge variant="destructive">Esgotado</Badge>;
     }
     
-    if (item.stock_status === 'LOW' || qty < reorder) {
+    if (qty < minQty) {
       return <Badge variant="destructive">Baixo</Badge>;
-    }
-    
-    if (qty <= minQty) {
-      return <Badge variant="secondary">Crítico</Badge>;
     }
     
     return <Badge variant="outline">Normal</Badge>;
@@ -77,7 +88,7 @@ export function InventoryTable({ items, categories, onEdit, onMove, onDelete }: 
         <TableHeader>
           <TableRow>
             <TableHead scope="col">Foto</TableHead>
-            <TableHead scope="col">Item/Descrição</TableHead>
+            <TableHead scope="col">Item/Fabricante</TableHead>
             <TableHead scope="col">SKU</TableHead>
             <TableHead scope="col">Categoria</TableHead>
             <TableHead scope="col">Unid.</TableHead>
@@ -114,7 +125,7 @@ export function InventoryTable({ items, categories, onEdit, onMove, onDelete }: 
               <TableCell>
                 <div className="space-y-1">
                   <div className="font-medium">
-                    {item.name}
+                    {item.name}{item.manufacturer && <span className="text-muted-foreground">/{item.manufacturer}</span>}
                   </div>
                   {item.location_name && (
                     <div className="text-xs text-muted-foreground">

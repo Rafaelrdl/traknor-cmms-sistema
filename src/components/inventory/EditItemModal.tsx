@@ -23,6 +23,7 @@ export function EditItemModal({ item, categories, open, onOpenChange, onItemUpda
   
   const [formData, setFormData] = useState({
     name: '',
+    manufacturer: '',
     code: '',
     description: '',
     category_id: '',
@@ -44,6 +45,7 @@ export function EditItemModal({ item, categories, open, onOpenChange, onItemUpda
     if (item && open) {
       setFormData({
         name: item.name,
+        manufacturer: item.manufacturer || '',
         code: item.code || item.sku || '',
         description: item.description || '',
         category_id: item.category_id || '',
@@ -76,6 +78,7 @@ export function EditItemModal({ item, categories, open, onOpenChange, onItemUpda
       id: Number(item.id),
       data: {
         name: formData.name.trim(),
+        manufacturer: formData.manufacturer.trim(),
         code: formData.code.trim(),
         description: formData.description.trim(),
         category: formData.category_id ? Number(formData.category_id) : null,
@@ -152,6 +155,17 @@ export function EditItemModal({ item, categories, open, onOpenChange, onItemUpda
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 placeholder="Ex: Filtro de Ar G4 - 610x610x48mm"
                 required
+              />
+            </div>
+
+            {/* Fabricante */}
+            <div className="md:col-span-2">
+              <Label htmlFor="edit-manufacturer">Fabricante</Label>
+              <Input
+                id="edit-manufacturer"
+                value={formData.manufacturer}
+                onChange={(e) => setFormData(prev => ({ ...prev, manufacturer: e.target.value }))}
+                placeholder="Ex: Siemens, WEG, Schneider"
               />
             </div>
 
