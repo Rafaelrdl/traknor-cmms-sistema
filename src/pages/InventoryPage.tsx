@@ -78,10 +78,13 @@ export function InventoryPage() {
     (itemsData?.results || []).map(mapApiItemToInventoryItem), 
     [itemsData]
   );
-  const categories = useMemo(() => 
-    (categoriesData || []).map(mapApiCategoryToCategory), 
-    [categoriesData]
-  );
+  const categories = useMemo(() => {
+    // Handle both array and paginated response formats
+    const categoryArray = Array.isArray(categoriesData) 
+      ? categoriesData 
+      : (categoriesData as any)?.results || [];
+    return categoryArray.map(mapApiCategoryToCategory);
+  }, [categoriesData]);
   
   // Local state
   const [searchQuery, setSearchQuery] = useState('');
