@@ -21,7 +21,7 @@ function Calendar({
         month: "flex flex-col gap-4",
         month_caption: "flex justify-center pt-1 relative items-center w-full h-7",
         caption_label: "text-sm font-medium",
-        nav: "absolute inset-x-2 flex justify-between items-center",
+        nav: "flex items-center absolute inset-x-2 top-4 justify-between z-10",
         button_previous: cn(
           buttonVariants({ variant: "outline" }),
           "size-7 bg-transparent p-0 opacity-50 hover:opacity-100"
@@ -49,12 +49,6 @@ function Calendar({
         range_end: "day-range-end rounded-r-md",
         range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
         ...classNames,
-      }}
-      components={{
-        Chevron: ({ orientation, className, ...props }) => {
-          const Icon = orientation === "left" ? ChevronLeft : ChevronRight;
-          return <Icon className={cn("size-4", className)} {...props} />;
-        },
       }}
       {...props}
     />
