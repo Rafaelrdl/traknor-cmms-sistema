@@ -3,18 +3,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { AlertTriangle, Edit, Package, Trash2, ArrowUpDown } from 'lucide-react';
+import { AlertTriangle, Edit, Eye, Package, Trash2, ArrowUpDown } from 'lucide-react';
 import type { InventoryItem, InventoryCategory } from '@/models/inventory';
 
 interface InventoryTableProps {
   items: InventoryItem[];
   categories: InventoryCategory[];
+  onView: (item: InventoryItem) => void;
   onEdit: (item: InventoryItem) => void;
   onMove: (item: InventoryItem) => void;
   onDelete: (item: InventoryItem) => void;
 }
 
-export function InventoryTable({ items, categories, onEdit, onMove, onDelete }: InventoryTableProps) {
+export function InventoryTable({ items, categories, onView, onEdit, onMove, onDelete }: InventoryTableProps) {
   const getCategoryName = (categoryId?: string | null) => {
     if (!categoryId) return 'Sem categoria';
     const category = categories.find(c => c.id === categoryId);
@@ -188,6 +189,20 @@ export function InventoryTable({ items, categories, onEdit, onMove, onDelete }: 
               <TableCell className="text-right">
                 <TooltipProvider>
                   <div className="flex items-center justify-end gap-1">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => onView(item)}
+                          aria-label={`Visualizar ${item.name}`}
+                          data-testid="inventory-view"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Visualizar detalhes</TooltipContent>
+                    </Tooltip>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button 

@@ -15,6 +15,7 @@ import { InventoryAnalysis } from '@/components/inventory/InventoryAnalysis';
 import { NewItemModal } from '@/components/inventory/NewItemModal';
 import { EditItemModal } from '@/components/inventory/EditItemModal';
 import { MoveItemModal } from '@/components/inventory/MoveItemModal';
+import { ViewItemModal } from '@/components/inventory/ViewItemModal';
 import { IfCan } from '@/components/auth/IfCan';
 import { useRoleBasedData, DataFilterInfo } from '@/components/data/FilteredDataProvider';
 import { useAbility } from '@/hooks/useAbility';
@@ -148,6 +149,7 @@ export function InventoryPage() {
   }, [filteredInventoryData, searchQuery, selectedCategory, showActiveOnly]);
   
   // Modal states
+  const [viewingItem, setViewingItem] = useState<InventoryItem | null>(null);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [movingItem, setMovingItem] = useState<InventoryItem | null>(null);
   const [deletingItem, setDeletingItem] = useState<InventoryItem | null>(null);
@@ -183,6 +185,10 @@ export function InventoryPage() {
     });
   };
 
+  const handleView = (item: InventoryItem) => {
+    setViewingItem(item);
+  };
+
   const handleEdit = (item: InventoryItem) => {
     setEditingItem(item);
   };
@@ -204,6 +210,7 @@ export function InventoryPage() {
         <InventoryTable
           items={filteredItems}
           categories={categories}
+          onView={handleView}
           onEdit={handleEdit}
           onMove={handleMove}
           onDelete={handleDelete}
@@ -355,6 +362,14 @@ export function InventoryPage() {
           {!loadingItems && !itemsError && <InventoryTabs tabs={tabs} />}
         </CardContent>
       </Card>
+
+      {/* View Modal */}
+      <ViewItemModal
+        item={viewingItem}
+        categories={categories}
+        open={!!viewingItem}
+        onOpenChange={(open) => !open && setViewingItem(null)}
+      />
 
       {/* Edit Modal */}
       <EditItemModal
