@@ -29,38 +29,48 @@ import {
 import type { ApiInventoryItem, ApiInventoryCategory } from '@/types/api';
 
 // Mappers
-const mapApiItemToInventoryItem = (item: ApiInventoryItem): InventoryItem => ({
-  id: String(item.id),
-  code: item.code,
-  sku: item.code, // Use code as SKU
-  name: item.name,
-  description: item.description,
-  category_id: item.category ? String(item.category) : null,
-  category_name: item.category_name || null,
-  unit: item.unit,
-  qty_on_hand: item.quantity,
-  quantity: item.quantity,
-  min_qty: item.min_quantity,
-  minimum_quantity: item.min_quantity,
-  max_qty: item.max_quantity ?? undefined,
-  maximum_quantity: item.max_quantity ?? undefined,
-  reorder_point: item.reorder_point ?? item.min_quantity,
-  location: item.location,
-  location_name: [item.location, item.shelf, item.bin].filter(Boolean).join(' / ') || undefined,
-  shelf: item.shelf,
-  bin: item.bin,
-  supplier: item.supplier,
-  supplier_code: item.supplier_code,
-  unit_cost: item.unit_cost,
-  photo_url: item.image_url || item.image,
-  image_url: item.image_url,
-  is_active: item.is_active,
-  is_critical: item.is_critical,
-  is_low_stock: item.is_low_stock,
-  stock_status: item.stock_status,
-  created_at: item.created_at,
-  updated_at: item.updated_at,
-});
+const mapApiItemToInventoryItem = (item: ApiInventoryItem): InventoryItem => {
+  // Debug log
+  if (item.code === 'RFG-001') {
+    console.log('API Item RFG-001:', {
+      max_quantity: item.max_quantity,
+      image_url: item.image_url ? item.image_url.substring(0, 50) + '...' : null
+    });
+  }
+  
+  return {
+    id: String(item.id),
+    code: item.code,
+    sku: item.code, // Use code as SKU
+    name: item.name,
+    description: item.description,
+    category_id: item.category ? String(item.category) : null,
+    category_name: item.category_name || null,
+    unit: item.unit,
+    qty_on_hand: item.quantity,
+    quantity: item.quantity,
+    min_qty: item.min_quantity,
+    minimum_quantity: item.min_quantity,
+    max_qty: item.max_quantity ?? undefined,
+    maximum_quantity: item.max_quantity ?? undefined,
+    reorder_point: item.reorder_point ?? item.min_quantity,
+    location: item.location,
+    location_name: [item.location, item.shelf, item.bin].filter(Boolean).join(' / ') || undefined,
+    shelf: item.shelf,
+    bin: item.bin,
+    supplier: item.supplier,
+    supplier_code: item.supplier_code,
+    unit_cost: item.unit_cost,
+    photo_url: item.image_url || item.image,
+    image_url: item.image_url,
+    is_active: item.is_active,
+    is_critical: item.is_critical,
+    is_low_stock: item.is_low_stock,
+    stock_status: item.stock_status,
+    created_at: item.created_at,
+    updated_at: item.updated_at,
+  };
+};
 
 const mapApiCategoryToCategory = (cat: ApiInventoryCategory): InventoryCategory => ({
   id: String(cat.id),

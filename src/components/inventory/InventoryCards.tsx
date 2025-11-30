@@ -47,11 +47,14 @@ export function InventoryCards({ items, categories, onEdit, onMove }: InventoryC
           <CardContent className="p-4">
             {/* Image */}
             <div className="aspect-square mb-3 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
-              {item.photo_url ? (
+              {(item.photo_url || item.image_url) ? (
                 <img 
-                  src={item.photo_url} 
+                  src={item.photo_url || item.image_url || ''} 
                   alt={item.name}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
                 />
               ) : (
                 <Package className="h-8 w-8 text-muted-foreground" />

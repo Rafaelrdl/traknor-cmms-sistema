@@ -39,9 +39,9 @@ export function EditItemModal({ item, categories, open, onOpenChange, onItemUpda
     is_critical: false
   });
 
-  // Update form data when item changes
+  // Update form data when item changes or modal opens
   useEffect(() => {
-    if (item) {
+    if (item && open) {
       setFormData({
         name: item.name,
         code: item.code || item.sku || '',
@@ -55,12 +55,12 @@ export function EditItemModal({ item, categories, open, onOpenChange, onItemUpda
         max_quantity: item.max_qty || item.maximum_quantity,
         unit_cost: item.unit_cost || 0,
         supplier: item.supplier || '',
-        image: item.photo_url || item.image_url || '',
-        is_active: item.is_active,
+        image: item.image_url || item.photo_url || '',
+        is_active: item.is_active !== undefined ? item.is_active : true,
         is_critical: item.is_critical || false
       });
     }
-  }, [item]);
+  }, [item, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
