@@ -174,6 +174,20 @@ export function Dashboard() {
     }));
   }, [workOrders, slaSettings]);
 
+  // Calcular status dos equipamentos baseado nos dados reais da API
+  const equipmentStatusData = useMemo(() => {
+    const functioning = (equipment || []).filter(eq => eq.status === 'FUNCTIONING').length;
+    const maintenance = (equipment || []).filter(eq => eq.status === 'MAINTENANCE').length;
+    const stopped = (equipment || []).filter(eq => eq.status === 'STOPPED').length;
+    
+    return {
+      functioning,
+      maintenance,
+      stopped,
+      total: functioning + maintenance + stopped
+    };
+  }, [equipment]);
+
   // Calcular KPIs baseados em dados reais da API
   const dashboardKPIs = useMemo(() => {
     // Usar estatísticas da API se disponíveis, senão calcular localmente
@@ -252,9 +266,9 @@ export function Dashboard() {
         category: 'workorders'
       })) || [],
       assetStatus: [
-        { label: 'Funcionando', value: chartData?.equipmentStatus?.functioning || 0, category: 'assets' },
-        { label: 'Em Manutenção', value: chartData?.equipmentStatus?.maintenance || 0, category: 'assets' },
-        { label: 'Parado', value: chartData?.equipmentStatus?.stopped || 0, category: 'assets' }
+        { label: 'Funcionando', value: equipmentStatusData.functioning, category: 'assets' },
+        { label: 'Em Manutenção', value: equipmentStatusData.maintenance, category: 'assets' },
+        { label: 'Parado', value: equipmentStatusData.stopped, category: 'assets' }
       ],
       technicianPerformance: [], // Empty for now
       maintenanceMetrics: {
@@ -271,10 +285,18 @@ export function Dashboard() {
         const eq = equipment.find(e => e.id === wo.equipmentId);
         const sector = sectors.find(s => s.id === eq?.sectorId);
         
+        const getTypeLabel = (type: string) => {
+          switch(type) {
+            case 'PREVENTIVE': return 'Manutenção Preventiva';
+            case 'REQUEST': return 'Solicitação';
+            default: return 'Manutenção Corretiva';
+          }
+        };
+        
         return {
           id: wo.id,
           equipmentName: eq?.tag || wo.number,
-          type: wo.type === 'PREVENTIVE' ? 'Manutenção Preventiva' : 'Manutenção Corretiva',
+          type: getTypeLabel(wo.type),
           scheduledDate: wo.scheduledDate,
           responsible: wo.assignedTo || 'Não atribuído',
           priority: wo.priority,
@@ -285,7 +307,7 @@ export function Dashboard() {
     };
 
     return filterDashboard(mockData);
-  }, [kpis, chartData, role, filterDashboard, dashboardKPIs, equipment, sectors, upcomingWorkOrders]);
+  }, [kpis, chartData, role, filterDashboard, dashboardKPIs, equipment, sectors, upcomingWorkOrders, equipmentStatusData]);
 
   // Dados centralizados - usar dados da API para evolução de OS
   const weeklyData = weeklyEvolutionData.length > 0 ? weeklyEvolutionData : (chartData?.workOrderEvolution || []);
@@ -495,7 +517,7 @@ export function Dashboard() {
               {/* Donut chart representation */}
               <div className="flex items-center justify-center">
                 {(() => {
-                  const equipmentStatus = chartData?.equipmentStatus || { functioning: 0, maintenance: 0, stopped: 0 };
+                  const equipmentStatus = equipmentStatusData;
                   const total = equipmentStatus.functioning + 
                                equipmentStatus.maintenance + 
                                equipmentStatus.stopped;
@@ -545,6 +567,7 @@ export function Dashboard() {
                         />
                         
                         {/* Functioning segment (teal) */}
+                        {equipmentStatus.functioning > 0 && (
                         <circle
                           cx="50"
                           cy="50"
@@ -567,8 +590,10 @@ export function Dashboard() {
                             }
                           }}
                         />
+                        )}
                         
                         {/* Maintenance segment (yellow) */}
+                        {equipmentStatus.maintenance > 0 && (
                         <circle
                           cx="50"
                           cy="50"
@@ -591,8 +616,10 @@ export function Dashboard() {
                             }
                           }}
                         />
+                        )}
                         
                         {/* Stopped segment (red) */}
+                        {equipmentStatus.stopped > 0 && (
                         <circle
                           cx="50"
                           cy="50"
@@ -615,6 +642,7 @@ export function Dashboard() {
                             }
                           }}
                         />
+                        )}
                       </svg>
                       
                       {/* Center number */}
@@ -634,7 +662,7 @@ export function Dashboard() {
                     <span className="text-sm transition-colors group-hover:text-foreground">Funcionando</span>
                   </div>
                   <span className="text-sm font-medium">
-                    {chartData?.equipmentStatus?.functioning || 0}
+                    {equipmentStatusData.functioning}
                   </span>
                 </div>
                 <div className="flex items-center justify-between hover:bg-muted/50 rounded-lg px-2 py-1 transition-colors cursor-pointer group">
@@ -643,7 +671,7 @@ export function Dashboard() {
                     <span className="text-sm transition-colors group-hover:text-foreground">Em Manutenção</span>
                   </div>
                   <span className="text-sm font-medium">
-                    {chartData?.equipmentStatus?.maintenance || 0}
+                    {equipmentStatusData.maintenance}
                   </span>
                 </div>
                 <div className="flex items-center justify-between hover:bg-muted/50 rounded-lg px-2 py-1 transition-colors cursor-pointer group">
@@ -652,7 +680,7 @@ export function Dashboard() {
                     <span className="text-sm transition-colors group-hover:text-foreground">Parado</span>
                   </div>
                   <span className="text-sm font-medium">
-                    {chartData?.equipmentStatus?.stopped || 0}
+                    {equipmentStatusData.stopped}
                   </span>
                 </div>
               </div>

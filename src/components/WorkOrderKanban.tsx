@@ -102,9 +102,9 @@ function WorkOrderCard({
               <div 
                 className="h-3 w-3 rounded-full flex-shrink-0" 
                 style={{ 
-                  backgroundColor: workOrder.type === 'PREVENTIVE' ? '#22c55e' : '#f97316' 
+                  backgroundColor: workOrder.type === 'PREVENTIVE' ? '#22c55e' : workOrder.type === 'REQUEST' ? '#8b5cf6' : '#f97316' 
                 }} 
-                title={workOrder.type === 'PREVENTIVE' ? 'Preventiva' : 'Corretiva'} 
+                title={workOrder.type === 'PREVENTIVE' ? 'Preventiva' : workOrder.type === 'REQUEST' ? 'Solicitação' : 'Corretiva'} 
               />
             </div>
             <span className="text-[10px] text-muted-foreground flex-shrink-0">{formattedDate}</span>

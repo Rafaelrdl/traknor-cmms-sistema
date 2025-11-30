@@ -508,10 +508,12 @@ export function EquipmentStatusTracking({ equipment, isOpen, onClose }: Equipmen
                         <div className="flex items-center gap-2">
                           <Badge variant={
                             record.type === 'PREVENTIVE' ? 'default' :
-                            record.type === 'CORRECTIVE' ? 'secondary' : 'destructive'
+                            record.type === 'CORRECTIVE' ? 'secondary' : 
+                            record.type === 'REQUEST' ? 'outline' : 'destructive'
                           }>
                             {record.type === 'PREVENTIVE' ? 'Preventiva' :
-                             record.type === 'CORRECTIVE' ? 'Corretiva' : 'Emergencial'}
+                             record.type === 'CORRECTIVE' ? 'Corretiva' :
+                             record.type === 'REQUEST' ? 'Solicitação' : 'Emergencial'}
                           </Badge>
                           <Badge variant={record.status === 'COMPLETED' ? 'default' : 'outline'}>
                             {record.status === 'COMPLETED' ? 'Concluída' : 
@@ -614,8 +616,12 @@ export function EquipmentStatusTracking({ equipment, isOpen, onClose }: Equipmen
                     <TableRow key={order.id}>
                       <TableCell className="font-medium">{order.number}</TableCell>
                       <TableCell>
-                        <Badge variant={order.type === 'PREVENTIVE' ? 'default' : 'secondary'}>
-                          {order.type === 'PREVENTIVE' ? 'Preventiva' : 'Corretiva'}
+                        <Badge variant={
+                          order.type === 'PREVENTIVE' ? 'default' : 
+                          order.type === 'REQUEST' ? 'outline' : 'secondary'
+                        }>
+                          {order.type === 'PREVENTIVE' ? 'Preventiva' : 
+                           order.type === 'REQUEST' ? 'Solicitação' : 'Corretiva'}
                         </Badge>
                       </TableCell>
                       <TableCell>

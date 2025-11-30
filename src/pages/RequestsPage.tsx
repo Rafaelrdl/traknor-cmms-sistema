@@ -42,7 +42,6 @@ export function RequestsPage() {
     convertMutation.mutate({
       id: solicitation.id,
       data: {
-        type: 'CORRECTIVE',
         priority: 'MEDIUM',
         scheduled_date: new Date().toISOString().split('T')[0],
       }

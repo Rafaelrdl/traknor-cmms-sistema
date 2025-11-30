@@ -612,6 +612,7 @@ export function MonitorAssetDetailPage() {
                       'CORRECTIVE': { label: 'Corretiva', color: 'text-red-600' },
                       'PREVENTIVE': { label: 'Preventiva', color: 'text-blue-600' },
                       'PREDICTIVE': { label: 'Preditiva', color: 'text-purple-600' },
+                      'REQUEST': { label: 'Solicitação', color: 'text-violet-600' },
                     };
 
                     const status = statusConfig[wo.status] || statusConfig['OPEN'];

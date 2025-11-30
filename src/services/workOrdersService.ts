@@ -107,13 +107,22 @@ const mapStatus = (status: ApiWorkOrder['status']): WorkOrder['status'] => {
 };
 
 /**
+ * Mapeia tipo de OS da API para o frontend
+ */
+const mapType = (type: ApiWorkOrder['type']): WorkOrder['type'] => {
+  if (type === 'REQUEST') return 'REQUEST';
+  if (type === 'PREVENTIVE') return 'PREVENTIVE';
+  return 'CORRECTIVE'; // CORRECTIVE e EMERGENCY viram CORRECTIVE
+};
+
+/**
  * Mapeia Work Order da API para o modelo do frontend
  */
 const mapWorkOrder = (wo: ApiWorkOrder): WorkOrder => ({
   id: String(wo.id),
   number: wo.number,
   equipmentId: String(wo.asset),
-  type: wo.type === 'EMERGENCY' ? 'CORRECTIVE' : wo.type,
+  type: mapType(wo.type),
   status: mapStatus(wo.status),
   priority: wo.priority,
   description: wo.description,

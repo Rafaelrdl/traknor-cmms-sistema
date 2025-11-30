@@ -578,10 +578,12 @@ export function WorkOrderEditModal({
                                     setFormData(prev => ({ ...prev, type: value as WorkOrder['type'] }));
                                     if (errors.type) setErrors(prev => ({ ...prev, type: '' }));
                                   }}
+                                  disabled={formData.type === 'REQUEST'}
                                 >
                                   <SelectTrigger className={cn(
                                     "h-9",
-                                    errors.type && "border-destructive focus:ring-destructive"
+                                    errors.type && "border-destructive focus:ring-destructive",
+                                    formData.type === 'REQUEST' && "bg-muted cursor-not-allowed"
                                   )}>
                                     <SelectValue placeholder="Selecione" />
                                   </SelectTrigger>
@@ -598,8 +600,19 @@ export function WorkOrderEditModal({
                                         <span>Preventiva</span>
                                       </div>
                                     </SelectItem>
+                                    <SelectItem value="REQUEST">
+                                      <div className="flex items-center gap-2">
+                                        <ClipboardList className="h-3.5 w-3.5" />
+                                        <span>Solicitação</span>
+                                      </div>
+                                    </SelectItem>
                                   </SelectContent>
                                 </Select>
+                                {formData.type === 'REQUEST' && (
+                                  <p className="text-xs text-muted-foreground">
+                                    Tipo não editável (originada de solicitação)
+                                  </p>
+                                )}
                                 {errors.type && (
                                   <p className="text-xs text-destructive mt-1">{errors.type}</p>
                                 )}

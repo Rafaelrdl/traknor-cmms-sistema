@@ -40,7 +40,6 @@ export interface CreateRequestData {
 }
 
 export interface ConvertToWorkOrderData {
-  type: 'PREVENTIVE' | 'CORRECTIVE';
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   scheduled_date: string;
   assigned_to?: string;

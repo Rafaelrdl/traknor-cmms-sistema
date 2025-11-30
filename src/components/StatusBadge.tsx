@@ -70,7 +70,7 @@ const workOrderStatusConfig = {
 };
 
 // Configuração de tipos de OS com cores consistentes com a página de configurações
-// Cores baseadas em: PREVENTIVE=#3b82f6 (azul), CORRECTIVE=#ef4444 (vermelho)
+// Cores baseadas em: PREVENTIVE=#3b82f6 (azul), CORRECTIVE=#ef4444 (vermelho), REQUEST=#8b5cf6 (roxo)
 const workOrderTypeConfig = {
   PREVENTIVE: { 
     label: 'Preventiva', 
@@ -83,6 +83,12 @@ const workOrderTypeConfig = {
     textColor: 'text-red-700',
     bgColor: 'bg-red-100',
     borderColor: 'border-red-200'
+  },
+  REQUEST: { 
+    label: 'Solicitação', 
+    textColor: 'text-violet-700',
+    bgColor: 'bg-violet-100',
+    borderColor: 'border-violet-200'
   },
 };
 

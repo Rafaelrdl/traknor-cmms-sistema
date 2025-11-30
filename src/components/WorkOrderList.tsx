@@ -255,10 +255,12 @@ export function WorkOrderList({
                                 ? "border-white/30 text-white bg-white/10" 
                                 : wo.type === 'PREVENTIVE' 
                                   ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-0" 
-                                  : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-0"
+                                  : wo.type === 'REQUEST'
+                                    ? "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400 border-0"
+                                    : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-0"
                             )}
                           >
-                            {wo.type === 'PREVENTIVE' ? 'Prev' : 'Corr'}
+                            {wo.type === 'PREVENTIVE' ? 'Prev' : wo.type === 'REQUEST' ? 'Solic' : 'Corr'}
                           </Badge>
                         )}
                       </div>

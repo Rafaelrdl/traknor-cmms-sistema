@@ -94,7 +94,7 @@ export interface WorkOrder {
   id: string;
   number: string;
   equipmentId: string;
-  type: 'PREVENTIVE' | 'CORRECTIVE';
+  type: 'PREVENTIVE' | 'CORRECTIVE' | 'REQUEST';
   status: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED';
   scheduledDate: string;
   assignedTo?: string;

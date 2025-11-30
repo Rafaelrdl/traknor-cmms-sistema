@@ -1,20 +1,54 @@
 // Importações dos componentes de UI e ícones
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users } from 'lucide-react';
-import { useChartData } from '@/hooks/useDataTemp';
+import { useMemo } from 'react';
+import { useWorkOrders } from '@/hooks/useWorkOrdersQuery';
+import type { TechnicianPerformance } from '@/types';
 
 /**
  * Componente que exibe um gráfico de barras horizontais empilhadas
  * mostrando o desempenho dos técnicos por tipo de ordem de serviço
  */
 export function TechnicianPerformanceChart() {
-  // Hook personalizado para obter dados do gráfico
-  const [chartData] = useChartData();
-  // Extrai dados dos técnicos, usando array vazio como fallback
-  const technicianData = chartData?.technicianPerformance || [];
+  // Busca ordens de serviço da API
+  const { data: workOrders = [], isLoading } = useWorkOrders();
 
-  // Debug: verificar os dados carregados
-  console.log('Technician Performance Data:', technicianData);
+  // Calcula dados de desempenho por técnico com dados reais
+  const technicianData = useMemo<TechnicianPerformance[]>(() => {
+    const performanceMap = new Map<string, TechnicianPerformance>();
+
+    // Processa ordens de serviço completadas
+    workOrders
+      .filter(wo => wo.status === 'COMPLETED' && wo.assignedToName)
+      .forEach(wo => {
+        const name = wo.assignedToName!;
+        const existing = performanceMap.get(name) || {
+          name,
+          preventive: 0,
+          corrective: 0,
+          request: 0
+        };
+
+        if (wo.type === 'PREVENTIVE') {
+          existing.preventive++;
+        } else if (wo.type === 'CORRECTIVE') {
+          existing.corrective++;
+        } else if (wo.type === 'REQUEST') {
+          existing.request++;
+        }
+
+        performanceMap.set(name, existing);
+      });
+
+    // Converte para array e ordena por total de OS (maior primeiro)
+    return Array.from(performanceMap.values())
+      .sort((a, b) => {
+        const totalA = a.preventive + a.corrective + a.request;
+        const totalB = b.preventive + b.corrective + b.request;
+        return totalB - totalA;
+      })
+      .slice(0, 5); // Limita a 5 técnicos
+  }, [workOrders]);
 
   // Calcula o valor máximo para dimensionar as barras proporcionalmente
   const maxValue = technicianData.reduce((max, tech) => {
@@ -31,6 +65,30 @@ export function TechnicianPerformanceChart() {
     ${technicianData.map(tech => 
       `${tech.name}: ${tech.preventive + tech.corrective + tech.request} ordens`
     ).join(', ')}.`;
+
+  // Renderiza estado de carregamento
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Desempenho por Técnico
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="space-y-2 animate-pulse">
+                <div className="h-4 bg-muted rounded w-1/3"></div>
+                <div className="h-6 bg-muted rounded"></div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   // Renderiza estado vazio quando não há dados
   if (technicianData.length === 0) {

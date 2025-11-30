@@ -32,6 +32,7 @@ export function generateWorkOrderPrintContent({
     switch (type) {
       case 'PREVENTIVE': return 'Preventiva';
       case 'CORRECTIVE': return 'Corretiva';
+      case 'REQUEST': return 'Solicitação';
       default: return type;
     }
   };
