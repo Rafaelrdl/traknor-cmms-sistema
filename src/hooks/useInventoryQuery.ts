@@ -233,6 +233,22 @@ export function useInventoryMovementsSummary(days: number = 30) {
   });
 }
 
+export function useConsumptionByCategory(days: number = 90) {
+  return useQuery({
+    queryKey: ['inventory', 'consumption-by-category', days],
+    queryFn: () => inventoryMovementsService.getConsumptionByCategory(days),
+    enabled: isUserAuthenticated(),
+  });
+}
+
+export function useTopConsumedItems(days: number = 90, limit: number = 5) {
+  return useQuery({
+    queryKey: ['inventory', 'top-consumed-items', days, limit],
+    queryFn: () => inventoryMovementsService.getTopConsumedItems(days, limit),
+    enabled: isUserAuthenticated(),
+  });
+}
+
 export function useCreateInventoryMovement() {
   const queryClient = useQueryClient();
   

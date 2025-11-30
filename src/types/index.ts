@@ -114,6 +114,9 @@ export interface WorkOrderStockItem {
   id: string;
   workOrderId: string;
   stockItemId: string;
+  itemName?: string;
+  itemSku?: string;
+  unit?: string;
   quantity: number;
   stockItem?: StockItem;
 }

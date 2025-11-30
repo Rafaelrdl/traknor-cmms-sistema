@@ -169,6 +169,21 @@ export interface MovementSummary {
   by_reason: Array<{ reason: string; count: number }>;
 }
 
+export interface ConsumptionByCategory {
+  category_id: number | null;
+  category_name: string;
+  total_consumed: number;
+}
+
+export interface TopConsumedItem {
+  item_id: number;
+  item_name: string;
+  item_sku: string;
+  item_unit: string;
+  category_name: string;
+  total_consumed: number;
+}
+
 export const inventoryMovementsService = {
   async getAll(params?: InventoryMovementParams) {
     const response = await api.get<ApiInventoryMovement[]>('/inventory/movements/', { params });
@@ -183,6 +198,20 @@ export const inventoryMovementsService = {
   async getSummary(days: number = 30) {
     const response = await api.get<MovementSummary>('/inventory/movements/summary/', {
       params: { days },
+    });
+    return response.data;
+  },
+
+  async getConsumptionByCategory(days: number = 90) {
+    const response = await api.get<ConsumptionByCategory[]>('/inventory/movements/consumption_by_category/', {
+      params: { days },
+    });
+    return response.data;
+  },
+
+  async getTopConsumedItems(days: number = 90, limit: number = 5) {
+    const response = await api.get<TopConsumedItem[]>('/inventory/movements/top_consumed_items/', {
+      params: { days, limit },
     });
     return response.data;
   },

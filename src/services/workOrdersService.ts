@@ -140,7 +140,10 @@ const mapWorkOrder = (wo: ApiWorkOrder): WorkOrder => ({
   stockItems: Array.isArray(wo.items) ? wo.items.map((i): WorkOrderStockItem => ({
     id: String(i.id),
     workOrderId: String(wo.id),
-    stockItemId: String(i.item),
+    stockItemId: String(i.inventory_item),
+    itemName: i.item_name,
+    itemSku: i.item_sku,
+    unit: i.unit,
     quantity: i.quantity,
   })) : [],
 });
@@ -322,17 +325,17 @@ export const workOrdersService = {
   async addStockItem(id: string, itemId: string, quantity: number): Promise<WorkOrderStockItem> {
     const response = await api.post<{
       id: number;
-      item: number;
+      inventory_item: number;
       quantity: number;
     }>(`/cmms/work-orders/${id}/items/`, {
-      item: Number(itemId),
+      inventory_item: Number(itemId),
       quantity,
     });
     
     return {
       id: String(response.data.id),
       workOrderId: id,
-      stockItemId: String(response.data.item),
+      stockItemId: String(response.data.inventory_item),
       quantity: response.data.quantity,
     };
   },

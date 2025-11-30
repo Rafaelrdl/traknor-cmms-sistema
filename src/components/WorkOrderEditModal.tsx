@@ -107,6 +107,7 @@ export function WorkOrderEditModal({
   const [formData, setFormData] = useState<Partial<WorkOrder>>({});
   const [activeTab, setActiveTab] = useState("details");
   const [selectedStockItems, setSelectedStockItems] = useState<StockItemRequest[]>([]);
+  const [originalStockItems, setOriginalStockItems] = useState<StockItemRequest[]>([]); // Itens originais para comparação
   const [stockItemForm, setStockItemForm] = useState({ stockItemId: '', quantity: 1 });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -157,12 +158,13 @@ export function WorkOrderEditModal({
       const stockItemRequests: StockItemRequest[] = (currentWorkOrder.stockItems || []).map(item => ({
         id: item.id,
         stockItemId: item.stockItemId,
-        name: item.stockItem?.description || `Item ${item.stockItemId}`,
+        name: item.itemName || item.stockItem?.description || `Item ${item.stockItemId}`,
         quantity: item.quantity,
-        unit: item.stockItem?.unit || 'un'
+        unit: item.unit || item.stockItem?.unit || 'un'
       }));
       
       setSelectedStockItems(stockItemRequests);
+      setOriginalStockItems(stockItemRequests); // Salvar itens originais para comparação
       setUploadedPhotos(currentWorkOrder.photos || []);
       
       // Se for ordem preventiva sem checklist, criar um exemplo
@@ -208,6 +210,7 @@ export function WorkOrderEditModal({
       setErrors({});
       setNewPhotoFiles(new Map());
       setDeletedPhotoIds([]); // Limpar fotos marcadas para deletar
+      setOriginalStockItems([]); // Limpar itens originais
     }
   }, [isOpen]);
 
@@ -335,24 +338,45 @@ export function WorkOrderEditModal({
         }
       }
       
-      // Converter StockItemRequest[] de volta para WorkOrderStockItem[]
-      const updatedStockItems: WorkOrderStockItem[] = selectedStockItems.map(item => ({
-        id: item.id,
-        workOrderId: workOrder.id,
-        stockItemId: item.stockItemId,
-        quantity: item.quantity,
-        stockItem: stockItems.find(si => si.id === item.stockItemId)
-      }));
+      // Gerenciar itens de estoque - identificar adições e remoções
+      const originalIds = new Set(originalStockItems.map(i => i.stockItemId));
+      const currentIds = new Set(selectedStockItems.map(i => i.stockItemId));
+      
+      // Itens a remover (existiam originalmente mas não existem mais)
+      const itemsToRemove = originalStockItems.filter(item => !currentIds.has(item.stockItemId));
+      for (const item of itemsToRemove) {
+        try {
+          await workOrdersService.removeStockItem(workOrder.id, item.id);
+        } catch (error) {
+          console.error('Erro ao remover item de estoque:', error);
+        }
+      }
+      
+      // Itens a adicionar (não existiam originalmente)
+      const itemsToAdd = selectedStockItems.filter(item => !originalIds.has(item.stockItemId));
+      for (const item of itemsToAdd) {
+        try {
+          await workOrdersService.addStockItem(workOrder.id, item.stockItemId, item.quantity);
+        } catch (error) {
+          console.error('Erro ao adicionar item de estoque:', error);
+        }
+      }
 
       // Fotos existentes (que já estavam no backend) + novas uploadadas
       const existingPhotos = uploadedPhotos.filter(p => !p.id.startsWith('photo-'));
       const allPhotos = [...existingPhotos, ...uploadedNewPhotos];
 
-      // Combina os dados do formulário com os itens de estoque selecionados
+      // Combina os dados do formulário
       const updatedWorkOrder: WorkOrder = {
         ...workOrder,
         ...formData,
-        stockItems: updatedStockItems,
+        stockItems: selectedStockItems.map(item => ({
+          id: item.id,
+          workOrderId: workOrder.id,
+          stockItemId: item.stockItemId,
+          quantity: item.quantity,
+          stockItem: stockItems.find(si => si.id === item.stockItemId)
+        })),
         executionDescription,
         photos: allPhotos,
         checklistResponses,
@@ -361,6 +385,7 @@ export function WorkOrderEditModal({
       onSave(updatedWorkOrder);
       setNewPhotoFiles(new Map()); // Limpar arquivos após salvar
       setDeletedPhotoIds([]); // Limpar lista de fotos deletadas
+      setOriginalStockItems(selectedStockItems); // Atualizar itens originais
       onClose();
     } catch (error) {
       console.error('Erro ao salvar ordem de serviço:', error);
