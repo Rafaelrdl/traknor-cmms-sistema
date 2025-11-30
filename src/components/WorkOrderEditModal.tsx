@@ -205,8 +205,28 @@ export function WorkOrderEditModal({
     if (!formData.status) newErrors.status = 'Status é obrigatório';
     
     // Validações específicas para status concluído
-    if (formData.status === 'COMPLETED' && !formData.completedAt) {
-      newErrors.completedAt = 'Data de conclusão é obrigatória para ordens concluídas';
+    if (formData.status === 'COMPLETED') {
+      if (!formData.completedAt) {
+        newErrors.completedAt = 'Data de conclusão é obrigatória para ordens concluídas';
+      } else {
+        const completedDate = new Date(formData.completedAt);
+        
+        // Validar se a data de conclusão não é anterior à data de criação
+        if (formData.createdAt) {
+          const createdDate = new Date(formData.createdAt);
+          if (completedDate < createdDate) {
+            newErrors.completedAt = 'Data de conclusão não pode ser anterior à data de criação';
+          }
+        }
+        
+        // Validar se a data de conclusão não é anterior à data programada
+        if (formData.scheduledDate) {
+          const scheduledDate = new Date(formData.scheduledDate);
+          if (completedDate < scheduledDate) {
+            newErrors.completedAt = 'Data de conclusão não pode ser anterior à data programada';
+          }
+        }
+      }
     }
     
     setErrors(newErrors);
