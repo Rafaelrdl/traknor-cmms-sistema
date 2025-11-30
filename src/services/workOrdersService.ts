@@ -101,7 +101,7 @@ const mapWorkOrder = (wo: ApiWorkOrder): WorkOrder => ({
     id: String(p.id),
     url: p.file,
     name: p.caption || 'Foto',
-    uploadedAt: p.created_at,
+    uploadedAt: p.uploaded_at,
     uploadedBy: p.uploaded_by_name || undefined,
   })) : [],
   checklistResponses: Array.isArray(wo.checklist_responses) ? wo.checklist_responses.map((cr): ChecklistResponse => ({
@@ -131,8 +131,9 @@ const mapToApi = (data: Partial<WorkOrder>): Record<string, unknown> => {
   if (data.description) payload.description = data.description;
   if (data.scheduledDate) payload.scheduled_date = data.scheduledDate;
   if (data.assignedTo) payload.assigned_to = Number(data.assignedTo);
-  if (data.executionDescription) payload.execution_description = data.executionDescription;
+  if (data.executionDescription !== undefined) payload.execution_description = data.executionDescription;
   if (data.startedAt) payload.started_at = data.startedAt;
+  if (data.completedAt) payload.completed_at = data.completedAt;
   
   return payload;
 };
@@ -266,7 +267,8 @@ export const workOrdersService = {
       id: number;
       file: string;
       caption: string;
-      created_at: string;
+      uploaded_at: string;
+      uploaded_by_name?: string;
     }>(`/cmms/work-orders/${id}/photos/`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
@@ -275,7 +277,8 @@ export const workOrdersService = {
       id: String(response.data.id),
       url: response.data.file,
       name: response.data.caption || file.name,
-      uploadedAt: response.data.created_at,
+      uploadedAt: response.data.uploaded_at,
+      uploadedBy: response.data.uploaded_by_name,
     };
   },
 

@@ -28,14 +28,17 @@ import {
   FileText,
   Camera,
   Upload,
-  ClipboardCheck
+  ClipboardCheck,
+  Loader2
 } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useCompanies, useSectors } from '@/hooks/useLocationsQuery';
 import { useEquipments } from '@/hooks/useEquipmentQuery';
 import { useStockItems } from '@/hooks/useInventoryQuery';
 import { useTechnicians } from '@/hooks/useTeamQuery';
+import { useWorkOrder } from '@/hooks/useWorkOrdersQuery';
 import { printWorkOrder } from '@/utils/printWorkOrder';
+import { workOrdersService } from '@/services/workOrdersService';
 import type { WorkOrder, WorkOrderStockItem, ChecklistResponse, UploadedPhoto, StockItem } from '@/types';
 import type { ApiInventoryItem } from '@/types/api';
 import { cn } from '@/lib/utils';
@@ -92,6 +95,14 @@ export function WorkOrderEditModal({
   workOrder,
   onSave
 }: WorkOrderEditModalProps) {
+  // Buscar detalhes completos da ordem de serviço
+  const { data: workOrderDetails, isLoading: isLoadingDetails } = useWorkOrder(
+    isOpen && workOrder?.id ? workOrder.id : null
+  );
+  
+  // Usar os dados detalhados se disponíveis, senão usar os dados passados como prop
+  const currentWorkOrder = workOrderDetails || workOrder;
+  
   // Estados e hooks
   const [formData, setFormData] = useState<Partial<WorkOrder>>({});
   const [activeTab, setActiveTab] = useState("details");
@@ -123,23 +134,26 @@ export function WorkOrderEditModal({
 
   // Função para imprimir a ordem de serviço
   const handlePrintWorkOrder = () => {
-    if (!workOrder) return;
+    if (!currentWorkOrder) return;
     
     printWorkOrder({
-      workOrder: { ...workOrder, ...formData } as WorkOrder,
+      workOrder: { ...currentWorkOrder, ...formData } as WorkOrder,
       equipment,
       sectors,
       companies
     });
   };
   
-  // Carregar dados da ordem de serviço quando abrir o modal
+  // Carregar dados da ordem de serviço quando abrir o modal ou quando os detalhes carregarem
   useEffect(() => {
-    if (workOrder && isOpen) {
-      setFormData({ ...workOrder });
+    // Aguardar enquanto carrega os detalhes
+    if (isLoadingDetails) return;
+    
+    if (currentWorkOrder && isOpen) {
+      setFormData({ ...currentWorkOrder });
       
       // Converter WorkOrderStockItem[] para StockItemRequest[]
-      const stockItemRequests: StockItemRequest[] = (workOrder.stockItems || []).map(item => ({
+      const stockItemRequests: StockItemRequest[] = (currentWorkOrder.stockItems || []).map(item => ({
         id: item.id,
         stockItemId: item.stockItemId,
         name: item.stockItem?.description || `Item ${item.stockItemId}`,
@@ -148,10 +162,10 @@ export function WorkOrderEditModal({
       }));
       
       setSelectedStockItems(stockItemRequests);
-      setUploadedPhotos(workOrder.photos || []);
+      setUploadedPhotos(currentWorkOrder.photos || []);
       
       // Se for ordem preventiva sem checklist, criar um exemplo
-      const defaultChecklist: ChecklistResponse[] = workOrder.type === 'PREVENTIVE' && (!workOrder.checklistResponses || workOrder.checklistResponses.length === 0) ? [
+      const defaultChecklist: ChecklistResponse[] = currentWorkOrder.type === 'PREVENTIVE' && (!currentWorkOrder.checklistResponses || currentWorkOrder.checklistResponses.length === 0) ? [
         {
           taskId: 'task-1',
           taskName: 'Inspeção Visual do Equipamento',
@@ -174,14 +188,14 @@ export function WorkOrderEditModal({
             { id: 'check-6', description: 'Lubrificar componentes', checked: false }
           ]
         }
-      ] : (workOrder.checklistResponses || []);
+      ] : (currentWorkOrder.checklistResponses || []);
       
       setChecklistResponses(defaultChecklist);
-      setExecutionDescription(workOrder.executionDescription || '');
+      setExecutionDescription(currentWorkOrder.executionDescription || '');
       setActiveTab("details");
       setErrors({});
     }
-  }, [workOrder, isOpen]);
+  }, [currentWorkOrder, isOpen, isLoadingDetails]);
 
   // Reset form when modal closes
   useEffect(() => {
@@ -191,6 +205,7 @@ export function WorkOrderEditModal({
       setStockItemForm({ stockItemId: '', quantity: 1 });
       setActiveTab("details");
       setErrors({});
+      setNewPhotoFiles(new Map());
     }
   }, [isOpen]);
 
@@ -235,6 +250,9 @@ export function WorkOrderEditModal({
 
   // Referência para input de arquivo
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Estado para guardar arquivos de fotos novas para upload
+  const [newPhotoFiles, setNewPhotoFiles] = useState<Map<string, File>>(new Map());
 
   // Manipuladores de eventos
   // Upload de fotos
@@ -246,14 +264,17 @@ export function WorkOrderEditModal({
       if (file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onload = (e) => {
+          const photoId = `photo-${Date.now()}-${Math.random()}`;
           const newPhoto: UploadedPhoto = {
-            id: `photo-${Date.now()}-${Math.random()}`,
+            id: photoId,
             url: e.target?.result as string,
             name: file.name,
             uploadedAt: new Date().toISOString(),
             uploadedBy: user?.name || 'Usuário'
           };
           setUploadedPhotos(prev => [...prev, newPhoto]);
+          // Guardar o arquivo original para upload posterior
+          setNewPhotoFiles(prev => new Map(prev).set(photoId, file));
         };
         reader.readAsDataURL(file);
       }
@@ -268,9 +289,15 @@ export function WorkOrderEditModal({
   // Remover foto
   const removePhoto = (photoId: string) => {
     setUploadedPhotos(prev => prev.filter(photo => photo.id !== photoId));
+    // Remover arquivo do mapa de novos arquivos
+    setNewPhotoFiles(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(photoId);
+      return newMap;
+    });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData || !workOrder) return;
     
     if (!validateForm()) {
@@ -280,35 +307,49 @@ export function WorkOrderEditModal({
     
     setIsSubmitting(true);
     
-    setTimeout(() => {
-      try {
-        // Converter StockItemRequest[] de volta para WorkOrderStockItem[]
-        const updatedStockItems: WorkOrderStockItem[] = selectedStockItems.map(item => ({
-          id: item.id,
-          workOrderId: workOrder.id,
-          stockItemId: item.stockItemId,
-          quantity: item.quantity,
-          stockItem: stockItems.find(si => si.id === item.stockItemId)
-        }));
-
-        // Combina os dados do formulário com os itens de estoque selecionados
-        const updatedWorkOrder: WorkOrder = {
-          ...workOrder,
-          ...formData,
-          stockItems: updatedStockItems,
-          executionDescription,
-          photos: uploadedPhotos,
-          checklistResponses,
-        };
-        
-        onSave(updatedWorkOrder);
-        onClose();
-      } catch (error) {
-        console.error('Erro ao salvar ordem de serviço:', error);
-      } finally {
-        setIsSubmitting(false);
+    try {
+      // Upload de fotos novas para o backend
+      const uploadedNewPhotos: UploadedPhoto[] = [];
+      for (const [photoId, file] of newPhotoFiles.entries()) {
+        try {
+          const uploadedPhoto = await workOrdersService.uploadPhoto(workOrder.id, file, file.name);
+          uploadedNewPhotos.push(uploadedPhoto);
+        } catch (error) {
+          console.error('Erro ao fazer upload da foto:', error);
+        }
       }
-    }, 500); // Simula delay de API
+      
+      // Converter StockItemRequest[] de volta para WorkOrderStockItem[]
+      const updatedStockItems: WorkOrderStockItem[] = selectedStockItems.map(item => ({
+        id: item.id,
+        workOrderId: workOrder.id,
+        stockItemId: item.stockItemId,
+        quantity: item.quantity,
+        stockItem: stockItems.find(si => si.id === item.stockItemId)
+      }));
+
+      // Fotos existentes (que já estavam no backend) + novas uploadadas
+      const existingPhotos = uploadedPhotos.filter(p => !p.id.startsWith('photo-'));
+      const allPhotos = [...existingPhotos, ...uploadedNewPhotos];
+
+      // Combina os dados do formulário com os itens de estoque selecionados
+      const updatedWorkOrder: WorkOrder = {
+        ...workOrder,
+        ...formData,
+        stockItems: updatedStockItems,
+        executionDescription,
+        photos: allPhotos,
+        checklistResponses,
+      };
+      
+      onSave(updatedWorkOrder);
+      setNewPhotoFiles(new Map()); // Limpar arquivos após salvar
+      onClose();
+    } catch (error) {
+      console.error('Erro ao salvar ordem de serviço:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   const addStockItem = () => {
@@ -418,7 +459,18 @@ export function WorkOrderEditModal({
           </div>
         </DialogHeader>
 
+        {/* Loading indicator while fetching details */}
+        {isLoadingDetails && (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3 text-muted-foreground">
+              <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <span className="text-sm">Carregando detalhes...</span>
+            </div>
+          </div>
+        )}
+
         {/* Content - Scrollable */}
+        {!isLoadingDetails && (
         <div className="flex-1 overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
             <TabsList className="w-full justify-start px-6 py-0 h-12 bg-muted/50 rounded-none border-b shrink-0">
@@ -446,15 +498,13 @@ export function WorkOrderEditModal({
                   </span>
                 )}
               </TabsTrigger>
-              {workOrder.status !== 'COMPLETED' && (
-                <TabsTrigger 
-                  value="execution" 
-                  className="flex items-center gap-2 data-[state=active]:bg-background"
-                >
-                  <Wrench className="h-4 w-4" />
-                  <span>Execução</span>
-                </TabsTrigger>
-              )}
+              <TabsTrigger 
+                value="execution" 
+                className="flex items-center gap-2 data-[state=active]:bg-background"
+              >
+                <Wrench className="h-4 w-4" />
+                <span>Execução</span>
+              </TabsTrigger>
             </TabsList>
             
             <ScrollArea className="flex-1">
@@ -1225,6 +1275,7 @@ export function WorkOrderEditModal({
             </ScrollArea>
           </Tabs>
         </div>
+        )}
 
         {/* Footer - Fixed */}
         <div className="border-t bg-background px-6 py-4 shrink-0">
