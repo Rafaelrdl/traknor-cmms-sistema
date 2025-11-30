@@ -341,8 +341,10 @@ export interface ApiStatusChange {
 export interface ApiRequest {
   id: number;
   number: string;
-  location: number;
-  location_name: string;
+  sector: number;
+  sector_name: string;
+  subsection: number | null;
+  subsection_name: string | null;
   asset: number | null;
   asset_tag: string | null;
   asset_name: string | null;

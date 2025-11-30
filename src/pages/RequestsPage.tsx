@@ -3,50 +3,31 @@ import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Users, Calendar, Loader2 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { MessageSquare, Users, Calendar, Loader2, Plus, Eye, ArrowRightCircle } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
-import { SolicitationsDrawer } from '@/components/SolicitationsDrawer';
+import { SolicitationModal } from '@/components/SolicitationModal';
 import { SolicitationFilters, type SolicitationFilters as SolicitationFiltersType } from '@/components/SolicitationFilters';
+import { CreateRequestModal } from '@/components/CreateRequestModal';
 import { toast } from 'sonner';
 import {
   useSolicitations,
-  useConvertSolicitationToWorkOrder,
-  useUpdateSolicitationStatus
+  useConvertSolicitationToWorkOrder
 } from '@/hooks/useRequestsQuery';
-import { useStockItems } from '@/hooks/useInventoryQuery';
 import { filterSolicitations, getFilterOptions } from '@/utils/solicitationFilters';
-import type { Solicitation, StockItem } from '@/types';
-import type { ApiInventoryItem } from '@/types/api';
-
-// Mapper: ApiInventoryItem → StockItem
-const mapToStockItem = (item: ApiInventoryItem): StockItem => ({
-  id: String(item.id),
-  code: item.code,
-  description: item.name,
-  unit: item.unit_display || item.unit,
-  quantity: item.quantity,
-  minimum: item.min_quantity,
-  maximum: item.max_quantity ?? 0
-});
+import type { Solicitation } from '@/types';
 
 export function RequestsPage() {
   // React Query hooks
   const { data: solicitations = [], isLoading, error } = useSolicitations();
-  const { data: stockItemsData } = useStockItems();
-  
-  // Map API items to frontend StockItem format
-  const stockItems = useMemo(() => 
-    (stockItemsData?.results || []).map(mapToStockItem), 
-    [stockItemsData]
-  );
   
   // Mutations
   const convertMutation = useConvertSolicitationToWorkOrder();
-  const updateStatusMutation = useUpdateSolicitationStatus();
   
   // Local state
   const [selectedSolicitation, setSelectedSolicitation] = useState<Solicitation | null>(null);
   const [filters, setFilters] = useState<SolicitationFiltersType>({});
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // Get filter options from all solicitations
   const filterOptions = useMemo(() => getFilterOptions(solicitations), [solicitations]);
@@ -56,17 +37,6 @@ export function RequestsPage() {
     filterSolicitations(solicitations, filters), 
     [solicitations, filters]
   );
-
-  const handleRowClick = (solicitation: Solicitation) => {
-    setSelectedSolicitation(solicitation);
-  };
-
-  const handleUpdateSolicitation = (updatedSolicitation: Solicitation) => {
-    // Status update via API mutation - the cache will be invalidated automatically
-    const newStatus = updatedSolicitation.status === 'Nova' ? 'NEW' :
-                      updatedSolicitation.status === 'Em triagem' ? 'TRIAGING' : 'NEW';
-    updateStatusMutation.mutate({ id: updatedSolicitation.id, status: newStatus as 'NEW' | 'TRIAGING' | 'REJECTED' });
-  };
 
   const handleConvertToWorkOrder = (solicitation: Solicitation) => {
     convertMutation.mutate({
@@ -100,6 +70,20 @@ export function RequestsPage() {
     setSelectedSolicitation(null);
   };
 
+  const handleViewSolicitation = (solicitation: Solicitation, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setSelectedSolicitation(solicitation);
+  };
+
+  const handleConvertClick = (solicitation: Solicitation, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (solicitation.status === 'Convertida em OS') {
+      toast.info('Esta solicitação já foi convertida em OS.');
+      return;
+    }
+    handleConvertToWorkOrder(solicitation);
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -126,7 +110,13 @@ export function RequestsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Solicitações" />
+      <div className="flex items-center justify-between">
+        <PageHeader title="Solicitações" />
+        <Button onClick={() => setIsCreateModalOpen(true)} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Nova Solicitação
+        </Button>
+      </div>
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -248,23 +238,16 @@ export function RequestsPage() {
                     <th scope="col" className="text-left p-4 font-medium text-muted-foreground">
                       Data
                     </th>
+                    <th scope="col" className="text-center p-4 font-medium text-muted-foreground">
+                      Ações
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredSolicitations.map((solicitation) => (
                     <tr
                       key={solicitation.id}
-                      className="border-b hover:bg-muted/50 cursor-pointer transition-colors"
-                      onClick={() => handleRowClick(solicitation)}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          handleRowClick(solicitation);
-                        }
-                      }}
-                      aria-label={`Ver detalhes da solicitação ${solicitation.location_name} - ${solicitation.equipment_name}`}
+                      className="border-b hover:bg-muted/50 transition-colors"
                     >
                       <td className="p-4">
                         <div className="max-w-xs">
@@ -272,7 +255,7 @@ export function RequestsPage() {
                             {solicitation.location_name}
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {solicitation.equipment_name}
+                            {solicitation.equipment_name || '-'}
                           </p>
                         </div>
                       </td>
@@ -307,6 +290,51 @@ export function RequestsPage() {
                           {formatDate(solicitation.created_at)}
                         </div>
                       </td>
+
+                      <td className="p-4">
+                        <div className="flex items-center justify-center gap-1">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={(e) => handleViewSolicitation(solicitation, e)}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Visualizar detalhes</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-primary hover:text-primary"
+                                  onClick={(e) => handleConvertClick(solicitation, e)}
+                                  disabled={solicitation.status === 'Convertida em OS'}
+                                >
+                                  <ArrowRightCircle className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>
+                                  {solicitation.status === 'Convertida em OS' 
+                                    ? 'Já convertida em OS' 
+                                    : 'Converter em Ordem de Serviço'}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -339,14 +367,18 @@ export function RequestsPage() {
         </CardContent>
       </Card>
 
-      {/* Solicitations Drawer */}
-      <SolicitationsDrawer
+      {/* Solicitation Modal */}
+      <SolicitationModal
         solicitation={selectedSolicitation}
         isOpen={!!selectedSolicitation}
         onClose={handleCloseDrawer}
-        onUpdate={handleUpdateSolicitation}
         onConvert={handleConvertToWorkOrder}
-        stockItems={stockItems}
+      />
+
+      {/* Create Request Modal */}
+      <CreateRequestModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
       />
     </div>
   );

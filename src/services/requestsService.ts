@@ -32,7 +32,8 @@ export interface RequestFilters {
 }
 
 export interface CreateRequestData {
-  location_id: string;
+  sector_id: string;
+  subsection_id?: string;
   equipment_id?: string;
   note: string;
   items?: { stock_item_id: string; qty: number }[];
@@ -52,8 +53,8 @@ export interface ConvertToWorkOrderData {
 
 const mapRequest = (req: ApiRequest): Solicitation => ({
   id: String(req.id),
-  location_id: String(req.location),
-  location_name: req.location_name,
+  location_id: req.subsection ? String(req.subsection) : String(req.sector),
+  location_name: req.subsection_name || req.sector_name || '',
   equipment_id: req.asset ? String(req.asset) : '',
   equipment_name: req.asset_name || '',
   requester_user_id: String(req.requester),
@@ -120,7 +121,8 @@ export const requestsService = {
    */
   async create(data: CreateRequestData): Promise<Solicitation> {
     const payload = {
-      location: Number(data.location_id),
+      sector: Number(data.sector_id),
+      subsection: data.subsection_id ? Number(data.subsection_id) : null,
       asset: data.equipment_id ? Number(data.equipment_id) : null,
       note: data.note,
       items: data.items?.map(i => ({
