@@ -83,10 +83,13 @@ export function InventoryPage() {
   const deleteMutation = useDeleteInventoryItem();
   
   // Map API data to frontend types
-  const items = useMemo(() => 
-    (itemsData?.results || []).map(mapApiItemToInventoryItem), 
-    [itemsData]
-  );
+  const items = useMemo(() => {
+    // Handle both array and paginated response formats
+    const itemsArray = Array.isArray(itemsData) 
+      ? itemsData 
+      : (itemsData as any)?.results || [];
+    return itemsArray.map(mapApiItemToInventoryItem);
+  }, [itemsData]);
   const categories = useMemo(() => {
     // Handle both array and paginated response formats
     const categoryArray = Array.isArray(categoriesData) 

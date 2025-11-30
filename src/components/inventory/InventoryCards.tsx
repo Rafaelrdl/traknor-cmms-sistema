@@ -20,14 +20,15 @@ export function InventoryCards({ items, categories, onEdit, onMove }: InventoryC
   };
 
   const isLowStock = (item: InventoryItem) => {
-    // Usar campo calculado pela API se disponível
-    if (item.is_low_stock !== undefined) {
+    // Usar campo calculado pela API se disponível (verificar se é boolean)
+    if (typeof item.is_low_stock === 'boolean') {
       return item.is_low_stock;
     }
-    // Fallback: calcular manualmente
-    const qty = item.qty_on_hand ?? item.quantity ?? 0;
-    const reorder = item.reorder_point ?? item.min_qty ?? 0;
-    return qty > 0 && qty <= reorder;
+    // Fallback: calcular manualmente apenas se estoque <= ponto de reposição
+    const qty = Number(item.qty_on_hand ?? item.quantity ?? 0);
+    const reorder = Number(item.reorder_point ?? item.min_qty ?? 0);
+    // Só é low stock se qty > 0 E qty <= reorder
+    return qty > 0 && reorder > 0 && qty <= reorder;
   };
 
   if (items.length === 0) {
