@@ -98,11 +98,20 @@ const mapAssetStatus = (status: string): Equipment['status'] => {
 };
 
 /**
- * Mapeia criticidade baseado no health_score
+ * Mapeia criticidade baseado em specifications ou health_score
  */
-const mapCriticidade = (healthScore: number): Equipment['criticidade'] => {
-  if (healthScore >= 80) return 'BAIXA';
-  if (healthScore >= 50) return 'MEDIA';
+const mapCriticidade = (specs?: Record<string, unknown>, healthScore?: number): Equipment['criticidade'] => {
+  // Primeiro tentar ler da specifications
+  if (specs?.criticidade && typeof specs.criticidade === 'string') {
+    const criticidade = specs.criticidade as Equipment['criticidade'];
+    if (['BAIXA', 'MEDIA', 'ALTA', 'CRITICA'].includes(criticidade)) {
+      return criticidade;
+    }
+  }
+  // Fallback: calcular baseado no health_score
+  const score = healthScore ?? 100;
+  if (score >= 80) return 'BAIXA';
+  if (score >= 50) return 'MEDIA';
   return 'ALTA';
 };
 
@@ -135,7 +144,7 @@ const apiAssetToEquipment = (asset: ApiAsset): Equipment & {
     installDate: asset.installation_date || '',
     nextMaintenance: '', // TODO: Calcular próxima manutenção
     status: mapAssetStatus(asset.status),
-    criticidade: mapCriticidade(asset.health_score),
+    criticidade: mapCriticidade(asset.specifications, asset.health_score),
     lastMaintenance: asset.last_maintenance,
     totalOperatingHours: undefined, // TODO: Calcular horas
     energyConsumption: undefined, // TODO: Calcular consumo
@@ -172,17 +181,25 @@ const equipmentToApiAsset = (equipment: Partial<Equipment>): Partial<ApiAsset> =
     data.subsection = equipment.subSectionId ? parseInt(equipment.subSectionId, 10) : null;
   }
   
-  // Incluir specifications se fornecido
-  if (equipment.specifications) {
-    data.specifications = equipment.specifications;
+  // Incluir specifications se fornecido, mesclando com criticidade
+  const specs: Record<string, unknown> = equipment.specifications ? { ...equipment.specifications } : {};
+  
+  // Adicionar criticidade às specifications
+  if (equipment.criticidade !== undefined) {
+    specs.criticidade = equipment.criticidade;
+  }
+  
+  // Só enviar specifications se tiver algo
+  if (Object.keys(specs).length > 0) {
+    data.specifications = specs;
   }
   
   // Mapear status reverso
   if (equipment.status) {
     const statusMapping: Record<Equipment['status'], string> = {
-      'FUNCTIONING': 'OPERATIONAL',
+      'FUNCTIONING': 'OK',
       'MAINTENANCE': 'MAINTENANCE',
-      'STOPPED': 'INACTIVE',
+      'STOPPED': 'STOPPED',
     };
     data.status = statusMapping[equipment.status];
   }
@@ -193,7 +210,7 @@ const equipmentToApiAsset = (equipment: Partial<Equipment>): Partial<ApiAsset> =
       'CHILLER': 'CHILLER',
       'CENTRAL': 'AHU',
       'VRF': 'VRF',
-      'SPLIT': 'SPLIT',
+      'SPLIT': 'FAN_COIL', // Split mapeia para Fan Coil no backend
     };
     data.asset_type = typeMapping[equipment.type];
   }

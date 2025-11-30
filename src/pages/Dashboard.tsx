@@ -17,11 +17,12 @@ import {
   User
 } from 'lucide-react';
 import { useDashboardKPIs, useChartData } from '@/hooks/useDataTemp';
-import { useWorkOrders } from '@/hooks/useWorkOrdersQuery';
+import { useWorkOrders, useWorkOrderStats } from '@/hooks/useWorkOrdersQuery';
 import { useEquipments } from '@/hooks/useEquipmentQuery';
 import { useSectors } from '@/hooks/useLocationsQuery';
 import { useDashboardFiltering } from '@/hooks/useDashboardFiltering';
 import { useAbility } from '@/hooks/useAbility';
+import { useSLAStore, calculateSLAStatus } from '@/store/useSLAStore';
 import { useMemo } from 'react';
 
 export function Dashboard() {
@@ -31,8 +32,10 @@ export function Dashboard() {
   
   // Usar as mesmas ordens de serviço do sistema (React Query)
   const { data: workOrders = [] } = useWorkOrders();
+  const { data: workOrderStats } = useWorkOrderStats();
   const { data: equipment = [] } = useEquipments();
   const { data: sectors = [] } = useSectors();
+  const slaSettings = useSLAStore((state) => state.settings);
   
   const {
     filterDashboard,
@@ -71,10 +74,135 @@ export function Dashboard() {
       .slice(0, 5); // Limitar a 5 para não poluir o dashboard
   }, [workOrders, role]);
 
-  // Calcular KPIs baseados em dados reais
+  // Calcular evolução de OS por dia da semana baseado nos dados reais da API
+  const weeklyEvolutionData = useMemo(() => {
+    const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    const today = new Date();
+    const last7Days: { day: string; date: Date; completed: number; overdue: number; open: number }[] = [];
+    
+    // Criar array com os últimos 7 dias
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      date.setHours(0, 0, 0, 0);
+      last7Days.push({
+        day: dayNames[date.getDay()],
+        date,
+        completed: 0,
+        overdue: 0,
+        open: 0
+      });
+    }
+    
+    // Contar OS por dia
+    (workOrders || []).forEach(wo => {
+      // Determinar a data relevante para esta OS
+      let relevantDate: Date | null = null;
+      
+      if (wo.status === 'COMPLETED' && wo.completedAt) {
+        relevantDate = new Date(wo.completedAt);
+      } else if (wo.createdAt) {
+        relevantDate = new Date(wo.createdAt);
+      } else if (wo.scheduledDate) {
+        relevantDate = new Date(wo.scheduledDate);
+      }
+      
+      if (!relevantDate) return;
+      
+      // Encontrar o dia correspondente
+      const dayEntry = last7Days.find(d => {
+        const entryDate = new Date(d.date);
+        return entryDate.toDateString() === relevantDate!.toDateString();
+      });
+      
+      if (!dayEntry) return;
+      
+      if (wo.status === 'COMPLETED') {
+        dayEntry.completed++;
+      } else if (wo.status === 'OPEN') {
+        // Verificar se está em atraso
+        const isOverdue = slaSettings.enabled && wo.createdAt
+          ? (() => {
+              const priority = wo.priority as 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+              const slaStatus = calculateSLAStatus(
+                wo.createdAt,
+                wo.startedAt,
+                wo.completedAt,
+                priority,
+                slaSettings,
+                wo.status
+              );
+              return slaStatus.responseStatus === 'breached' || slaStatus.resolutionStatus === 'breached';
+            })()
+          : new Date(wo.scheduledDate) < new Date();
+        
+        if (isOverdue) {
+          dayEntry.overdue++;
+        } else {
+          dayEntry.open++;
+        }
+      } else if (wo.status === 'IN_PROGRESS') {
+        // OS em progresso também pode estar em atraso
+        const isOverdue = slaSettings.enabled && wo.createdAt
+          ? (() => {
+              const priority = wo.priority as 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+              const slaStatus = calculateSLAStatus(
+                wo.createdAt,
+                wo.startedAt,
+                wo.completedAt,
+                priority,
+                slaSettings,
+                wo.status
+              );
+              return slaStatus.resolutionStatus === 'breached';
+            })()
+          : false;
+        
+        if (isOverdue) {
+          dayEntry.overdue++;
+        } else {
+          dayEntry.open++;
+        }
+      }
+    });
+    
+    return last7Days.map(d => ({
+      day: d.day,
+      completed: d.completed,
+      inProgress: d.overdue, // Renomear para manter compatibilidade com o gráfico (inProgress = overdue)
+      open: d.open
+    }));
+  }, [workOrders, slaSettings]);
+
+  // Calcular KPIs baseados em dados reais da API
   const dashboardKPIs = useMemo(() => {
-    const openWorkOrders = (workOrders || []).filter(wo => wo.status === 'OPEN').length;
+    // Usar estatísticas da API se disponíveis, senão calcular localmente
+    const openWorkOrders = workOrderStats?.open ?? (workOrders || []).filter(wo => wo.status === 'OPEN').length;
+    const inProgressWorkOrders = workOrderStats?.in_progress ?? (workOrders || []).filter(wo => wo.status === 'IN_PROGRESS').length;
+    const completedWorkOrders = workOrderStats?.completed ?? (workOrders || []).filter(wo => wo.status === 'COMPLETED').length;
+    
+    // Calcular OS em atraso baseado no SLA de atendimento
     const overdueWorkOrders = (workOrders || []).filter(wo => {
+      // Apenas OS abertas ou em execução podem estar em atraso
+      if (wo.status === 'COMPLETED') return false;
+      
+      // Se SLA está habilitado, usa o cálculo de SLA
+      if (slaSettings.enabled && wo.createdAt) {
+        const priority = wo.priority as 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+        const slaStatus = calculateSLAStatus(
+          wo.createdAt,
+          wo.startedAt,
+          wo.completedAt,
+          priority,
+          slaSettings,
+          wo.status
+        );
+        
+        // Considera em atraso se o SLA de atendimento ou resolução foi violado
+        return slaStatus.responseStatus === 'breached' || slaStatus.resolutionStatus === 'breached';
+      }
+      
+      // Fallback: usar data agendada se SLA não está habilitado
       return wo.status === 'OPEN' && new Date(wo.scheduledDate) < new Date();
     }).length;
     
@@ -87,11 +215,13 @@ export function Dashboard() {
     return {
       openWorkOrders,
       overdueWorkOrders,
+      inProgressWorkOrders,
+      completedWorkOrders,
       criticalEquipment,
       mttr: kpis?.mttr || 2.5,
       mtbf: kpis?.mtbf || 168
     };
-  }, [workOrders, equipment, kpis]);
+  }, [workOrders, workOrderStats, equipment, kpis, slaSettings]);
 
   // Create mock dashboard data and apply role-based filtering
   const dashboardData = useMemo(() => {
@@ -157,8 +287,8 @@ export function Dashboard() {
     return filterDashboard(mockData);
   }, [kpis, chartData, role, filterDashboard, dashboardKPIs, equipment, sectors, upcomingWorkOrders]);
 
-  // Dados centralizados do mock (filtered)
-  const weeklyData = chartData?.workOrderEvolution || [];
+  // Dados centralizados - usar dados da API para evolução de OS
+  const weeklyData = weeklyEvolutionData.length > 0 ? weeklyEvolutionData : (chartData?.workOrderEvolution || []);
   const upcomingMaintenance = dashboardData.upcomingMaintenance || [];
   const filteredKPIs = dashboardData.kpis || [];
 

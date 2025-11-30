@@ -626,9 +626,10 @@ function AssetsContent() {
                       <SelectValue placeholder="Selecione a criticidade" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="BAIXA">🟢 Baixa</SelectItem>
-                      <SelectItem value="MEDIA">🟡 Média</SelectItem>
-                      <SelectItem value="ALTA">🔴 Alta</SelectItem>
+                      <SelectItem value="BAIXA">🔵 Baixa</SelectItem>
+                      <SelectItem value="MEDIA">🟢 Média</SelectItem>
+                      <SelectItem value="ALTA">🟠 Alta</SelectItem>
+                      <SelectItem value="CRITICA">🔴 Crítica</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

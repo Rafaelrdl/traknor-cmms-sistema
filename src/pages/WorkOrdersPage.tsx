@@ -17,6 +17,7 @@ import { WorkOrderKanban } from '@/components/WorkOrderKanban';
 import { WorkOrderPanel } from '@/components/WorkOrderPanel';
 import { WorkOrderEditModal } from '@/components/WorkOrderEditModal';
 import { WorkOrderModal } from '@/components/WorkOrderModal';
+import { WorkOrderViewModal } from '@/components/WorkOrderViewModal';
 import { 
   useWorkOrders, 
   useCreateWorkOrder, 
@@ -77,6 +78,7 @@ export function WorkOrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [selectedOrder, setSelectedOrder] = useState<WorkOrder | null>(null);
   const [editingOrder, setEditingOrder] = useState<WorkOrder | null>(null);
+  const [viewingOrder, setViewingOrder] = useState<WorkOrder | null>(null);
   const [showNewOrderModal, setShowNewOrderModal] = useState(false);
   const [checklist, setChecklist] = useState<ChecklistItem[]>(mockChecklist);
 
@@ -244,6 +246,7 @@ export function WorkOrdersPage() {
               workOrders={filteredOrders}
               onStartWorkOrder={startWorkOrder}
               onEditWorkOrder={setEditingOrder}
+              onViewWorkOrder={setViewingOrder}
             />
           )}
           
@@ -429,6 +432,13 @@ export function WorkOrdersPage() {
         isOpen={showNewOrderModal}
         onClose={() => setShowNewOrderModal(false)}
         onSave={handleCreateWorkOrder}
+      />
+
+      {/* View Work Order Modal (Read-only) */}
+      <WorkOrderViewModal
+        workOrder={viewingOrder}
+        isOpen={!!viewingOrder}
+        onClose={() => setViewingOrder(null)}
       />
     </div>
   );

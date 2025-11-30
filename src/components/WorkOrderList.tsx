@@ -24,7 +24,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Play, Edit, ClipboardList, AlertTriangle, User, FileText, UserPlus } from 'lucide-react';
+import { Play, Edit, ClipboardList, AlertTriangle, User, FileText, UserPlus, Eye } from 'lucide-react';
 import { useEquipments } from '@/hooks/useEquipmentQuery';
 import { useSectors, useCompanies } from '@/hooks/useLocationsQuery';
 import { useTechnicians } from '@/hooks/useTeamQuery';
@@ -40,6 +40,7 @@ interface WorkOrderListProps {
   workOrders: WorkOrder[];
   onStartWorkOrder?: (id: string, technicianId?: string) => void;
   onEditWorkOrder?: (wo: WorkOrder) => void;
+  onViewWorkOrder?: (wo: WorkOrder) => void;
   compact?: boolean;
 }
 
@@ -47,6 +48,7 @@ export function WorkOrderList({
   workOrders, 
   onStartWorkOrder, 
   onEditWorkOrder,
+  onViewWorkOrder,
   compact = false
 }: WorkOrderListProps) {
   const { data: equipment = [] } = useEquipments();
@@ -383,8 +385,25 @@ export function WorkOrderList({
                 </>
               )}
               <TableCell>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <TooltipProvider>
+                    {onViewWorkOrder && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => onViewWorkOrder(wo)}
+                            aria-label={`Visualizar ordem de serviço ${wo.number}`}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Visualizar OS</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                     {wo.status === 'OPEN' && !wo.assignedTo && onStartWorkOrder && (
                       <Tooltip>
                         <TooltipTrigger asChild>

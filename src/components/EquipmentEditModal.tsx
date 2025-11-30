@@ -63,6 +63,14 @@ const STATUS_OPTIONS = [
   { value: 'STOPPED', label: '🔴 Desativado' },
 ];
 
+// Opções de criticidade
+const CRITICIDADE_OPTIONS = [
+  { value: 'BAIXA', label: '🔵 Baixa' },
+  { value: 'MEDIA', label: '🟢 Média' },
+  { value: 'ALTA', label: '🟠 Alta' },
+  { value: 'CRITICA', label: '🔴 Crítica' },
+];
+
 // Opções de fases
 const PHASES_OPTIONS = [
   { value: 'monofasico', label: 'Monofásico' },
@@ -98,6 +106,7 @@ export function EquipmentEditModal({ equipment, open, onOpenChange }: EquipmentE
   const [tag, setTag] = useState('');
   const [equipmentType, setEquipmentType] = useState('CHILLER');
   const [equipmentStatus, setEquipmentStatus] = useState<'FUNCTIONING' | 'MAINTENANCE' | 'STOPPED'>('FUNCTIONING');
+  const [criticidade, setCriticidade] = useState<'BAIXA' | 'MEDIA' | 'ALTA' | 'CRITICA'>('MEDIA');
   const [brand, setBrand] = useState('');
   const [model, setModel] = useState('');
   const [serialNumber, setSerialNumber] = useState('');
@@ -146,6 +155,7 @@ export function EquipmentEditModal({ equipment, open, onOpenChange }: EquipmentE
       setTag(equipment.tag || '');
       setEquipmentType(equipment.type || 'CHILLER');
       setEquipmentStatus(equipment.status || 'FUNCTIONING');
+      setCriticidade(equipment.criticidade || 'MEDIA');
       setBrand(equipment.brand || '');
       setModel(equipment.model || '');
       setSerialNumber(equipment.serialNumber || '');
@@ -254,6 +264,7 @@ export function EquipmentEditModal({ equipment, open, onOpenChange }: EquipmentE
           tag: tag.trim(),
           type: equipmentType as Equipment['type'],
           status: equipmentStatus,
+          criticidade: criticidade,
           brand: brand.trim(),
           model: model.trim(),
           serialNumber: serialNumber.trim(),
@@ -347,22 +358,45 @@ export function EquipmentEditModal({ equipment, open, onOpenChange }: EquipmentE
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="equipmentStatus">
-                    Estado do Equipamento <span className="text-red-500">*</span>
-                  </Label>
-                  <Select value={equipmentStatus} onValueChange={(value: 'FUNCTIONING' | 'MAINTENANCE' | 'STOPPED') => setEquipmentStatus(value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o estado" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STATUS_OPTIONS.map((status) => (
-                        <SelectItem key={status.value} value={status.value}>
-                          {status.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="equipmentStatus">
+                      Estado do Equipamento <span className="text-red-500">*</span>
+                    </Label>
+                    <Select value={equipmentStatus} onValueChange={(value: 'FUNCTIONING' | 'MAINTENANCE' | 'STOPPED') => setEquipmentStatus(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o estado" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {STATUS_OPTIONS.map((status) => (
+                          <SelectItem key={status.value} value={status.value}>
+                            {status.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="criticidade">
+                      Criticidade <span className="text-red-500">*</span>
+                    </Label>
+                    <Select value={criticidade} onValueChange={(value: 'BAIXA' | 'MEDIA' | 'ALTA' | 'CRITICA') => setCriticidade(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a criticidade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CRITICIDADE_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Nível de importância operacional
+                    </p>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
