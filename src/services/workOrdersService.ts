@@ -20,6 +20,33 @@ import type { WorkOrder, ChecklistResponse, UploadedPhoto, WorkOrderStockItem } 
 import type { ApiWorkOrder, PaginatedResponse } from '@/types/api';
 
 // ============================================
+// Helpers
+// ============================================
+
+/**
+ * Normaliza URL de arquivo para ser absoluta
+ * Em desenvolvimento, URLs relativas precisam apontar para o backend
+ */
+const normalizeFileUrl = (url: string | undefined | null): string => {
+  if (!url) return '';
+  
+  // Já é uma URL absoluta
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // URL relativa - construir URL absoluta para o backend
+  // Em dev, usamos o proxy do Vite, então URLs relativas como /media/... funcionam
+  // Mas se o backend retorna URLs sem a barra inicial, precisamos ajustar
+  const baseUrl = import.meta.env.DEV 
+    ? 'http://umc.localhost:8000'  // Backend direto em dev
+    : window.location.origin;
+  
+  const path = url.startsWith('/') ? url : `/${url}`;
+  return `${baseUrl}${path}`;
+};
+
+// ============================================
 // Tipos de Filtros
 // ============================================
 
@@ -99,8 +126,8 @@ const mapWorkOrder = (wo: ApiWorkOrder): WorkOrder => ({
   executionDescription: wo.execution_description || undefined,
   photos: Array.isArray(wo.photos) ? wo.photos.map((p): UploadedPhoto => ({
     id: String(p.id),
-    url: p.file,
-    name: p.caption || 'Foto',
+    url: normalizeFileUrl(p.file),
+    name: p.caption || p.file?.split('/').pop() || 'Foto',
     uploadedAt: p.uploaded_at,
     uploadedBy: p.uploaded_by_name || undefined,
   })) : [],
@@ -275,7 +302,7 @@ export const workOrdersService = {
     
     return {
       id: String(response.data.id),
-      url: response.data.file,
+      url: normalizeFileUrl(response.data.file),
       name: response.data.caption || file.name,
       uploadedAt: response.data.uploaded_at,
       uploadedBy: response.data.uploaded_by_name,

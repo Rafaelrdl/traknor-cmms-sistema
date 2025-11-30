@@ -111,6 +111,7 @@ export function WorkOrderEditModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [uploadedPhotos, setUploadedPhotos] = useState<UploadedPhoto[]>([]);
+  const [deletedPhotoIds, setDeletedPhotoIds] = useState<string[]>([]); // Fotos a serem deletadas no backend
   const [checklistResponses, setChecklistResponses] = useState<ChecklistResponse[]>([]);
   const [executionDescription, setExecutionDescription] = useState('');
   
@@ -206,6 +207,7 @@ export function WorkOrderEditModal({
       setActiveTab("details");
       setErrors({});
       setNewPhotoFiles(new Map());
+      setDeletedPhotoIds([]); // Limpar fotos marcadas para deletar
     }
   }, [isOpen]);
 
@@ -288,6 +290,11 @@ export function WorkOrderEditModal({
 
   // Remover foto
   const removePhoto = (photoId: string) => {
+    // Se for uma foto existente no backend (não começa com 'photo-'), marcar para deletar
+    if (!photoId.startsWith('photo-')) {
+      setDeletedPhotoIds(prev => [...prev, photoId]);
+    }
+    
     setUploadedPhotos(prev => prev.filter(photo => photo.id !== photoId));
     // Remover arquivo do mapa de novos arquivos
     setNewPhotoFiles(prev => {
@@ -308,6 +315,15 @@ export function WorkOrderEditModal({
     setIsSubmitting(true);
     
     try {
+      // Deletar fotos marcadas para remoção
+      for (const photoId of deletedPhotoIds) {
+        try {
+          await workOrdersService.deletePhoto(workOrder.id, photoId);
+        } catch (error) {
+          console.error('Erro ao deletar foto:', error);
+        }
+      }
+      
       // Upload de fotos novas para o backend
       const uploadedNewPhotos: UploadedPhoto[] = [];
       for (const [photoId, file] of newPhotoFiles.entries()) {
@@ -344,6 +360,7 @@ export function WorkOrderEditModal({
       
       onSave(updatedWorkOrder);
       setNewPhotoFiles(new Map()); // Limpar arquivos após salvar
+      setDeletedPhotoIds([]); // Limpar lista de fotos deletadas
       onClose();
     } catch (error) {
       console.error('Erro ao salvar ordem de serviço:', error);
