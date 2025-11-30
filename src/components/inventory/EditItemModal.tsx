@@ -34,6 +34,7 @@ export function EditItemModal({ item, categories, open, onOpenChange, onItemUpda
     max_quantity: undefined as number | undefined,
     unit_cost: 0,
     supplier: '',
+    image: '',
     is_active: true,
     is_critical: false
   });
@@ -54,6 +55,7 @@ export function EditItemModal({ item, categories, open, onOpenChange, onItemUpda
         max_quantity: item.max_qty || item.maximum_quantity,
         unit_cost: item.unit_cost || 0,
         supplier: item.supplier || '',
+        image: item.photo_url || item.image_url || '',
         is_active: item.is_active,
         is_critical: item.is_critical || false
       });
@@ -85,6 +87,7 @@ export function EditItemModal({ item, categories, open, onOpenChange, onItemUpda
         max_quantity: formData.max_quantity,
         unit_cost: formData.unit_cost,
         supplier: formData.supplier.trim(),
+        image_url: formData.image.trim() || null,
         is_active: formData.is_active,
         is_critical: formData.is_critical
       }
@@ -305,6 +308,21 @@ export function EditItemModal({ item, categories, open, onOpenChange, onItemUpda
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 placeholder="Descrição detalhada do item"
               />
+            </div>
+
+            {/* URL da Imagem */}
+            <div className="md:col-span-2">
+              <Label htmlFor="edit-image">URL da Imagem</Label>
+              <Input
+                id="edit-image"
+                type="url"
+                value={formData.image}
+                onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
+                placeholder="https://exemplo.com/imagem.jpg"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Cole o link de uma imagem do item (opcional)
+              </p>
             </div>
           </div>
 

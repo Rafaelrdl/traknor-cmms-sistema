@@ -24,6 +24,7 @@ export interface InventoryItem {
   category_name?: string | null;
   unit: string;
   photo_url?: string | null;
+  image_url?: string | null;
   location_name?: string;
   location?: string;
   shelf?: string;

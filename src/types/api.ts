@@ -431,6 +431,7 @@ export interface ApiInventoryItem {
   supplier_code: string;
   lead_time_days: number | null;
   image: string | null;
+  image_url: string | null;
   is_active: boolean;
   is_critical: boolean;
   is_low_stock: boolean;
