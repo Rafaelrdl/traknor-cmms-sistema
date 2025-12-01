@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Upload, FileText, FileImage, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,7 +21,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Procedure, ProcedureCategory, ProcedureStatus } from '@/models/procedure';
-import { createProcedure, updateProcedure, putFile } from '@/data/proceduresStore';
+import { useCreateProcedure, useUpdateProcedure } from '@/hooks/useProceduresQuery';
 import { toast } from 'sonner';
 
 interface ProcedureModalProps {
@@ -42,17 +42,35 @@ export function ProcedureModal({
   const isEditing = !!procedure;
   
   const [formData, setFormData] = useState({
-    title: procedure?.title || '',
-    description: procedure?.description || '',
-    category_id: procedure?.category_id || null,
-    status: (procedure?.status || 'Ativo') as ProcedureStatus,
-    tags: procedure?.tags || [],
+    title: '',
+    description: '',
+    category_id: null as string | null,
+    status: 'Ativo' as ProcedureStatus,
+    tags: [] as string[],
   });
   
   const [file, setFile] = useState<File | null>(null);
   const [newTag, setNewTag] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+
+  // Reset form when modal opens/closes or procedure changes
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        title: procedure?.title || '',
+        description: procedure?.description || '',
+        category_id: procedure?.category_id || null,
+        status: procedure?.status || 'Ativo',
+        tags: procedure?.tags || [],
+      });
+      setFile(null);
+      setNewTag('');
+    }
+  }, [isOpen, procedure]);
+
+  // API Mutations
+  const createProcedureMutation = useCreateProcedure();
+  const updateProcedureMutation = useUpdateProcedure();
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -144,42 +162,48 @@ export function ProcedureModal({
       toast.error('Selecione um arquivo PDF ou Markdown');
       return;
     }
-
-    setIsSubmitting(true);
     
     try {
       if (isEditing && procedure) {
-        // Update existing procedure (metadata only)
-        await updateProcedure({
-          ...procedure,
-          ...formData,
+        // Update existing procedure via API
+        const apiStatus = formData.status === 'Ativo' ? 'ACTIVE' : 'INACTIVE';
+        
+        await updateProcedureMutation.mutateAsync({
+          id: Number(procedure.id),
+          data: {
+            title: formData.title,
+            description: formData.description,
+            category: formData.category_id ? Number(formData.category_id) : undefined,
+            status: apiStatus,
+            file: file || undefined,
+          },
         });
-        toast.success('Procedimento atualizado com sucesso');
       } else {
-        // Create new procedure
+        // Create new procedure via API
         if (!file) throw new Error('Arquivo é obrigatório para novos procedimentos');
         
-        // Upload file to IndexedDB
-        const fileRef = await putFile(file);
+        const fileType = file.name.toLowerCase().endsWith('.pdf') ? 'PDF' : 'MARKDOWN';
+        const apiStatus = formData.status === 'Ativo' ? 'ACTIVE' : 'INACTIVE';
         
-        // Create procedure
-        await createProcedure({
-          ...formData,
-          file: fileRef,
+        await createProcedureMutation.mutateAsync({
+          title: formData.title,
+          description: formData.description,
+          category: formData.category_id ? Number(formData.category_id) : 0,
+          status: apiStatus,
+          file_type: fileType,
+          file: file,
         });
-        
-        toast.success('Procedimento criado com sucesso');
       }
 
       onSuccess();
       handleClose();
     } catch (error) {
       console.error('Error saving procedure:', error);
-      toast.error('Erro ao salvar procedimento');
-    } finally {
-      setIsSubmitting(false);
+      // Toast is handled by mutation hooks
     }
   };
+
+  const isSubmitting = createProcedureMutation.isPending || updateProcedureMutation.isPending;
 
   const handleClose = () => {
     setFormData({

@@ -663,7 +663,10 @@ export interface ApiProcedureCategory {
   id: number;
   name: string;
   description: string;
-  procedure_count: number;
+  color: string;
+  procedures_count: number;
+  created_at: string;
+  updated_at: string;
 }
 
 /**
@@ -671,36 +674,79 @@ export interface ApiProcedureCategory {
  */
 export interface ApiProcedureVersion {
   id: number;
-  version_number: string;
-  file_url: string;
-  file_type: 'PDF' | 'MARKDOWN' | 'DOCX';
-  file_size: number;
+  version_number: number;
   changelog: string;
+  file: string | null;
+  file_type: 'PDF' | 'MARKDOWN' | 'DOCX';
   created_by: number;
   created_by_name: string;
   created_at: string;
 }
 
 /**
- * Procedure
+ * Procedure List Item (listagem simplificada)
+ */
+export interface ApiProcedureListItem {
+  id: number;
+  title: string;
+  category: number | null;
+  category_name: string | null;
+  category_color: string | null;
+  status: 'ACTIVE' | 'INACTIVE' | 'DRAFT' | 'ARCHIVED';
+  file_type: 'PDF' | 'MARKDOWN' | 'DOCX';
+  file: string;
+  version: number;
+  versions_count: number;
+  is_active: boolean;
+  view_count: number;
+  tags: string[];
+  created_by: number;
+  created_by_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Procedure Detail (detalhes completos)
  */
 export interface ApiProcedure {
   id: number;
   title: string;
   description: string;
-  category: number;
-  category_name: string;
-  status: 'DRAFT' | 'REVIEW' | 'APPROVED' | 'ARCHIVED';
-  current_version: string;
-  file_url: string;
+  category: number | null;
+  category_name: string | null;
+  category_color: string | null;
+  status: 'ACTIVE' | 'INACTIVE' | 'DRAFT' | 'ARCHIVED';
   file_type: 'PDF' | 'MARKDOWN' | 'DOCX';
+  file: string;
+  version: number;
   versions: ApiProcedureVersion[];
   tags: string[];
   view_count: number;
+  is_active: boolean;
   created_by: number;
   created_by_name: string;
   created_at: string;
   updated_at: string;
+}
+
+/**
+ * Procedure Stats
+ */
+export interface ApiProcedureStats {
+  total: number;
+  by_status: {
+    active: number;
+    inactive: number;
+    draft: number;
+    archived: number;
+  };
+  by_type: {
+    pdf: number;
+    markdown: number;
+    docx: number;
+  };
+  by_category: Record<string, number>;
 }
 
 // ============================================

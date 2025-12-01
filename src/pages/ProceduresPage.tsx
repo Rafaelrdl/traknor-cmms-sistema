@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Plus, FileText, AlertCircle } from 'lucide-react';
+import { BookOpen, Plus, FileText, AlertCircle, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ProcedureFilters } from '@/components/procedure/ProcedureFilters';
 import { ProcedureTable } from '@/components/procedure/ProcedureTable';
@@ -9,19 +9,51 @@ import { ProcedureModal } from '@/components/procedure/ProcedureModal';
 import { ProcedureViewer } from '@/components/procedure/ProcedureViewer';
 import { IfCanCreate } from '@/components/auth/IfCan';
 import { 
-  listProcedures, 
-  listCategories, 
-  filterProcedures,
-  initializeStorage,
-  createSampleFiles
-} from '@/data/proceduresStore';
-import { Procedure, ProcedureStatus } from '@/models/procedure';
+  useProcedures, 
+  useProcedureCategories,
+  useProcedureStats 
+} from '@/hooks/useProceduresQuery';
+import { Procedure, ProcedureCategory, ProcedureStatus } from '@/models/procedure';
+import type { ApiProcedureListItem, ApiProcedureCategory } from '@/types/api';
+
+// Helper para converter do formato API para o formato local (para compatibilidade com componentes existentes)
+function apiProcedureToLocal(apiProcedure: ApiProcedureListItem): Procedure {
+  return {
+    id: String(apiProcedure.id),
+    title: apiProcedure.title,
+    description: '',
+    category_id: apiProcedure.category ? String(apiProcedure.category) : null,
+    status: apiProcedure.is_active || apiProcedure.status === 'ACTIVE' ? 'Ativo' : 'Inativo',
+    tags: apiProcedure.tags || [],
+    version: apiProcedure.version || 1,
+    file: {
+      id: String(apiProcedure.id),
+      name: apiProcedure.title,
+      type: apiProcedure.file_type === 'PDF' ? 'pdf' : 'md',
+      size: 0,
+    },
+    created_at: apiProcedure.created_at,
+    updated_at: apiProcedure.updated_at,
+    // Campos adicionais da API para uso interno
+    _apiData: apiProcedure,
+  } as Procedure & { _apiData: ApiProcedureListItem };
+}
+
+function apiCategoryToLocal(apiCategory: ApiProcedureCategory): ProcedureCategory {
+  return {
+    id: String(apiCategory.id),
+    name: apiCategory.name,
+    color: apiCategory.color || '#6b7280',
+  };
+}
+
+// Helper para converter status local para API
+function localStatusToApi(status: ProcedureStatus | 'Todos'): 'ACTIVE' | 'INACTIVE' | 'DRAFT' | 'ARCHIVED' | undefined {
+  if (status === 'Todos') return undefined;
+  return status === 'Ativo' ? 'ACTIVE' : 'INACTIVE';
+}
 
 export function ProceduresPage() {
-  const [procedures, setProcedures] = useState(listProcedures());
-  const [filteredProcedures, setFilteredProcedures] = useState(procedures);
-  const [categories] = useState(listCategories());
-  
   const [filters, setFilters] = useState({
     category_id: null as string | null,
     status: 'Todos' as ProcedureStatus | 'Todos',
@@ -36,26 +68,37 @@ export function ProceduresPage() {
   
   const [selectedProcedure, setSelectedProcedure] = useState<Procedure | undefined>();
 
-  // Initialize storage and load procedures
-  useEffect(() => {
-    initializeStorage();
-    createSampleFiles().catch(console.warn); // Create sample files for demo
-    refreshProcedures();
-  }, []);
+  // Fetch data from API
+  const { 
+    data: apiProcedures = [], 
+    isLoading: loadingProcedures, 
+    refetch: refetchProcedures 
+  } = useProcedures({
+    category: filters.category_id ? Number(filters.category_id) : undefined,
+    status: localStatusToApi(filters.status),
+    search: filters.q || undefined,
+  });
 
-  // Apply filters when they change
-  useEffect(() => {
-    const filtered = filterProcedures({
-      category_id: filters.category_id,
-      status: filters.status === 'Todos' ? undefined : filters.status,
-      q: filters.q,
-    });
-    setFilteredProcedures(filtered);
-  }, [procedures, filters]);
+  const { 
+    data: apiCategories = [], 
+    isLoading: loadingCategories 
+  } = useProcedureCategories();
 
-  const refreshProcedures = () => {
-    setProcedures(listProcedures());
-  };
+  const { data: stats } = useProcedureStats();
+
+  // Convert API data to local format for existing components
+  // Adiciona verificação defensiva para garantir que são arrays
+  const procedures = useMemo(() => 
+    Array.isArray(apiProcedures) ? apiProcedures.map(apiProcedureToLocal) : [], 
+    [apiProcedures]
+  );
+  
+  const categories = useMemo(() => 
+    Array.isArray(apiCategories) ? apiCategories.map(apiCategoryToLocal) : [], 
+    [apiCategories]
+  );
+
+  const isLoading = loadingProcedures || loadingCategories;
 
   const handleFilterChange = (newFilters: Partial<typeof filters>) => {
     setFilters(prev => ({ ...prev, ...newFilters }));
@@ -87,24 +130,24 @@ export function ProceduresPage() {
   };
 
   const handleModalSuccess = () => {
-    refreshProcedures();
+    refetchProcedures();
     setModals({ create: false, edit: false, view: false });
     setSelectedProcedure(undefined);
   };
 
   const handleViewerClose = () => {
     setModals(prev => ({ ...prev, view: false }));
-    // Refresh procedures when viewer closes to catch any version changes
-    refreshProcedures();
+    refetchProcedures();
   };
 
-  // Calculate statistics
-  const stats = {
-    total: procedures.length,
-    active: procedures.filter(p => p.status === 'Ativo').length,
-    inactive: procedures.filter(p => p.status === 'Inativo').length,
-    pdf: procedures.filter(p => p.file.type === 'pdf').length,
-    md: procedures.filter(p => p.file.type === 'md').length,
+  // Calculate statistics from API stats or local data
+  const displayStats = {
+    total: stats?.total ?? procedures.length,
+    active: stats?.by_status?.active ?? procedures.filter(p => p.status === 'Ativo').length,
+    inactive: (stats?.by_status?.inactive ?? 0) + (stats?.by_status?.draft ?? 0) + (stats?.by_status?.archived ?? 0) 
+      || procedures.filter(p => p.status === 'Inativo').length,
+    pdf: stats?.by_type?.pdf ?? procedures.filter(p => p.file.type === 'pdf').length,
+    md: stats?.by_type?.markdown ?? procedures.filter(p => p.file.type === 'md').length,
   };
 
   return (
@@ -129,7 +172,7 @@ export function ProceduresPage() {
         <CardContent className="pt-6">
           <ProcedureFilters
             categories={categories}
-            selectedCategory={filters.category_id}
+            selectedCategory={filters.category_id ?? undefined}
             selectedStatus={filters.status}
             searchQuery={filters.q}
             onCategoryChange={(categoryId) => handleFilterChange({ category_id: categoryId })}
@@ -148,35 +191,35 @@ export function ProceduresPage() {
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
+            <div className="text-2xl font-bold">{displayStats.total}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.pdf} PDF • {stats.md} Markdown
+              {displayStats.pdf} PDF • {displayStats.md} Markdown
             </p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ativos</CardTitle>
+            <CardTitle className="text-sm font-medium">Aprovados</CardTitle>
             <div className="w-4 h-4 rounded-full bg-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.active}</div>
+            <div className="text-2xl font-bold">{displayStats.active}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.total > 0 ? Math.round((stats.active / stats.total) * 100) : 0}% do total
+              {displayStats.total > 0 ? Math.round((displayStats.active / displayStats.total) * 100) : 0}% do total
             </p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Inativos</CardTitle>
-            <div className="w-4 h-4 rounded-full bg-gray-400" />
+            <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
+            <div className="w-4 h-4 rounded-full bg-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.inactive}</div>
+            <div className="text-2xl font-bold">{displayStats.inactive}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.inactive > 0 ? 'Requer revisão' : 'Nenhum inativo'}
+              {displayStats.inactive > 0 ? 'Rascunho/Revisão' : 'Nenhum pendente'}
             </p>
           </CardContent>
         </Card>
@@ -195,28 +238,40 @@ export function ProceduresPage() {
         </Card>
       </div>
 
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-muted-foreground">Carregando procedimentos...</span>
+        </div>
+      )}
+
       {/* Results Summary */}
-      {filteredProcedures.length !== procedures.length && (
+      {!isLoading && filters.q && (
         <div className="flex items-center gap-2 px-4 py-3 bg-muted/50 rounded-lg">
           <AlertCircle className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm">
-            Exibindo {filteredProcedures.length} de {procedures.length} procedimentos
+            {procedures.length === 0 
+              ? 'Nenhum procedimento encontrado' 
+              : `Exibindo ${procedures.length} procedimento${procedures.length !== 1 ? 's' : ''}`}
           </span>
         </div>
       )}
 
       {/* Procedures Table */}
-      <Card>
-        <CardContent className="p-0">
-          <ProcedureTable
-            procedures={filteredProcedures}
-            categories={categories}
-            onView={handleViewProcedure}
-            onEdit={handleEditProcedure}
-            onUpdate={refreshProcedures}
-          />
-        </CardContent>
-      </Card>
+      {!isLoading && (
+        <Card>
+          <CardContent className="p-0">
+            <ProcedureTable
+              procedures={procedures}
+              categories={categories}
+              onView={handleViewProcedure}
+              onEdit={handleEditProcedure}
+              onUpdate={() => refetchProcedures()}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Modals */}
       <ProcedureModal

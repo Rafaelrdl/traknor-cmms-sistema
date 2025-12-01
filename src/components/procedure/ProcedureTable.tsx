@@ -39,7 +39,11 @@ import {
 import { IfCan, IfCanEdit, IfCanDelete } from '@/components/auth/IfCan';
 import { useAbility } from '@/hooks/useAbility';
 import { Procedure, ProcedureCategory, ProcedureStatus } from '@/models/procedure';
-import { updateProcedure, deleteProcedure } from '@/data/proceduresStore';
+import { 
+  useUpdateProcedure, 
+  useDeleteProcedure,
+  useApproveProcedure 
+} from '@/hooks/useProceduresQuery';
 import { toast } from 'sonner';
 
 interface ProcedureTableProps {
@@ -63,6 +67,11 @@ export function ProcedureTable({
     procedure?: Procedure;
   }>({ isOpen: false });
 
+  // API Mutations
+  const updateProcedureMutation = useUpdateProcedure();
+  const deleteProcedureMutation = useDeleteProcedure();
+  const approveMutation = useApproveProcedure();
+
   const getCategoryName = (categoryId?: string | null) => {
     if (!categoryId) return 'Sem categoria';
     return categories.find(cat => cat.id === categoryId)?.name || 'Categoria desconhecida';
@@ -75,12 +84,22 @@ export function ProcedureTable({
 
   const handleStatusChange = async (procedure: Procedure, newStatus: ProcedureStatus) => {
     try {
-      await updateProcedure({
-        ...procedure,
-        status: newStatus,
-      });
+      const apiStatus = newStatus === 'Ativo' ? 'APPROVED' : 'DRAFT';
+      
+      // Use approve/reject for status changes
+      if (apiStatus === 'APPROVED') {
+        await approveMutation.mutateAsync({ 
+          id: Number(procedure.id), 
+          approved: true 
+        });
+      } else {
+        await approveMutation.mutateAsync({ 
+          id: Number(procedure.id), 
+          approved: false,
+          rejectionReason: 'Status alterado para inativo'
+        });
+      }
       onUpdate();
-      toast.success('Status atualizado com sucesso');
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('Erro ao atualizar status');
@@ -89,12 +108,13 @@ export function ProcedureTable({
 
   const handleCategoryChange = async (procedure: Procedure, categoryId: string | null) => {
     try {
-      await updateProcedure({
-        ...procedure,
-        category_id: categoryId,
+      await updateProcedureMutation.mutateAsync({
+        id: Number(procedure.id),
+        data: {
+          category: categoryId ? Number(categoryId) : undefined,
+        },
       });
       onUpdate();
-      toast.success('Categoria atualizada com sucesso');
     } catch (error) {
       console.error('Error updating category:', error);
       toast.error('Erro ao atualizar categoria');
@@ -103,9 +123,8 @@ export function ProcedureTable({
 
   const handleDelete = async (procedure: Procedure) => {
     try {
-      await deleteProcedure(procedure.id);
+      await deleteProcedureMutation.mutateAsync(Number(procedure.id));
       onUpdate();
-      toast.success('Procedimento excluído com sucesso');
     } catch (error) {
       console.error('Error deleting procedure:', error);
       toast.error('Erro ao excluir procedimento');
