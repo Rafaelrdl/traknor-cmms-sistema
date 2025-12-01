@@ -742,7 +742,14 @@ export function Dashboard() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={maintenance.type === 'Manutenção Preventiva' ? 'default' : 'secondary'}>
+                      <Badge 
+                        variant={
+                          maintenance.type === 'Manutenção Preventiva' ? 'default' : 
+                          maintenance.type === 'Solicitação' ? 'outline' : 
+                          'secondary'
+                        }
+                        className={maintenance.type === 'Solicitação' ? 'bg-violet-100 text-violet-700 border-violet-200' : ''}
+                      >
                         {maintenance.type}
                       </Badge>
                     </TableCell>
@@ -755,7 +762,8 @@ export function Dashboard() {
                         maintenance.priority === 'HIGH' ? 'outline' : 
                         'secondary'
                       }>
-                        {maintenance.priority === 'HIGH' ? 'Alta' : 
+                        {maintenance.priority === 'CRITICAL' ? 'Crítica' :
+                         maintenance.priority === 'HIGH' ? 'Alta' : 
                          maintenance.priority === 'MEDIUM' ? 'Média' : 'Baixa'}
                       </Badge>
                     </TableCell>
