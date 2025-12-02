@@ -58,9 +58,9 @@ export type WidgetType =
   | 'card-progress'         // Card com barra de progresso
   
   // Cards de Ação
-  | 'work-orders-summary'   // Resumo de OS
-  | 'equipment-status'      // Status de equipamentos
-  | 'maintenance-schedule'  // Agenda de manutenções
+  | 'card-button'           // Card com botão de ação
+  | 'card-toggle'           // Card com switch para ligar/desligar
+  | 'card-status'           // Card indicador de status com cores
   
   // Gráficos de Linha
   | 'chart-line'            // Gráfico de linha
@@ -165,32 +165,32 @@ export const widgetDefinitions: WidgetDefinition[] = [
 
   // CARDS DE AÇÃO (3)
   {
-    id: 'work-orders-summary',
-    name: 'Resumo de OS',
-    description: 'Resumo de ordens de serviço',
+    id: 'card-button',
+    name: 'Card Botão',
+    description: 'Botão para acionar comando',
     category: 'cards-acao',
-    defaultSize: 'col-3',
-    icon: 'ClipboardList',
+    defaultSize: 'col-2',
+    icon: 'MousePointerClick',
     configurable: true,
     requiresData: true,
   },
   {
-    id: 'equipment-status',
-    name: 'Status de Equipamentos',
-    description: 'Visão geral dos equipamentos',
+    id: 'card-toggle',
+    name: 'Card Toggle',
+    description: 'Switch para ligar/desligar',
     category: 'cards-acao',
-    defaultSize: 'col-3',
-    icon: 'Server',
+    defaultSize: 'col-2',
+    icon: 'ToggleRight',
     configurable: true,
     requiresData: true,
   },
   {
-    id: 'maintenance-schedule',
-    name: 'Agenda de Manutenções',
-    description: 'Próximas manutenções programadas',
+    id: 'card-status',
+    name: 'Card Status',
+    description: 'Indicador de status com cores',
     category: 'cards-acao',
-    defaultSize: 'col-4',
-    icon: 'Calendar',
+    defaultSize: 'col-2',
+    icon: 'CircleDot',
     configurable: true,
     requiresData: true,
   },

@@ -157,6 +157,14 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
       case 'indicator-trend':
         return renderTrendIndicator();
 
+      // CARDS DE AÇÃO
+      case 'card-button':
+        return renderButtonCard();
+      case 'card-toggle':
+        return renderToggleCard();
+      case 'card-status':
+        return renderStatusCard();
+
       // TABELAS
       case 'table-simple':
         return renderSimpleTable();
@@ -166,12 +174,6 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
         return renderEquipmentTable();
 
       // ESPECÍFICOS CMMS
-      case 'work-orders-summary':
-        return renderWorkOrdersSummary();
-      case 'equipment-status':
-        return renderEquipmentStatus();
-      case 'maintenance-schedule':
-        return renderMaintenanceSchedule();
       case 'technician-performance':
         return renderTechnicianPerformance();
       case 'sla-overview':
@@ -675,6 +677,125 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
               style={{ width: `${Math.max(percent, 2)}%` }}
             />
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Estado para o toggle
+  const [toggleState, setToggleState] = useState(false);
+
+  function renderButtonCard() {
+    const label = widget.config?.label || formatSensorLabel(sensorTag) || widget.title;
+    const buttonColor = widget.config?.color || '#3b82f6';
+    
+    return (
+      <div className="h-full flex flex-col items-center justify-center gap-3 p-3">
+        <h3 className="text-xs font-medium text-muted-foreground text-center">{label}</h3>
+        <button 
+          className="px-6 py-3 rounded-lg font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all text-sm"
+          style={{ backgroundColor: buttonColor }}
+          onClick={() => {
+            // Aqui pode ser implementada a ação do botão
+            console.log('Botão clicado:', widget.id);
+          }}
+        >
+          Executar
+        </button>
+      </div>
+    );
+  }
+
+  function renderToggleCard() {
+    const label = widget.config?.label || formatSensorLabel(sensorTag) || widget.title;
+    
+    return (
+      <div className="h-full flex flex-col items-center justify-center gap-3 p-3">
+        <h3 className="text-xs font-medium text-muted-foreground text-center">{label}</h3>
+        <button
+          onClick={() => setToggleState(!toggleState)}
+          className={cn(
+            "relative w-14 h-7 rounded-full transition-colors",
+            toggleState ? "bg-green-500" : "bg-gray-300"
+          )}
+        >
+          <div 
+            className={cn(
+              "absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full transition-transform shadow-sm",
+              toggleState && "translate-x-7"
+            )}
+          />
+        </button>
+        <span className={cn(
+          "text-sm font-medium",
+          toggleState ? "text-green-600" : "text-muted-foreground"
+        )}>
+          {toggleState ? 'Ligado' : 'Desligado'}
+        </span>
+      </div>
+    );
+  }
+
+  function renderStatusCard() {
+    const label = widget.config?.label || formatSensorLabel(sensorTag) || widget.title;
+    
+    // Usar valor do sensor se disponível
+    let statusValue = 50;
+    if (sensorTag && assetId && sensorData.value !== null) {
+      statusValue = Number(sensorData.value);
+    }
+    
+    // Determinar status baseado nos thresholds ou valor padrão
+    let status: string;
+    let statusColor: string;
+    let statusBgClass: string;
+    
+    const warningThreshold = widget.config?.warningThreshold;
+    const criticalThreshold = widget.config?.criticalThreshold;
+    
+    if (criticalThreshold !== undefined || warningThreshold !== undefined) {
+      // Usar thresholds configurados
+      if (criticalThreshold !== undefined && statusValue >= criticalThreshold) {
+        status = 'Crítico';
+        statusColor = '#ef4444';
+        statusBgClass = 'bg-red-50';
+      } else if (warningThreshold !== undefined && statusValue >= warningThreshold) {
+        status = 'Aviso';
+        statusColor = '#f59e0b';
+        statusBgClass = 'bg-yellow-50';
+      } else {
+        status = 'OK';
+        statusColor = '#10b981';
+        statusBgClass = 'bg-green-50';
+      }
+    } else {
+      // Lógica padrão: porcentagem 0-100
+      const normalizedValue = statusValue / 100;
+      if (normalizedValue > 0.7) {
+        status = 'OK';
+        statusColor = '#10b981';
+        statusBgClass = 'bg-green-50';
+      } else if (normalizedValue > 0.4) {
+        status = 'Aviso';
+        statusColor = '#f59e0b';
+        statusBgClass = 'bg-yellow-50';
+      } else {
+        status = 'Crítico';
+        statusColor = '#ef4444';
+        statusBgClass = 'bg-red-50';
+      }
+    }
+    
+    return (
+      <div className={cn("h-full flex flex-col items-center justify-center gap-3 p-3 rounded-lg", statusBgClass)}>
+        <h3 className="text-xs font-medium text-muted-foreground text-center">{label}</h3>
+        <div 
+          className="w-16 h-16 rounded-full flex items-center justify-center"
+          style={{ backgroundColor: `${statusColor}20` }}
+        >
+          <span className="text-lg font-bold" style={{ color: statusColor }}>
+            {sensorData.isLoading ? '...' : status}
+          </span>
         </div>
       </div>
     );
