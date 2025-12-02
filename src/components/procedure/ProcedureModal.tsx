@@ -123,8 +123,8 @@ export function ProcedureModal({
 
   const validateAndSetFile = (selectedFile: File) => {
     const maxSize = 20 * 1024 * 1024; // 20MB
-    const allowedTypes = ['application/pdf', 'text/markdown', 'text/plain'];
-    const allowedExtensions = ['.pdf', '.md', '.markdown'];
+    const allowedTypes = ['application/pdf'];
+    const allowedExtensions = ['.pdf'];
     
     // Check file size
     if (selectedFile.size > maxSize) {
@@ -137,7 +137,7 @@ export function ProcedureModal({
       allowedExtensions.some(ext => selectedFile.name.toLowerCase().endsWith(ext));
     
     if (!isValidType) {
-      toast.error('Tipo de arquivo não suportado. Use apenas PDF ou Markdown (.md)');
+      toast.error('Tipo de arquivo não suportado. Use apenas arquivos PDF');
       return;
     }
 
@@ -159,7 +159,7 @@ export function ProcedureModal({
     }
 
     if (!isEditing && !file) {
-      toast.error('Selecione um arquivo PDF ou Markdown');
+      toast.error('Selecione um arquivo PDF');
       return;
     }
     
@@ -182,7 +182,7 @@ export function ProcedureModal({
         // Create new procedure via API
         if (!file) throw new Error('Arquivo é obrigatório para novos procedimentos');
         
-        const fileType = file.name.toLowerCase().endsWith('.pdf') ? 'PDF' : 'MARKDOWN';
+        const fileType = 'PDF'; // Apenas PDF é suportado
         const apiStatus = formData.status === 'Ativo' ? 'ACTIVE' : 'INACTIVE';
         
         await createProcedureMutation.mutateAsync({
@@ -231,12 +231,12 @@ export function ProcedureModal({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {isEditing ? 'Editar Procedimento' : 'Novo Procedimento'}
+            {isEditing ? 'Editar Procedimento' : 'Novo Procedimento Operacional'}
           </DialogTitle>
           <DialogDescription>
             {isEditing 
-              ? 'Atualize as informações do procedimento'
-              : 'Faça upload de um arquivo PDF ou Markdown e preencha os metadados'
+              ? 'Atualize as informações do procedimento operacional'
+              : 'Faça upload do documento PDF (POP) e preencha as informações'
             }
           </DialogDescription>
         </DialogHeader>
@@ -260,7 +260,7 @@ export function ProcedureModal({
                 >
                   <input
                     type="file"
-                    accept=".pdf,.md,.markdown"
+                    accept=".pdf"
                     onChange={handleFileSelect}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
@@ -297,10 +297,10 @@ export function ProcedureModal({
                       <Upload className="h-12 w-12 text-muted-foreground mx-auto" />
                       <div>
                         <p className="text-sm font-medium">
-                          Clique para selecionar ou arraste um arquivo
+                          Clique para selecionar ou arraste o documento
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          PDF ou Markdown (.md) • Máximo 20MB
+                          Arquivo PDF • Máximo 20MB
                         </p>
                       </div>
                     </div>
@@ -315,10 +315,10 @@ export function ProcedureModal({
           {/* Basic Information */}
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Título *</Label>
+              <Label htmlFor="title">Título do Documento *</Label>
               <Input
                 id="title"
-                placeholder="Ex: Limpeza de Filtros HVAC"
+                placeholder="Ex: POP - Limpeza de Filtros HVAC"
                 value={formData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
               />
@@ -328,7 +328,7 @@ export function ProcedureModal({
               <Label htmlFor="description">Descrição</Label>
               <Textarea
                 id="description"
-                placeholder="Breve descrição do procedimento..."
+                placeholder="Descreva o objetivo e aplicação do procedimento..."
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 rows={3}

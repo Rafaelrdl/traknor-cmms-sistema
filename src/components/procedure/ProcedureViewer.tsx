@@ -19,12 +19,12 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -416,18 +416,15 @@ export function ProcedureViewer({
   const isPDF = procedure.file.type === 'pdf';
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent 
-        side="right" 
-        className="w-full sm:w-[90vw] sm:max-w-4xl p-0 flex flex-col"
-      >
-        <SheetHeader className="p-6 pb-4 border-b">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-6xl w-[95vw] h-[90vh] p-0 flex flex-col overflow-hidden">
+        <DialogHeader className="p-6 pb-4 border-b shrink-0">
           <div className="flex items-start justify-between">
-            <div className="space-y-2 flex-1">
-              <SheetTitle className="text-xl">{procedure.title}</SheetTitle>
-              <SheetDescription className="text-base">
+            <div className="space-y-2 flex-1 pr-8">
+              <DialogTitle className="text-xl">{procedure.title}</DialogTitle>
+              <DialogDescription className="text-base">
                 {procedure.description || 'Sem descrição disponível'}
-              </SheetDescription>
+              </DialogDescription>
               
               <div className="flex flex-wrap gap-2 items-center pt-2">
                 {category && (
@@ -471,13 +468,8 @@ export function ProcedureViewer({
                 </div>
               )}
             </div>
-            
-            <Button variant="ghost" size="sm" onClick={onClose} className="ml-4">
-              <X className="h-4 w-4" />
-              <span className="sr-only">Fechar</span>
-            </Button>
           </div>
-        </SheetHeader>
+        </DialogHeader>
 
         {/* Toolbar */}
         <div className="border-b bg-muted/30">
@@ -888,7 +880,7 @@ export function ProcedureViewer({
         </div>
 
         {/* Footer with keyboard shortcuts */}
-        <div className="border-t px-6 py-3 bg-muted/30">
+        <div className="border-t px-6 py-3 bg-muted/30 shrink-0">
           <div className="text-xs text-muted-foreground">
             <strong>Atalhos:</strong> 
             {activeTab === 'document' && isPDF && ' ← → (navegar páginas) •'}
@@ -896,7 +888,7 @@ export function ProcedureViewer({
             {' '}Esc (fechar)
           </div>
         </div>
-      </SheetContent>
+      </DialogContent>
 
       {/* Version Comparison Dialog */}
       {procedure && showVersionComparison && (
@@ -907,6 +899,6 @@ export function ProcedureViewer({
           onProcedureUpdate={handleProcedureUpdate}
         />
       )}
-    </Sheet>
+    </Dialog>
   );
 }

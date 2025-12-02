@@ -1,12 +1,14 @@
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Plus, FileText, AlertCircle, Loader2 } from 'lucide-react';
+import { BookOpen, Plus, FileText, AlertCircle, Loader2, ClipboardList, CheckSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProcedureFilters } from '@/components/procedure/ProcedureFilters';
 import { ProcedureTable } from '@/components/procedure/ProcedureTable';
 import { ProcedureModal } from '@/components/procedure/ProcedureModal';
 import { ProcedureViewer } from '@/components/procedure/ProcedureViewer';
+import { ChecklistTable, ChecklistModal, ChecklistViewer } from '@/components/checklist';
 import { IfCanCreate } from '@/components/auth/IfCan';
 import { 
   useProcedures, 
@@ -14,7 +16,19 @@ import {
   useProcedureStats 
 } from '@/hooks/useProceduresQuery';
 import { Procedure, ProcedureCategory, ProcedureStatus } from '@/models/procedure';
+import { ChecklistTemplate, ChecklistCategory } from '@/models/checklist';
+import { 
+  listChecklists, 
+  listChecklistCategories, 
+  getChecklistStats,
+  createChecklist,
+  updateChecklist,
+  deleteChecklist,
+  duplicateChecklist,
+  toggleChecklistActive,
+} from '@/data/checklistsStore';
 import type { ApiProcedureListItem, ApiProcedureCategory } from '@/types/api';
+import { toast } from 'sonner';
 
 // Helper para converter do formato API para o formato local (para compatibilidade com componentes existentes)
 function apiProcedureToLocal(apiProcedure: ApiProcedureListItem): Procedure {
@@ -54,13 +68,16 @@ function localStatusToApi(status: ProcedureStatus | 'Todos'): 'ACTIVE' | 'INACTI
 }
 
 export function ProceduresPage() {
-  const [filters, setFilters] = useState({
+  const [activeTab, setActiveTab] = useState<'procedures' | 'checklists'>('procedures');
+  
+  // === PROCEDURES STATE ===
+  const [procedureFilters, setProcedureFilters] = useState({
     category_id: null as string | null,
     status: 'Todos' as ProcedureStatus | 'Todos',
     q: '',
   });
   
-  const [modals, setModals] = useState({
+  const [procedureModals, setProcedureModals] = useState({
     create: false,
     edit: false,
     view: false,
@@ -68,15 +85,15 @@ export function ProceduresPage() {
   
   const [selectedProcedure, setSelectedProcedure] = useState<Procedure | undefined>();
 
-  // Fetch data from API
+  // Fetch procedures data from API
   const { 
     data: apiProcedures = [], 
     isLoading: loadingProcedures, 
     refetch: refetchProcedures 
   } = useProcedures({
-    category: filters.category_id ? Number(filters.category_id) : undefined,
-    status: localStatusToApi(filters.status),
-    search: filters.q || undefined,
+    category: procedureFilters.category_id ? Number(procedureFilters.category_id) : undefined,
+    status: localStatusToApi(procedureFilters.status),
+    search: procedureFilters.q || undefined,
   });
 
   const { 
@@ -84,28 +101,45 @@ export function ProceduresPage() {
     isLoading: loadingCategories 
   } = useProcedureCategories();
 
-  const { data: stats } = useProcedureStats();
+  const { data: procedureStats } = useProcedureStats();
 
-  // Convert API data to local format for existing components
-  // Adiciona verificação defensiva para garantir que são arrays
+  // Convert API data to local format
   const procedures = useMemo(() => 
     Array.isArray(apiProcedures) ? apiProcedures.map(apiProcedureToLocal) : [], 
     [apiProcedures]
   );
   
-  const categories = useMemo(() => 
+  const procedureCategories = useMemo(() => 
     Array.isArray(apiCategories) ? apiCategories.map(apiCategoryToLocal) : [], 
     [apiCategories]
   );
 
-  const isLoading = loadingProcedures || loadingCategories;
+  // === CHECKLISTS STATE ===
+  const [checklistModals, setChecklistModals] = useState({
+    create: false,
+    edit: false,
+    view: false,
+  });
+  
+  const [selectedChecklist, setSelectedChecklist] = useState<ChecklistTemplate | null>(null);
+  const [checklistsData, setChecklistsData] = useState<ChecklistTemplate[]>(listChecklists());
+  const checklistCategories = listChecklistCategories();
+  const checklistStats = getChecklistStats();
 
-  const handleFilterChange = (newFilters: Partial<typeof filters>) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
+  // Refresh checklists data
+  const refreshChecklists = () => {
+    setChecklistsData(listChecklists());
   };
 
-  const handleResetFilters = () => {
-    setFilters({
+  // === PROCEDURES HANDLERS ===
+  const isProceduresLoading = loadingProcedures || loadingCategories;
+
+  const handleProcedureFilterChange = (newFilters: Partial<typeof procedureFilters>) => {
+    setProcedureFilters(prev => ({ ...prev, ...newFilters }));
+  };
+
+  const handleResetProcedureFilters = () => {
+    setProcedureFilters({
       category_id: null,
       status: 'Todos',
       q: '',
@@ -114,40 +148,90 @@ export function ProceduresPage() {
 
   const handleViewProcedure = (procedure: Procedure) => {
     setSelectedProcedure(procedure);
-    setModals(prev => ({ ...prev, view: true }));
+    setProcedureModals(prev => ({ ...prev, view: true }));
   };
 
   const handleEditProcedure = (procedure: Procedure) => {
     setSelectedProcedure(procedure);
-    setModals(prev => ({ ...prev, edit: true }));
+    setProcedureModals(prev => ({ ...prev, edit: true }));
   };
 
-  const handleCloseModal = (type: keyof typeof modals) => {
-    setModals(prev => ({ ...prev, [type]: false }));
+  const handleCloseProcedureModal = (type: keyof typeof procedureModals) => {
+    setProcedureModals(prev => ({ ...prev, [type]: false }));
     if (type !== 'view') {
       setSelectedProcedure(undefined);
     }
   };
 
-  const handleModalSuccess = () => {
+  const handleProcedureModalSuccess = () => {
     refetchProcedures();
-    setModals({ create: false, edit: false, view: false });
+    setProcedureModals({ create: false, edit: false, view: false });
     setSelectedProcedure(undefined);
   };
 
-  const handleViewerClose = () => {
-    setModals(prev => ({ ...prev, view: false }));
-    refetchProcedures();
+  // === CHECKLISTS HANDLERS ===
+  const handleViewChecklist = (checklist: ChecklistTemplate) => {
+    setSelectedChecklist(checklist);
+    setChecklistModals(prev => ({ ...prev, view: true }));
   };
 
-  // Calculate statistics from API stats or local data
-  const displayStats = {
-    total: stats?.total ?? procedures.length,
-    active: stats?.by_status?.active ?? procedures.filter(p => p.status === 'Ativo').length,
-    inactive: (stats?.by_status?.inactive ?? 0) + (stats?.by_status?.draft ?? 0) + (stats?.by_status?.archived ?? 0) 
+  const handleEditChecklist = (checklist: ChecklistTemplate) => {
+    setSelectedChecklist(checklist);
+    setChecklistModals(prev => ({ ...prev, edit: true }));
+  };
+
+  const handleDuplicateChecklist = (checklist: ChecklistTemplate) => {
+    const duplicated = duplicateChecklist(checklist.id);
+    if (duplicated) {
+      toast.success('Checklist duplicado com sucesso');
+      refreshChecklists();
+    }
+  };
+
+  const handleDeleteChecklist = (id: string) => {
+    const success = deleteChecklist(id);
+    if (success) {
+      toast.success('Checklist excluído com sucesso');
+      refreshChecklists();
+    }
+  };
+
+  const handleToggleChecklistActive = (id: string, isActive: boolean) => {
+    const updated = toggleChecklistActive(id, isActive);
+    if (updated) {
+      toast.success(isActive ? 'Checklist ativado' : 'Checklist desativado');
+      refreshChecklists();
+    }
+  };
+
+  const handleSaveChecklist = (data: Omit<ChecklistTemplate, 'id' | 'created_at' | 'updated_at'>) => {
+    if (selectedChecklist) {
+      // Update existing
+      const updated = updateChecklist(selectedChecklist.id, data);
+      if (updated) {
+        toast.success('Checklist atualizado com sucesso');
+      }
+    } else {
+      // Create new
+      createChecklist(data);
+      toast.success('Checklist criado com sucesso');
+    }
+    refreshChecklists();
+    setChecklistModals({ create: false, edit: false, view: false });
+    setSelectedChecklist(null);
+  };
+
+  const handleCloseChecklistModal = () => {
+    setChecklistModals({ create: false, edit: false, view: false });
+    setSelectedChecklist(null);
+  };
+
+  // === COMPUTED VALUES ===
+  const displayProcedureStats = {
+    total: procedureStats?.total ?? procedures.length,
+    active: procedureStats?.by_status?.active ?? procedures.filter(p => p.status === 'Ativo').length,
+    inactive: (procedureStats?.by_status?.inactive ?? 0) + (procedureStats?.by_status?.draft ?? 0) + (procedureStats?.by_status?.archived ?? 0) 
       || procedures.filter(p => p.status === 'Inativo').length,
-    pdf: stats?.by_type?.pdf ?? procedures.filter(p => p.file.type === 'pdf').length,
-    md: stats?.by_type?.markdown ?? procedures.filter(p => p.file.type === 'md').length,
   };
 
   return (
@@ -155,145 +239,270 @@ export function ProceduresPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Procedimentos</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Documentação Técnica</h1>
+          <p className="text-muted-foreground mt-1">
+            Gerencie POPs, procedimentos operacionais e checklists de manutenção
+          </p>
         </div>
-        <div className="flex gap-2">
+      </div>
+
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
+        <div className="flex items-center justify-between">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="procedures" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Procedimentos Operacionais
+            </TabsTrigger>
+            <TabsTrigger value="checklists" className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4" />
+              Checklists
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Action Button based on active tab */}
           <IfCanCreate subject="procedure">
-            <Button onClick={() => setModals(prev => ({ ...prev, create: true }))} data-testid="procedure-create">
-              <Plus className="mr-2 h-4 w-4" />
-              Novo Procedimento
-            </Button>
+            {activeTab === 'procedures' ? (
+              <Button onClick={() => setProcedureModals(prev => ({ ...prev, create: true }))}>
+                <Plus className="mr-2 h-4 w-4" />
+                Novo Documento
+              </Button>
+            ) : (
+              <Button onClick={() => setChecklistModals(prev => ({ ...prev, create: true }))}>
+                <Plus className="mr-2 h-4 w-4" />
+                Novo Checklist
+              </Button>
+            )}
           </IfCanCreate>
         </div>
-      </div>
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <ProcedureFilters
-            categories={categories}
-            selectedCategory={filters.category_id ?? undefined}
-            selectedStatus={filters.status}
-            searchQuery={filters.q}
-            onCategoryChange={(categoryId) => handleFilterChange({ category_id: categoryId })}
-            onStatusChange={(status) => handleFilterChange({ status })}
-            onSearchChange={(q) => handleFilterChange({ q })}
-            onReset={handleResetFilters}
-          />
-        </CardContent>
-      </Card>
+        {/* === PROCEDURES TAB === */}
+        <TabsContent value="procedures" className="space-y-6 mt-6">
+          {/* Filters */}
+          <Card>
+            <CardContent className="pt-6">
+              <ProcedureFilters
+                categories={procedureCategories}
+                selectedCategory={procedureFilters.category_id ?? undefined}
+                selectedStatus={procedureFilters.status}
+                searchQuery={procedureFilters.q}
+                onCategoryChange={(categoryId) => handleProcedureFilterChange({ category_id: categoryId })}
+                onStatusChange={(status) => handleProcedureFilterChange({ status })}
+                onSearchChange={(q) => handleProcedureFilterChange({ q })}
+                onReset={handleResetProcedureFilters}
+              />
+            </CardContent>
+          </Card>
 
-      {/* Statistics */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{displayStats.total}</div>
-            <p className="text-xs text-muted-foreground">
-              {displayStats.pdf} PDF • {displayStats.md} Markdown
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Aprovados</CardTitle>
-            <div className="w-4 h-4 rounded-full bg-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{displayStats.active}</div>
-            <p className="text-xs text-muted-foreground">
-              {displayStats.total > 0 ? Math.round((displayStats.active / displayStats.total) * 100) : 0}% do total
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
-            <div className="w-4 h-4 rounded-full bg-amber-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{displayStats.inactive}</div>
-            <p className="text-xs text-muted-foreground">
-              {displayStats.inactive > 0 ? 'Rascunho/Revisão' : 'Nenhum pendente'}
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Categorias</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{categories.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Disponíveis
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+          {/* Statistics */}
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total de Documentos</CardTitle>
+                <BookOpen className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{displayProcedureStats.total}</div>
+                <p className="text-xs text-muted-foreground">
+                  POPs e documentos técnicos
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Ativos</CardTitle>
+                <div className="w-4 h-4 rounded-full bg-green-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{displayProcedureStats.active}</div>
+                <p className="text-xs text-muted-foreground">
+                  {displayProcedureStats.total > 0 ? Math.round((displayProcedureStats.active / displayProcedureStats.total) * 100) : 0}% do total
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Categorias</CardTitle>
+                <FileText className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{procedureCategories.length}</div>
+                <p className="text-xs text-muted-foreground">
+                  Para organização
+                </p>
+              </CardContent>
+            </Card>
+          </div>
 
-      {/* Loading State */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          <span className="ml-2 text-muted-foreground">Carregando procedimentos...</span>
-        </div>
-      )}
+          {/* Loading State */}
+          {isProceduresLoading && (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-muted-foreground">Carregando documentos...</span>
+            </div>
+          )}
 
-      {/* Results Summary */}
-      {!isLoading && filters.q && (
-        <div className="flex items-center gap-2 px-4 py-3 bg-muted/50 rounded-lg">
-          <AlertCircle className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm">
-            {procedures.length === 0 
-              ? 'Nenhum procedimento encontrado' 
-              : `Exibindo ${procedures.length} procedimento${procedures.length !== 1 ? 's' : ''}`}
-          </span>
-        </div>
-      )}
+          {/* Results Summary */}
+          {!isProceduresLoading && procedureFilters.q && (
+            <div className="flex items-center gap-2 px-4 py-3 bg-muted/50 rounded-lg">
+              <AlertCircle className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">
+                {procedures.length === 0 
+                  ? 'Nenhum documento encontrado' 
+                  : `Exibindo ${procedures.length} documento${procedures.length !== 1 ? 's' : ''}`}
+              </span>
+            </div>
+          )}
 
-      {/* Procedures Table */}
-      {!isLoading && (
-        <Card>
-          <CardContent className="p-0">
-            <ProcedureTable
-              procedures={procedures}
-              categories={categories}
-              onView={handleViewProcedure}
-              onEdit={handleEditProcedure}
-              onUpdate={() => refetchProcedures()}
-            />
-          </CardContent>
-        </Card>
-      )}
+          {/* Procedures Table */}
+          {!isProceduresLoading && (
+            <Card>
+              <CardContent className="p-0">
+                <ProcedureTable
+                  procedures={procedures}
+                  categories={procedureCategories}
+                  onView={handleViewProcedure}
+                  onEdit={handleEditProcedure}
+                  onUpdate={() => refetchProcedures()}
+                />
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
 
-      {/* Modals */}
+        {/* === CHECKLISTS TAB === */}
+        <TabsContent value="checklists" className="space-y-6 mt-6">
+          {/* Statistics */}
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total de Checklists</CardTitle>
+                <ClipboardList className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{checklistStats.total}</div>
+                <p className="text-xs text-muted-foreground">
+                  Templates disponíveis
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Ativos</CardTitle>
+                <div className="w-4 h-4 rounded-full bg-green-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{checklistStats.active}</div>
+                <p className="text-xs text-muted-foreground">
+                  Prontos para uso
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total de Itens</CardTitle>
+                <CheckSquare className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{checklistStats.totalItems}</div>
+                <p className="text-xs text-muted-foreground">
+                  Tarefas cadastradas
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Utilizações</CardTitle>
+                <Badge variant="secondary" className="h-4">
+                  {checklistStats.totalUsage}
+                </Badge>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{checklistStats.totalUsage}</div>
+                <p className="text-xs text-muted-foreground">
+                  Vinculados a planos
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Checklists Table */}
+          <Card>
+            <CardContent className="p-0">
+              <ChecklistTable
+                checklists={checklistsData}
+                categories={checklistCategories}
+                onView={handleViewChecklist}
+                onEdit={handleEditChecklist}
+                onDuplicate={handleDuplicateChecklist}
+                onDelete={handleDeleteChecklist}
+                onToggleActive={handleToggleChecklistActive}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* === PROCEDURE MODALS === */}
       <ProcedureModal
-        isOpen={modals.create}
-        onClose={() => handleCloseModal('create')}
-        onSuccess={handleModalSuccess}
-        categories={categories}
+        isOpen={procedureModals.create}
+        onClose={() => handleCloseProcedureModal('create')}
+        onSuccess={handleProcedureModalSuccess}
+        categories={procedureCategories}
       />
       
       <ProcedureModal
-        isOpen={modals.edit}
-        onClose={() => handleCloseModal('edit')}
-        onSuccess={handleModalSuccess}
-        categories={categories}
+        isOpen={procedureModals.edit}
+        onClose={() => handleCloseProcedureModal('edit')}
+        onSuccess={handleProcedureModalSuccess}
+        categories={procedureCategories}
         procedure={selectedProcedure}
       />
 
       <ProcedureViewer
-        isOpen={modals.view}
-        onClose={handleViewerClose}
+        isOpen={procedureModals.view}
+        onClose={() => {
+          setProcedureModals(prev => ({ ...prev, view: false }));
+          refetchProcedures();
+        }}
         procedure={selectedProcedure}
-        categories={categories}
+        categories={procedureCategories}
+      />
+
+      {/* === CHECKLIST MODALS === */}
+      <ChecklistModal
+        isOpen={checklistModals.create}
+        onClose={handleCloseChecklistModal}
+        onSave={handleSaveChecklist}
+        categories={checklistCategories}
+      />
+
+      <ChecklistModal
+        isOpen={checklistModals.edit}
+        onClose={handleCloseChecklistModal}
+        onSave={handleSaveChecklist}
+        categories={checklistCategories}
+        checklist={selectedChecklist || undefined}
+      />
+
+      <ChecklistViewer
+        isOpen={checklistModals.view}
+        onClose={handleCloseChecklistModal}
+        checklist={selectedChecklist}
+        categories={checklistCategories}
+        onEdit={(checklist) => {
+          setChecklistModals({ create: false, edit: true, view: false });
+          setSelectedChecklist(checklist);
+        }}
+        onDuplicate={(checklist) => {
+          handleDuplicateChecklist(checklist);
+          handleCloseChecklistModal();
+        }}
       />
     </div>
   );
