@@ -176,10 +176,10 @@ export function ChecklistTable({
                   </TableCell>
                   
                   <TableCell className="text-sm text-muted-foreground">
-                    {formatDistanceToNow(new Date(checklist.updated_at), {
+                    {checklist.updated_at ? formatDistanceToNow(new Date(checklist.updated_at), {
                       addSuffix: true,
                       locale: ptBR,
-                    })}
+                    }) : '-'}
                   </TableCell>
                   
                   <TableCell>

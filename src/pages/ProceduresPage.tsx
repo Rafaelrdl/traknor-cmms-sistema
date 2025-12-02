@@ -15,18 +15,20 @@ import {
   useProcedureCategories,
   useProcedureStats 
 } from '@/hooks/useProceduresQuery';
+import {
+  useChecklists,
+  useChecklistCategories,
+  useChecklistStats,
+  useCreateChecklist,
+  useUpdateChecklist,
+  useDeleteChecklist,
+  useDuplicateChecklist,
+  useToggleChecklistActive,
+  type ApiChecklistTemplate,
+  type ApiChecklistCategory,
+} from '@/hooks/useChecklistsQuery';
 import { Procedure, ProcedureCategory, ProcedureStatus } from '@/models/procedure';
 import { ChecklistTemplate, ChecklistCategory } from '@/models/checklist';
-import { 
-  listChecklists, 
-  listChecklistCategories, 
-  getChecklistStats,
-  createChecklist,
-  updateChecklist,
-  deleteChecklist,
-  duplicateChecklist,
-  toggleChecklistActive,
-} from '@/data/checklistsStore';
 import type { ApiProcedureListItem, ApiProcedureCategory } from '@/types/api';
 import { toast } from 'sonner';
 
@@ -61,6 +63,37 @@ function apiCategoryToLocal(apiCategory: ApiProcedureCategory): ProcedureCategor
   };
 }
 
+// Helper para converter checklist da API para formato local
+function apiChecklistToLocal(api: ApiChecklistTemplate): ChecklistTemplate {
+  return {
+    id: String(api.id),
+    name: api.name,
+    description: api.description,
+    category_id: api.category ? String(api.category) : null,
+    items: (api.items || []).map((item, index) => ({
+      id: item.id,
+      description: item.label,
+      type: item.type,
+      required: item.required,
+      order: item.order ?? index + 1,
+    })),
+    is_active: api.is_active,
+    usage_count: api.usage_count,
+    created_at: api.created_at,
+    updated_at: api.updated_at,
+  };
+}
+
+function apiChecklistCategoryToLocal(api: ApiChecklistCategory): ChecklistCategory {
+  return {
+    id: String(api.id),
+    name: api.name,
+    description: api.description,
+    color: api.color,
+    icon: api.icon,
+  };
+}
+
 // Helper para converter status local para API
 function localStatusToApi(status: ProcedureStatus | 'Todos'): 'ACTIVE' | 'INACTIVE' | 'DRAFT' | 'ARCHIVED' | undefined {
   if (status === 'Todos') return undefined;
@@ -68,7 +101,7 @@ function localStatusToApi(status: ProcedureStatus | 'Todos'): 'ACTIVE' | 'INACTI
 }
 
 export function ProceduresPage() {
-  const [activeTab, setActiveTab] = useState<'procedures' | 'checklists'>('procedures');
+  const [activeTab, setActiveTab] = useState<'procedures' | 'checklists'>('checklists');
   
   // === PROCEDURES STATE ===
   const [procedureFilters, setProcedureFilters] = useState({
@@ -122,17 +155,49 @@ export function ProceduresPage() {
   });
   
   const [selectedChecklist, setSelectedChecklist] = useState<ChecklistTemplate | null>(null);
-  const [checklistsData, setChecklistsData] = useState<ChecklistTemplate[]>(listChecklists());
-  const checklistCategories = listChecklistCategories();
-  const checklistStats = getChecklistStats();
 
-  // Refresh checklists data
-  const refreshChecklists = () => {
-    setChecklistsData(listChecklists());
+  // Fetch checklists data from API
+  const { 
+    data: apiChecklists = [], 
+    isLoading: loadingChecklists,
+    refetch: refetchChecklists,
+  } = useChecklists();
+
+  const { 
+    data: apiChecklistCategories = [], 
+    isLoading: loadingChecklistCategories 
+  } = useChecklistCategories();
+
+  const { data: checklistStatsData } = useChecklistStats();
+
+  // Mutations
+  const createChecklistMutation = useCreateChecklist();
+  const updateChecklistMutation = useUpdateChecklist();
+  const deleteChecklistMutation = useDeleteChecklist();
+  const duplicateChecklistMutation = useDuplicateChecklist();
+  const toggleActiveMutation = useToggleChecklistActive();
+
+  // Convert API data to local format
+  const checklistsData = useMemo(() => 
+    Array.isArray(apiChecklists) ? apiChecklists.map(apiChecklistToLocal) : [], 
+    [apiChecklists]
+  );
+
+  const checklistCategories = useMemo(() => 
+    Array.isArray(apiChecklistCategories) ? apiChecklistCategories.map(apiChecklistCategoryToLocal) : [], 
+    [apiChecklistCategories]
+  );
+
+  const checklistStats = checklistStatsData || {
+    total: checklistsData.length,
+    active: checklistsData.filter(c => c.is_active).length,
+    total_items: checklistsData.reduce((acc, c) => acc + c.items.length, 0),
+    total_usage: checklistsData.reduce((acc, c) => acc + (c.usage_count || 0), 0),
   };
 
   // === PROCEDURES HANDLERS ===
   const isProceduresLoading = loadingProcedures || loadingCategories;
+  const isChecklistsLoading = loadingChecklists || loadingChecklistCategories;
 
   const handleProcedureFilterChange = (newFilters: Partial<typeof procedureFilters>) => {
     setProcedureFilters(prev => ({ ...prev, ...newFilters }));
@@ -181,44 +246,48 @@ export function ProceduresPage() {
   };
 
   const handleDuplicateChecklist = (checklist: ChecklistTemplate) => {
-    const duplicated = duplicateChecklist(checklist.id);
-    if (duplicated) {
-      toast.success('Checklist duplicado com sucesso');
-      refreshChecklists();
-    }
+    duplicateChecklistMutation.mutate(Number(checklist.id));
+    handleCloseChecklistModal();
   };
 
   const handleDeleteChecklist = (id: string) => {
-    const success = deleteChecklist(id);
-    if (success) {
-      toast.success('Checklist excluído com sucesso');
-      refreshChecklists();
-    }
+    deleteChecklistMutation.mutate(Number(id));
   };
 
   const handleToggleChecklistActive = (id: string, isActive: boolean) => {
-    const updated = toggleChecklistActive(id, isActive);
-    if (updated) {
-      toast.success(isActive ? 'Checklist ativado' : 'Checklist desativado');
-      refreshChecklists();
-    }
+    toggleActiveMutation.mutate({ id: Number(id), isActive });
   };
 
   const handleSaveChecklist = (data: Omit<ChecklistTemplate, 'id' | 'created_at' | 'updated_at'>) => {
+    // Converter para formato da API
+    const apiData = {
+      name: data.name,
+      description: data.description,
+      category: data.category_id ? Number(data.category_id) : null,
+      items: data.items.map((item, index) => ({
+        id: item.id,
+        label: item.description,
+        type: item.type,
+        required: item.required,
+        order: index + 1,
+        options: item.options,
+      })),
+      status: data.is_active ? 'ACTIVE' as const : 'INACTIVE' as const,
+      is_active: data.is_active,
+      estimated_time: null,
+    };
+
     if (selectedChecklist) {
       // Update existing
-      const updated = updateChecklist(selectedChecklist.id, data);
-      if (updated) {
-        toast.success('Checklist atualizado com sucesso');
-      }
+      updateChecklistMutation.mutate({ 
+        id: Number(selectedChecklist.id), 
+        data: apiData 
+      });
     } else {
       // Create new
-      createChecklist(data);
-      toast.success('Checklist criado com sucesso');
+      createChecklistMutation.mutate(apiData);
     }
-    refreshChecklists();
-    setChecklistModals({ create: false, edit: false, view: false });
-    setSelectedChecklist(null);
+    handleCloseChecklistModal();
   };
 
   const handleCloseChecklistModal = () => {
@@ -239,7 +308,7 @@ export function ProceduresPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Documentação Técnica</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Procedimentos</h1>
           <p className="text-muted-foreground mt-1">
             Gerencie POPs, procedimentos operacionais e checklists de manutenção
           </p>
@@ -250,13 +319,13 @@ export function ProceduresPage() {
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
         <div className="flex items-center justify-between">
           <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="procedures" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Procedimentos Operacionais
-            </TabsTrigger>
             <TabsTrigger value="checklists" className="flex items-center gap-2">
               <ClipboardList className="h-4 w-4" />
               Checklists
+            </TabsTrigger>
+            <TabsTrigger value="procedures" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Procedimentos Operacionais
             </TabsTrigger>
           </TabsList>
 
@@ -374,77 +443,89 @@ export function ProceduresPage() {
 
         {/* === CHECKLISTS TAB === */}
         <TabsContent value="checklists" className="space-y-6 mt-6">
-          {/* Statistics */}
-          <div className="grid gap-4 md:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total de Checklists</CardTitle>
-                <ClipboardList className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{checklistStats.total}</div>
-                <p className="text-xs text-muted-foreground">
-                  Templates disponíveis
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Ativos</CardTitle>
-                <div className="w-4 h-4 rounded-full bg-green-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{checklistStats.active}</div>
-                <p className="text-xs text-muted-foreground">
-                  Prontos para uso
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total de Itens</CardTitle>
-                <CheckSquare className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{checklistStats.totalItems}</div>
-                <p className="text-xs text-muted-foreground">
-                  Tarefas cadastradas
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Utilizações</CardTitle>
-                <Badge variant="secondary" className="h-4">
-                  {checklistStats.totalUsage}
-                </Badge>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{checklistStats.totalUsage}</div>
-                <p className="text-xs text-muted-foreground">
-                  Vinculados a planos
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Loading State */}
+          {isChecklistsLoading && (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-muted-foreground">Carregando checklists...</span>
+            </div>
+          )}
 
-          {/* Checklists Table */}
-          <Card>
-            <CardContent className="p-0">
-              <ChecklistTable
-                checklists={checklistsData}
-                categories={checklistCategories}
-                onView={handleViewChecklist}
-                onEdit={handleEditChecklist}
-                onDuplicate={handleDuplicateChecklist}
-                onDelete={handleDeleteChecklist}
-                onToggleActive={handleToggleChecklistActive}
-              />
-            </CardContent>
-          </Card>
+          {!isChecklistsLoading && (
+            <>
+              {/* Statistics */}
+              <div className="grid gap-4 md:grid-cols-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total de Checklists</CardTitle>
+                    <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{checklistStats.total}</div>
+                    <p className="text-xs text-muted-foreground">
+                      Templates disponíveis
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Ativos</CardTitle>
+                    <div className="w-4 h-4 rounded-full bg-green-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{checklistStats.active}</div>
+                    <p className="text-xs text-muted-foreground">
+                      Prontos para uso
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total de Itens</CardTitle>
+                    <CheckSquare className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{checklistStats.total_items}</div>
+                    <p className="text-xs text-muted-foreground">
+                      Tarefas cadastradas
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Utilizações</CardTitle>
+                    <Badge variant="secondary" className="h-4">
+                      {checklistStats.total_usage}
+                    </Badge>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{checklistStats.total_usage}</div>
+                    <p className="text-xs text-muted-foreground">
+                      Vinculados a planos
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Checklists Table */}
+              <Card>
+                <CardContent className="p-0">
+                  <ChecklistTable
+                    checklists={checklistsData}
+                    categories={checklistCategories}
+                    onView={handleViewChecklist}
+                    onEdit={handleEditChecklist}
+                    onDuplicate={handleDuplicateChecklist}
+                    onDelete={handleDeleteChecklist}
+                    onToggleActive={handleToggleChecklistActive}
+                  />
+                </CardContent>
+              </Card>
+            </>
+          )}
         </TabsContent>
       </Tabs>
 
