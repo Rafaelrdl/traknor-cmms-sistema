@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { WidgetType, widgetDefinitions, categoryNames } from '@/types/dashboard';
+import { WidgetType, widgetDefinitions, categoryNames, categoryOrder } from '@/types/dashboard';
 import { useDashboardStore } from '@/store/useDashboardStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,7 +32,9 @@ import {
   Type,
   Image,
   Square,
-  CheckCircle
+  CheckCircle,
+  AlertTriangle,
+  Grid
 } from 'lucide-react';
 
 // Mapa de ícones
@@ -40,7 +42,7 @@ const iconMap: Record<string, any> = {
   Activity, TrendingUp, BarChart2, LineChart, AreaChart, 
   BarChart3, BarChartHorizontal, PieChart, Circle, Gauge,
   Table, ClipboardList, Server, Calendar, Users, Clock,
-  Type, Image, Square, CheckCircle
+  Type, Image, Square, CheckCircle, AlertTriangle, Grid
 };
 
 interface WidgetPaletteProps {
@@ -82,8 +84,14 @@ export function WidgetPalette({ layoutId, buttonVariant = 'outline' }: WidgetPal
     return acc;
   }, {} as Record<string, typeof widgetDefinitions>);
 
-  // Obter categorias únicas
-  const categories = Array.from(new Set(widgetDefinitions.map(w => w.category)));
+  // Contar widgets por categoria (para exibição)
+  const categoryCounts = widgetDefinitions.reduce((acc, widget) => {
+    acc[widget.category] = (acc[widget.category] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Ordenar categorias conforme definido
+  const sortedCategories = categoryOrder.filter(cat => groupedWidgets[cat]);
 
   // Função para obter o ícone
   const getIcon = (iconName: string) => {
@@ -111,9 +119,9 @@ export function WidgetPalette({ layoutId, buttonVariant = 'outline' }: WidgetPal
 
           {/* Barra de busca e filtros */}
           <div className="flex-shrink-0 px-6 py-4 border-b bg-muted/30">
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col gap-4">
               {/* Campo de busca */}
-              <div className="relative flex-1">
+              <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar widgets..."
@@ -123,23 +131,25 @@ export function WidgetPalette({ layoutId, buttonVariant = 'outline' }: WidgetPal
                 />
               </div>
               
-              {/* Filtros de categoria */}
+              {/* Filtros de categoria com contagem */}
               <div className="flex flex-wrap gap-2">
                 <Button
                   variant={selectedCategory === null ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSelectedCategory(null)}
+                  className="text-xs"
                 >
-                  Todos
+                  Todos ({widgetDefinitions.length})
                 </Button>
-                {categories.map(category => (
+                {categoryOrder.map(category => (
                   <Button
                     key={category}
                     variant={selectedCategory === category ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setSelectedCategory(category)}
+                    onClick={() => setSelectedCategory(selectedCategory === category ? null : category)}
+                    className="text-xs"
                   >
-                    {categoryNames[category]}
+                    {categoryNames[category]} ({categoryCounts[category] || 0})
                   </Button>
                 ))}
               </div>
@@ -149,13 +159,13 @@ export function WidgetPalette({ layoutId, buttonVariant = 'outline' }: WidgetPal
           {/* Lista de widgets com scroll */}
           <div className="flex-1 overflow-y-auto px-6 py-4">
             <div className="space-y-6">
-              {Object.entries(groupedWidgets).map(([category, widgets]) => (
+              {sortedCategories.map(category => (
                 <div key={category}>
                   <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">
-                    {categoryNames[category]}
+                    {categoryNames[category]} ({groupedWidgets[category].length})
                   </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    {widgets.map(widget => (
+                    {groupedWidgets[category].map(widget => (
                       <button
                         key={widget.id}
                         onClick={() => handleAddWidget(widget.id)}

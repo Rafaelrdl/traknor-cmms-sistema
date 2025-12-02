@@ -41,6 +41,9 @@ import {
   AlertCircle
 } from 'lucide-react';
 
+// Importar mapa de ícones do arquivo separado
+import { kpiIconMap } from './kpiIcons';
+
 // Hooks para dados reais
 import { useWorkOrders, useWorkOrderStats } from '@/hooks/useWorkOrdersQuery';
 import { useEquipments } from '@/hooks/useEquipmentQuery';
@@ -258,51 +261,64 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
       const trendDisplay = getTrendDisplay();
       const TrendIcon = trendDisplay.icon;
 
-      return (
-        <div className="flex flex-col items-center justify-center h-full py-2">
-          {/* Ícone */}
-          <div className={cn(
-            "rounded-lg bg-primary/10 flex items-center justify-center mb-2",
-            isCompact ? "w-8 h-8" : "w-10 h-10"
-          )}>
-            <Activity className={cn(
-              "text-primary",
-              isCompact ? "w-4 h-4" : "w-5 h-5"
-            )} />
-          </div>
+      // Obter o ícone configurado ou usar Activity como padrão
+      const iconKey = widget.config?.iconName || 'activity';
+      const SelectedIcon = kpiIconMap[iconKey] || Activity;
 
-          {/* Valor principal */}
-          <div className={cn(
-            "font-bold text-foreground flex items-baseline justify-center flex-wrap gap-1",
-            isCompact ? "text-2xl" : "text-3xl"
-          )}>
-            <span>{formattedValue}</span>
-            {unit && (
+      return (
+        <div className="flex flex-col items-center justify-center h-full p-2">
+          {/* Layout horizontal: Ícone + Valor */}
+          <div className="flex items-center gap-4">
+            {/* Ícone */}
+            <div className={cn(
+              "rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0",
+              isCompact ? "w-12 h-12" : "w-16 h-16"
+            )}>
+              <SelectedIcon className={cn(
+                "text-primary",
+                isCompact ? "w-6 h-6" : "w-9 h-9"
+              )} />
+            </div>
+
+            {/* Valor e Unidade na mesma linha */}
+            <div className="flex items-baseline gap-1">
               <span className={cn(
-                "font-normal text-muted-foreground",
-                isCompact ? "text-sm" : "text-base"
+                "font-bold text-foreground leading-none",
+                isCompact ? "text-3xl" : "text-4xl"
               )}>
-                {unit}
+                {formattedValue}
               </span>
-            )}
+              {unit && (
+                <span className={cn(
+                  "font-medium text-muted-foreground",
+                  isCompact ? "text-base" : "text-lg"
+                )}>
+                  {unit}
+                </span>
+              )}
+            </div>
           </div>
           
           {/* Label */}
           <div className={cn(
             "text-muted-foreground text-center leading-tight",
-            isCompact ? "text-xs mt-1" : "text-sm mt-1"
+            isCompact ? "text-xs mt-2" : "text-sm mt-3"
           )}>
             {label}
           </div>
           
           {/* Indicador de tendência */}
           <div className={cn(
-            "flex items-center gap-1 text-xs",
-            isCompact ? "mt-1" : "mt-2",
+            "flex items-center gap-1",
+            isCompact ? "mt-1 text-xs" : "mt-2 text-sm",
             trendDisplay.colorClass
           )}>
-            <TrendIcon className="w-3 h-3 flex-shrink-0" />
-            <span>{isCompact && sensorData.trend ? `${sensorData.trend.direction === 'up' ? '+' : sensorData.trend.direction === 'down' ? '-' : ''}${sensorData.trend.percentage.toFixed(1)}%` : trendDisplay.text}</span>
+            <TrendIcon className={cn(isCompact ? "w-3 h-3" : "w-4 h-4")} />
+            <span className="font-medium">
+              {isCompact && sensorData.trend 
+                ? `${sensorData.trend.direction === 'up' ? '+' : sensorData.trend.direction === 'down' ? '-' : ''}${sensorData.trend.percentage.toFixed(1)}%` 
+                : trendDisplay.text}
+            </span>
           </div>
         </div>
       );
@@ -310,37 +326,50 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
 
     // Fallback para dados de Work Orders se não tiver sensor configurado
     const openWO = workOrderStats?.open ?? workOrders.filter(wo => wo.status === 'OPEN').length;
+    
+    // Obter o ícone configurado ou usar ClipboardList como padrão para WO
+    const fallbackIconKey = widget.config?.iconName || 'activity';
+    const FallbackIcon = kpiIconMap[fallbackIconKey] || ClipboardList;
+    
     return (
-      <div className="flex flex-col items-center justify-center h-full py-2">
-        {/* Ícone */}
-        <div className={cn(
-          "rounded-lg bg-primary/10 flex items-center justify-center mb-2",
-          isCompact ? "w-8 h-8" : "w-10 h-10"
-        )}>
-          <ClipboardList className={cn(
-            "text-primary",
-            isCompact ? "w-4 h-4" : "w-5 h-5"
-          )} />
-        </div>
+      <div className="flex flex-col items-center justify-center h-full p-2">
+        {/* Layout horizontal: Ícone + Valor */}
+        <div className="flex items-center gap-4">
+          {/* Ícone */}
+          <div className={cn(
+            "rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0",
+            isCompact ? "w-12 h-12" : "w-16 h-16"
+          )}>
+            <FallbackIcon className={cn(
+              "text-primary",
+              isCompact ? "w-6 h-6" : "w-9 h-9"
+            )} />
+          </div>
 
-        <div className={cn(
-          "font-bold text-foreground",
-          isCompact ? "text-2xl" : "text-3xl"
-        )}>
-          {openWO}
+          {/* Valor */}
+          <span className={cn(
+            "font-bold text-foreground leading-none",
+            isCompact ? "text-3xl" : "text-4xl"
+          )}>
+            {openWO}
+          </span>
         </div>
+        
+        {/* Label */}
         <div className={cn(
           "text-muted-foreground text-center leading-tight",
-          isCompact ? "text-xs mt-1" : "text-sm mt-1"
+          isCompact ? "text-xs mt-2" : "text-sm mt-3"
         )}>
           {widget.config?.label || 'OS em Aberto'}
         </div>
+        
+        {/* Indicador de tendência */}
         <div className={cn(
-          "flex items-center gap-1 text-xs text-green-600",
-          isCompact ? "mt-1" : "mt-2"
+          "flex items-center gap-1 text-green-600",
+          isCompact ? "mt-1 text-xs" : "mt-2 text-sm"
         )}>
-          <TrendingDown className="w-3 h-3" />
-          <span>-12% vs semana anterior</span>
+          <TrendingDown className={cn(isCompact ? "w-3 h-3" : "w-4 h-4")} />
+          <span className="font-medium">-12% vs semana anterior</span>
         </div>
       </div>
     );
@@ -388,13 +417,144 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
   }
 
   function renderStatCard() {
+    // Verificar se o widget é pequeno (1 coluna)
+    const isCompact = widget.size === 'col-1';
+
+    // Se tiver um sensor configurado, usar dados do sensor
+    if (sensorTag && assetId) {
+      if (sensorData.isLoading) {
+        return (
+          <div className="flex flex-col items-center justify-center h-full">
+            <div className="text-sm text-muted-foreground">Carregando...</div>
+          </div>
+        );
+      }
+
+      if (sensorData.error) {
+        return (
+          <div className="flex flex-col items-center justify-center h-full">
+            <AlertTriangle className="w-6 h-6 text-destructive mb-2" />
+            <div className="text-sm text-destructive">Erro ao carregar</div>
+          </div>
+        );
+      }
+
+      // Aplicar fórmula de transformação se houver
+      let displayValue: string | number | null = sensorData.value;
+      const formula = widget.config?.transform?.formula;
+      if (formula && displayValue !== null && displayValue !== undefined) {
+        const numericResult = evaluateFormula(formula, Number(displayValue));
+        displayValue = numericResult;
+      }
+
+      // Formatar o valor
+      const formattedValue = displayValue !== null && displayValue !== undefined
+        ? typeof displayValue === 'number' 
+          ? displayValue.toFixed(2)
+          : String(displayValue)
+        : '--';
+
+      // Usar unidade configurada ou do sensor
+      const unit = widget.config?.unit || sensorData.unit || '';
+      const label = widget.config?.label || sensorTag;
+
+      // Determinar cor e ícone da tendência
+      const getTrendDisplay = () => {
+        if (!sensorData.trend) {
+          return {
+            icon: sensorData.isOnline ? CheckCircle : XCircle,
+            text: sensorData.isOnline ? 'Online' : 'Offline',
+            colorClass: sensorData.isOnline ? 'text-green-600' : 'text-red-600',
+          };
+        }
+
+        const { direction, percentage } = sensorData.trend;
+        const formattedPercent = percentage.toFixed(1);
+
+        switch (direction) {
+          case 'up':
+            return {
+              icon: TrendingUp,
+              text: `+${formattedPercent}% vs última hora`,
+              colorClass: 'text-green-600',
+            };
+          case 'down':
+            return {
+              icon: TrendingDown,
+              text: `-${formattedPercent}% vs última hora`,
+              colorClass: 'text-red-600',
+            };
+          default:
+            return {
+              icon: Minus,
+              text: 'Estável',
+              colorClass: 'text-muted-foreground',
+            };
+        }
+      };
+
+      const trendDisplay = getTrendDisplay();
+      const TrendIcon = trendDisplay.icon;
+
+      return (
+        <div className="flex flex-col items-center justify-center h-full py-2">
+          {/* Valor principal */}
+          <div className={cn(
+            "font-bold text-foreground flex items-baseline justify-center flex-wrap gap-1",
+            isCompact ? "text-2xl" : "text-3xl"
+          )}>
+            <span>{formattedValue}</span>
+            {unit && (
+              <span className={cn(
+                "font-normal text-muted-foreground",
+                isCompact ? "text-sm" : "text-base"
+              )}>
+                {unit}
+              </span>
+            )}
+          </div>
+          
+          {/* Label */}
+          <div className={cn(
+            "text-muted-foreground text-center leading-tight",
+            isCompact ? "text-xs mt-1" : "text-sm mt-1"
+          )}>
+            {label}
+          </div>
+          
+          {/* Indicador de tendência */}
+          <div className={cn(
+            "flex items-center gap-1 text-xs",
+            isCompact ? "mt-1" : "mt-2",
+            trendDisplay.colorClass
+          )}>
+            <TrendIcon className="w-3 h-3 flex-shrink-0" />
+            <span>{isCompact && sensorData.trend ? `${sensorData.trend.direction === 'up' ? '+' : sensorData.trend.direction === 'down' ? '-' : ''}${sensorData.trend.percentage.toFixed(1)}%` : trendDisplay.text}</span>
+          </div>
+        </div>
+      );
+    }
+
+    // Fallback para dados de Work Orders se não tiver sensor configurado
     const completedWO = workOrderStats?.completed ?? workOrders.filter(wo => wo.status === 'COMPLETED').length;
     return (
-      <div className="flex flex-col items-center justify-center h-full">
-        <Activity className="w-8 h-8 text-primary mb-2" />
-        <div className="text-3xl font-bold text-foreground">{completedWO}</div>
-        <div className="text-sm text-muted-foreground">Concluídas</div>
-        <div className="flex items-center gap-1 mt-2 text-xs text-green-600">
+      <div className="flex flex-col items-center justify-center h-full py-2">
+        <div className={cn(
+          "font-bold text-foreground",
+          isCompact ? "text-2xl" : "text-3xl"
+        )}>
+          {completedWO}
+        </div>
+        <div className={cn(
+          "text-muted-foreground text-center leading-tight",
+          isCompact ? "text-xs mt-1" : "text-sm mt-1"
+        )}>
+          {widget.config?.label || 'Concluídas'}
+        </div>
+        <div className={cn(
+          "flex items-center gap-1 text-xs text-green-600",
+          isCompact ? "mt-1" : "mt-2"
+        )}>
           <TrendingUp className="w-3 h-3" />
           <span>+8% este mês</span>
         </div>

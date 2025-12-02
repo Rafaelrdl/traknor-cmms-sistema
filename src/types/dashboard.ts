@@ -51,39 +51,48 @@ export interface DashboardWidget {
 }
 
 export type WidgetType = 
-  // Cards KPI
+  // Cards Simples
   | 'card-kpi'              // Card KPI padrão com ícone e tendência
   | 'card-value'            // Card com valor único
   | 'card-stat'             // Card com estatística e trend
   | 'card-progress'         // Card com barra de progresso
   
-  // Gráficos
+  // Cards de Ação
+  | 'work-orders-summary'   // Resumo de OS
+  | 'equipment-status'      // Status de equipamentos
+  | 'maintenance-schedule'  // Agenda de manutenções
+  
+  // Gráficos de Linha
   | 'chart-line'            // Gráfico de linha
   | 'chart-area'            // Gráfico de área
+  
+  // Gráficos de Barra
   | 'chart-bar'             // Gráfico de barras vertical
   | 'chart-bar-horizontal'  // Gráfico de barras horizontal
+  
+  // Gráficos Circulares
   | 'chart-pie'             // Gráfico de pizza
   | 'chart-donut'           // Gráfico de rosca (donut)
+  | 'gauge-circular'        // Medidor circular
   
   // Medidores
-  | 'gauge-circular'        // Medidor circular
   | 'gauge-progress'        // Barra de progresso
+  | 'technician-performance'// Performance dos técnicos
+  | 'sla-overview'          // Visão geral de SLA
   
   // Indicadores
   | 'indicator-status'      // Indicador de status (LED)
   | 'indicator-trend'       // Indicador de tendência
+  | 'indicator-alert'       // Indicador de alerta
   
   // Tabelas
   | 'table-simple'          // Tabela simples
   | 'table-work-orders'     // Tabela de OS
   | 'table-equipment'       // Tabela de equipamentos
   
-  // Específicos CMMS
-  | 'work-orders-summary'   // Resumo de OS
-  | 'equipment-status'      // Status de equipamentos
-  | 'maintenance-schedule'  // Agenda de manutenções
-  | 'technician-performance'// Performance dos técnicos
-  | 'sla-overview'          // Visão geral de SLA
+  // Mapas de Calor
+  | 'heatmap-equipment'     // Mapa de calor por equipamento
+  | 'heatmap-time'          // Mapa de calor temporal
   
   // Outros
   | 'text-display'          // Exibição de texto
@@ -103,7 +112,7 @@ export interface WidgetDefinition {
   id: WidgetType;
   name: string;
   description: string;
-  category: 'kpis' | 'charts' | 'gauges' | 'tables' | 'cmms' | 'others';
+  category: 'cards-simples' | 'cards-acao' | 'graficos-linha' | 'graficos-barra' | 'graficos-circulares' | 'medidores' | 'indicadores' | 'tabelas' | 'mapas-calor' | 'outros';
   defaultSize: DashboardWidget['size'];
   icon: string;
   configurable: boolean;
@@ -112,12 +121,12 @@ export interface WidgetDefinition {
 
 // Definições de widgets disponíveis
 export const widgetDefinitions: WidgetDefinition[] = [
-  // CARDS KPI
+  // CARDS SIMPLES (4)
   {
     id: 'card-kpi',
     name: 'Card KPI',
     description: 'Card com valor, ícone e tendência',
-    category: 'kpis',
+    category: 'cards-simples',
     defaultSize: 'col-2',
     icon: 'Activity',
     configurable: true,
@@ -127,7 +136,7 @@ export const widgetDefinitions: WidgetDefinition[] = [
     id: 'card-value',
     name: 'Card Valor',
     description: 'Exibe um valor único',
-    category: 'kpis',
+    category: 'cards-simples',
     defaultSize: 'col-2',
     icon: 'Square',
     configurable: true,
@@ -137,7 +146,7 @@ export const widgetDefinitions: WidgetDefinition[] = [
     id: 'card-stat',
     name: 'Card Estatística',
     description: 'Valor com tendência e comparação',
-    category: 'kpis',
+    category: 'cards-simples',
     defaultSize: 'col-2',
     icon: 'TrendingUp',
     configurable: true,
@@ -147,135 +156,19 @@ export const widgetDefinitions: WidgetDefinition[] = [
     id: 'card-progress',
     name: 'Card Progresso',
     description: 'Barra de progresso com percentual',
-    category: 'kpis',
+    category: 'cards-simples',
     defaultSize: 'col-2',
     icon: 'BarChart2',
     configurable: true,
     requiresData: true,
   },
 
-  // GRÁFICOS
-  {
-    id: 'chart-line',
-    name: 'Gráfico de Linha',
-    description: 'Linha temporal de dados',
-    category: 'charts',
-    defaultSize: 'col-4',
-    icon: 'LineChart',
-    configurable: true,
-    requiresData: true,
-  },
-  {
-    id: 'chart-area',
-    name: 'Gráfico de Área',
-    description: 'Área preenchida temporal',
-    category: 'charts',
-    defaultSize: 'col-4',
-    icon: 'AreaChart',
-    configurable: true,
-    requiresData: true,
-  },
-  {
-    id: 'chart-bar',
-    name: 'Gráfico de Barras',
-    description: 'Barras verticais',
-    category: 'charts',
-    defaultSize: 'col-4',
-    icon: 'BarChart3',
-    configurable: true,
-    requiresData: true,
-  },
-  {
-    id: 'chart-bar-horizontal',
-    name: 'Barras Horizontais',
-    description: 'Barras na horizontal',
-    category: 'charts',
-    defaultSize: 'col-4',
-    icon: 'BarChartHorizontal',
-    configurable: true,
-    requiresData: true,
-  },
-  {
-    id: 'chart-pie',
-    name: 'Gráfico de Pizza',
-    description: 'Pizza com percentuais',
-    category: 'charts',
-    defaultSize: 'col-3',
-    icon: 'PieChart',
-    configurable: true,
-    requiresData: true,
-  },
-  {
-    id: 'chart-donut',
-    name: 'Gráfico Donut',
-    description: 'Rosca com centro vazio',
-    category: 'charts',
-    defaultSize: 'col-3',
-    icon: 'Circle',
-    configurable: true,
-    requiresData: true,
-  },
-
-  // MEDIDORES
-  {
-    id: 'gauge-circular',
-    name: 'Medidor Circular',
-    description: 'Medidor circular completo',
-    category: 'gauges',
-    defaultSize: 'col-2',
-    icon: 'Gauge',
-    configurable: true,
-    requiresData: true,
-  },
-  {
-    id: 'gauge-progress',
-    name: 'Barra de Progresso',
-    description: 'Barra de progresso horizontal',
-    category: 'gauges',
-    defaultSize: 'col-3',
-    icon: 'Activity',
-    configurable: true,
-    requiresData: true,
-  },
-
-  // TABELAS
-  {
-    id: 'table-simple',
-    name: 'Tabela Simples',
-    description: 'Tabela de dados genérica',
-    category: 'tables',
-    defaultSize: 'col-6',
-    icon: 'Table',
-    configurable: true,
-    requiresData: false,
-  },
-  {
-    id: 'table-work-orders',
-    name: 'Tabela de OS',
-    description: 'Lista de ordens de serviço',
-    category: 'tables',
-    defaultSize: 'col-6',
-    icon: 'ClipboardList',
-    configurable: true,
-    requiresData: true,
-  },
-  {
-    id: 'table-equipment',
-    name: 'Tabela de Equipamentos',
-    description: 'Lista de equipamentos',
-    category: 'tables',
-    defaultSize: 'col-6',
-    icon: 'Server',
-    configurable: true,
-    requiresData: true,
-  },
-
-  // ESPECÍFICOS CMMS
+  // CARDS DE AÇÃO (3)
   {
     id: 'work-orders-summary',
     name: 'Resumo de OS',
     description: 'Resumo de ordens de serviço',
-    category: 'cmms',
+    category: 'cards-acao',
     defaultSize: 'col-3',
     icon: 'ClipboardList',
     configurable: true,
@@ -285,7 +178,7 @@ export const widgetDefinitions: WidgetDefinition[] = [
     id: 'equipment-status',
     name: 'Status de Equipamentos',
     description: 'Visão geral dos equipamentos',
-    category: 'cmms',
+    category: 'cards-acao',
     defaultSize: 'col-3',
     icon: 'Server',
     configurable: true,
@@ -295,9 +188,97 @@ export const widgetDefinitions: WidgetDefinition[] = [
     id: 'maintenance-schedule',
     name: 'Agenda de Manutenções',
     description: 'Próximas manutenções programadas',
-    category: 'cmms',
+    category: 'cards-acao',
     defaultSize: 'col-4',
     icon: 'Calendar',
+    configurable: true,
+    requiresData: true,
+  },
+
+  // GRÁFICOS DE LINHA (2)
+  {
+    id: 'chart-line',
+    name: 'Gráfico de Linha',
+    description: 'Linha temporal de dados',
+    category: 'graficos-linha',
+    defaultSize: 'col-4',
+    icon: 'LineChart',
+    configurable: true,
+    requiresData: true,
+  },
+  {
+    id: 'chart-area',
+    name: 'Gráfico de Área',
+    description: 'Área preenchida temporal',
+    category: 'graficos-linha',
+    defaultSize: 'col-4',
+    icon: 'AreaChart',
+    configurable: true,
+    requiresData: true,
+  },
+
+  // GRÁFICOS DE BARRA (2)
+  {
+    id: 'chart-bar',
+    name: 'Gráfico de Barras',
+    description: 'Barras verticais',
+    category: 'graficos-barra',
+    defaultSize: 'col-4',
+    icon: 'BarChart3',
+    configurable: true,
+    requiresData: true,
+  },
+  {
+    id: 'chart-bar-horizontal',
+    name: 'Barras Horizontais',
+    description: 'Barras na horizontal',
+    category: 'graficos-barra',
+    defaultSize: 'col-4',
+    icon: 'BarChartHorizontal',
+    configurable: true,
+    requiresData: true,
+  },
+
+  // GRÁFICOS CIRCULARES (3)
+  {
+    id: 'chart-pie',
+    name: 'Gráfico de Pizza',
+    description: 'Pizza com percentuais',
+    category: 'graficos-circulares',
+    defaultSize: 'col-3',
+    icon: 'PieChart',
+    configurable: true,
+    requiresData: true,
+  },
+  {
+    id: 'chart-donut',
+    name: 'Gráfico Donut',
+    description: 'Rosca com centro vazio',
+    category: 'graficos-circulares',
+    defaultSize: 'col-3',
+    icon: 'Circle',
+    configurable: true,
+    requiresData: true,
+  },
+  {
+    id: 'gauge-circular',
+    name: 'Medidor Circular',
+    description: 'Medidor circular como gráfico',
+    category: 'graficos-circulares',
+    defaultSize: 'col-2',
+    icon: 'Gauge',
+    configurable: true,
+    requiresData: true,
+  },
+
+  // MEDIDORES (3)
+  {
+    id: 'gauge-progress',
+    name: 'Barra de Progresso',
+    description: 'Barra de progresso horizontal',
+    category: 'medidores',
+    defaultSize: 'col-3',
+    icon: 'Activity',
     configurable: true,
     requiresData: true,
   },
@@ -305,7 +286,7 @@ export const widgetDefinitions: WidgetDefinition[] = [
     id: 'technician-performance',
     name: 'Performance Técnicos',
     description: 'Métricas de desempenho',
-    category: 'cmms',
+    category: 'medidores',
     defaultSize: 'col-4',
     icon: 'Users',
     configurable: true,
@@ -315,19 +296,95 @@ export const widgetDefinitions: WidgetDefinition[] = [
     id: 'sla-overview',
     name: 'Visão Geral SLA',
     description: 'Métricas de SLA',
-    category: 'cmms',
+    category: 'medidores',
     defaultSize: 'col-3',
     icon: 'Clock',
     configurable: true,
     requiresData: true,
   },
 
-  // OUTROS
+  // INDICADORES (3)
+  {
+    id: 'indicator-status',
+    name: 'Indicador de Status',
+    description: 'LED de status online/offline',
+    category: 'indicadores',
+    defaultSize: 'col-1',
+    icon: 'CheckCircle',
+    configurable: true,
+    requiresData: true,
+  },
+  {
+    id: 'indicator-trend',
+    name: 'Indicador de Tendência',
+    description: 'Seta de tendência up/down',
+    category: 'indicadores',
+    defaultSize: 'col-1',
+    icon: 'TrendingUp',
+    configurable: true,
+    requiresData: true,
+  },
+  {
+    id: 'indicator-alert',
+    name: 'Indicador de Alerta',
+    description: 'Alerta visual de limites',
+    category: 'indicadores',
+    defaultSize: 'col-1',
+    icon: 'AlertTriangle',
+    configurable: true,
+    requiresData: true,
+  },
+
+  // TABELAS (2)
+  {
+    id: 'table-simple',
+    name: 'Tabela Simples',
+    description: 'Tabela de dados genérica',
+    category: 'tabelas',
+    defaultSize: 'col-6',
+    icon: 'Table',
+    configurable: true,
+    requiresData: false,
+  },
+  {
+    id: 'table-work-orders',
+    name: 'Tabela de OS',
+    description: 'Lista de ordens de serviço',
+    category: 'tabelas',
+    defaultSize: 'col-6',
+    icon: 'ClipboardList',
+    configurable: true,
+    requiresData: true,
+  },
+
+  // MAPAS DE CALOR (2)
+  {
+    id: 'heatmap-equipment',
+    name: 'Mapa de Calor Equipamentos',
+    description: 'Mapa de calor por equipamento',
+    category: 'mapas-calor',
+    defaultSize: 'col-4',
+    icon: 'Grid',
+    configurable: true,
+    requiresData: true,
+  },
+  {
+    id: 'heatmap-time',
+    name: 'Mapa de Calor Temporal',
+    description: 'Mapa de calor por período',
+    category: 'mapas-calor',
+    defaultSize: 'col-4',
+    icon: 'Calendar',
+    configurable: true,
+    requiresData: true,
+  },
+
+  // OUTROS (2)
   {
     id: 'text-display',
     name: 'Exibição de Texto',
     description: 'Texto formatado',
-    category: 'others',
+    category: 'outros',
     defaultSize: 'col-2',
     icon: 'Type',
     configurable: true,
@@ -337,7 +394,7 @@ export const widgetDefinitions: WidgetDefinition[] = [
     id: 'photo-display',
     name: 'Exibição de Imagem',
     description: 'Imagem personalizada',
-    category: 'others',
+    category: 'outros',
     defaultSize: 'col-3',
     icon: 'Image',
     configurable: true,
@@ -345,12 +402,30 @@ export const widgetDefinitions: WidgetDefinition[] = [
   },
 ];
 
-// Nomes de categorias em português
+// Nomes de categorias em português com contagem
 export const categoryNames: Record<string, string> = {
-  'kpis': 'Cards KPI',
-  'charts': 'Gráficos',
-  'gauges': 'Medidores',
-  'tables': 'Tabelas',
-  'cmms': 'Específicos CMMS',
-  'others': 'Outros',
+  'cards-simples': 'Cards Simples',
+  'cards-acao': 'Cards de Ação',
+  'graficos-linha': 'Gráficos de Linha',
+  'graficos-barra': 'Gráficos de Barra',
+  'graficos-circulares': 'Gráficos Circulares',
+  'medidores': 'Medidores',
+  'indicadores': 'Indicadores',
+  'tabelas': 'Tabelas',
+  'mapas-calor': 'Mapas de Calor',
+  'outros': 'Outros',
 };
+
+// Ordem das categorias para exibição
+export const categoryOrder = [
+  'cards-simples',
+  'cards-acao',
+  'graficos-linha',
+  'graficos-barra',
+  'graficos-circulares',
+  'medidores',
+  'indicadores',
+  'tabelas',
+  'mapas-calor',
+  'outros',
+];

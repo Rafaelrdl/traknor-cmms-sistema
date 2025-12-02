@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -23,6 +24,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Settings, Palette, Database, Save, Loader2 } from 'lucide-react';
 import type { AssetSensor } from '@/apps/monitor/types/asset';
+import { kpiIconMap, kpiIconOptions } from './kpiIcons';
+import { cn } from '@/lib/utils';
 
 interface WidgetConfigProps {
   widget: DashboardWidget;
@@ -718,6 +721,67 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
                   Nome personalizado para exibição no widget
                 </p>
               </div>
+
+              {/* Seletor de ícone - apenas para Card KPI */}
+              {widget.type === 'card-kpi' && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label>Ícone</Label>
+                    <span className="text-xs text-muted-foreground">{kpiIconOptions.length} disponíveis</span>
+                  </div>
+                  
+                  {/* Ícone selecionado atualmente */}
+                  <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg border">
+                    {(() => {
+                      const currentIcon = config.iconName || 'activity';
+                      const CurrentIconComponent = kpiIconMap[currentIcon];
+                      const currentLabel = kpiIconOptions.find(i => i.value === currentIcon)?.label || 'Atividade';
+                      return (
+                        <>
+                          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center shadow-sm">
+                            <CurrentIconComponent className="w-6 h-6 text-primary-foreground" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold">{currentLabel}</p>
+                            <p className="text-xs text-muted-foreground">Ícone selecionado</p>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Grid de ícones */}
+                  <div className="rounded-lg border bg-muted/30 overflow-hidden">
+                    <ScrollArea className="h-[160px]">
+                      <div className="p-3">
+                        <div className="grid grid-cols-10 gap-1">
+                          {kpiIconOptions.map((iconOption) => {
+                            const IconComponent = kpiIconMap[iconOption.value];
+                            const isSelected = (config.iconName || 'activity') === iconOption.value;
+                            return (
+                              <button
+                                key={iconOption.value}
+                                type="button"
+                                onClick={() => handleConfigChange('iconName', iconOption.value)}
+                                className={cn(
+                                  "flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-150",
+                                  isSelected 
+                                    ? "bg-primary text-primary-foreground shadow-md scale-110" 
+                                    : "bg-background hover:bg-primary/10 text-muted-foreground hover:text-primary border border-transparent hover:border-primary/30"
+                                )}
+                                title={iconOption.label}
+                              >
+                                <IconComponent className="w-4 h-4" />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label>Cor Principal</Label>
                 <div className="flex gap-2">
