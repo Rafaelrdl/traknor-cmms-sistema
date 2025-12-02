@@ -7,7 +7,8 @@ import {
   MonitorAssetDetailPage,
   RulesPage,
   ReportsPage,
-  EditableOverviewPage
+  EditableOverviewPage,
+  CustomDashboardPage
 } from './pages';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { TeamPage } from '@/pages/TeamPage';
@@ -19,6 +20,7 @@ import { SettingsPage } from '@/pages/SettingsPage';
  * 
  * Estrutura implementada:
  * - /monitor                → Visão Geral (Dashboard Customizável)
+ * - /monitor/dashboards     → Dashboards Customizáveis (drag & drop)
  * - /monitor/dashboard      → Dashboard de Monitoramento (KPIs)
  * - /monitor/alertas        → Lista de Alertas
  * - /monitor/sensores       → Grid de Sensores/Devices
@@ -33,6 +35,9 @@ export function MonitorRoutes() {
     <Routes>
       {/* Visão Geral - Dashboard Customizável (página inicial) */}
       <Route path="/" element={<EditableOverviewPage />} />
+      
+      {/* Dashboard Customizável com Drag & Drop */}
+      <Route path="/dashboards" element={<CustomDashboardPage />} />
       
       {/* Dashboard de KPIs */}
       <Route path="/dashboard" element={<MonitorDashboard />} />

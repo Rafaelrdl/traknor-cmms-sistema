@@ -26,7 +26,8 @@ import {
   AlertTriangle,
   Box,
   Wrench,
-  LayoutDashboard
+  LayoutDashboard,
+  LayoutGrid
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavbarOverflow } from '@/hooks/useNavbarOverflow';
@@ -55,6 +56,7 @@ const cmmsNavigation: NavItem[] = [
 // Rotas do módulo Monitor (TrakSense)
 const monitorNavigation: NavItem[] = [
   { name: 'Visão Geral', href: '/monitor', icon: LayoutDashboard, exact: true },
+  { name: 'Dashboards', href: '/monitor/dashboards', icon: LayoutGrid },
   { name: 'Dashboard', href: '/monitor/dashboard', icon: Activity },
   { name: 'Ativos', href: '/monitor/ativos', icon: Box },
   { name: 'Sensores', href: '/monitor/sensores', icon: Cpu },
