@@ -253,3 +253,141 @@ export function evaluateFormula(formula: string | undefined, value: number | nul
     return value;
   }
 }
+
+// ============ SENSOR HISTORY HOOKS ============
+
+export interface SensorHistoryDataPoint {
+  timestamp: Date;
+  value: number;
+  sensorId: string;
+}
+
+export interface SensorHistorySeries {
+  sensorTag: string;
+  label: string;
+  color: string;
+  data: SensorHistoryDataPoint[];
+}
+
+export interface UseMultiSensorHistoryResult {
+  series: SensorHistorySeries[];
+  loading: boolean;
+  error: string | null;
+}
+
+/**
+ * Hook para buscar histórico de múltiplas variáveis de sensor
+ * @param sensorTags - Array de tags de sensores
+ * @param assetTag - Tag do asset (ex: CHILLER-001)
+ * @param hours - Número de horas de histórico
+ * @param refreshInterval - Intervalo de atualização em ms
+ */
+export function useMultiSensorHistory(
+  sensorTags: string[] | undefined,
+  assetTag: string | undefined,
+  hours: number = 24,
+  refreshInterval: number = 60000
+): UseMultiSensorHistoryResult {
+  const [result, setResult] = useState<UseMultiSensorHistoryResult>({
+    series: [],
+    loading: false,
+    error: null
+  });
+
+  useEffect(() => {
+    if (!sensorTags || sensorTags.length === 0 || !assetTag) {
+      setResult({
+        series: [],
+        loading: false,
+        error: null
+      });
+      return;
+    }
+
+    let isMounted = true;
+    let hasData = false;
+
+    const fetchHistory = async () => {
+      if (!hasData) {
+        setResult(prev => ({ ...prev, loading: true, error: null }));
+      }
+
+      try {
+        console.log(`📊 Buscando histórico multi-sensor: assetTag=${assetTag}, sensorTags=${sensorTags.join(',')}, hours=${hours}`);
+
+        // Buscar histórico usando assetTag diretamente
+        const response = await telemetryService.getHistoryByAsset(
+          assetTag,
+          hours,
+          sensorTags
+        );
+
+        console.log('📊 Resposta da API:', response);
+
+        if (!isMounted) return;
+
+        // Cores para as séries
+        const colors = [
+          '#3b82f6', // blue
+          '#10b981', // green
+          '#f59e0b', // amber
+          '#ef4444', // red
+          '#8b5cf6', // violet
+          '#06b6d4', // cyan
+          '#ec4899', // pink
+          '#84cc16', // lime
+        ];
+
+        // Mapear séries
+        const series: SensorHistorySeries[] = sensorTags.map((tag, index) => {
+          const sensorSeries = response.series.find(s => s.sensorId === tag);
+          
+          // Extrair nome da variável (remover MAC)
+          const label = tag.includes('_') ? tag.split('_').slice(1).join('_') : tag;
+          
+          const data: SensorHistoryDataPoint[] = sensorSeries?.data.map(point => ({
+            timestamp: new Date(point.timestamp),
+            value: point.avg ?? point.max ?? point.min ?? 0,
+            sensorId: tag
+          })) || [];
+
+          return {
+            sensorTag: tag,
+            label,
+            color: colors[index % colors.length],
+            data
+          };
+        });
+
+        hasData = series.some(s => s.data.length > 0);
+        
+        console.log(`✅ ${series.length} séries carregadas`);
+        
+        setResult({
+          series,
+          loading: false,
+          error: null
+        });
+      } catch (error) {
+        if (!isMounted) return;
+        console.error('❌ Erro ao buscar histórico dos sensores:', error);
+        setResult({
+          series: [],
+          loading: false,
+          error: error instanceof Error ? error.message : 'Erro ao carregar dados'
+        });
+      }
+    };
+
+    fetchHistory();
+
+    const interval = setInterval(fetchHistory, refreshInterval);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [sensorTags?.join(','), assetTag, hours, refreshInterval]);
+
+  return result;
+}

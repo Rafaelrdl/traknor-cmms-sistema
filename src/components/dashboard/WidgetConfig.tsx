@@ -266,24 +266,6 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
         return (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Período de Tempo</Label>
-              <Select
-                value={config.timeRange || '7d'}
-                onValueChange={(value) => handleConfigChange('timeRange', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1h">Última hora</SelectItem>
-                  <SelectItem value="6h">Últimas 6 horas</SelectItem>
-                  <SelectItem value="24h">Últimas 24 horas</SelectItem>
-                  <SelectItem value="7d">Últimos 7 dias</SelectItem>
-                  <SelectItem value="30d">Últimos 30 dias</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
               <Label>Intervalo de Atualização</Label>
               <Select
                 value={String(config.refreshInterval || 60000)}

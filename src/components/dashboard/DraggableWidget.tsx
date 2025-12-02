@@ -47,7 +47,7 @@ import { kpiIconMap } from './kpiIcons';
 // Hooks para dados reais
 import { useWorkOrders, useWorkOrderStats } from '@/hooks/useWorkOrdersQuery';
 import { useEquipments } from '@/hooks/useEquipmentQuery';
-import { useSensorData, evaluateFormula } from '@/hooks/useSensorData';
+import { useSensorData, evaluateFormula, useMultiSensorHistory } from '@/hooks/useSensorData';
 
 interface DraggableWidgetProps {
   widget: DashboardWidget;
@@ -59,6 +59,7 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
   const removeWidget = useDashboardStore(state => state.removeWidget);
   const [configOpen, setConfigOpen] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [chartPeriod, setChartPeriod] = useState<string>('24h'); // Período do gráfico
 
   // Dados reais do sistema
   const { data: workOrders = [] } = useWorkOrders();
@@ -67,8 +68,19 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
   
   // Dados do sensor configurado
   const sensorTag = widget.config?.sensorTag;
+  const sensorTags = widget.config?.sensorTags; // Array de tags para gráficos multi-série
   const assetId = widget.config?.assetId;
+  const assetTag = widget.config?.assetTag; // Tag do asset para telemetria
   const sensorData = useSensorData(sensorTag, assetId, 30000);
+  
+  // Histórico de múltiplas variáveis para gráficos
+  const chartTimeRange = chartPeriod === '1h' ? 1 
+    : chartPeriod === '12h' ? 12 
+    : chartPeriod === '24h' ? 24 
+    : chartPeriod === '7d' ? 168 
+    : chartPeriod === '30d' ? 720 
+    : 24;
+  const multiSensorHistory = useMultiSensorHistory(sensorTags, assetTag, chartTimeRange, 60000);
   
   // Função para remover MAC address do nome da variável
   // Exemplo: "F80332010002C873_temperatura_retorno" -> "temperatura_retorno"
@@ -802,6 +814,184 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
   }
 
   function renderLineChart() {
+    // Se tem sensores configurados, usar dados reais
+    if (sensorTags && sensorTags.length > 0 && assetId) {
+      if (multiSensorHistory.loading) {
+        return (
+          <div className="h-full flex flex-col items-center justify-center">
+            <div className="animate-pulse text-muted-foreground">Carregando dados...</div>
+          </div>
+        );
+      }
+
+      if (multiSensorHistory.error) {
+        return (
+          <div className="h-full flex flex-col items-center justify-center">
+            <div className="text-destructive text-sm">{multiSensorHistory.error}</div>
+          </div>
+        );
+      }
+
+      if (multiSensorHistory.series.length === 0 || multiSensorHistory.series.every(s => s.data.length === 0)) {
+        return (
+          <div className="h-full flex flex-col items-center justify-center">
+            <LineChart className="w-8 h-8 text-muted-foreground mb-2" />
+            <div className="text-muted-foreground text-sm">Sem dados no período</div>
+          </div>
+        );
+      }
+
+      // Calcular valores min/max globais para escala
+      const allValues = multiSensorHistory.series.flatMap(s => s.data.map(d => d.value));
+      const minValue = Math.min(...allValues);
+      const maxValue = Math.max(...allValues);
+      const valueRange = maxValue - minValue || 1;
+
+      // Pegar timestamps únicos ordenados
+      const allTimestamps = [...new Set(
+        multiSensorHistory.series.flatMap(s => s.data.map(d => d.timestamp.getTime()))
+      )].sort((a, b) => a - b);
+
+      // Limitar pontos para exibição (máx 20 pontos)
+      const step = Math.max(1, Math.floor(allTimestamps.length / 20));
+      const displayTimestamps = allTimestamps.filter((_, i) => i % step === 0);
+
+      // Formatar label do tempo
+      const formatTime = (ts: number) => {
+        const date = new Date(ts);
+        if (chartTimeRange <= 24) {
+          return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        }
+        return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+      };
+
+      // Opções de período
+      const periodOptions = [
+        { value: '1h', label: '1h' },
+        { value: '12h', label: '12h' },
+        { value: '24h', label: '24h' },
+        { value: '7d', label: '7d' },
+        { value: '30d', label: '30d' },
+      ];
+
+      return (
+        <div className="h-full flex flex-col p-1">
+          {/* Header com legenda e seletor de período */}
+          <div className="flex items-center justify-between mb-2 gap-2">
+            {/* Legenda */}
+            <div className="flex flex-wrap gap-2 flex-1 min-w-0">
+              {multiSensorHistory.series.map(serie => (
+                <div key={serie.sensorTag} className="flex items-center gap-1">
+                  <div 
+                    className="w-2.5 h-2.5 rounded-full flex-shrink-0" 
+                    style={{ backgroundColor: serie.color }}
+                  />
+                  <span className="text-[10px] text-muted-foreground truncate">{serie.label}</span>
+                </div>
+              ))}
+            </div>
+            
+            {/* Seletor de período */}
+            <div className="flex gap-0.5 flex-shrink-0">
+              {periodOptions.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setChartPeriod(opt.value)}
+                  className={cn(
+                    "px-1.5 py-0.5 text-[10px] rounded transition-colors",
+                    chartPeriod === opt.value
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {/* Gráfico SVG */}
+          <div className="flex-1 relative min-h-0">
+            <svg className="w-full h-full" preserveAspectRatio="none">
+              {/* Linhas de grade */}
+              <line x1="0" y1="25%" x2="100%" y2="25%" stroke="currentColor" strokeOpacity="0.1" />
+              <line x1="0" y1="50%" x2="100%" y2="50%" stroke="currentColor" strokeOpacity="0.1" />
+              <line x1="0" y1="75%" x2="100%" y2="75%" stroke="currentColor" strokeOpacity="0.1" />
+              
+              {/* Linhas de cada série */}
+              {multiSensorHistory.series.map(serie => {
+                if (serie.data.length === 0) return null;
+                
+                // Criar path da linha
+                const points = displayTimestamps.map((ts, i) => {
+                  const dataPoint = serie.data.find(d => 
+                    Math.abs(d.timestamp.getTime() - ts) < (step * 60000) // tolerância
+                  );
+                  const value = dataPoint?.value ?? null;
+                  if (value === null) return null;
+                  
+                  const x = (i / (displayTimestamps.length - 1)) * 100;
+                  const y = 100 - ((value - minValue) / valueRange) * 80 - 10; // 10-90% da altura
+                  return { x, y, value };
+                }).filter(Boolean) as { x: number; y: number; value: number }[];
+
+                if (points.length < 2) return null;
+
+                const pathD = points.map((p, i) => 
+                  `${i === 0 ? 'M' : 'L'} ${p.x}% ${p.y}%`
+                ).join(' ');
+
+                return (
+                  <g key={serie.sensorTag}>
+                    {/* Linha */}
+                    <path
+                      d={pathD}
+                      fill="none"
+                      stroke={serie.color}
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    {/* Pontos */}
+                    {points.map((p, i) => (
+                      <circle
+                        key={i}
+                        cx={`${p.x}%`}
+                        cy={`${p.y}%`}
+                        r="3"
+                        fill={serie.color}
+                      />
+                    ))}
+                  </g>
+                );
+              })}
+            </svg>
+            
+            {/* Labels de valores (eixo Y) */}
+            <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-[10px] text-muted-foreground pointer-events-none">
+              <span>{maxValue.toFixed(1)}</span>
+              <span>{((maxValue + minValue) / 2).toFixed(1)}</span>
+              <span>{minValue.toFixed(1)}</span>
+            </div>
+          </div>
+          
+          {/* Labels de tempo (eixo X) */}
+          <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+            {displayTimestamps.length > 0 && (
+              <>
+                <span>{formatTime(displayTimestamps[0])}</span>
+                {displayTimestamps.length > 2 && (
+                  <span>{formatTime(displayTimestamps[Math.floor(displayTimestamps.length / 2)])}</span>
+                )}
+                <span>{formatTime(displayTimestamps[displayTimestamps.length - 1])}</span>
+              </>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Fallback: dados mockados
     const days = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
     const data = [4, 7, 5, 8, 3, 6, 2];
     const max = Math.max(...data);
@@ -810,7 +1000,7 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
       <div className="h-full flex flex-col">
         <div className="flex items-center gap-2 mb-4">
           <LineChart className="w-5 h-5 text-primary" />
-          <span className="font-medium">Evolução Semanal</span>
+          <span className="font-medium">Configure as variáveis</span>
         </div>
         <div className="flex-1 flex items-end justify-between gap-2 pb-6">
           {data.map((value, i) => (
