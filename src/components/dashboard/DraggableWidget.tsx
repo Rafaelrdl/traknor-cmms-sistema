@@ -70,6 +70,17 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
   const assetId = widget.config?.assetId;
   const sensorData = useSensorData(sensorTag, assetId, 30000);
   
+  // Função para remover MAC address do nome da variável
+  // Exemplo: "F80332010002C873_temperatura_retorno" -> "temperatura_retorno"
+  const formatSensorLabel = (tag: string | undefined): string => {
+    if (!tag) return '';
+    // Se contém underscore, pegar tudo depois do primeiro underscore (remove o MAC)
+    if (tag.includes('_')) {
+      return tag.split('_').slice(1).join('_');
+    }
+    return tag;
+  };
+  
   const {
     attributes,
     listeners,
@@ -220,7 +231,7 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
 
       // Usar unidade configurada ou do sensor
       const unit = widget.config?.unit || sensorData.unit || '';
-      const label = widget.config?.label || sensorTag;
+      const label = widget.config?.label || formatSensorLabel(sensorTag);
 
       // Determinar cor e ícone da tendência
       const getTrendDisplay = () => {
@@ -389,7 +400,7 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
         : String(displayValue ?? '0');
 
       const unit = widget.config?.unit || sensorData.unit || '';
-      const label = widget.config?.label || sensorTag;
+      const label = widget.config?.label || formatSensorLabel(sensorTag);
 
       return (
         <div className="flex flex-col items-center justify-center h-full">
@@ -456,7 +467,7 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
 
       // Usar unidade configurada ou do sensor
       const unit = widget.config?.unit || sensorData.unit || '';
-      const label = widget.config?.label || sensorTag;
+      const label = widget.config?.label || formatSensorLabel(sensorTag);
 
       // Determinar cor e ícone da tendência
       const getTrendDisplay = () => {
@@ -563,19 +574,107 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
   }
 
   function renderProgressCard() {
+    // Se tiver sensor configurado, usar dados do sensor
+    if (sensorTag && assetId) {
+      if (sensorData.isLoading) {
+        return (
+          <div className="flex flex-col items-center justify-center h-full">
+            <div className="text-sm text-muted-foreground">Carregando...</div>
+          </div>
+        );
+      }
+
+      // Obter valor atual do sensor
+      let currentValue: number = sensorData.value !== null ? Number(sensorData.value) : 0;
+      
+      // Aplicar fórmula de transformação se houver
+      const formula = widget.config?.transform?.formula;
+      if (formula && currentValue !== null) {
+        const transformedValue = evaluateFormula(formula, currentValue);
+        currentValue = typeof transformedValue === 'number' ? transformedValue : Number(transformedValue) || 0;
+      }
+
+      // Obter valores min/max da configuração
+      const minValue = widget.config?.minValue ?? 0;
+      const maxValue = widget.config?.maxValue ?? 100;
+      
+      // Calcular percentual baseado no range configurado
+      const range = maxValue - minValue;
+      const normalizedValue = currentValue - minValue;
+      const percent = range > 0 ? Math.round((normalizedValue / range) * 100) : 0;
+      const clampedPercent = Math.max(0, Math.min(100, percent));
+      
+      // Determinar cor baseado no percentual
+      const getProgressColor = () => {
+        if (clampedPercent >= 75) return 'bg-green-500';
+        if (clampedPercent >= 50) return 'bg-primary';
+        if (clampedPercent >= 25) return 'bg-yellow-500';
+        return 'bg-orange-500';
+      };
+
+      const unit = widget.config?.unit || sensorData.unit || '';
+      const label = widget.config?.label || formatSensorLabel(sensorTag);
+      const decimals = widget.config?.decimals ?? 2;
+      const formattedValue = typeof currentValue === 'number' 
+        ? currentValue.toFixed(decimals) 
+        : String(currentValue);
+      
+      return (
+        <div className="flex flex-col justify-between h-full p-2">
+          {/* Valor principal no topo */}
+          <div className="text-center">
+            <span className="text-2xl font-bold text-foreground">{formattedValue}</span>
+            <span className="text-sm text-muted-foreground ml-1">{unit}</span>
+          </div>
+          
+          {/* Label */}
+          <div className="text-center">
+            <div className="text-xs text-muted-foreground truncate">{label}</div>
+          </div>
+          
+          {/* Barra de progresso */}
+          <div className="w-full">
+            <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
+              <span>{minValue}</span>
+              <span className="font-medium">{clampedPercent}%</span>
+              <span>{maxValue}</span>
+            </div>
+            <div className="h-2 bg-muted rounded-full overflow-hidden">
+              <div 
+                className="h-full rounded-full transition-all duration-500 bg-primary"
+                style={{ width: `${Math.max(clampedPercent, 2)}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Fallback para dados de Work Orders se não tiver sensor configurado
     const total = workOrders.length || 1;
     const completed = workOrders.filter(wo => wo.status === 'COMPLETED').length;
     const percent = Math.round((completed / total) * 100);
     
     return (
-      <div className="flex flex-col justify-center h-full space-y-4">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Taxa de Conclusão</span>
-          <span className="text-sm font-bold">{percent}%</span>
+      <div className="flex flex-col justify-between h-full p-2">
+        {/* Valor principal no topo */}
+        <div className="text-center">
+          <span className="text-2xl font-bold text-foreground">{percent}%</span>
         </div>
-        <Progress value={percent} className="h-2" />
-        <div className="text-xs text-muted-foreground">
-          {completed} de {total} ordens concluídas
+        
+        {/* Label */}
+        <div className="text-center">
+          <div className="text-xs text-muted-foreground">{completed} de {total} concluídas</div>
+        </div>
+        
+        {/* Barra de progresso */}
+        <div className="w-full">
+          <div className="h-2 bg-muted rounded-full overflow-hidden">
+            <div 
+              className="h-full rounded-full transition-all duration-500 bg-primary"
+              style={{ width: `${Math.max(percent, 2)}%` }}
+            />
+          </div>
         </div>
       </div>
     );
@@ -740,7 +839,7 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
       const min = widget.config?.min ?? 0;
       const max = widget.config?.max ?? 100;
       percent = Math.min(100, Math.max(0, ((displayValue - min) / (max - min)) * 100));
-      label = widget.config?.label || sensorTag;
+      label = widget.config?.label || formatSensorLabel(sensorTag);
       unit = widget.config?.unit || sensorData.unit || '';
     }
 
