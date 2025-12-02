@@ -42,6 +42,7 @@ import {
 // Hooks para dados reais
 import { useWorkOrders, useWorkOrderStats } from '@/hooks/useWorkOrdersQuery';
 import { useEquipments } from '@/hooks/useEquipmentQuery';
+import { useSensorData, evaluateFormula } from '@/hooks/useSensorData';
 
 interface DraggableWidgetProps {
   widget: DashboardWidget;
@@ -57,6 +58,11 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
   const { data: workOrders = [] } = useWorkOrders();
   const { data: workOrderStats } = useWorkOrderStats();
   const { data: equipment = [] } = useEquipments();
+  
+  // Dados do sensor configurado
+  const sensorTag = widget.config?.sensorTag;
+  const assetId = widget.config?.assetId;
+  const sensorData = useSensorData(sensorTag, assetId, 30000);
   
   const {
     attributes,
@@ -165,8 +171,77 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
 
   // === RENDERIZADORES DE WIDGETS ===
 
-  // KPI Card com dados reais
+  // KPI Card com dados reais do sensor
   function renderKPICard() {
+    // Se tiver um sensor configurado, usar dados do sensor
+    if (sensorTag && assetId) {
+      if (sensorData.isLoading) {
+        return (
+          <div className="flex flex-col items-center justify-center h-full">
+            <div className="text-sm text-muted-foreground">Carregando...</div>
+          </div>
+        );
+      }
+
+      if (sensorData.error) {
+        return (
+          <div className="flex flex-col items-center justify-center h-full">
+            <AlertTriangle className="w-6 h-6 text-destructive mb-2" />
+            <div className="text-sm text-destructive">Erro ao carregar</div>
+          </div>
+        );
+      }
+
+      // Aplicar fórmula de transformação se houver
+      let displayValue: string | number | null = sensorData.value;
+      const formula = widget.config?.transform?.formula;
+      if (formula && displayValue !== null && displayValue !== undefined) {
+        const numericResult = evaluateFormula(formula, Number(displayValue));
+        displayValue = numericResult;
+      }
+
+      // Formatar o valor
+      const formattedValue = displayValue !== null && displayValue !== undefined
+        ? typeof displayValue === 'number' 
+          ? displayValue.toFixed(2)
+          : String(displayValue)
+        : '--';
+
+      // Usar unidade configurada ou do sensor
+      const unit = widget.config?.unit || sensorData.unit || '';
+      const label = widget.config?.label || sensorTag;
+
+      return (
+        <div className="flex flex-col items-center justify-center h-full">
+          <div className="text-4xl font-bold text-foreground">
+            {formattedValue}
+            {unit && <span className="text-lg ml-1 font-normal text-muted-foreground">{unit}</span>}
+          </div>
+          <div className="text-sm text-muted-foreground mt-2">
+            {label}
+          </div>
+          {/* Indicador de status online */}
+          <div className={cn(
+            "flex items-center gap-1 mt-2 text-xs",
+            sensorData.isOnline ? "text-green-600" : "text-red-600"
+          )}>
+            {sensorData.isOnline ? (
+              <>
+                <CheckCircle className="w-3 h-3" />
+                <span>Online</span>
+              </>
+            ) : (
+              <>
+                <XCircle className="w-3 h-3" />
+                <span>Offline</span>
+              </>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Fallback para dados de Work Orders se não tiver sensor configurado
     const openWO = workOrderStats?.open ?? workOrders.filter(wo => wo.status === 'OPEN').length;
     return (
       <div className="flex flex-col items-center justify-center h-full">
@@ -183,6 +258,34 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
   }
 
   function renderValueCard() {
+    // Se tiver sensor configurado, usar dados do sensor
+    if (sensorTag && assetId && sensorData.value !== null) {
+      let displayValue: string | number | null = sensorData.value;
+      const formula = widget.config?.transform?.formula;
+      if (formula && displayValue !== null) {
+        displayValue = evaluateFormula(formula, Number(displayValue));
+      }
+
+      const formattedValue = typeof displayValue === 'number' 
+        ? displayValue.toFixed(2) 
+        : String(displayValue ?? '0');
+
+      const unit = widget.config?.unit || sensorData.unit || '';
+      const label = widget.config?.label || sensorTag;
+
+      return (
+        <div className="flex flex-col items-center justify-center h-full">
+          <div className="text-3xl font-bold text-foreground">
+            {formattedValue}
+            {unit && <span className="text-lg ml-1 font-normal text-muted-foreground">{unit}</span>}
+          </div>
+          <div className="text-sm text-muted-foreground mt-2">
+            {label}
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col items-center justify-center h-full">
         <div className="text-3xl font-bold text-foreground">
@@ -371,7 +474,27 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
   }
 
   function renderGauge() {
-    const percent = widget.config?.value || 75;
+    // Se tiver sensor configurado, usar dados do sensor
+    let percent: number = Number(widget.config?.value) || 75;
+    let label = widget.config?.label || 'Performance';
+    let unit = '';
+
+    if (sensorTag && assetId && sensorData.value !== null) {
+      let displayValue: number = Number(sensorData.value);
+      const formula = widget.config?.transform?.formula;
+      if (formula) {
+        const result = evaluateFormula(formula, displayValue);
+        if (result !== null && typeof result === 'number') displayValue = result;
+      }
+      
+      // Calcular porcentagem se tiver min/max configurados
+      const min = widget.config?.min ?? 0;
+      const max = widget.config?.max ?? 100;
+      percent = Math.min(100, Math.max(0, ((displayValue - min) / (max - min)) * 100));
+      label = widget.config?.label || sensorTag;
+      unit = widget.config?.unit || sensorData.unit || '';
+    }
+
     return (
       <div className="h-full flex flex-col items-center justify-center">
         <Gauge className="w-8 h-8 text-primary mb-2" />
@@ -385,16 +508,21 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
             }}
           />
         </div>
-        <div className="text-2xl font-bold mt-2">{percent}%</div>
+        <div className="text-2xl font-bold mt-2">
+          {sensorTag && assetId && sensorData.value !== null
+            ? `${Number(sensorData.value).toFixed(1)}${unit ? ` ${unit}` : ''}`
+            : `${percent}%`
+          }
+        </div>
         <div className="text-xs text-muted-foreground">
-          {widget.config?.label || 'Performance'}
+          {label}
         </div>
       </div>
     );
   }
 
   function renderProgressGauge() {
-    const percent = widget.config?.value || 65;
+    const percent: number = Number(widget.config?.value) || 65;
     return (
       <div className="h-full flex flex-col justify-center">
         <div className="text-sm font-medium mb-2">

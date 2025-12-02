@@ -33,6 +33,15 @@ export interface DashboardWidget {
     dataSource?: string;
     equipmentId?: string;
     sectorId?: string;
+    // Dados de sensor
+    assetId?: number;
+    deviceId?: string;
+    sensorTag?: string;
+    sensorTags?: string[];
+    min?: number;
+    max?: number;
+    value?: number | string;
+    status?: string;
     // Transformação de dados
     transform?: {
       formula?: string;
