@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { 
-  MonitorDashboard, 
   AlertsList, 
   SensorsPage, 
   MonitorAssetsPage, 
@@ -21,7 +20,6 @@ import { SettingsPage } from '@/pages/SettingsPage';
  * Estrutura implementada:
  * - /monitor                → Visão Geral (Dashboard Customizável)
  * - /monitor/dashboards     → Dashboards Customizáveis (drag & drop)
- * - /monitor/dashboard      → Dashboard de Monitoramento (KPIs)
  * - /monitor/alertas        → Lista de Alertas
  * - /monitor/sensores       → Grid de Sensores/Devices
  * - /monitor/ativos         → Lista de Ativos HVAC
@@ -38,9 +36,6 @@ export function MonitorRoutes() {
       
       {/* Dashboard Customizável com Drag & Drop */}
       <Route path="/dashboards" element={<CustomDashboardPage />} />
-      
-      {/* Dashboard de KPIs */}
-      <Route path="/dashboard" element={<MonitorDashboard />} />
       
       {/* Lista de alertas */}
       <Route path="/alertas" element={<AlertsList />} />

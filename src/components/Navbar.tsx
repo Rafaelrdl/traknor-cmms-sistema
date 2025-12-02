@@ -57,7 +57,6 @@ const cmmsNavigation: NavItem[] = [
 const monitorNavigation: NavItem[] = [
   { name: 'Visão Geral', href: '/monitor', icon: LayoutDashboard, exact: true },
   { name: 'Dashboards', href: '/monitor/dashboards', icon: LayoutGrid },
-  { name: 'Dashboard', href: '/monitor/dashboard', icon: Activity },
   { name: 'Ativos', href: '/monitor/ativos', icon: Box },
   { name: 'Sensores', href: '/monitor/sensores', icon: Cpu },
   { name: 'Alertas', href: '/monitor/alertas', icon: Bell },
