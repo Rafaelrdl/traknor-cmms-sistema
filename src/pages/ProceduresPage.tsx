@@ -427,17 +427,13 @@ export function ProceduresPage() {
 
           {/* Procedures Table */}
           {!isProceduresLoading && (
-            <Card>
-              <CardContent className="p-0">
-                <ProcedureTable
-                  procedures={procedures}
-                  categories={procedureCategories}
-                  onView={handleViewProcedure}
-                  onEdit={handleEditProcedure}
-                  onUpdate={() => refetchProcedures()}
-                />
-              </CardContent>
-            </Card>
+            <ProcedureTable
+              procedures={procedures}
+              categories={procedureCategories}
+              onView={handleViewProcedure}
+              onEdit={handleEditProcedure}
+              onUpdate={() => refetchProcedures()}
+            />
           )}
         </TabsContent>
 
