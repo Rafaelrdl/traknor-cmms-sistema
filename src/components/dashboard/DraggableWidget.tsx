@@ -4,6 +4,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { DashboardWidget } from '@/types/dashboard';
 import { useDashboardStore } from '@/store/useDashboardStore';
 import { WidgetConfig } from './WidgetConfig';
+import { ConfirmDialog } from '@/shared/ui/components/ConfirmDialog';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { KPICard } from '@/components/KPICard';
@@ -26,6 +27,7 @@ import {
   AlertTriangle, 
   TrendingUp,
   TrendingDown,
+  Minus,
   Clock,
   ClipboardList,
   Server,
@@ -53,6 +55,7 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
   const editMode = useDashboardStore(state => state.editMode);
   const removeWidget = useDashboardStore(state => state.removeWidget);
   const [configOpen, setConfigOpen] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   // Dados reais do sistema
   const { data: workOrders = [] } = useWorkOrders();
@@ -92,9 +95,11 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
 
   const handleRemove = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm(`Tem certeza que deseja remover o widget "${widget.title}"?`)) {
-      removeWidget(layoutId, widget.id);
-    }
+    setConfirmDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    removeWidget(layoutId, widget.id);
   };
 
   const handleConfig = (e: React.MouseEvent) => {
@@ -173,6 +178,9 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
 
   // KPI Card com dados reais do sensor
   function renderKPICard() {
+    // Verificar se o widget é pequeno (1 coluna)
+    const isCompact = widget.size === 'col-1';
+
     // Se tiver um sensor configurado, usar dados do sensor
     if (sensorTag && assetId) {
       if (sensorData.isLoading) {
@@ -211,31 +219,90 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
       const unit = widget.config?.unit || sensorData.unit || '';
       const label = widget.config?.label || sensorTag;
 
+      // Determinar cor e ícone da tendência
+      const getTrendDisplay = () => {
+        if (!sensorData.trend) {
+          // Sem dados de tendência, mostrar status online
+          return {
+            icon: sensorData.isOnline ? CheckCircle : XCircle,
+            text: sensorData.isOnline ? 'Online' : 'Offline',
+            colorClass: sensorData.isOnline ? 'text-green-600' : 'text-red-600',
+          };
+        }
+
+        const { direction, percentage } = sensorData.trend;
+        const formattedPercent = percentage.toFixed(1);
+
+        switch (direction) {
+          case 'up':
+            return {
+              icon: TrendingUp,
+              text: `+${formattedPercent}% vs última hora`,
+              colorClass: 'text-green-600',
+            };
+          case 'down':
+            return {
+              icon: TrendingDown,
+              text: `-${formattedPercent}% vs última hora`,
+              colorClass: 'text-red-600',
+            };
+          default:
+            return {
+              icon: Minus,
+              text: 'Estável',
+              colorClass: 'text-muted-foreground',
+            };
+        }
+      };
+
+      const trendDisplay = getTrendDisplay();
+      const TrendIcon = trendDisplay.icon;
+
       return (
-        <div className="flex flex-col items-center justify-center h-full">
-          <div className="text-4xl font-bold text-foreground">
-            {formattedValue}
-            {unit && <span className="text-lg ml-1 font-normal text-muted-foreground">{unit}</span>}
+        <div className="flex flex-col items-center justify-center h-full py-2">
+          {/* Ícone */}
+          <div className={cn(
+            "rounded-lg bg-primary/10 flex items-center justify-center mb-2",
+            isCompact ? "w-8 h-8" : "w-10 h-10"
+          )}>
+            <Activity className={cn(
+              "text-primary",
+              isCompact ? "w-4 h-4" : "w-5 h-5"
+            )} />
           </div>
-          <div className="text-sm text-muted-foreground mt-2">
+
+          {/* Valor principal */}
+          <div className={cn(
+            "font-bold text-foreground flex items-baseline justify-center flex-wrap gap-1",
+            isCompact ? "text-2xl" : "text-3xl"
+          )}>
+            <span>{formattedValue}</span>
+            {unit && (
+              <span className={cn(
+                "font-normal text-muted-foreground",
+                isCompact ? "text-sm" : "text-base"
+              )}>
+                {unit}
+              </span>
+            )}
+          </div>
+          
+          {/* Label */}
+          <div className={cn(
+            "text-muted-foreground text-center leading-tight",
+            isCompact ? "text-xs mt-1" : "text-sm mt-1"
+          )}>
             {label}
           </div>
-          {/* Indicador de status online */}
+          
+          {/* Indicador de tendência */}
           <div className={cn(
-            "flex items-center gap-1 mt-2 text-xs",
-            sensorData.isOnline ? "text-green-600" : "text-red-600"
+            "flex items-center gap-1 text-xs",
+            isCompact ? "mt-1" : "mt-2",
+            trendDisplay.colorClass
           )}>
-            {sensorData.isOnline ? (
-              <>
-                <CheckCircle className="w-3 h-3" />
-                <span>Online</span>
-              </>
-            ) : (
-              <>
-                <XCircle className="w-3 h-3" />
-                <span>Offline</span>
-              </>
-            )}
+            <TrendIcon className="w-3 h-3 flex-shrink-0" />
+            <span>{isCompact && sensorData.trend ? `${sensorData.trend.direction === 'up' ? '+' : sensorData.trend.direction === 'down' ? '-' : ''}${sensorData.trend.percentage.toFixed(1)}%` : trendDisplay.text}</span>
           </div>
         </div>
       );
@@ -244,12 +311,34 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
     // Fallback para dados de Work Orders se não tiver sensor configurado
     const openWO = workOrderStats?.open ?? workOrders.filter(wo => wo.status === 'OPEN').length;
     return (
-      <div className="flex flex-col items-center justify-center h-full">
-        <div className="text-4xl font-bold text-foreground">{openWO}</div>
-        <div className="text-sm text-muted-foreground mt-2">
+      <div className="flex flex-col items-center justify-center h-full py-2">
+        {/* Ícone */}
+        <div className={cn(
+          "rounded-lg bg-primary/10 flex items-center justify-center mb-2",
+          isCompact ? "w-8 h-8" : "w-10 h-10"
+        )}>
+          <ClipboardList className={cn(
+            "text-primary",
+            isCompact ? "w-4 h-4" : "w-5 h-5"
+          )} />
+        </div>
+
+        <div className={cn(
+          "font-bold text-foreground",
+          isCompact ? "text-2xl" : "text-3xl"
+        )}>
+          {openWO}
+        </div>
+        <div className={cn(
+          "text-muted-foreground text-center leading-tight",
+          isCompact ? "text-xs mt-1" : "text-sm mt-1"
+        )}>
           {widget.config?.label || 'OS em Aberto'}
         </div>
-        <div className="flex items-center gap-1 mt-2 text-xs text-green-600">
+        <div className={cn(
+          "flex items-center gap-1 text-xs text-green-600",
+          isCompact ? "mt-1" : "mt-2"
+        )}>
           <TrendingDown className="w-3 h-3" />
           <span>-12% vs semana anterior</span>
         </div>
@@ -965,7 +1054,10 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
             )}
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="min-h-[150px]">
+            <div className={cn(
+              "min-h-[120px]",
+              widget.size === 'col-1' && "min-h-[100px]"
+            )}>
               {renderWidgetContent()}
             </div>
           </CardContent>
@@ -977,6 +1069,17 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
         layoutId={layoutId}
         open={configOpen}
         onClose={() => setConfigOpen(false)}
+      />
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        title="Remover Widget"
+        description={`Tem certeza que deseja remover o widget "${widget.title}"? Esta ação não pode ser desfeita.`}
+        confirmText="Remover"
+        cancelText="Cancelar"
+        variant="destructive"
+        onConfirm={handleConfirmDelete}
       />
     </>
   );

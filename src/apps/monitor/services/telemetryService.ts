@@ -72,25 +72,136 @@ class TelemetryService {
 
     try {
       const url = `/telemetry/assets/${assetTag}/history/?${queryParams.toString()}`;
+      console.log('📊 Buscando histórico asset:', url);
       const response = await monitorApi.get<any>(url);
+      console.log('📊 Resposta histórico asset:', response);
       
-      // Mapear resposta da API
+      // A API retorna dados no formato { data: [...], device_id, sensor_ids, interval, from, to, count }
+      // Precisamos agrupar por sensor_id e criar as séries
+      const dataBySersor: Record<string, Array<{ timestamp: string; value: number }>> = {};
+      
+      if (response.data && Array.isArray(response.data)) {
+        for (const point of response.data) {
+          const sensorId = point.sensor_id;
+          const timestamp = point.ts || point.bucket;
+          const value = point.value ?? point.avg_value ?? point.last_value ?? 0;
+          
+          if (!dataBySersor[sensorId]) {
+            dataBySersor[sensorId] = [];
+          }
+          
+          dataBySersor[sensorId].push({
+            timestamp: timestamp,
+            value: value
+          });
+        }
+      }
+      
+      // Converter para o formato de séries
+      const series = Object.entries(dataBySersor).map(([sensorId, data]) => ({
+        sensorId,
+        sensorType: undefined,
+        unit: undefined,
+        data
+      }));
+      
+      console.log('📊 Séries processadas (asset):', series);
+      
       return {
         deviceId: assetTag,
-        series: response.series?.map((s: any) => ({
-          sensorId: s.sensor_id || s.sensorId,
-          sensorType: s.sensor_type || s.metric_type,
-          unit: s.unit,
-          data: (s.data || s.readings || []).map((d: any) => ({
-            timestamp: d.timestamp || d.time,
-            value: d.value ?? d.avg ?? d.mean ?? 0
-          }))
-        })) || []
+        series
       };
     } catch (error) {
       console.error('Erro ao buscar telemetria:', error);
       return {
         deviceId: assetTag,
+        series: []
+      };
+    }
+  }
+
+  /**
+   * GET /api/telemetry/history/<device_id>/
+   * Buscar histórico de telemetria por device_id (mqtt_client_id).
+   */
+  async getHistoryByDevice(
+    deviceId: string,
+    hours: number = 24,
+    sensorIds?: string[],
+    forceInterval?: string
+  ): Promise<DeviceHistoryResponse> {
+    const end = new Date();
+    const start = new Date(end.getTime() - hours * 60 * 60 * 1000);
+    
+    let interval: string;
+    if (forceInterval) {
+      interval = forceInterval;
+    } else if (hours < 1) {
+      interval = 'raw';
+    } else if (hours <= 6) {
+      interval = '1m';
+    } else if (hours <= 24) {
+      interval = '5m';
+    } else {
+      interval = '1h';
+    }
+    
+    const queryParams = new URLSearchParams();
+    queryParams.append('from', start.toISOString());
+    queryParams.append('to', end.toISOString());
+    queryParams.append('interval', interval);
+    
+    if (sensorIds && sensorIds.length > 0) {
+      sensorIds.forEach(id => queryParams.append('sensor_id', id));
+    }
+
+    try {
+      const url = `/telemetry/history/${deviceId}/?${queryParams.toString()}`;
+      console.log('📊 Buscando histórico device:', url);
+      const response = await monitorApi.get<any>(url);
+      console.log('📊 Resposta histórico device:', response);
+      
+      // A API retorna dados no formato { data: [...], device_id, sensor_ids, interval, from, to, count }
+      // Precisamos agrupar por sensor_id e criar as séries
+      const dataBySersor: Record<string, Array<{ timestamp: string; value: number }>> = {};
+      
+      if (response.data && Array.isArray(response.data)) {
+        for (const point of response.data) {
+          // Para dados raw: { ts, sensor_id, value }
+          // Para dados agregados: { bucket, sensor_id, avg_value, min_value, max_value, last_value, count }
+          const sensorId = point.sensor_id;
+          const timestamp = point.ts || point.bucket;
+          const value = point.value ?? point.avg_value ?? point.last_value ?? 0;
+          
+          if (!dataBySersor[sensorId]) {
+            dataBySersor[sensorId] = [];
+          }
+          
+          dataBySersor[sensorId].push({
+            timestamp: timestamp,
+            value: value
+          });
+        }
+      }
+      
+      // Converter para o formato de séries
+      const series = Object.entries(dataBySersor).map(([sensorId, data]) => ({
+        sensorId,
+        sensorType: undefined,
+        unit: undefined,
+        data
+      }));
+      
+      console.log('📊 Séries processadas:', series);
+      
+      return {
+        deviceId: deviceId,
+        series
+      };
+    } catch (error) {
+      console.error('Erro ao buscar telemetria por device:', error);
+      return {
+        deviceId: deviceId,
         series: []
       };
     }
