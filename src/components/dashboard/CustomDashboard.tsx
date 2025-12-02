@@ -257,21 +257,21 @@ export function CustomDashboard() {
 
       {/* Edit Mode Actions */}
       {editMode && (
-        <div className="flex items-center justify-between bg-accent/50 border border-accent rounded-lg p-4 shadow-sm">
+        <div className="flex items-center justify-between bg-primary text-primary-foreground rounded-lg p-4 shadow-md">
           <div className="flex items-center gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-white/20">
               <Edit3 className="w-5 h-5" />
             </div>
             <div>
-              <div className="font-medium text-foreground">Modo de Edição Ativo</div>
-              <p className="text-sm text-muted-foreground">
+              <div className="font-medium">Modo de Edição Ativo</div>
+              <p className="text-sm text-primary-foreground/80">
                 Arraste widgets para reorganizar ou clique no X para remover
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={() => handleStartEditName(currentLayoutId, currentLayout?.name || '')}
               className="gap-2"
@@ -280,7 +280,7 @@ export function CustomDashboard() {
               Renomear Tela
             </Button>
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={handleResetSizes}
               className="gap-2"
@@ -288,7 +288,7 @@ export function CustomDashboard() {
               <RotateCcw className="w-4 h-4" />
               Resetar Tamanhos
             </Button>
-            <WidgetPalette layoutId={currentLayoutId} />
+            <WidgetPalette layoutId={currentLayoutId} buttonVariant="secondary" />
             {!currentLayout?.isDefault && layouts.length > 1 && (
               <Button
                 variant="destructive"

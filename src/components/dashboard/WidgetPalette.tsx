@@ -3,7 +3,6 @@ import { WidgetType, widgetDefinitions, categoryNames } from '@/types/dashboard'
 import { useDashboardStore } from '@/store/useDashboardStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Dialog, 
   DialogContent, 
@@ -46,9 +45,10 @@ const iconMap: Record<string, any> = {
 
 interface WidgetPaletteProps {
   layoutId: string;
+  buttonVariant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'destructive';
 }
 
-export function WidgetPalette({ layoutId }: WidgetPaletteProps) {
+export function WidgetPalette({ layoutId, buttonVariant = 'outline' }: WidgetPaletteProps) {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -94,13 +94,13 @@ export function WidgetPalette({ layoutId }: WidgetPaletteProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
+        <Button variant={buttonVariant} className="gap-2">
           <Plus className="w-4 h-4" />
           Adicionar Widget
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col p-0">
-        <div className="flex flex-col h-full">
+      <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-0">
+        <div className="flex flex-col h-full overflow-hidden">
           {/* Header fixo */}
           <DialogHeader className="flex-shrink-0 px-6 py-5 border-b bg-background">
             <DialogTitle className="text-xl font-bold">Biblioteca de Widgets</DialogTitle>
@@ -146,8 +146,8 @@ export function WidgetPalette({ layoutId }: WidgetPaletteProps) {
             </div>
           </div>
 
-          {/* Lista de widgets */}
-          <ScrollArea className="flex-1 px-6 py-4">
+          {/* Lista de widgets com scroll */}
+          <div className="flex-1 overflow-y-auto px-6 py-4">
             <div className="space-y-6">
               {Object.entries(groupedWidgets).map(([category, widgets]) => (
                 <div key={category}>
@@ -188,7 +188,7 @@ export function WidgetPalette({ layoutId }: WidgetPaletteProps) {
                 </div>
               )}
             </div>
-          </ScrollArea>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
