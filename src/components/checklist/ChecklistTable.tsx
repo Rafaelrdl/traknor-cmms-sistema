@@ -1,14 +1,7 @@
 import { useState } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,19 +19,27 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { 
   MoreHorizontal, 
   Edit, 
   Trash2, 
   Copy, 
   Eye,
+  CheckSquare,
+  ListChecks,
+  Sparkles,
   ClipboardList,
-  CheckCircle2,
-  XCircle
 } from 'lucide-react';
 import { ChecklistTemplate, ChecklistCategory } from '@/models/checklist';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 interface ChecklistTableProps {
   checklists: ChecklistTemplate[];
@@ -82,174 +83,224 @@ export function ChecklistTable({
 
   if (checklists.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <ClipboardList className="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-medium">Nenhum checklist encontrado</h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          Crie seu primeiro checklist para vincular aos planos de manutenção
-        </p>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ClipboardList className="h-5 w-5" />
+            Lista de Checklists
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <ListChecks className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+            <h3 className="text-lg font-medium mb-2">Nenhum checklist encontrado</h3>
+            <p className="text-muted-foreground">
+              Crie seu primeiro checklist para padronizar as manutenções preventivas.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[300px]">Nome</TableHead>
-              <TableHead>Categoria</TableHead>
-              <TableHead>Equipamento</TableHead>
-              <TableHead className="text-center">Itens</TableHead>
-              <TableHead className="text-center">Usos</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Atualizado</TableHead>
-              <TableHead className="w-[70px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {checklists.map((checklist) => {
-              const category = getCategoryById(checklist.category_id);
-              
-              return (
-                <TableRow key={checklist.id}>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <button
-                        onClick={() => onView(checklist)}
-                        className="font-medium text-left hover:underline hover:text-primary transition-colors"
-                      >
-                        {checklist.name}
-                      </button>
-                      {checklist.description && (
-                        <p className="text-xs text-muted-foreground line-clamp-1">
-                          {checklist.description}
-                        </p>
-                      )}
+    <TooltipProvider delayDuration={300}>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ClipboardList className="h-5 w-5" />
+            Lista de Checklists
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full" role="grid" aria-label="Lista de checklists">
+              <thead>
+                <tr className="border-b">
+                  <th scope="col" className="text-left p-4 font-medium text-muted-foreground">
+                    Checklist
+                  </th>
+                  <th scope="col" className="text-left p-4 font-medium text-muted-foreground">
+                    Categoria
+                  </th>
+                  <th scope="col" className="text-left p-4 font-medium text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <CheckSquare className="h-4 w-4" />
+                      Itens
                     </div>
-                  </TableCell>
+                  </th>
+                  <th scope="col" className="text-left p-4 font-medium text-muted-foreground">
+                    Atualizado
+                  </th>
+                  <th scope="col" className="text-center p-4 font-medium text-muted-foreground">
+                    Status
+                  </th>
+                  <th scope="col" className="text-center p-4 font-medium text-muted-foreground">
+                    Ações
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {checklists.map((checklist) => {
+                  const category = getCategoryById(checklist.category_id);
+                  const totalItems = checklist.items.length;
                   
-                  <TableCell>
-                    {category ? (
-                      <Badge variant="secondary" className="flex items-center gap-1.5 w-fit">
-                        {category.color && (
-                          <div
-                            className="w-2 h-2 rounded-full"
-                            style={{ backgroundColor: category.color }}
-                          />
-                        )}
-                        {category.name}
-                      </Badge>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">—</span>
-                    )}
-                  </TableCell>
-                  
-                  <TableCell>
-                    {checklist.equipment_type ? (
-                      <Badge variant="outline">{checklist.equipment_type}</Badge>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">—</span>
-                    )}
-                  </TableCell>
-                  
-                  <TableCell className="text-center">
-                    <Badge variant="secondary">
-                      {checklist.items.length} {checklist.items.length === 1 ? 'item' : 'itens'}
-                    </Badge>
-                  </TableCell>
-                  
-                  <TableCell className="text-center">
-                    <span className="text-sm text-muted-foreground">
-                      {checklist.usage_count || 0}
-                    </span>
-                  </TableCell>
-                  
-                  <TableCell>
-                    <Badge 
-                      variant={checklist.is_active ? 'default' : 'secondary'}
-                      className={checklist.is_active ? 'bg-green-500 hover:bg-green-600' : ''}
+                  return (
+                    <tr
+                      key={checklist.id}
+                      className={cn(
+                        "border-b hover:bg-muted/50 transition-colors",
+                        !checklist.is_active && "opacity-60"
+                      )}
                     >
-                      {checklist.is_active ? 'Ativo' : 'Inativo'}
-                    </Badge>
-                  </TableCell>
-                  
-                  <TableCell className="text-sm text-muted-foreground">
-                    {checklist.updated_at ? formatDistanceToNow(new Date(checklist.updated_at), {
-                      addSuffix: true,
-                      locale: ptBR,
-                    }) : '-'}
-                  </TableCell>
-                  
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Ações</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onView(checklist)}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          Visualizar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onEdit(checklist)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onDuplicate(checklist)}>
-                          <Copy className="mr-2 h-4 w-4" />
-                          Duplicar
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          onClick={() => onToggleActive(checklist.id, !checklist.is_active)}
-                        >
-                          {checklist.is_active ? (
-                            <>
-                              <XCircle className="mr-2 h-4 w-4" />
-                              Desativar
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle2 className="mr-2 h-4 w-4" />
-                              Ativar
-                            </>
+                      {/* Nome e Descrição */}
+                      <td className="p-4">
+                        <div className="max-w-xs">
+                          <p className="font-medium text-sm">
+                            {checklist.name}
+                          </p>
+                          {checklist.description && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {checklist.description}
+                            </p>
                           )}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          onClick={() => handleDeleteClick(checklist)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Excluir
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
+                        </div>
+                      </td>
+                      
+                      {/* Categoria */}
+                      <td className="p-4">
+                        {category ? (
+                          <div 
+                            className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium"
+                            style={{ 
+                              backgroundColor: `${category.color}15`,
+                              color: category.color,
+                              border: `1px solid ${category.color}30`
+                            }}
+                          >
+                            <div
+                              className="w-2 h-2 rounded-full"
+                              style={{ backgroundColor: category.color }}
+                            />
+                            {category.name}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      
+                      {/* Itens */}
+                      <td className="p-4">
+                        <span className="text-sm">{totalItems} {totalItems === 1 ? 'item' : 'itens'}</span>
+                      </td>
+                      
+                      {/* Atualizado */}
+                      <td className="p-4">
+                        <span className="text-sm text-muted-foreground">
+                          {checklist.updated_at ? formatDistanceToNow(new Date(checklist.updated_at), {
+                            addSuffix: false,
+                            locale: ptBR,
+                          }) : '-'}
+                        </span>
+                      </td>
+                      
+                      {/* Status com Switch */}
+                      <td className="p-4">
+                        <div className="flex justify-center">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div>
+                                <Switch
+                                  checked={checklist.is_active}
+                                  onCheckedChange={(checked) => onToggleActive(checklist.id, checked)}
+                                  className="data-[state=checked]:bg-green-500"
+                                />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {checklist.is_active ? 'Clique para desativar' : 'Clique para ativar'}
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </td>
+                      
+                      {/* Ações */}
+                      <td className="p-4">
+                        <div className="flex items-center justify-center gap-1">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => onView(checklist)}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Visualizar detalhes</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Mais ações</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuItem onClick={() => onEdit(checklist)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => onDuplicate(checklist)}>
+                                <Copy className="mr-2 h-4 w-4" />
+                                Duplicar
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                onClick={() => handleDeleteClick(checklist)}
+                                className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Excluir
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir Checklist</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir o checklist "{checklistToDelete?.name}"?
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-destructive" />
+              Excluir Checklist
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <span>
+                Tem certeza que deseja excluir o checklist <strong>"{checklistToDelete?.name}"</strong>?
+              </span>
               {(checklistToDelete?.usage_count ?? 0) > 0 && (
-                <span className="block mt-2 text-amber-600">
-                  ⚠️ Este checklist está vinculado a {checklistToDelete?.usage_count} plano(s) de manutenção.
+                <span className="flex items-center gap-2 mt-3 p-3 bg-amber-50 text-amber-700 rounded-lg text-sm">
+                  <Sparkles className="h-4 w-4 flex-shrink-0" />
+                  Este checklist está vinculado a {checklistToDelete?.usage_count} plano(s) de manutenção.
                 </span>
               )}
-              Esta ação não pode ser desfeita.
+              <span className="block text-xs mt-2">Esta ação não pode ser desfeita.</span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -263,6 +314,6 @@ export function ChecklistTable({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </TooltipProvider>
   );
 }

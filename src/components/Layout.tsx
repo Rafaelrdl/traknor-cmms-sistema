@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { LogOut, User, Users, Settings2 } from 'lucide-react';
+import { LogOut, User, Users, Settings2, HelpCircle } from 'lucide-react';
 import { useUsers } from '@/data/usersStore';
 import { IfCan } from '@/components/auth/IfCan';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -74,6 +74,19 @@ export function Layout({ children }: LayoutProps) {
 
             {/* Alerts Notification Dropdown */}
             <AlertsNotificationDropdown />
+
+            {/* Help Icon */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 flex-shrink-0"
+              asChild
+            >
+              <Link to={`${modulePrefix}/help`}>
+                <HelpCircle className="h-5 w-5 text-muted-foreground" />
+                <span className="sr-only">Ajuda</span>
+              </Link>
+            </Button>
 
             {/* User Menu - Always visible */}
             <DropdownMenu>

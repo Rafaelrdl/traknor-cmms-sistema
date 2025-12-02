@@ -511,19 +511,15 @@ export function ProceduresPage() {
               </div>
 
               {/* Checklists Table */}
-              <Card>
-                <CardContent className="p-0">
-                  <ChecklistTable
-                    checklists={checklistsData}
-                    categories={checklistCategories}
-                    onView={handleViewChecklist}
-                    onEdit={handleEditChecklist}
-                    onDuplicate={handleDuplicateChecklist}
-                    onDelete={handleDeleteChecklist}
-                    onToggleActive={handleToggleChecklistActive}
-                  />
-                </CardContent>
-              </Card>
+              <ChecklistTable
+                checklists={checklistsData}
+                categories={checklistCategories}
+                onView={handleViewChecklist}
+                onEdit={handleEditChecklist}
+                onDuplicate={handleDuplicateChecklist}
+                onDelete={handleDeleteChecklist}
+                onToggleActive={handleToggleChecklistActive}
+              />
             </>
           )}
         </TabsContent>

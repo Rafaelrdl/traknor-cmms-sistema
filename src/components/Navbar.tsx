@@ -50,7 +50,6 @@ const cmmsNavigation: NavItem[] = [
   { name: 'Estoque', href: '/cmms/inventory', icon: Warehouse },
   { name: 'Procedimentos', href: '/cmms/procedures', icon: BookOpen },
   { name: 'Relatórios', href: '/cmms/reports', icon: FileText },
-  { name: 'Ajuda', href: '/cmms/help', icon: HelpCircle },
 ];
 
 // Rotas do módulo Monitor (TrakSense)
