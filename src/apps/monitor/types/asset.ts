@@ -141,4 +141,12 @@ export interface AssetSensor {
   last_value: number | null;
   last_reading_at: string | null;
   is_online: boolean;
+  // Campos do device
+  device: number;
+  device_name: string;
+  device_display_name: string;
+  device_serial: string;
+  device_mqtt_client_id: string;
+  asset_tag: string;
+  created_at?: string;
 }

@@ -1,9 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { DashboardWidget } from '@/types/dashboard';
 import { useDashboardStore } from '@/store/useDashboardStore';
-import { useAssetsQuery } from '@/apps/monitor/hooks/useAssetsQuery';
-import { useDevicesSummaryQuery } from '@/apps/monitor/hooks/useDevicesQuery';
-import { useMonitorStore } from '@/apps/monitor/store/monitorStore';
+import { useAssetsQuery, useAssetSensorsQuery } from '@/apps/monitor/hooks/useAssetsQuery';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,7 +20,7 @@ import {
   DialogTitle, 
 } from '@/components/ui/dialog';
 import { Settings, Save, X, Zap, Code, Loader2 } from 'lucide-react';
-import type { DeviceSummary } from '@/apps/monitor/types/device';
+import type { AssetSensor } from '@/apps/monitor/types/asset';
 
 // Exemplos de fórmulas para transformação de valores
 const FORMULA_EXAMPLES = [
@@ -41,9 +39,16 @@ interface WidgetConfigProps {
   onClose: () => void;
 }
 
+// Interface para agrupar sensores por device
+interface DeviceGroup {
+  deviceId: number;
+  displayName: string;
+  fullSerial: string;
+  sensors: AssetSensor[];
+}
+
 export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigProps) {
   const updateWidget = useDashboardStore(state => state.updateWidget);
-  const { currentSite } = useMonitorStore();
   
   // Estados locais para edição
   const [title, setTitle] = useState(widget.title);
@@ -54,11 +59,11 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
   const [selectedAssetId, setSelectedAssetId] = useState<number | null>(
     config.assetId ? parseInt(config.assetId.toString()) : null
   );
-  const [selectedDeviceName, setSelectedDeviceName] = useState<string | null>(
-    config.deviceName || null
+  const [selectedDeviceId, setSelectedDeviceId] = useState<number | null>(
+    config.deviceId ? parseInt(config.deviceId.toString()) : null
   );
-  const [selectedMetricType, setSelectedMetricType] = useState<string | null>(
-    config.metricType || config.sensorTag || null
+  const [selectedSensorTag, setSelectedSensorTag] = useState<string | null>(
+    config.sensorTag || null
   );
 
   // Verificar se é widget de múltiplas variáveis (gráficos)
@@ -74,44 +79,53 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
   // React Query: buscar assets
   const { data: assets = [], isLoading: isLoadingAssets } = useAssetsQuery({});
 
-  // React Query: buscar devices do site (com variáveis)
-  const { data: devices = [], isLoading: isLoadingDevices } = useDevicesSummaryQuery(currentSite?.id);
+  // React Query: buscar sensores do asset selecionado
+  const { 
+    data: assetSensors = [], 
+    isLoading: isLoadingSensors 
+  } = useAssetSensorsQuery(selectedAssetId);
 
-  // Agrupar devices por asset
-  const devicesByAsset = useMemo(() => {
-    const map = new Map<number, DeviceSummary[]>();
-    devices.forEach(device => {
-      const assetId = device.asset_info?.id;
-      if (assetId) {
-        const list = map.get(assetId) || [];
-        list.push(device);
-        map.set(assetId, list);
+  // Agrupar sensores por device
+  const deviceGroups = useMemo<DeviceGroup[]>(() => {
+    const map = new Map<number, DeviceGroup>();
+    
+    assetSensors.forEach(sensor => {
+      // Usar device como ID (campo numérico que referencia o device)
+      const deviceId = (sensor as any).device || 0;
+      
+      if (!map.has(deviceId)) {
+        // Extrair nome do device do sensor
+        const displayName = (sensor as any).device_display_name || 
+                           (sensor as any).device_name ||
+                           `Device ${deviceId}`;
+        const fullSerial = (sensor as any).device_serial || '';
+        
+        map.set(deviceId, {
+          deviceId,
+          displayName,
+          fullSerial,
+          sensors: []
+        });
       }
+      
+      map.get(deviceId)!.sensors.push(sensor);
     });
-    return map;
-  }, [devices]);
+    
+    return Array.from(map.values());
+  }, [assetSensors]);
 
-  // Devices do asset selecionado
-  const assetDevices = useMemo(() => {
-    if (!selectedAssetId) return [];
-    return devicesByAsset.get(selectedAssetId) || [];
-  }, [selectedAssetId, devicesByAsset]);
-
-  // Variáveis disponíveis do device selecionado
-  const availableVariables = useMemo(() => {
-    if (!selectedDeviceName) return [];
-    const device = assetDevices.find(d => 
-      d.display_name === selectedDeviceName || 
-      d.serial_number.slice(-4) === selectedDeviceName
-    );
-    return device?.variables || [];
-  }, [assetDevices, selectedDeviceName]);
+  // Sensores do device selecionado
+  const availableSensors = useMemo(() => {
+    if (!selectedDeviceId) return [];
+    const group = deviceGroups.find(g => g.deviceId === selectedDeviceId);
+    return group?.sensors || [];
+  }, [deviceGroups, selectedDeviceId]);
 
   // Sensor selecionado
   const selectedSensor = useMemo(() => {
-    if (!selectedMetricType) return null;
-    return availableVariables.find(v => v.tag === selectedMetricType) || null;
-  }, [availableVariables, selectedMetricType]);
+    if (!selectedSensorTag) return null;
+    return availableSensors.find(s => s.tag === selectedSensorTag) || null;
+  }, [availableSensors, selectedSensorTag]);
 
   // Resetar estados quando o widget mudar
   useEffect(() => {
@@ -119,39 +133,43 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
     setSize(widget.size);
     setConfig(widget.config || {});
     setSelectedAssetId(widget.config?.assetId ? parseInt(widget.config.assetId.toString()) : null);
-    setSelectedDeviceName(widget.config?.deviceName || null);
-    setSelectedMetricType(widget.config?.metricType || widget.config?.sensorTag || null);
+    setSelectedDeviceId(widget.config?.deviceId ? parseInt(widget.config.deviceId.toString()) : null);
+    setSelectedSensorTag(widget.config?.sensorTag || null);
     setSelectedVariables(widget.config?.sensorTags || (widget.config?.sensorTag ? [widget.config.sensorTag] : []));
   }, [widget]);
 
   // Atualizar config quando seleções mudarem
   useEffect(() => {
-    if (isMultiVariableChart && selectedVariables.length > 0 && selectedAssetId) {
-      const selectedAsset = assets.find(a => a.id === selectedAssetId);
-      const selectedSensors = availableVariables.filter(s => selectedVariables.includes(s.tag));
+    if (!selectedAssetId) return;
+    
+    const selectedAsset = assets.find(a => a.id === selectedAssetId);
+    const deviceGroup = deviceGroups.find(g => g.deviceId === selectedDeviceId);
+    
+    if (isMultiVariableChart && selectedVariables.length > 0) {
+      const selectedSensors = availableSensors.filter(s => selectedVariables.includes(s.tag));
       
       setConfig(prev => ({
         ...prev,
         assetId: selectedAssetId?.toString(),
         assetTag: selectedAsset?.tag,
-        deviceName: selectedDeviceName,
+        deviceId: selectedDeviceId?.toString(),
+        deviceName: deviceGroup?.displayName,
         sensorTags: selectedVariables,
         sensorTag: selectedVariables[0],
         unit: selectedSensors[0]?.unit,
       }));
-    } else if (selectedSensor && selectedAssetId) {
-      const selectedAsset = assets.find(a => a.id === selectedAssetId);
+    } else if (selectedSensor) {
       setConfig(prev => ({
         ...prev,
         assetId: selectedAssetId?.toString(),
         assetTag: selectedAsset?.tag,
-        deviceName: selectedDeviceName,
-        metricType: selectedMetricType,
+        deviceId: selectedDeviceId?.toString(),
+        deviceName: deviceGroup?.displayName,
         sensorTag: selectedSensor.tag,
         unit: selectedSensor.unit,
       }));
     }
-  }, [isMultiVariableChart, selectedVariables, selectedSensor, selectedAssetId, selectedDeviceName, selectedMetricType, assets, availableVariables]);
+  }, [isMultiVariableChart, selectedVariables, selectedSensor, selectedAssetId, selectedDeviceId, assets, deviceGroups, availableSensors]);
 
   const handleSave = () => {
     updateWidget(layoutId, widget.id, {
@@ -177,6 +195,24 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
   const showLimits = !['table-data', 'table-alerts', 'photo-display', 'text-display',
     'table-workorders', 'table-equipments'
   ].includes(widget.type) && showDataSource;
+
+  // Helper para extrair o nome da variável do tag (remove prefixo MAC se existir)
+  // Ex: "F80332010002C873_temperatura_ambiente" -> "temperatura_ambiente"
+  const getVariableName = (tag: string) => {
+    // Verifica se o tag tem o padrão MAC_nome (16 chars hex + underscore + nome)
+    const macPattern = /^[A-Fa-f0-9]{16}_(.+)$/;
+    const match = tag.match(macPattern);
+    if (match) {
+      return match[1]; // Retorna apenas o nome após o MAC
+    }
+    return tag; // Retorna o tag original se não tiver prefixo MAC
+  };
+
+  // Helper para formatar nome do sensor - usa o tag como identificador principal
+  const formatSensorName = (sensor: AssetSensor) => {
+    // Retorna o tag do sensor sem o prefixo MAC
+    return getVariableName(sensor.tag || sensor.name || sensor.metric_type);
+  };
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
@@ -242,8 +278,8 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
                       onValueChange={(value) => {
                         const assetId = parseInt(value);
                         setSelectedAssetId(assetId);
-                        setSelectedDeviceName(null);
-                        setSelectedMetricType(null);
+                        setSelectedDeviceId(null);
+                        setSelectedSensorTag(null);
                         setSelectedVariables([]);
                       }}
                     >
@@ -279,17 +315,17 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
                     <Label className="text-sm font-medium">
                       2️⃣ Sensor (Device)
                     </Label>
-                    {isLoadingDevices ? (
+                    {isLoadingSensors ? (
                       <div className="flex items-center justify-center h-10 border rounded-md bg-muted/50">
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                         <span className="text-sm text-muted-foreground">Carregando sensores...</span>
                       </div>
-                    ) : assetDevices.length > 0 ? (
+                    ) : deviceGroups.length > 0 ? (
                       <Select
-                        value={selectedDeviceName || ''}
+                        value={selectedDeviceId?.toString() || ''}
                         onValueChange={(value) => {
-                          setSelectedDeviceName(value);
-                          setSelectedMetricType(null);
+                          setSelectedDeviceId(parseInt(value));
+                          setSelectedSensorTag(null);
                           setSelectedVariables([]);
                         }}
                       >
@@ -297,20 +333,22 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
                           <SelectValue placeholder="Selecione um sensor" />
                         </SelectTrigger>
                         <SelectContent className="max-h-[300px]">
-                          {assetDevices.map(device => (
+                          {deviceGroups.map(device => (
                             <SelectItem 
-                              key={device.id} 
-                              value={device.display_name || device.serial_number.slice(-4)}
+                              key={device.deviceId} 
+                              value={device.deviceId.toString()}
                             >
                               <div className="flex items-center gap-2">
-                                <span className="font-mono font-medium text-primary">
-                                  {device.display_name || device.serial_number.slice(-4)}
+                                <span className="font-mono font-medium text-foreground">
+                                  {device.displayName}
                                 </span>
+                                {device.fullSerial && (
+                                  <span className="text-muted-foreground text-xs">
+                                    ({device.fullSerial})
+                                  </span>
+                                )}
                                 <span className="text-muted-foreground text-xs">
-                                  ({device.serial_number})
-                                </span>
-                                <span className="text-muted-foreground text-xs">
-                                  - {device.total_variables_count} variáveis
+                                  - {device.sensors.length} variáveis
                                 </span>
                               </div>
                             </SelectItem>
@@ -328,7 +366,7 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
                 )}
 
                 {/* Passo 3: Selecionar Variável(is) */}
-                {selectedDeviceName && availableVariables.length > 0 && (
+                {selectedDeviceId && availableSensors.length > 0 && (
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">
                       3️⃣ Variável{isMultiVariableChart ? 's' : ''} {isMultiVariableChart && '(múltipla seleção)'}
@@ -336,12 +374,7 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
                     
                     {isMultiVariableChart ? (
                       <div className="border rounded-lg p-3 space-y-2 max-h-[200px] overflow-y-auto">
-                        {availableVariables.map((sensor, index) => {
-                          const formattedName = sensor.name || sensor.metric_type
-                            .split('_')
-                            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                            .join(' ');
-                          
+                        {availableSensors.map((sensor, index) => {
                           const isSelected = selectedVariables.includes(sensor.tag);
                           
                           return (
@@ -366,9 +399,20 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
                                 className="w-4 h-4"
                               />
                               <div className="flex-1 flex items-center gap-2">
-                                <span className="font-medium">{formattedName}</span>
-                                <span className="text-muted-foreground">•</span>
-                                <span className="text-green-600 font-medium text-sm">{sensor.unit}</span>
+                                <span className="font-mono font-medium text-foreground">{getVariableName(sensor.tag)}</span>
+                                {sensor.is_online ? (
+                                  <span className="text-xs text-green-600">🟢</span>
+                                ) : (
+                                  <span className="text-xs text-red-600">🔴</span>
+                                )}
+                                {sensor.last_value !== null && (
+                                  <>
+                                    <span className="text-muted-foreground">•</span>
+                                    <span className="text-muted-foreground text-sm">
+                                      {sensor.last_value.toFixed(2)} {sensor.unit}
+                                    </span>
+                                  </>
+                                )}
                               </div>
                             </label>
                           );
@@ -383,29 +427,33 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
                       </div>
                     ) : (
                       <Select
-                        value={selectedMetricType || ''}
-                        onValueChange={(value) => setSelectedMetricType(value)}
+                        value={selectedSensorTag || ''}
+                        onValueChange={(value) => setSelectedSensorTag(value)}
                       >
                         <SelectTrigger className="h-10">
                           <SelectValue placeholder="Selecione uma variável" />
                         </SelectTrigger>
                         <SelectContent className="max-h-[300px]">
-                          {availableVariables.map((sensor, index) => {
-                            const formattedName = sensor.name || sensor.metric_type
-                              .split('_')
-                              .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                              .join(' ');
-                            
-                            return (
-                              <SelectItem key={`${sensor.tag}-${index}`} value={sensor.tag}>
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium">{formattedName}</span>
-                                  <span className="text-muted-foreground">•</span>
-                                  <span className="text-green-600 font-medium text-sm">{sensor.unit}</span>
-                                </div>
-                              </SelectItem>
-                            );
-                          })}
+                          {availableSensors.map((sensor, index) => (
+                            <SelectItem key={`${sensor.tag}-${index}`} value={sensor.tag}>
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono font-medium text-foreground">{getVariableName(sensor.tag)}</span>
+                                {sensor.is_online ? (
+                                  <span className="text-xs">🟢</span>
+                                ) : (
+                                  <span className="text-xs">🔴</span>
+                                )}
+                                {sensor.last_value !== null && (
+                                  <>
+                                    <span className="text-muted-foreground">•</span>
+                                    <span className="text-muted-foreground text-sm">
+                                      {sensor.last_value.toFixed(2)} {sensor.unit}
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     )}
@@ -597,7 +645,7 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
               <span className="flex items-center gap-2">
                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                 Configuração completa: <span className="font-medium">
-                  {selectedDeviceName} → {selectedSensor.name || selectedSensor.metric_type}
+                  {formatSensorName(selectedSensor)} ({selectedSensor.unit})
                 </span>
               </span>
             ) : isMultiVariableChart && selectedVariables.length > 0 ? (
@@ -605,7 +653,7 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                 {selectedVariables.length} variável(is) selecionada(s)
               </span>
-            ) : selectedDeviceName ? (
+            ) : selectedDeviceId ? (
               <span className="text-primary flex items-center gap-2">
                 📊 Device selecionado. Escolha uma ou mais variáveis.
               </span>
