@@ -63,9 +63,11 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
   const [chartPeriod, setChartPeriod] = useState<string>('24h'); // Período do gráfico
   const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set()); // Séries ocultas no gráfico
 
-  // Refs para ECharts
+  // Refs para ECharts - um para cada tipo de gráfico
   const echartsContainerRef = useRef<HTMLDivElement>(null);
   const echartsInstanceRef = useRef<echarts.ECharts | null>(null);
+  const barChartContainerRef = useRef<HTMLDivElement>(null);
+  const barChartInstanceRef = useRef<echarts.ECharts | null>(null);
 
   // Dados reais do sistema
   const { data: workOrders = [] } = useWorkOrders();
@@ -87,29 +89,29 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
     : chartPeriod === '30d' ? 720 
     : 24;
   
-  console.log('📊 DraggableWidget - Params para useMultiSensorHistory:', {
-    sensorTags,
-    assetTag,
-    chartTimeRange,
-    widgetId: widget.id,
-    widgetType: widget.type
-  });
+  // console.log('📊 DraggableWidget - Params para useMultiSensorHistory:', {
+  //   sensorTags,
+  //   assetTag,
+  //   chartTimeRange,
+  //   widgetId: widget.id,
+  //   widgetType: widget.type
+  // });
   
   const multiSensorHistory = useMultiSensorHistory(sensorTags, assetTag, chartTimeRange, 60000);
   
-  console.log('📊 DraggableWidget - multiSensorHistory result:', {
-    seriesCount: multiSensorHistory.series.length,
-    loading: multiSensorHistory.loading,
-    error: multiSensorHistory.error,
-    widgetId: widget.id,
-    series: multiSensorHistory.series.map(s => ({
-      label: s.label,
-      sensorTag: s.sensorTag,
-      dataPoints: s.data.length,
-      firstPoint: s.data[0],
-      lastPoint: s.data[s.data.length - 1]
-    }))
-  });
+  // console.log('📊 DraggableWidget - multiSensorHistory result:', {
+  //   seriesCount: multiSensorHistory.series.length,
+  //   loading: multiSensorHistory.loading,
+  //   error: multiSensorHistory.error,
+  //   widgetId: widget.id,
+  //   series: multiSensorHistory.series.map(s => ({
+  //     label: s.label,
+  //     sensorTag: s.sensorTag,
+  //     dataPoints: s.data.length,
+  //     firstPoint: s.data[0],
+  //     lastPoint: s.data[s.data.length - 1]
+  //   }))
+  // });
   
   // Função para remover MAC address do nome da variável
   // Exemplo: "F80332010002C873_temperatura_retorno" -> "temperatura_retorno"
@@ -124,13 +126,13 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
 
   // Preparar dados para Recharts - DEVE estar no nível superior (regras dos hooks)
   const chartData = useMemo(() => {
-    console.log('📊 chartData useMemo executando:', {
-      seriesLength: multiSensorHistory.series?.length || 0,
-      series: multiSensorHistory.series
-    });
+    // console.log('📊 chartData useMemo executando:', {
+    //   seriesLength: multiSensorHistory.series?.length || 0,
+    //   series: multiSensorHistory.series
+    // });
     
     if (!multiSensorHistory.series || multiSensorHistory.series.length === 0) {
-      console.log('📊 chartData: Sem séries, retornando []');
+      // console.log('📊 chartData: Sem séries, retornando []');
       return [];
     }
 
@@ -142,7 +144,7 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
       });
     });
 
-    console.log('📊 chartData: Timestamps únicos coletados:', allTimestamps.size);
+    // console.log('📊 chartData: Timestamps únicos coletados:', allTimestamps.size);
 
     // Ordenar timestamps
     const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => a - b);
@@ -167,49 +169,49 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
       return point;
     });
     
-    console.log('📊 chartData gerado:', {
-      pointsCount: data.length,
-      firstPoint: data[0],
-      lastPoint: data[data.length - 1]
-    });
+    // console.log('📊 chartData gerado:', {
+    //   pointsCount: data.length,
+    //   firstPoint: data[0],
+    //   lastPoint: data[data.length - 1]
+    // });
     
     return data;
   }, [multiSensorHistory.series]);
   
   // Effect para gerenciar ECharts (apenas para chart-line-echarts)
   useEffect(() => {
-    console.log('📊 ECharts useEffect executando:', {
-      widgetType: widget.type,
-      hasContainer: !!echartsContainerRef.current,
-      sensorTags,
-      assetTag,
-      seriesLength: multiSensorHistory.series.length,
-      chartDataLength: chartData.length
-    });
+    // console.log('📊 ECharts useEffect executando:', {
+    //   widgetType: widget.type,
+    //   hasContainer: !!echartsContainerRef.current,
+    //   sensorTags,
+    //   assetTag,
+    //   seriesLength: multiSensorHistory.series.length,
+    //   chartDataLength: chartData.length
+    // });
 
     // Só executar para widgets ECharts
     if (widget.type !== 'chart-line-echarts' && widget.type !== 'chart-area') {
-      console.log('📊 ECharts: Tipo de widget não é chart-line-echarts ou chart-area');
+      // console.log('📊 ECharts: Tipo de widget não é chart-line-echarts ou chart-area');
       return;
     }
     
     if (!echartsContainerRef.current) {
-      console.log('📊 ECharts: Container ref não está disponível ainda');
+      // console.log('📊 ECharts: Container ref não está disponível ainda');
       return;
     }
 
     // Inicializar instância do ECharts
     if (!echartsInstanceRef.current) {
-      console.log('📊 ECharts: Inicializando instância do ECharts');
+      // console.log('📊 ECharts: Inicializando instância do ECharts');
       echartsInstanceRef.current = echarts.init(echartsContainerRef.current);
     }
 
     // Se tem sensores configurados e dados disponíveis
     if (sensorTags && sensorTags.length > 0 && assetTag && multiSensorHistory.series.length > 0 && chartData.length > 0) {
-      console.log('📊 ECharts: Preparando dados para renderizar gráfico', {
-        hiddenSeriesCount: hiddenSeries.size,
-        hiddenSeries: Array.from(hiddenSeries)
-      });
+      // console.log('📊 ECharts: Preparando dados para renderizar gráfico', {
+      //   hiddenSeriesCount: hiddenSeries.size,
+      //   hiddenSeries: Array.from(hiddenSeries)
+      // });
       
       // Preparar dados para ECharts
       const timestamps = chartData.map(point => 
@@ -224,7 +226,7 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
       // Mapear TODAS as séries, mas controlar visibilidade através da propriedade 'show'
       const seriesData = multiSensorHistory.series.map(serie => {
         const isHidden = hiddenSeries.has(serie.label);
-        console.log(`📊 Série "${serie.label}":`, { isHidden });
+        // console.log(`📊 Série "${serie.label}":`, { isHidden });
         
         // Configuração base da série
         const serieConfig: any = {
@@ -332,12 +334,12 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
         series: seriesData
       };
 
-      console.log('📊 ECharts: Setando opções do gráfico:', {
-        timestamps: timestamps.length,
-        seriesData: seriesData.length,
-        visibleSeries: seriesData.filter((s: any) => !s.silent).length,
-        hiddenSeriesCount: hiddenSeries.size
-      });
+      // console.log('📊 ECharts: Setando opções do gráfico:', {
+      //   timestamps: timestamps.length,
+      //   seriesData: seriesData.length,
+      //   visibleSeries: seriesData.filter((s: any) => !s.silent).length,
+      //   hiddenSeriesCount: hiddenSeries.size
+      // });
 
       // Usar setOption com notMerge: true para forçar re-renderização completa
       echartsInstanceRef.current.setOption(option, {
@@ -345,7 +347,7 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
         replaceMerge: ['series'], // Substituir array de séries
       });
       
-      console.log('📊 ECharts: Gráfico renderizado com sucesso');
+      // console.log('📊 ECharts: Gráfico renderizado com sucesso');
     }
 
     // Cleanup e resize
@@ -365,6 +367,198 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
       if (widget.type === 'chart-line-echarts' || widget.type === 'chart-area') {
         echartsInstanceRef.current?.dispose();
         echartsInstanceRef.current = null;
+      }
+    };
+  }, [widget.type]);
+
+  // Effect para gerenciar gráfico de barras ECharts
+  useEffect(() => {
+    // console.log('📊 Bar Chart useEffect executando:', {
+    //   widgetType: widget.type,
+    //   hasContainer: !!barChartContainerRef.current,
+    //   sensorTags,
+    //   assetTag,
+    //   seriesLength: multiSensorHistory.series.length
+    // });
+
+    // Só executar para widgets de barra
+    if (widget.type !== 'chart-bar' && widget.type !== 'chart-bar-horizontal') {
+      // console.log('📊 Bar Chart: Tipo de widget não é chart-bar ou chart-bar-horizontal');
+      return;
+    }
+    
+    if (!barChartContainerRef.current) {
+      // console.log('📊 Bar Chart: Container ref não está disponível ainda');
+      return;
+    }
+
+    // Inicializar instância do ECharts para barras
+    if (!barChartInstanceRef.current) {
+      // console.log('📊 Bar Chart: Inicializando instância do ECharts');
+      barChartInstanceRef.current = echarts.init(barChartContainerRef.current);
+    }
+
+    // Se tem sensores configurados e dados disponíveis
+    if (sensorTags && sensorTags.length > 0 && assetTag && multiSensorHistory.series.length > 0) {
+      // console.log('📊 Bar Chart: Preparando dados para renderizar gráfico');
+      
+      // Pegar o último valor de cada série para exibir
+      const barData = multiSensorHistory.series.map(serie => {
+        const lastValue = serie.data.length > 0 
+          ? serie.data[serie.data.length - 1].value 
+          : 0;
+        
+        return {
+          name: serie.label,
+          value: lastValue,
+          color: serie.color,
+          unit: serie.unit || ''
+        };
+      });
+
+      // console.log('📊 Bar Chart: Dados preparados:', barData);
+
+      // Determinar se é horizontal ou vertical
+      const isHorizontal = widget.type === 'chart-bar-horizontal';
+
+      const option: echarts.EChartsOption = {
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'shadow'
+          },
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          borderColor: '#ddd',
+          borderWidth: 1,
+          textStyle: {
+            color: '#333',
+            fontSize: 12
+          },
+          formatter: (params: any) => {
+            if (!Array.isArray(params) || params.length === 0) return '';
+            const param = params[0];
+            const dataItem = barData.find(d => d.name === param.name);
+            const value = typeof param.value === 'number' ? param.value.toFixed(2) : param.value;
+            const unit = dataItem?.unit || '';
+            return `<strong>${param.name}</strong><br/>Valor: <strong>${value}${unit ? ' ' + unit : ''}</strong>`;
+          }
+        },
+        grid: {
+          left: isHorizontal ? '15%' : '3%',
+          right: '3%',
+          bottom: isHorizontal ? '3%' : '0%',
+          top: isHorizontal ? '5%' : '12%',
+          containLabel: true
+        },
+        xAxis: {
+          type: isHorizontal ? 'value' : 'category',
+          data: isHorizontal ? undefined : barData.map(d => d.name),
+          axisLabel: {
+            fontSize: isHorizontal ? 11 : 10,
+            color: '#666',
+            rotate: isHorizontal ? 0 : 20,
+            interval: 0
+          },
+          splitLine: isHorizontal ? {
+            lineStyle: {
+              color: '#eee',
+              type: 'dashed'
+            }
+          } : undefined,
+          axisLine: {
+            lineStyle: {
+              color: '#ddd'
+            }
+          },
+          axisTick: {
+            show: false
+          }
+        },
+        yAxis: {
+          type: isHorizontal ? 'category' : 'value',
+          data: isHorizontal ? barData.map(d => d.name) : undefined,
+          axisLabel: {
+            fontSize: 11,
+            color: '#666'
+          },
+          splitLine: !isHorizontal ? {
+            lineStyle: {
+              color: '#eee',
+              type: 'dashed'
+            }
+          } : undefined,
+          axisLine: {
+            lineStyle: {
+              color: '#ddd'
+            }
+          },
+          axisTick: {
+            show: false
+          }
+        },
+        series: [{
+          type: 'bar',
+          data: barData.map(d => ({
+            value: d.value,
+            itemStyle: {
+              color: d.color
+            }
+          })),
+          barWidth: '80%',
+          label: {
+            show: true,
+            position: isHorizontal ? 'right' : 'top',
+            formatter: (params: any) => {
+              const dataItem = barData[params.dataIndex];
+              const value = typeof params.value === 'number' ? params.value.toFixed(1) : params.value;
+              const unit = dataItem?.unit || '';
+              return `{bold|${value}}{unit|${unit ? ' ' + unit : ''}}`;
+            },
+            fontSize: 10,
+            color: '#333',
+            fontWeight: 600,
+            rich: {
+              bold: {
+                fontWeight: 600,
+                color: '#333',
+                fontSize: 11
+              },
+              unit: {
+                fontWeight: 400,
+                color: '#666',
+                fontSize: 9
+              }
+            }
+          }
+        }]
+      };
+
+      // console.log('📊 Bar Chart: Setando opções do gráfico');
+
+      barChartInstanceRef.current.setOption(option, {
+        notMerge: true,
+      });
+      
+      // console.log('📊 Bar Chart: Gráfico renderizado com sucesso');
+    }
+
+    // Cleanup e resize
+    const handleResize = () => {
+      barChartInstanceRef.current?.resize();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [widget.type, multiSensorHistory.series, sensorTags, assetTag]);
+
+  // Cleanup da instância de gráfico de barras ao desmontar
+  useEffect(() => {
+    return () => {
+      if (widget.type === 'chart-bar' || widget.type === 'chart-bar-horizontal') {
+        barChartInstanceRef.current?.dispose();
+        barChartInstanceRef.current = null;
       }
     };
   }, [widget.type]);
@@ -431,8 +625,9 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
       case 'chart-bar-horizontal':
         return renderBarChart();
       case 'chart-pie':
-      case 'chart-donut':
         return renderPieChart();
+      case 'chart-donut':
+        return renderDonutChart();
 
       // MEDIDORES
       case 'gauge-circular':
@@ -1219,60 +1414,319 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
   }
 
   function renderBarChart() {
-    const openWO = workOrders.filter(wo => wo.status === 'OPEN').length;
-    const inProgress = workOrders.filter(wo => wo.status === 'IN_PROGRESS').length;
-    const completed = workOrders.filter(wo => wo.status === 'COMPLETED').length;
-    const max = Math.max(openWO, inProgress, completed, 1);
+    console.log('📊 renderBarChart executando:', {
+      hasSensorTags: !!sensorTags,
+      sensorTagsLength: sensorTags?.length || 0,
+      hasAssetTag: !!assetTag,
+      loading: multiSensorHistory.loading,
+      error: multiSensorHistory.error,
+      seriesLength: multiSensorHistory.series.length
+    });
+
+    // Se tem sensores configurados, usar dados reais
+    if (sensorTags && sensorTags.length > 0 && assetTag) {
+      console.log('📊 Bar Chart: Condição principal atendida (tem sensorTags e assetTag)');
+      
+      if (multiSensorHistory.loading) {
+        return (
+          <div className="h-full flex flex-col items-center justify-center">
+            <div className="animate-pulse text-muted-foreground">Carregando dados...</div>
+          </div>
+        );
+      }
+
+      if (multiSensorHistory.error) {
+        return (
+          <div className="h-full flex flex-col items-center justify-center">
+            <div className="text-destructive text-sm">{multiSensorHistory.error}</div>
+          </div>
+        );
+      }
+
+      if (multiSensorHistory.series.length === 0 || multiSensorHistory.series.every(s => s.data.length === 0)) {
+        return (
+          <div className="h-full flex flex-col items-center justify-center">
+            <BarChart3 className="w-8 h-8 text-muted-foreground mb-2" />
+            <div className="text-muted-foreground text-sm">Sem dados no período</div>
+          </div>
+        );
+      }
+
+      console.log('📊 Bar Chart: Renderizando container do gráfico');
+
+      return (
+        <div 
+          ref={barChartContainerRef} 
+          className="h-full w-full" 
+          style={{ minHeight: '200px' }}
+        />
+      );
+    }
+
+    // Fallback: dados mockados
+    console.log('📊 Bar Chart: Caindo no fallback - Configure as variáveis');
+    return (
+      <div className="h-full flex flex-col items-center justify-center">
+        <BarChart3 className="w-8 h-8 text-muted-foreground mb-2" />
+        <div className="text-muted-foreground text-sm">Configure as variáveis</div>
+      </div>
+    );
+  }
+
+  function renderPieChart() {
+    console.log('🥧 renderPieChart - Debug:', {
+      widgetId: widget.id,
+      sensorTags: widget.config?.sensorTags,
+      hasSensorTags: Array.isArray(widget.config?.sensorTags),
+      sensorTagsLength: widget.config?.sensorTags?.length,
+      seriesLength: multiSensorHistory.series.length,
+      series: multiSensorHistory.series
+    });
+
+    // Se houver sensor tags configurados, exibe dados dos sensores
+    if (Array.isArray(widget.config?.sensorTags) && widget.config.sensorTags.length > 0 && multiSensorHistory.series.length > 0) {
+      // Pegar o último valor de cada série configurada
+      const pieData = multiSensorHistory.series
+        .map((series) => {
+          const lastDataPoint = series.data.length > 0 ? series.data[series.data.length - 1] : null;
+          const lastValue = lastDataPoint ? lastDataPoint.value : 0;
+          
+          return {
+            name: series.label || series.name,
+            value: Math.abs(lastValue), // Usar valor absoluto para o gráfico de pizza
+            color: series.color,
+            unit: series.unit || ''
+          };
+        })
+        .filter(item => item.value > 0); // Apenas valores positivos
+
+      console.log('🥧 renderPieChart - pieData:', pieData);
+
+      if (pieData.length === 0) {
+        return (
+          <div className="h-full flex items-center justify-center text-muted-foreground">
+            Sem dados disponíveis
+          </div>
+        );
+      }
+
+      const total = pieData.reduce((sum, item) => sum + item.value, 0);
+      
+      // Função para calcular coordenadas de um ponto no círculo
+      const polarToCartesian = (centerX: number, centerY: number, radius: number, angleInDegrees: number) => {
+        const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+        return {
+          x: centerX + (radius * Math.cos(angleInRadians)),
+          y: centerY + (radius * Math.sin(angleInRadians))
+        };
+      };
+
+      // Função para criar o caminho de uma fatia de pizza
+      const describeArc = (x: number, y: number, radius: number, startAngle: number, endAngle: number) => {
+        const start = polarToCartesian(x, y, radius, endAngle);
+        const end = polarToCartesian(x, y, radius, startAngle);
+        const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+        
+        return [
+          "M", x, y,
+          "L", start.x, start.y,
+          "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y,
+          "Z"
+        ].join(" ");
+      };
+
+      // Calcular ângulos para cada fatia
+      let currentAngle = 0;
+      const slices = pieData.map(item => {
+        const sliceAngle = (item.value / total) * 360;
+        const slice = {
+          ...item,
+          startAngle: currentAngle,
+          endAngle: currentAngle + sliceAngle
+        };
+        currentAngle += sliceAngle;
+        return slice;
+      });
+
+      return (
+        <div className="h-full flex flex-col items-center justify-center">
+          <div className="relative w-40 h-40">
+            <svg className="w-40 h-40" viewBox="0 0 100 100">
+              {slices.map((slice, index) => (
+                <path
+                  key={index}
+                  d={describeArc(50, 50, 48, slice.startAngle, slice.endAngle)}
+                  fill={slice.color}
+                  stroke="white"
+                  strokeWidth="1.5"
+                />
+              ))}
+            </svg>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-4 text-xs max-w-[90%] justify-center">
+            {pieData.map((item, index) => (
+              <div key={index} className="flex items-center gap-1">
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: item.color }}
+                />
+                <span>
+                  {item.name}: {item.value.toFixed(1)}{item.unit}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    console.log('🥧 renderPieChart - Usando fallback (status de equipamentos)');
+
+    // Fallback: exibir status de equipamentos se não houver sensor configurado
+    const functioning = equipment.filter(eq => eq.status === 'FUNCTIONING').length;
+    const maintenance = equipment.filter(eq => eq.status === 'MAINTENANCE').length;
+    const stopped = equipment.filter(eq => eq.status === 'STOPPED').length;
+    const total = functioning + maintenance + stopped || 1;
 
     return (
-      <div className="h-full flex flex-col">
+      <div className="h-full flex flex-col items-center justify-center">
         <div className="flex items-center gap-2 mb-4">
-          <BarChart3 className="w-5 h-5 text-primary" />
-          <span className="font-medium">Status das OS</span>
+          <PieChart className="w-5 h-5 text-primary" />
+          <span className="font-medium">Status dos Equipamentos</span>
         </div>
-        <div className="flex-1 space-y-4">
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Abertas</span>
-              <span className="font-medium">{openWO}</span>
-            </div>
-            <div className="h-3 bg-muted rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-yellow-500 rounded-full transition-all"
-                style={{ width: `${(openWO / max) * 100}%` }}
-              />
-            </div>
+        <div className="relative w-32 h-32">
+          <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#e5e7eb" strokeWidth="10" />
+            <circle 
+              cx="50" cy="50" r="40" fill="transparent" 
+              stroke="#10b981" strokeWidth="10"
+              strokeDasharray={`${(functioning / total) * 251.2} 251.2`}
+              strokeDashoffset="0"
+            />
+            <circle 
+              cx="50" cy="50" r="40" fill="transparent" 
+              stroke="#f59e0b" strokeWidth="10"
+              strokeDasharray={`${(maintenance / total) * 251.2} 251.2`}
+              strokeDashoffset={`${-(functioning / total) * 251.2}`}
+            />
+            <circle 
+              cx="50" cy="50" r="40" fill="transparent" 
+              stroke="#ef4444" strokeWidth="10"
+              strokeDasharray={`${(stopped / total) * 251.2} 251.2`}
+              strokeDashoffset={`${-((functioning + maintenance) / total) * 251.2}`}
+            />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-2xl font-bold">{total}</span>
           </div>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Em Progresso</span>
-              <span className="font-medium">{inProgress}</span>
-            </div>
-            <div className="h-3 bg-muted rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-blue-500 rounded-full transition-all"
-                style={{ width: `${(inProgress / max) * 100}%` }}
-              />
-            </div>
+        </div>
+        <div className="flex gap-4 mt-4 text-xs">
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-green-500 rounded-full" />
+            <span>Ok ({functioning})</span>
           </div>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Concluídas</span>
-              <span className="font-medium">{completed}</span>
-            </div>
-            <div className="h-3 bg-muted rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-green-500 rounded-full transition-all"
-                style={{ width: `${(completed / max) * 100}%` }}
-              />
-            </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-yellow-500 rounded-full" />
+            <span>Manut. ({maintenance})</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-red-500 rounded-full" />
+            <span>Parado ({stopped})</span>
           </div>
         </div>
       </div>
     );
   }
 
-  function renderPieChart() {
+  function renderDonutChart() {
+    console.log('🍩 renderDonutChart - Debug:', {
+      widgetId: widget.id,
+      sensorTags: widget.config?.sensorTags,
+      hasSensorTags: Array.isArray(widget.config?.sensorTags),
+      sensorTagsLength: widget.config?.sensorTags?.length,
+      seriesLength: multiSensorHistory.series.length,
+      series: multiSensorHistory.series
+    });
+
+    // Se houver sensor tags configurados, exibe dados dos sensores
+    if (Array.isArray(widget.config?.sensorTags) && widget.config.sensorTags.length > 0 && multiSensorHistory.series.length > 0) {
+      // Pegar o último valor de cada série configurada
+      const donutData = multiSensorHistory.series
+        .map((series) => {
+          const lastDataPoint = series.data.length > 0 ? series.data[series.data.length - 1] : null;
+          const lastValue = lastDataPoint ? lastDataPoint.value : 0;
+          
+          return {
+            name: series.label || series.name,
+            value: Math.abs(lastValue),
+            color: series.color,
+            unit: series.unit || ''
+          };
+        })
+        .filter(item => item.value > 0);
+
+      console.log('🍩 renderDonutChart - donutData:', donutData);
+
+      if (donutData.length === 0) {
+        return (
+          <div className="h-full flex items-center justify-center text-muted-foreground">
+            Sem dados disponíveis
+          </div>
+        );
+      }
+
+      const total = donutData.reduce((sum, item) => sum + item.value, 0);
+      const circumference = 251.2; // 2 * PI * 40 (raio)
+      let currentOffset = 0;
+
+      return (
+        <div className="h-full flex flex-col items-center justify-center">
+          <div className="relative w-40 h-40">
+            <svg className="w-40 h-40 transform -rotate-90" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="40" fill="transparent" stroke="#e5e7eb" strokeWidth="12" />
+              {donutData.map((item, index) => {
+                const segmentLength = (item.value / total) * circumference;
+                const circle = (
+                  <circle
+                    key={index}
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    fill="transparent"
+                    stroke={item.color}
+                    strokeWidth="12"
+                    strokeDasharray={`${segmentLength} ${circumference}`}
+                    strokeDashoffset={currentOffset}
+                  />
+                );
+                currentOffset -= segmentLength;
+                return circle;
+              })}
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-xl font-bold">{total.toFixed(1)}</span>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-4 text-xs max-w-[90%] justify-center">
+            {donutData.map((item, index) => (
+              <div key={index} className="flex items-center gap-1">
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: item.color }}
+                />
+                <span>
+                  {item.name}: {item.value.toFixed(1)}{item.unit}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    console.log('🍩 renderDonutChart - Usando fallback (status de equipamentos)');
+
+    // Fallback: exibir status de equipamentos se não houver sensor configurado
     const functioning = equipment.filter(eq => eq.status === 'FUNCTIONING').length;
     const maintenance = equipment.filter(eq => eq.status === 'MAINTENANCE').length;
     const stopped = equipment.filter(eq => eq.status === 'STOPPED').length;
@@ -1798,8 +2252,8 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
               )}
               {widget.title}
               {/* Legenda das variáveis para gráficos */}
-              {(widget.type === 'chart-line-echarts' || widget.type === 'chart-area') && multiSensorHistory.series.length > 0 && (
-                <div className="flex items-center gap-2 ml-3">
+              {(widget.type === 'chart-line-echarts' || widget.type === 'chart-area' || widget.type === 'chart-bar' || widget.type === 'chart-bar-horizontal') && multiSensorHistory.series.length > 0 && (
+                <div className="flex items-center gap-2 ml-3 flex-wrap max-w-[70%]">
                   {multiSensorHistory.series.map((serie) => (
                     <button
                       key={serie.label}
@@ -1831,7 +2285,7 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
             </CardTitle>
             <div className="flex items-center gap-2">
               {/* Filtro de tempo para gráficos ECharts */}
-              {(widget.type === 'chart-line-echarts' || widget.type === 'chart-area') && widget.config?.sensorTags && (
+              {(widget.type === 'chart-line-echarts' || widget.type === 'chart-area' || widget.type === 'chart-bar' || widget.type === 'chart-bar-horizontal') && widget.config?.sensorTags && (
                 <div className="flex gap-0.5">
                   {[{ value: '1h', label: '1h' }, { value: '12h', label: '12h' }, { value: '24h', label: '24h' }, { value: '7d', label: '7d' }, { value: '30d', label: '30d' }].map(opt => (
                     <button

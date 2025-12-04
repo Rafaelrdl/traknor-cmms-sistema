@@ -134,12 +134,19 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
   useEffect(() => {
     setTitle(widget.title);
     setSize(widget.size);
-    setConfig(widget.config || {});
+    
+    // Garantir que sensorTags está presente no config para widgets multi-variável
+    const initialConfig = { ...widget.config };
+    if (isMultiVariableChart && widget.config?.sensorTags) {
+      initialConfig.sensorTags = widget.config.sensorTags;
+    }
+    
+    setConfig(initialConfig || {});
     setSelectedAssetId(widget.config?.assetId ? parseInt(widget.config.assetId.toString()) : null);
     setSelectedDeviceId(widget.config?.deviceId ? parseInt(widget.config.deviceId.toString()) : null);
     setSelectedSensorTag(widget.config?.sensorTag || null);
     setSelectedVariables(widget.config?.sensorTags || (widget.config?.sensorTag ? [widget.config.sensorTag] : []));
-  }, [widget]);
+  }, [widget, isMultiVariableChart]);
 
   // Atualizar config quando seleções mudarem
   useEffect(() => {
@@ -175,6 +182,16 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
   }, [isMultiVariableChart, selectedVariables, selectedSensor, selectedAssetId, selectedDeviceId, assets, deviceGroups, availableSensors]);
 
   const handleSave = () => {
+    console.log('🥧 WidgetConfig - handleSave:', {
+      widgetId: widget.id,
+      widgetType: widget.type,
+      title,
+      size,
+      config,
+      selectedVariables,
+      isMultiVariableChart
+    });
+    
     updateWidget(layoutId, widget.id, {
       title,
       size,
