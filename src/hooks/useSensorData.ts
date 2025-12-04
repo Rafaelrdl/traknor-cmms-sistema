@@ -296,6 +296,7 @@ export function useMultiSensorHistory(
 
   useEffect(() => {
     if (!sensorTags || sensorTags.length === 0 || !assetTag) {
+      console.log('📊 useMultiSensorHistory: Sem sensorTags ou assetTag', { sensorTags, assetTag });
       setResult({
         series: [],
         loading: false,
@@ -303,6 +304,8 @@ export function useMultiSensorHistory(
       });
       return;
     }
+
+    console.log('📊 useMultiSensorHistory iniciando:', { sensorTags, assetTag, hours });
 
     let isMounted = true;
     let hasData = false;
@@ -322,7 +325,7 @@ export function useMultiSensorHistory(
           sensorTags
         );
 
-        console.log('📊 Resposta da API:', response);
+        console.log('📊 Resposta da API (useMultiSensorHistory):', response);
 
         if (!isMounted) return;
 
@@ -347,9 +350,11 @@ export function useMultiSensorHistory(
           
           const data: SensorHistoryDataPoint[] = sensorSeries?.data.map(point => ({
             timestamp: new Date(point.timestamp),
-            value: point.avg ?? point.max ?? point.min ?? 0,
+            value: point.value ?? point.avg_value ?? point.max_value ?? point.min_value ?? 0,
             sensorId: tag
           })) || [];
+
+          console.log(`📊 Série ${label}: ${data.length} pontos`, data.slice(0, 2));
 
           return {
             sensorTag: tag,
@@ -362,12 +367,15 @@ export function useMultiSensorHistory(
         hasData = series.some(s => s.data.length > 0);
         
         console.log(`✅ ${series.length} séries carregadas`);
+        console.log('📊 Chamando setResult com:', { seriesCount: series.length, series });
         
         setResult({
           series,
           loading: false,
           error: null
         });
+        
+        console.log('📊 setResult chamado!');
       } catch (error) {
         if (!isMounted) return;
         console.error('❌ Erro ao buscar histórico dos sensores:', error);

@@ -63,8 +63,8 @@ export type WidgetType =
   | 'card-status'           // Card indicador de status com cores
   
   // Gráficos de Linha
-  | 'chart-line'            // Gráfico de linha
-  | 'chart-area'            // Gráfico de área
+  | 'chart-line-echarts'    // Gráfico de linha (ECharts)
+  | 'chart-area'            // Gráfico de área (ECharts)
   
   // Gráficos de Barra
   | 'chart-bar'             // Gráfico de barras vertical
@@ -197,9 +197,9 @@ export const widgetDefinitions: WidgetDefinition[] = [
 
   // GRÁFICOS DE LINHA (2)
   {
-    id: 'chart-line',
-    name: 'Gráfico de Linha',
-    description: 'Linha temporal de dados',
+    id: 'chart-line-echarts',
+    name: 'Gráfico de Linha (ECharts)',
+    description: 'Linha temporal com ECharts',
     category: 'graficos-linha',
     defaultSize: 'col-4',
     icon: 'LineChart',

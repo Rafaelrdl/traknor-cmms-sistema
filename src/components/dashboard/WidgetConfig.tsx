@@ -63,7 +63,7 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
 
   // Verificar se é widget de múltiplas variáveis (gráficos)
   const isMultiVariableChart = [
-    'chart-line', 'chart-area', 'chart-bar', 'chart-bar-horizontal', 
+    'chart-line-echarts', 'chart-area', 'chart-bar', 'chart-bar-horizontal', 
     'chart-pie', 'chart-donut', 'table-data'
   ].includes(widget.type);
 
@@ -259,8 +259,6 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
           </div>
         );
 
-      case 'chart-line':
-      case 'chart-area':
       case 'chart-bar':
       case 'chart-bar-horizontal':
         return (

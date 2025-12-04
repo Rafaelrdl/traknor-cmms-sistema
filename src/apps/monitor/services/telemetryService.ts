@@ -78,7 +78,7 @@ class TelemetryService {
       
       // A API retorna dados no formato { data: [...], device_id, sensor_ids, interval, from, to, count }
       // Precisamos agrupar por sensor_id e criar as séries
-      const dataBySersor: Record<string, Array<{ timestamp: string; value: number }>> = {};
+      const dataBySensor: Record<string, Array<{ timestamp: string; value: number }>> = {};
       
       if (response.data && Array.isArray(response.data)) {
         for (const point of response.data) {
@@ -86,11 +86,11 @@ class TelemetryService {
           const timestamp = point.ts || point.bucket;
           const value = point.value ?? point.avg_value ?? point.last_value ?? 0;
           
-          if (!dataBySersor[sensorId]) {
-            dataBySersor[sensorId] = [];
+          if (!dataBySensor[sensorId]) {
+            dataBySensor[sensorId] = [];
           }
           
-          dataBySersor[sensorId].push({
+          dataBySensor[sensorId].push({
             timestamp: timestamp,
             value: value
           });
@@ -98,7 +98,7 @@ class TelemetryService {
       }
       
       // Converter para o formato de séries
-      const series = Object.entries(dataBySersor).map(([sensorId, data]) => ({
+      const series = Object.entries(dataBySensor).map(([sensorId, data]) => ({
         sensorId,
         sensorType: undefined,
         unit: undefined,
@@ -160,10 +160,13 @@ class TelemetryService {
       console.log('📊 Buscando histórico device:', url);
       const response = await monitorApi.get<any>(url);
       console.log('📊 Resposta histórico device:', response);
+      console.log('📊 response.data existe?', !!response.data);
+      console.log('📊 response.data é array?', Array.isArray(response.data));
+      console.log('📊 response.data:', response.data);
       
       // A API retorna dados no formato { data: [...], device_id, sensor_ids, interval, from, to, count }
       // Precisamos agrupar por sensor_id e criar as séries
-      const dataBySersor: Record<string, Array<{ timestamp: string; value: number }>> = {};
+      const dataBySensor: Record<string, Array<{ timestamp: string; value: number }>> = {};
       
       if (response.data && Array.isArray(response.data)) {
         for (const point of response.data) {
@@ -173,11 +176,11 @@ class TelemetryService {
           const timestamp = point.ts || point.bucket;
           const value = point.value ?? point.avg_value ?? point.last_value ?? 0;
           
-          if (!dataBySersor[sensorId]) {
-            dataBySersor[sensorId] = [];
+          if (!dataBySensor[sensorId]) {
+            dataBySensor[sensorId] = [];
           }
           
-          dataBySersor[sensorId].push({
+          dataBySensor[sensorId].push({
             timestamp: timestamp,
             value: value
           });
@@ -185,7 +188,7 @@ class TelemetryService {
       }
       
       // Converter para o formato de séries
-      const series = Object.entries(dataBySersor).map(([sensorId, data]) => ({
+      const series = Object.entries(dataBySensor).map(([sensorId, data]) => ({
         sensorId,
         sensorType: undefined,
         unit: undefined,

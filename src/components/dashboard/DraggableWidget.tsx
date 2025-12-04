@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DashboardWidget } from '@/types/dashboard';
@@ -11,6 +11,7 @@ import { KPICard } from '@/components/KPICard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import * as echarts from 'echarts';
 import { 
   Table, 
   TableBody, 
@@ -34,7 +35,7 @@ import {
   Users,
   BarChart3,
   PieChart,
-  LineChart,
+  LineChart as LineChartIcon,
   Gauge,
   CheckCircle,
   XCircle,
@@ -60,6 +61,11 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
   const [configOpen, setConfigOpen] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [chartPeriod, setChartPeriod] = useState<string>('24h'); // Período do gráfico
+  const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set()); // Séries ocultas no gráfico
+
+  // Refs para ECharts
+  const echartsContainerRef = useRef<HTMLDivElement>(null);
+  const echartsInstanceRef = useRef<echarts.ECharts | null>(null);
 
   // Dados reais do sistema
   const { data: workOrders = [] } = useWorkOrders();
@@ -80,7 +86,30 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
     : chartPeriod === '7d' ? 168 
     : chartPeriod === '30d' ? 720 
     : 24;
+  
+  console.log('📊 DraggableWidget - Params para useMultiSensorHistory:', {
+    sensorTags,
+    assetTag,
+    chartTimeRange,
+    widgetId: widget.id,
+    widgetType: widget.type
+  });
+  
   const multiSensorHistory = useMultiSensorHistory(sensorTags, assetTag, chartTimeRange, 60000);
+  
+  console.log('📊 DraggableWidget - multiSensorHistory result:', {
+    seriesCount: multiSensorHistory.series.length,
+    loading: multiSensorHistory.loading,
+    error: multiSensorHistory.error,
+    widgetId: widget.id,
+    series: multiSensorHistory.series.map(s => ({
+      label: s.label,
+      sensorTag: s.sensorTag,
+      dataPoints: s.data.length,
+      firstPoint: s.data[0],
+      lastPoint: s.data[s.data.length - 1]
+    }))
+  });
   
   // Função para remover MAC address do nome da variável
   // Exemplo: "F80332010002C873_temperatura_retorno" -> "temperatura_retorno"
@@ -92,6 +121,253 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
     }
     return tag;
   };
+
+  // Preparar dados para Recharts - DEVE estar no nível superior (regras dos hooks)
+  const chartData = useMemo(() => {
+    console.log('📊 chartData useMemo executando:', {
+      seriesLength: multiSensorHistory.series?.length || 0,
+      series: multiSensorHistory.series
+    });
+    
+    if (!multiSensorHistory.series || multiSensorHistory.series.length === 0) {
+      console.log('📊 chartData: Sem séries, retornando []');
+      return [];
+    }
+
+    // Coletar todos os timestamps únicos
+    const allTimestamps = new Set<number>();
+    multiSensorHistory.series.forEach(serie => {
+      serie.data.forEach(point => {
+        allTimestamps.add(point.timestamp.getTime());
+      });
+    });
+
+    console.log('📊 chartData: Timestamps únicos coletados:', allTimestamps.size);
+
+    // Ordenar timestamps
+    const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => a - b);
+
+    // Criar objetos com todos os valores
+    const data = sortedTimestamps.map(ts => {
+      const point: Record<string, any> = { 
+        timestamp: ts,
+        timeLabel: new Date(ts).toLocaleString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+      };
+      
+      multiSensorHistory.series.forEach(serie => {
+        const dataPoint = serie.data.find(d => d.timestamp.getTime() === ts);
+        point[serie.label] = dataPoint?.value ?? null;
+      });
+      
+      return point;
+    });
+    
+    console.log('📊 chartData gerado:', {
+      pointsCount: data.length,
+      firstPoint: data[0],
+      lastPoint: data[data.length - 1]
+    });
+    
+    return data;
+  }, [multiSensorHistory.series]);
+  
+  // Effect para gerenciar ECharts (apenas para chart-line-echarts)
+  useEffect(() => {
+    console.log('📊 ECharts useEffect executando:', {
+      widgetType: widget.type,
+      hasContainer: !!echartsContainerRef.current,
+      sensorTags,
+      assetTag,
+      seriesLength: multiSensorHistory.series.length,
+      chartDataLength: chartData.length
+    });
+
+    // Só executar para widgets ECharts
+    if (widget.type !== 'chart-line-echarts' && widget.type !== 'chart-area') {
+      console.log('📊 ECharts: Tipo de widget não é chart-line-echarts ou chart-area');
+      return;
+    }
+    
+    if (!echartsContainerRef.current) {
+      console.log('📊 ECharts: Container ref não está disponível ainda');
+      return;
+    }
+
+    // Inicializar instância do ECharts
+    if (!echartsInstanceRef.current) {
+      console.log('📊 ECharts: Inicializando instância do ECharts');
+      echartsInstanceRef.current = echarts.init(echartsContainerRef.current);
+    }
+
+    // Se tem sensores configurados e dados disponíveis
+    if (sensorTags && sensorTags.length > 0 && assetTag && multiSensorHistory.series.length > 0 && chartData.length > 0) {
+      console.log('📊 ECharts: Preparando dados para renderizar gráfico', {
+        hiddenSeriesCount: hiddenSeries.size,
+        hiddenSeries: Array.from(hiddenSeries)
+      });
+      
+      // Preparar dados para ECharts
+      const timestamps = chartData.map(point => 
+        new Date(point.timestamp).toLocaleString('pt-BR', {
+          hour: '2-digit',
+          minute: '2-digit',
+          day: '2-digit',
+          month: '2-digit'
+        })
+      );
+
+      // Mapear TODAS as séries, mas controlar visibilidade através da propriedade 'show'
+      const seriesData = multiSensorHistory.series.map(serie => {
+        const isHidden = hiddenSeries.has(serie.label);
+        console.log(`📊 Série "${serie.label}":`, { isHidden });
+        
+        // Configuração base da série
+        const serieConfig: any = {
+          name: serie.label,
+          type: 'line' as const,
+          smooth: true,
+          symbol: 'circle',
+          symbolSize: 6,
+          lineStyle: {
+            width: 2.5,
+            opacity: isHidden ? 0 : 1,
+          },
+          itemStyle: {
+            color: serie.color,
+            opacity: isHidden ? 0 : 1,
+          },
+          data: chartData.map(point => point[serie.label]),
+          silent: isHidden,
+        };
+
+        // Se for gráfico de área, adicionar preenchimento
+        if (widget.type === 'chart-area') {
+          serieConfig.areaStyle = {
+            opacity: isHidden ? 0 : 0.3, // Área com 30% de opacidade quando visível
+            color: serie.color,
+          };
+        }
+
+        return serieConfig;
+      });
+
+      const option: echarts.EChartsOption = {
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'cross',
+            label: {
+              backgroundColor: '#6a7985'
+            }
+          },
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          borderColor: '#ddd',
+          borderWidth: 1,
+          textStyle: {
+            color: '#333',
+            fontSize: 12
+          },
+          formatter: (params: any) => {
+            if (!Array.isArray(params)) return '';
+            let tooltip = `<strong>${params[0].axisValue}</strong><br/>`;
+            params.forEach((param: any) => {
+              // Pular séries ocultas no tooltip
+              const serieLabel = param.seriesName;
+              if (hiddenSeries.has(serieLabel)) return;
+              
+              const value = typeof param.value === 'number' ? param.value.toFixed(2) : param.value;
+              tooltip += `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${param.color};margin-right:5px;"></span>${param.seriesName}: <strong>${value}</strong><br/>`;
+            });
+            return tooltip;
+          }
+        },
+        legend: {
+          show: false // Esconder legenda do ECharts, usar no header
+        },
+        grid: {
+          left: '60px',
+          right: '30px',
+          bottom: '40px',
+          top: '20px',
+          containLabel: false
+        },
+        xAxis: {
+          type: 'category',
+          boundaryGap: false,
+          data: timestamps,
+          axisLabel: {
+            fontSize: 11,
+            color: '#666',
+            rotate: 45
+          },
+          axisLine: {
+            lineStyle: {
+              color: '#ddd'
+            }
+          }
+        },
+        yAxis: {
+          type: 'value',
+          axisLabel: {
+            fontSize: 11,
+            color: '#666'
+          },
+          splitLine: {
+            lineStyle: {
+              color: '#eee',
+              type: 'dashed'
+            }
+          },
+          axisLine: {
+            lineStyle: {
+              color: '#ddd'
+            }
+          }
+        },
+        series: seriesData
+      };
+
+      console.log('📊 ECharts: Setando opções do gráfico:', {
+        timestamps: timestamps.length,
+        seriesData: seriesData.length,
+        visibleSeries: seriesData.filter((s: any) => !s.silent).length,
+        hiddenSeriesCount: hiddenSeries.size
+      });
+
+      // Usar setOption com notMerge: true para forçar re-renderização completa
+      echartsInstanceRef.current.setOption(option, {
+        notMerge: true, // Não fazer merge, substituir completamente
+        replaceMerge: ['series'], // Substituir array de séries
+      });
+      
+      console.log('📊 ECharts: Gráfico renderizado com sucesso');
+    }
+
+    // Cleanup e resize
+    const handleResize = () => {
+      echartsInstanceRef.current?.resize();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [widget.type, chartData, multiSensorHistory.series, hiddenSeries, sensorTags, assetTag]);
+
+  // Cleanup da instância ECharts ao desmontar
+  useEffect(() => {
+    return () => {
+      if (widget.type === 'chart-line-echarts' || widget.type === 'chart-area') {
+        echartsInstanceRef.current?.dispose();
+        echartsInstanceRef.current = null;
+      }
+    };
+  }, [widget.type]);
   
   const {
     attributes,
@@ -147,9 +423,10 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
         return renderProgressCard();
 
       // GRÁFICOS
-      case 'chart-line':
+      case 'chart-line-echarts':
+        return renderLineChartECharts();
       case 'chart-area':
-        return renderLineChart();
+        return renderAreaChartECharts();
       case 'chart-bar':
       case 'chart-bar-horizontal':
         return renderBarChart();
@@ -813,10 +1090,23 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
     );
   }
 
-  function renderLineChart() {
+  function renderLineChartECharts() {
+    console.log('📊 renderLineChartECharts executando:', {
+      hasSensorTags: !!sensorTags,
+      sensorTagsLength: sensorTags?.length || 0,
+      hasAssetTag: !!assetTag,
+      assetTag,
+      loading: multiSensorHistory.loading,
+      error: multiSensorHistory.error,
+      seriesLength: multiSensorHistory.series.length
+    });
+
     // Se tem sensores configurados, usar dados reais
-    if (sensorTags && sensorTags.length > 0 && assetId) {
+    if (sensorTags && sensorTags.length > 0 && assetTag) {
+      console.log('📊 ECharts: Condição principal atendida (tem sensorTags e assetTag)');
+      
       if (multiSensorHistory.loading) {
+        console.log('📊 ECharts: Estado = loading');
         return (
           <div className="h-full flex flex-col items-center justify-center">
             <div className="animate-pulse text-muted-foreground">Carregando dados...</div>
@@ -825,6 +1115,7 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
       }
 
       if (multiSensorHistory.error) {
+        console.log('📊 ECharts: Estado = erro:', multiSensorHistory.error);
         return (
           <div className="h-full flex flex-col items-center justify-center">
             <div className="text-destructive text-sm">{multiSensorHistory.error}</div>
@@ -833,191 +1124,96 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
       }
 
       if (multiSensorHistory.series.length === 0 || multiSensorHistory.series.every(s => s.data.length === 0)) {
+        console.log('📊 ECharts: Estado = sem dados no período');
         return (
           <div className="h-full flex flex-col items-center justify-center">
-            <LineChart className="w-8 h-8 text-muted-foreground mb-2" />
+            <LineChartIcon className="w-8 h-8 text-muted-foreground mb-2" />
             <div className="text-muted-foreground text-sm">Sem dados no período</div>
           </div>
         );
       }
 
-      // Calcular valores min/max globais para escala
-      const allValues = multiSensorHistory.series.flatMap(s => s.data.map(d => d.value));
-      const minValue = Math.min(...allValues);
-      const maxValue = Math.max(...allValues);
-      const valueRange = maxValue - minValue || 1;
-
-      // Pegar timestamps únicos ordenados
-      const allTimestamps = [...new Set(
-        multiSensorHistory.series.flatMap(s => s.data.map(d => d.timestamp.getTime()))
-      )].sort((a, b) => a - b);
-
-      // Limitar pontos para exibição (máx 20 pontos)
-      const step = Math.max(1, Math.floor(allTimestamps.length / 20));
-      const displayTimestamps = allTimestamps.filter((_, i) => i % step === 0);
-
-      // Formatar label do tempo
-      const formatTime = (ts: number) => {
-        const date = new Date(ts);
-        if (chartTimeRange <= 24) {
-          return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        }
-        return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-      };
-
-      // Opções de período
-      const periodOptions = [
-        { value: '1h', label: '1h' },
-        { value: '12h', label: '12h' },
-        { value: '24h', label: '24h' },
-        { value: '7d', label: '7d' },
-        { value: '30d', label: '30d' },
-      ];
+      console.log('📊 ECharts: Renderizando container do gráfico');
 
       return (
-        <div className="h-full flex flex-col p-1">
-          {/* Header com legenda e seletor de período */}
-          <div className="flex items-center justify-between mb-2 gap-2">
-            {/* Legenda */}
-            <div className="flex flex-wrap gap-2 flex-1 min-w-0">
-              {multiSensorHistory.series.map(serie => (
-                <div key={serie.sensorTag} className="flex items-center gap-1">
-                  <div 
-                    className="w-2.5 h-2.5 rounded-full flex-shrink-0" 
-                    style={{ backgroundColor: serie.color }}
-                  />
-                  <span className="text-[10px] text-muted-foreground truncate">{serie.label}</span>
-                </div>
-              ))}
-            </div>
-            
-            {/* Seletor de período */}
-            <div className="flex gap-0.5 flex-shrink-0">
-              {periodOptions.map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => setChartPeriod(opt.value)}
-                  className={cn(
-                    "px-1.5 py-0.5 text-[10px] rounded transition-colors",
-                    chartPeriod === opt.value
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  )}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          
-          {/* Gráfico SVG */}
-          <div className="flex-1 relative min-h-0">
-            <svg className="w-full h-full" preserveAspectRatio="none">
-              {/* Linhas de grade */}
-              <line x1="0" y1="25%" x2="100%" y2="25%" stroke="currentColor" strokeOpacity="0.1" />
-              <line x1="0" y1="50%" x2="100%" y2="50%" stroke="currentColor" strokeOpacity="0.1" />
-              <line x1="0" y1="75%" x2="100%" y2="75%" stroke="currentColor" strokeOpacity="0.1" />
-              
-              {/* Linhas de cada série */}
-              {multiSensorHistory.series.map(serie => {
-                if (serie.data.length === 0) return null;
-                
-                // Criar path da linha
-                const points = displayTimestamps.map((ts, i) => {
-                  const dataPoint = serie.data.find(d => 
-                    Math.abs(d.timestamp.getTime() - ts) < (step * 60000) // tolerância
-                  );
-                  const value = dataPoint?.value ?? null;
-                  if (value === null) return null;
-                  
-                  const x = (i / (displayTimestamps.length - 1)) * 100;
-                  const y = 100 - ((value - minValue) / valueRange) * 80 - 10; // 10-90% da altura
-                  return { x, y, value };
-                }).filter(Boolean) as { x: number; y: number; value: number }[];
-
-                if (points.length < 2) return null;
-
-                const pathD = points.map((p, i) => 
-                  `${i === 0 ? 'M' : 'L'} ${p.x}% ${p.y}%`
-                ).join(' ');
-
-                return (
-                  <g key={serie.sensorTag}>
-                    {/* Linha */}
-                    <path
-                      d={pathD}
-                      fill="none"
-                      stroke={serie.color}
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    {/* Pontos */}
-                    {points.map((p, i) => (
-                      <circle
-                        key={i}
-                        cx={`${p.x}%`}
-                        cy={`${p.y}%`}
-                        r="3"
-                        fill={serie.color}
-                      />
-                    ))}
-                  </g>
-                );
-              })}
-            </svg>
-            
-            {/* Labels de valores (eixo Y) */}
-            <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-[10px] text-muted-foreground pointer-events-none">
-              <span>{maxValue.toFixed(1)}</span>
-              <span>{((maxValue + minValue) / 2).toFixed(1)}</span>
-              <span>{minValue.toFixed(1)}</span>
-            </div>
-          </div>
-          
-          {/* Labels de tempo (eixo X) */}
-          <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-            {displayTimestamps.length > 0 && (
-              <>
-                <span>{formatTime(displayTimestamps[0])}</span>
-                {displayTimestamps.length > 2 && (
-                  <span>{formatTime(displayTimestamps[Math.floor(displayTimestamps.length / 2)])}</span>
-                )}
-                <span>{formatTime(displayTimestamps[displayTimestamps.length - 1])}</span>
-              </>
-            )}
-          </div>
-        </div>
+        <div 
+          ref={echartsContainerRef} 
+          className="h-full w-full" 
+          style={{ minHeight: '200px' }}
+        />
       );
     }
 
     // Fallback: dados mockados
-    const days = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
-    const data = [4, 7, 5, 8, 3, 6, 2];
-    const max = Math.max(...data);
-    
+    console.log('📊 ECharts: Caindo no fallback - Configure as variáveis');
     return (
-      <div className="h-full flex flex-col">
-        <div className="flex items-center gap-2 mb-4">
-          <LineChart className="w-5 h-5 text-primary" />
-          <span className="font-medium">Configure as variáveis</span>
-        </div>
-        <div className="flex-1 flex items-end justify-between gap-2 pb-6">
-          {data.map((value, i) => (
-            <div key={i} className="flex flex-col items-center gap-1 flex-1">
-              <div 
-                className="w-full bg-primary/20 rounded-t relative overflow-hidden"
-                style={{ height: `${(value / max) * 100}%`, minHeight: '8px' }}
-              >
-                <div 
-                  className="absolute bottom-0 w-full bg-primary rounded-t transition-all"
-                  style={{ height: '100%' }}
-                />
-              </div>
-              <span className="text-xs text-muted-foreground">{days[i]}</span>
-            </div>
-          ))}
-        </div>
+      <div className="h-full flex flex-col items-center justify-center">
+        <LineChartIcon className="w-8 h-8 text-muted-foreground mb-2" />
+        <div className="text-muted-foreground text-sm">Configure as variáveis</div>
+      </div>
+    );
+  }
+
+  function renderAreaChartECharts() {
+    console.log('📊 renderAreaChartECharts executando:', {
+      hasSensorTags: !!sensorTags,
+      sensorTagsLength: sensorTags?.length || 0,
+      hasAssetTag: !!assetTag,
+      assetTag,
+      loading: multiSensorHistory.loading,
+      error: multiSensorHistory.error,
+      seriesLength: multiSensorHistory.series.length
+    });
+
+    // Se tem sensores configurados, usar dados reais
+    if (sensorTags && sensorTags.length > 0 && assetTag) {
+      console.log('📊 Area ECharts: Condição principal atendida (tem sensorTags e assetTag)');
+      
+      if (multiSensorHistory.loading) {
+        console.log('📊 Area ECharts: Estado = loading');
+        return (
+          <div className="h-full flex flex-col items-center justify-center">
+            <div className="animate-pulse text-muted-foreground">Carregando dados...</div>
+          </div>
+        );
+      }
+
+      if (multiSensorHistory.error) {
+        console.log('📊 Area ECharts: Estado = erro:', multiSensorHistory.error);
+        return (
+          <div className="h-full flex flex-col items-center justify-center">
+            <div className="text-destructive text-sm">{multiSensorHistory.error}</div>
+          </div>
+        );
+      }
+
+      if (multiSensorHistory.series.length === 0 || multiSensorHistory.series.every(s => s.data.length === 0)) {
+        console.log('📊 Area ECharts: Estado = sem dados no período');
+        return (
+          <div className="h-full flex flex-col items-center justify-center">
+            <LineChartIcon className="w-8 h-8 text-muted-foreground mb-2" />
+            <div className="text-muted-foreground text-sm">Sem dados no período</div>
+          </div>
+        );
+      }
+
+      console.log('📊 Area ECharts: Renderizando container do gráfico');
+
+      return (
+        <div 
+          ref={echartsContainerRef} 
+          className="h-full w-full" 
+          style={{ minHeight: '200px' }}
+        />
+      );
+    }
+
+    // Fallback: dados mockados
+    console.log('📊 Area ECharts: Caindo no fallback - Configure as variáveis');
+    return (
+      <div className="h-full flex flex-col items-center justify-center">
+        <LineChartIcon className="w-8 h-8 text-muted-foreground mb-2" />
+        <div className="text-muted-foreground text-sm">Configure as variáveis</div>
       </div>
     );
   }
@@ -1589,7 +1785,7 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
           "h-full transition-all",
           editMode && "ring-2 ring-dashed ring-primary/30 hover:ring-primary/50"
         )}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 py-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               {editMode && (
                 <div
@@ -1601,33 +1797,82 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
                 </div>
               )}
               {widget.title}
+              {/* Legenda das variáveis para gráficos */}
+              {(widget.type === 'chart-line-echarts' || widget.type === 'chart-area') && multiSensorHistory.series.length > 0 && (
+                <div className="flex items-center gap-2 ml-3">
+                  {multiSensorHistory.series.map((serie) => (
+                    <button
+                      key={serie.label}
+                      onClick={() => {
+                        const newHidden = new Set(hiddenSeries);
+                        if (newHidden.has(serie.label)) {
+                          newHidden.delete(serie.label);
+                        } else {
+                          newHidden.add(serie.label);
+                        }
+                        setHiddenSeries(newHidden);
+                      }}
+                      className={cn(
+                        "flex items-center gap-1 px-2 py-0.5 text-xs rounded transition-all",
+                        hiddenSeries.has(serie.label) 
+                          ? "opacity-40 line-through" 
+                          : "opacity-100"
+                      )}
+                      style={{ 
+                        borderLeft: `3px solid ${serie.color}`,
+                        paddingLeft: '6px'
+                      }}
+                    >
+                      {serie.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </CardTitle>
-            {editMode && (
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={handleConfig}
-                >
-                  <Settings className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-destructive hover:text-destructive"
-                  onClick={handleRemove}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              {/* Filtro de tempo para gráficos ECharts */}
+              {(widget.type === 'chart-line-echarts' || widget.type === 'chart-area') && widget.config?.sensorTags && (
+                <div className="flex gap-0.5">
+                  {[{ value: '1h', label: '1h' }, { value: '12h', label: '12h' }, { value: '24h', label: '24h' }, { value: '7d', label: '7d' }, { value: '30d', label: '30d' }].map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setChartPeriod(opt.value)}
+                      className={cn(
+                        "px-2 py-0.5 text-xs rounded transition-colors",
+                        chartPeriod === opt.value
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {editMode && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={handleConfig}
+                  >
+                    <Settings className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-destructive hover:text-destructive"
+                    onClick={handleRemove}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className={cn(
-              "min-h-[120px]",
-              widget.size === 'col-1' && "min-h-[100px]"
-            )}>
+          <CardContent className="pt-0 pb-2 h-[calc(100%-3rem)]">
+            <div className="h-full">
               {renderWidgetContent()}
             </div>
           </CardContent>
