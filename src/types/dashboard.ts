@@ -311,7 +311,7 @@ export const widgetDefinitions: WidgetDefinition[] = [
     defaultSize: 'col-6',
     icon: 'Table',
     configurable: true,
-    requiresData: false,
+    requiresData: true,
   },
   {
     id: 'table-work-orders',

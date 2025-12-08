@@ -1942,29 +1942,56 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
   }
 
   function renderSimpleTable() {
+    // Se houver variáveis configuradas, usar dados dos sensores
+    if (Array.isArray(widget.config?.sensorTags) && widget.config.sensorTags.length > 0 && multiSensorHistory.series.length > 0) {
+      // Pegar os últimos valores de cada série
+      const tableData = multiSensorHistory.series.map(serie => {
+        const lastDataPoint = serie.data[serie.data.length - 1];
+        const formattedValue = lastDataPoint ? lastDataPoint.value.toFixed(2) : 'N/A';
+        
+        return {
+          variable: formatSensorLabel(serie.sensorTag),
+          value: formattedValue,
+          timestamp: lastDataPoint ? new Date(lastDataPoint.timestamp).toLocaleTimeString() : '-'
+        };
+      });
+
+      return (
+        <div className="h-full overflow-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Variável</TableHead>
+                <TableHead className="text-right">Valor</TableHead>
+                <TableHead className="text-right">Última Atualização</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {tableData.map((item, index) => (
+                <TableRow key={index}>
+                  <TableCell className="font-medium">{item.variable}</TableCell>
+                  <TableCell className="text-right font-mono">{item.value}</TableCell>
+                  <TableCell className="text-right text-xs text-muted-foreground">{item.timestamp}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      );
+    }
+
+    // Widget não configurado - mostrar mensagem para configurar
     return (
-      <div className="h-full overflow-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Item</TableHead>
-              <TableHead>Valor</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow>
-              <TableCell>Item 1</TableCell>
-              <TableCell>100</TableCell>
-              <TableCell><Badge>Ativo</Badge></TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>Item 2</TableCell>
-              <TableCell>85</TableCell>
-              <TableCell><Badge variant="secondary">Pendente</Badge></TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
+      <div className="flex flex-col items-center justify-center h-full p-2 text-center">
+        <div className="rounded-lg bg-muted/50 flex items-center justify-center w-10 h-10 mb-2">
+          <Settings className="w-5 h-5 text-muted-foreground" />
+        </div>
+        <div className="text-sm text-muted-foreground font-medium">
+          Configure as variáveis
+        </div>
+        <div className="text-xs text-muted-foreground/70 mt-1">
+          para exibir os valores
+        </div>
       </div>
     );
   }

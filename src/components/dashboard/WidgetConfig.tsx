@@ -61,10 +61,10 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
     config.sensorTag || null
   );
 
-  // Verificar se é widget de múltiplas variáveis (gráficos)
+  // Verificar se é widget de múltiplas variáveis (gráficos e tabelas)
   const isMultiVariableChart = [
     'chart-line-echarts', 'chart-area', 'chart-bar', 'chart-bar-horizontal', 
-    'chart-pie', 'chart-donut', 'table-data'
+    'chart-pie', 'chart-donut', 'table-data', 'table-simple'
   ].includes(widget.type);
 
   const [selectedVariables, setSelectedVariables] = useState<string[]>(
@@ -189,13 +189,23 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
       size,
       config,
       selectedVariables,
-      isMultiVariableChart
+      isMultiVariableChart,
+      finalConfig: {
+        ...config,
+        sensorTags: selectedVariables
+      }
     });
+    
+    // Garantir que sensorTags estão sendo salvos para widgets multi-variável
+    const finalConfig = { ...config };
+    if (isMultiVariableChart && selectedVariables.length > 0) {
+      finalConfig.sensorTags = selectedVariables;
+    }
     
     updateWidget(layoutId, widget.id, {
       title,
       size,
-      config,
+      config: finalConfig,
     });
     onClose();
   };
@@ -205,7 +215,7 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
   };
 
   // Verificar se deve mostrar fonte de dados
-  const showDataSource = !['table-alerts', 'photo-display', 'text-display', 
+  const showDataSource = !['photo-display', 'text-display', 
     'table-workorders', 'table-equipments', 'wo-by-status', 'wo-by-priority',
     'wo-by-type', 'os-abertas', 'os-andamento', 'os-atrasadas', 'mttr',
     'mtbf', 'disponibilidade', 'backlog'

@@ -72,10 +72,11 @@ export function WidgetPalette({ layoutId, buttonVariant = 'outline' }: WidgetPal
     
     const matchesCategory = !selectedCategory || widget.category === selectedCategory;
     
-    // Filtro específico para o Dashboard: excluir indicadores
+    // Filtro específico para o Dashboard: excluir indicadores e tabela de OS
     const isIndicator = widget.id.startsWith('indicator-');
+    const isWorkOrdersTable = widget.id === 'table-work-orders';
     
-    return matchesSearch && matchesCategory && !isIndicator;
+    return matchesSearch && matchesCategory && !isIndicator && !isWorkOrdersTable;
   });
 
   // Agrupar widgets filtrados por categoria
