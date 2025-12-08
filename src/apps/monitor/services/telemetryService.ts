@@ -72,9 +72,9 @@ class TelemetryService {
 
     try {
       const url = `/telemetry/assets/${assetTag}/history/?${queryParams.toString()}`;
-      console.log('📊 Buscando histórico asset:', url);
+
       const response = await monitorApi.get<any>(url);
-      console.log('📊 Resposta histórico asset:', response);
+
       
       // A API retorna dados no formato { data: [...], device_id, sensor_ids, interval, from, to, count }
       // Precisamos agrupar por sensor_id e criar as séries
@@ -105,7 +105,7 @@ class TelemetryService {
         data
       }));
       
-      console.log('📊 Séries processadas (asset):', series);
+
       
       return {
         deviceId: assetTag,
@@ -157,12 +157,12 @@ class TelemetryService {
 
     try {
       const url = `/telemetry/history/${deviceId}/?${queryParams.toString()}`;
-      console.log('📊 Buscando histórico device:', url);
+
       const response = await monitorApi.get<any>(url);
-      console.log('📊 Resposta histórico device:', response);
-      console.log('📊 response.data existe?', !!response.data);
-      console.log('📊 response.data é array?', Array.isArray(response.data));
-      console.log('📊 response.data:', response.data);
+
+
+
+
       
       // A API retorna dados no formato { data: [...], device_id, sensor_ids, interval, from, to, count }
       // Precisamos agrupar por sensor_id e criar as séries
@@ -195,7 +195,7 @@ class TelemetryService {
         data
       }));
       
-      console.log('📊 Séries processadas:', series);
+
       
       return {
         deviceId: deviceId,

@@ -76,29 +76,29 @@ export function EquipmentSearch({
 
     // Location filter (if selectedLocation is provided)
     if (selectedLocation) {
-      console.log('Filtering equipment for selectedLocation:', selectedLocation);
+
       
       // Extract original IDs from the unique node ID
       const originalSectorId = extractOriginalId(selectedLocation, 'sector');
       const originalSubsectionId = extractOriginalId(selectedLocation, 'subsection');
       
-      console.log('Extracted IDs:', { originalSectorId, originalSubsectionId });
+
       
       filtered = filtered.filter(eq => {
         // Log equipment details for debugging
-        console.log(`Equipment ${eq.tag}: companyId=${eq.companyId}, sectorId=${eq.sectorId}, subSectionId=${eq.subSectionId}`);
+
         
         // If selectedLocation is a subsection node, match equipment's subSectionId  
         if (originalSubsectionId) {
           const match = eq.subSectionId === originalSubsectionId;
-          console.log(`  -> Filtering by subsection: ${originalSubsectionId}, matches=${match}`);
+
           return match;
         }
         
         // If selectedLocation is a sector node, match equipment's sectorId
         if (originalSectorId && !selectedLocation.includes('subsection-')) {
           const match = eq.sectorId === originalSectorId;
-          console.log(`  -> Filtering by sector: ${originalSectorId}, matches=${match}`);
+
           return match;
         }
         
@@ -110,7 +110,7 @@ export function EquipmentSearch({
             const companyId = companyMatch[1];
             // Use equipment's companyId directly instead of looking up in MOCK_SECTORS
             const match = eq.companyId === companyId;
-            console.log(`  -> Filtering by company: ${companyId}, equipment companyId=${eq.companyId}, matches=${match}`);
+
             return match;
           }
         }

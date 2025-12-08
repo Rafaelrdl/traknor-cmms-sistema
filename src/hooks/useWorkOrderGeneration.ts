@@ -42,11 +42,6 @@ export function useAutomaticWorkOrderGeneration() {
         toast.success(`${generatedWorkOrders.length} ordem(ns) de serviço gerada(s) automaticamente!`, {
           description: `${updatedPlansMap.size} plano(s) de manutenção executado(s)`
         });
-        
-        console.log('Automatic work order generation:', {
-          generatedCount: generatedWorkOrders.length,
-          updatedPlans: updatedPlansMap.size
-        });
       }
       
     } catch (error) {

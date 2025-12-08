@@ -54,12 +54,12 @@ export async function fetchAllPages<T>(
     nextUrl = response.data.next; // Follow 'next' link (null when no more pages)
     
     if (import.meta.env.DEV && nextUrl) {
-      console.log(`📄 Fetched ${response.data.results.length} items, loading next page...`);
+
     }
   }
   
   if (import.meta.env.DEV) {
-    console.log(`✅ Fetched total of ${allResults.length} items from ${endpoint}`);
+
   }
   
   return allResults;

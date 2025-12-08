@@ -99,7 +99,7 @@ export function LocationTree() {
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log('Selecionando nó:', { id: node.id, name: node.name, type: node.type });
+
             setSelectedNode(node); // Seleciona o nó ao clicar
             // Fecha o menu mobile quando um item é selecionado em tela pequena
             if (window.innerWidth < 1024) {

@@ -47,7 +47,7 @@ export const api = axios.create({
 export const reconfigureApiForTenant = (tenantSlugOrUrl: string): void => {
   // 🔧 DEV MODE: Keep using relative URL (proxy handles routing)
   if (import.meta.env.DEV) {
-    console.log(`🔄 API mantida em modo proxy: /api → ${tenantSlugOrUrl}`);
+
     // Don't change baseURL in dev mode - proxy handles it
     return;
   }
@@ -64,7 +64,7 @@ export const reconfigureApiForTenant = (tenantSlugOrUrl: string): void => {
   }
   
   api.defaults.baseURL = newBaseUrl;
-  console.log(`🔄 API reconfigurada para: ${newBaseUrl}`);
+
 };
 
 /**
@@ -83,7 +83,7 @@ api.interceptors.request.use(
     
     // Debug log in development
     if (import.meta.env.DEV) {
-      console.log('📤 Request:', config.method?.toUpperCase(), config.url);
+
     }
     
     return config;
@@ -123,7 +123,7 @@ const processQueue = (error: AxiosError | null, token: string | null = null) => 
 api.interceptors.response.use(
   (response) => {
     if (import.meta.env.DEV) {
-      console.log('📥 Response:', response.status, response.config.url);
+
     }
     return response;
   },
@@ -160,7 +160,7 @@ api.interceptors.response.use(
         );
 
         if (import.meta.env.DEV) {
-          console.log('🔄 Token refreshed successfully');
+
         }
 
         processQueue(null, data.access);

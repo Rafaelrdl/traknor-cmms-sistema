@@ -14,8 +14,8 @@ export function configurePDFWorker() {
   // Set the worker source
   pdfjs.GlobalWorkerOptions.workerSrc = primaryWorkerUrl;
   
-  console.log(`PDF.js worker configured with URL: ${primaryWorkerUrl}`);
-  console.log('PDF.js version detected:', pdfjs.version || 'unknown');
+
+
   
   return pdfjs.GlobalWorkerOptions.workerSrc;
 }
@@ -41,13 +41,13 @@ export function configurePDFWorkerWithFallback() {
   const selectedUrl = workerUrls[0];
   pdfjs.GlobalWorkerOptions.workerSrc = selectedUrl;
   
-  console.log(`PDF.js worker initially configured with: ${selectedUrl}`);
+
   
   // Test worker availability asynchronously
   testWorkerUrls(workerUrls).then(workingUrl => {
     if (workingUrl && workingUrl !== selectedUrl) {
       pdfjs.GlobalWorkerOptions.workerSrc = workingUrl;
-      console.log(`PDF.js worker switched to working URL: ${workingUrl}`);
+
     }
   }).catch(error => {
     console.warn('PDF.js worker URL testing failed:', error);
@@ -75,7 +75,7 @@ async function testWorkerUrls(urls: string[]): Promise<string | null> {
       clearTimeout(timeoutId);
       
       // For no-cors mode, we can't check response status, so assume success
-      console.log(`PDF.js worker URL test passed: ${url}`);
+
       return url;
     } catch (error) {
       console.warn(`PDF.js worker URL test failed for ${url}:`, error);
@@ -94,17 +94,8 @@ if (typeof window !== 'undefined') {
 
 // Debugging helper
 export function checkPDFWorkerStatus() {
-  console.log('=== PDF.js Configuration Status ===');
-  console.log('PDF.js version:', pdfjs.version);
-  console.log('Worker source:', pdfjs.GlobalWorkerOptions.workerSrc);
-  console.log('Worker configured:', !!pdfjs.GlobalWorkerOptions.workerSrc);
+  // PDF.js Configuration Status logging removed
   
-  if (pdfjs.GlobalWorkerOptions.workerSrc) {
-    console.log('Worker URL format valid:', 
-      pdfjs.GlobalWorkerOptions.workerSrc.includes('pdf.worker'));
-  }
-  
-  console.log('=== End Status ===');
   return {
     version: pdfjs.version,
     workerSrc: pdfjs.GlobalWorkerOptions.workerSrc,

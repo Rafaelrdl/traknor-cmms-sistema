@@ -51,10 +51,10 @@ export const useCompanies = (): [Company[], (value: Company[] | ((current: Compa
   const [data] = useState<Company[]>(MOCK_COMPANIES);
   const setData = (value: Company[] | ((current: Company[]) => Company[])) => {
     // Por enquanto, apenas registra as mudanças pois não estamos persistindo
-    console.log('Companies updated:', value);
+
   };
   const deleteData = () => {
-    console.log('Companies deleted');
+
   };
   // Memoizar retorno para evitar re-criação de array
   return useMemo(() => [data, setData, deleteData] as const, [data]);
@@ -69,10 +69,10 @@ export const useCompanies = (): [Company[], (value: Company[] | ((current: Compa
 export const useSectors = (): [Sector[], (value: Sector[] | ((current: Sector[]) => Sector[])) => void, () => void] => {
   const [data] = useState<Sector[]>(MOCK_SECTORS);
   const setData = (value: Sector[] | ((current: Sector[]) => Sector[])) => {
-    console.log('Sectors updated:', value);
+
   };
   const deleteData = () => {
-    console.log('Sectors deleted');
+
   };
   // Memoizar retorno para evitar re-criação de array
   return useMemo(() => [data, setData, deleteData] as const, [data]);
@@ -87,10 +87,10 @@ export const useSectors = (): [Sector[], (value: Sector[] | ((current: Sector[])
 export const useSubSections = (): [SubSection[], (value: SubSection[] | ((current: SubSection[]) => SubSection[])) => void, () => void] => {
   const [data] = useState<SubSection[]>(MOCK_SUBSECTIONS);
   const setData = (value: SubSection[] | ((current: SubSection[]) => SubSection[])) => {
-    console.log('SubSections updated:', value);
+
   };
   const deleteData = () => {
-    console.log('SubSections deleted');
+
   };
   return [data, setData, deleteData];
 };
@@ -106,10 +106,10 @@ export const useSubSections = (): [SubSection[], (value: SubSection[] | ((curren
 export const useEquipment = (): [Equipment[], (value: Equipment[] | ((current: Equipment[]) => Equipment[])) => void, () => void] => {
   const [data] = useState<Equipment[]>(MOCK_EQUIPMENT);
   const setData = (value: Equipment[] | ((current: Equipment[]) => Equipment[])) => {
-    console.log('Equipment updated:', value);
+
   };
   const deleteData = () => {
-    console.log('Equipment deleted');
+
   };
   // Memoizar retorno para evitar re-criação de array
   return useMemo(() => [data, setData, deleteData] as const, [data]);
@@ -147,10 +147,10 @@ export const useWorkOrders = (): [WorkOrder[], (value: WorkOrder[] | ((current: 
 export const useMaintenancePlans = (): [MaintenancePlan[], (value: MaintenancePlan[] | ((current: MaintenancePlan[]) => MaintenancePlan[])) => void, () => void] => {
   const [data] = useState<MaintenancePlan[]>(MOCK_MAINTENANCE_PLANS);
   const setData = (value: MaintenancePlan[] | ((current: MaintenancePlan[]) => MaintenancePlan[])) => {
-    console.log('MaintenancePlans updated:', value);
+
   };
   const deleteData = () => {
-    console.log('MaintenancePlans deleted');
+
   };
   return [data, setData, deleteData];
 };
@@ -165,10 +165,10 @@ export const useMaintenancePlans = (): [MaintenancePlan[], (value: MaintenancePl
 export const useStock = (): [StockItem[], (value: StockItem[] | ((current: StockItem[]) => StockItem[])) => void, () => void] => {
   const [data] = useState<StockItem[]>(MOCK_STOCK_ITEMS);
   const setData = (value: StockItem[] | ((current: StockItem[]) => StockItem[])) => {
-    console.log('Stock updated:', value);
+
   };
   const deleteData = () => {
-    console.log('Stock deleted');
+
   };
   // Memoizar retorno para evitar re-criação de array
   return useMemo(() => [data, setData, deleteData] as const, [data]);
@@ -185,10 +185,10 @@ export const useStockItems = useStock;
 export const useDashboardKPIs = (): [DashboardKPIs, (value: DashboardKPIs | ((current: DashboardKPIs) => DashboardKPIs)) => void, () => void] => {
   const [data] = useState<DashboardKPIs>(MOCK_DASHBOARD_KPIS);
   const setData = (value: DashboardKPIs | ((current: DashboardKPIs) => DashboardKPIs)) => {
-    console.log('DashboardKPIs updated:', value);
+
   };
   const deleteData = () => {
-    console.log('DashboardKPIs deleted');
+
   };
   return [data, setData, deleteData];
 };
@@ -209,10 +209,10 @@ export const useUser = (): [User, (value: User | ((current: User) => User)) => v
   
   const [data] = useState<User>(userData);
   const setData = (value: User | ((current: User) => User)) => {
-    console.log('User updated:', value);
+
   };
   const deleteData = () => {
-    console.log('User deleted');
+
   };
   return [data, setData, deleteData];
 };
@@ -225,10 +225,10 @@ export const useUser = (): [User, (value: User | ((current: User) => User)) => v
 export const useChartData = (): [typeof MOCK_CHART_DATA, (value: typeof MOCK_CHART_DATA | ((current: typeof MOCK_CHART_DATA) => typeof MOCK_CHART_DATA)) => void, () => void] => {
   const [data] = useState(MOCK_CHART_DATA);
   const setData = (value: typeof MOCK_CHART_DATA | ((current: typeof MOCK_CHART_DATA) => typeof MOCK_CHART_DATA)) => {
-    console.log('Chart data updated:', value);
+
   };
   const deleteData = () => {
-    console.log('Chart data deleted');
+
   };
   return [data, setData, deleteData];
 };

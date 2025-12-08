@@ -1206,12 +1206,7 @@ export function printWorkOrder(options: PrintWorkOrderOptions): void {
           }
         });
         
-        // Exibir dica de atalhos no console para desenvolvedores
-        console.log('Atalhos disponíveis:');
-        console.log('Ctrl+P: Imprimir');
-        console.log('Ctrl++: Aumentar zoom');
-        console.log('Ctrl+-: Diminuir zoom');
-        console.log('Ctrl+0: Zoom 100%');
+        // Keyboard shortcuts are available but console messages removed
       </script>
     </body>
     </html>

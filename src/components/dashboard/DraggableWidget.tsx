@@ -89,7 +89,7 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
     : chartPeriod === '30d' ? 720 
     : 24;
   
-  // console.log('📊 DraggableWidget - Params para useMultiSensorHistory:', {
+
   //   sensorTags,
   //   assetTag,
   //   chartTimeRange,
@@ -99,7 +99,7 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
   
   const multiSensorHistory = useMultiSensorHistory(sensorTags, assetTag, chartTimeRange, 60000);
   
-  // console.log('📊 DraggableWidget - multiSensorHistory result:', {
+
   //   seriesCount: multiSensorHistory.series.length,
   //   loading: multiSensorHistory.loading,
   //   error: multiSensorHistory.error,
@@ -126,13 +126,13 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
 
   // Preparar dados para Recharts - DEVE estar no nível superior (regras dos hooks)
   const chartData = useMemo(() => {
-    // console.log('📊 chartData useMemo executando:', {
+
     //   seriesLength: multiSensorHistory.series?.length || 0,
     //   series: multiSensorHistory.series
     // });
     
     if (!multiSensorHistory.series || multiSensorHistory.series.length === 0) {
-      // console.log('📊 chartData: Sem séries, retornando []');
+
       return [];
     }
 
@@ -144,7 +144,7 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
       });
     });
 
-    // console.log('📊 chartData: Timestamps únicos coletados:', allTimestamps.size);
+
 
     // Ordenar timestamps
     const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => a - b);
@@ -169,7 +169,7 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
       return point;
     });
     
-    // console.log('📊 chartData gerado:', {
+
     //   pointsCount: data.length,
     //   firstPoint: data[0],
     //   lastPoint: data[data.length - 1]
@@ -180,7 +180,7 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
   
   // Effect para gerenciar ECharts (apenas para chart-line-echarts)
   useEffect(() => {
-    // console.log('📊 ECharts useEffect executando:', {
+
     //   widgetType: widget.type,
     //   hasContainer: !!echartsContainerRef.current,
     //   sensorTags,

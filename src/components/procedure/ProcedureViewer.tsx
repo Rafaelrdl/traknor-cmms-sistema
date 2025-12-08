@@ -57,7 +57,7 @@ import { ptBR } from 'date-fns/locale';
 // Ensure PDF worker is configured and log status
 configurePDFWorker();
 if (import.meta.env.DEV) {
-  console.log('PDF.js worker configured for development:', pdfjs.GlobalWorkerOptions.workerSrc);
+
 }
 
 
@@ -680,7 +680,7 @@ export function ProcedureViewer({
                                 <Document
                                   file={fileBlob}
                                   onLoadSuccess={({ numPages }) => {
-                                    console.log('PDF loaded successfully with', numPages, 'pages');
+
                                     setNumPages(numPages);
                                     setError(null); // Clear any previous errors
                                   }}
@@ -692,11 +692,11 @@ export function ProcedureViewer({
                                         error?.message?.includes('GlobalWorkerOptions') ||
                                         error?.message?.includes('No "GlobalWorkerOptions.workerSrc" specified') ||
                                         error?.message?.includes('Failed to fetch dynamically imported module')) {
-                                      console.log('PDF.js worker failed, trying fallback approach...');
+
                                       
                                       try {
                                         const workerSrc = configurePDFWorkerWithFallback();
-                                        console.log('Reconfigured worker source:', workerSrc);
+
                                         
                                         // Give a moment for the worker to be ready, then retry
                                         setTimeout(() => {

@@ -180,7 +180,7 @@ export function checkAndGenerateScheduledWorkOrders(plans: MaintenancePlan[]): W
         // Update plan's next execution date
         const nextDate = calculateNextExecutionDate(plan.next_execution_date, plan.frequency);
         // Note: This would need to be called from the component to update the plan
-        console.log(`Generated ${workOrders.length} work orders for plan ${plan.name}. Next execution: ${nextDate}`);
+
       } catch (error) {
         console.error(`Error generating work orders for plan ${plan.name}:`, error);
       }

@@ -13,8 +13,7 @@ export async function initializeProceduresForDev() {
     
     // Create sample files in IndexedDB
     await createSampleFiles();
-    
-    console.log('✅ Procedures module initialized successfully');
+
   } catch (error) {
     console.warn('⚠️ Error initializing procedures module:', error);
   }
@@ -30,7 +29,6 @@ export function clearProceduresData() {
   // Clear IndexedDB
   const request = indexedDB.deleteDatabase('ProceduresDB');
   request.onsuccess = () => {
-    console.log('🗑️ Procedures data cleared');
   };
   request.onerror = (error) => {
     console.warn('Error clearing procedures data:', error);
@@ -44,10 +42,7 @@ export function debugProceduresState() {
   const procedures = JSON.parse(localStorage.getItem('procedures:db') || '[]');
   const categories = JSON.parse(localStorage.getItem('procedure_categories:db') || '[]');
   
-  console.group('📋 Procedures Debug State');
-  console.log('Procedures:', procedures);
-  console.log('Categories:', categories);
-  console.groupEnd();
+  // Debug state information removed
 }
 
 // Make utilities available in development
@@ -57,6 +52,4 @@ if (import.meta.env.DEV) {
     clear: clearProceduresData,
     debug: debugProceduresState,
   };
-  
-  console.log('🔧 Procedures dev utils available at window.proceduresDevUtils');
 }

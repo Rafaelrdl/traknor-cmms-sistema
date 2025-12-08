@@ -83,11 +83,11 @@ export function ReportsPage() {
 
   const handleRequestReport = (template?: ReportTemplate) => {
     // Implementar modal de solicitação de relatório
-    console.log('Solicitando relatório:', template);
+
   };
 
   const handleDownload = (reportId: number) => {
-    console.log('Download do relatório:', reportId);
+
   };
 
   return (

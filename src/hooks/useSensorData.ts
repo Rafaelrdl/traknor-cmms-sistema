@@ -141,7 +141,7 @@ export function useSensorData(
           const assetTag = targetSensor.asset_tag;
           const deviceId = targetSensor.device_mqtt_client_id;
           
-          console.log('📊 Buscando histórico para tendência:', { assetTag, deviceId, sensorTag });
+
           
           let history: DeviceHistoryResponse | null = null;
           
@@ -157,7 +157,7 @@ export function useSensorData(
           
           // Se não retornou dados, tentar pelo device_id
           if ((!history || history.series.length === 0) && deviceId) {
-            console.log('📊 Tentando buscar pelo device_id:', deviceId);
+
             history = await telemetryService.getHistoryByDevice(
               deviceId,
               6,
@@ -167,7 +167,7 @@ export function useSensorData(
           }
           
           if (history) {
-            console.log('📊 Histórico recebido:', history);
+
             
             // Tentar encontrar série pelo sensorTag ou pelo nome do sensor
             let sensorSeries = history.series.find(s => 
@@ -179,14 +179,14 @@ export function useSensorData(
             // Se não encontrou, pegar a primeira série disponível
             if (!sensorSeries && history.series.length > 0) {
               sensorSeries = history.series[0];
-              console.log('📊 Usando primeira série disponível:', sensorSeries.sensorId);
+
             }
             
-            console.log('📊 Série do sensor:', sensorSeries);
+
             
             if (sensorSeries && sensorSeries.data.length >= 2) {
               trend = calculateTrend(sensorSeries.data);
-              console.log('📊 Tendência calculada:', trend);
+
             } else {
               console.warn('📊 Dados insuficientes para calcular tendência:', sensorSeries?.data?.length || 0, 'pontos');
             }
@@ -296,7 +296,7 @@ export function useMultiSensorHistory(
 
   useEffect(() => {
     if (!sensorTags || sensorTags.length === 0 || !assetTag) {
-      console.log('📊 useMultiSensorHistory: Sem sensorTags ou assetTag', { sensorTags, assetTag });
+
       setResult({
         series: [],
         loading: false,
@@ -305,7 +305,7 @@ export function useMultiSensorHistory(
       return;
     }
 
-    console.log('📊 useMultiSensorHistory iniciando:', { sensorTags, assetTag, hours });
+
 
     let isMounted = true;
     let hasData = false;
@@ -316,7 +316,7 @@ export function useMultiSensorHistory(
       }
 
       try {
-        console.log(`📊 Buscando histórico multi-sensor: assetTag=${assetTag}, sensorTags=${sensorTags.join(',')}, hours=${hours}`);
+
 
         // Buscar histórico usando assetTag diretamente
         const response = await telemetryService.getHistoryByAsset(
@@ -325,7 +325,7 @@ export function useMultiSensorHistory(
           sensorTags
         );
 
-        console.log('📊 Resposta da API (useMultiSensorHistory):', response);
+
 
         if (!isMounted) return;
 
@@ -354,7 +354,7 @@ export function useMultiSensorHistory(
             sensorId: tag
           })) || [];
 
-          console.log(`📊 Série ${label}: ${data.length} pontos`, data.slice(0, 2));
+
 
           return {
             sensorTag: tag,
@@ -366,8 +366,8 @@ export function useMultiSensorHistory(
 
         hasData = series.some(s => s.data.length > 0);
         
-        console.log(`✅ ${series.length} séries carregadas`);
-        console.log('📊 Chamando setResult com:', { seriesCount: series.length, series });
+
+
         
         setResult({
           series,
@@ -375,7 +375,7 @@ export function useMultiSensorHistory(
           error: null
         });
         
-        console.log('📊 setResult chamado!');
+
       } catch (error) {
         if (!isMounted) return;
         console.error('❌ Erro ao buscar histórico dos sensores:', error);

@@ -288,48 +288,48 @@ export function WorkOrderKanban({
     : null;
 
   function handleDragStart(event: DragStartEvent) {
-    console.log('Drag start event:', event.active.id);
+
     setActiveId(event.active.id as string);
   }
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
 
-    console.log('Drag end event:', { active: active.id, over: over?.id });
+
 
     if (!over) {
-      console.log('No drop target detected');
+
       setActiveId(null);
       return;
     }
 
     const activeWorkOrder = workOrders.find(wo => wo.id === active.id);
     if (!activeWorkOrder) {
-      console.log('Active work order not found');
+
       setActiveId(null);
       return;
     }
 
     // Verificar se estamos soltando em uma coluna (droppable zone)
     const overId = over.id as string;
-    console.log('Drop target ID:', overId);
+
     
     // overId será 'OPEN', 'IN_PROGRESS', ou 'COMPLETED'
     if (['OPEN', 'IN_PROGRESS', 'COMPLETED'].includes(overId)) {
       const newStatus = overId as WorkOrder['status'];
       
       if (activeWorkOrder.status !== newStatus) {
-        console.log(`Moving work order ${activeWorkOrder.id} from ${activeWorkOrder.status} to ${newStatus}`);
+
         
         onUpdateWorkOrder(activeWorkOrder.id, { 
           status: newStatus,
           ...(newStatus === 'COMPLETED' && { completedAt: new Date().toISOString() })
         });
       } else {
-        console.log('Work order already in target status');
+
       }
     } else {
-      console.log('Invalid drop target:', overId);
+
     }
 
     setActiveId(null);

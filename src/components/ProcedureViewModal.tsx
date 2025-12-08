@@ -145,12 +145,12 @@ export function ProcedureViewModal({ procedure, trigger }: ProcedureViewModalPro
 
   const handleDownload = () => {
     // Implementar download do procedimento em PDF
-    console.log('Download procedure:', procedure.id);
+
   };
 
   const handleEdit = () => {
     // Implementar edição do procedimento
-    console.log('Edit procedure:', procedure.id);
+
     setOpen(false);
   };
 

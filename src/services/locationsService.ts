@@ -101,7 +101,7 @@ export const locationsService = {
       occupants: data.occupants || 0,
       hvac_units: data.hvacUnits || 0,
     };
-    console.log('Creating company with payload:', payload);
+
     try {
       const response = await api.post<ApiCompany>('/locations/companies/', payload);
       return mapCompany(response.data);
@@ -138,7 +138,7 @@ export const locationsService = {
     if (data.occupants !== undefined) payload.occupants = data.occupants;
     if (data.hvacUnits !== undefined) payload.hvac_units = data.hvacUnits;
     
-    console.log('Updating company with payload:', payload);
+
 
     const response = await api.patch<ApiCompany>(`/locations/companies/${id}/`, payload);
     return mapCompany(response.data);
@@ -175,7 +175,7 @@ export const locationsService = {
       occupants: data.occupants || 0,
       hvac_units: data.hvacUnits || 0,
     };
-    console.log('Creating sector with payload:', payload);
+
     try {
       const response = await api.post<ApiSector>('/locations/sectors/', payload);
       return mapSector(response.data);
@@ -202,7 +202,7 @@ export const locationsService = {
     if (data.occupants !== undefined) payload.occupants = data.occupants;
     if (data.hvacUnits !== undefined) payload.hvac_units = data.hvacUnits;
     
-    console.log('Updating sector with payload:', payload);
+
 
     const response = await api.patch<ApiSector>(`/locations/sectors/${id}/`, payload);
     return mapSector(response.data);
@@ -234,7 +234,7 @@ export const locationsService = {
       code: '',  // Campo obrigatório para unique_together
       description: data.notes || '',
     };
-    console.log('Creating subsection with payload:', payload);
+
     const response = await api.post<ApiSubsection>('/locations/subsections/', payload);
     return mapSubsection(response.data);
   },
@@ -246,7 +246,7 @@ export const locationsService = {
     if (data.sectorId) payload.sector = Number(data.sectorId);
     if (data.notes !== undefined) payload.description = data.notes;
     
-    console.log('Updating subsection with payload:', payload);
+
 
     const response = await api.patch<ApiSubsection>(`/locations/subsections/${id}/`, payload);
     return mapSubsection(response.data);

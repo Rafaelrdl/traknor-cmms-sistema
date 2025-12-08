@@ -125,7 +125,7 @@ const apiAssetToEquipment = (asset: ApiAsset): Equipment & {
 } => {
   // Debug: log para verificar o mapeamento de localização
   if (asset.sector || asset.company_id) {
-    console.log(`[apiAssetToEquipment] ${asset.tag}: sector=${asset.sector}, company_id=${asset.company_id}`);
+
   }
   
   return {
@@ -268,18 +268,6 @@ export const equipmentService = {
     const assets = Array.isArray(response.data)
       ? response.data
       : response.data.results || [];
-    
-    // Debug: log para verificar campos de localização
-    if (assets.length > 0) {
-      console.log('[equipmentService] Sample asset from API:', {
-        tag: assets[0].tag,
-        sector: assets[0].sector,
-        subsection: assets[0].subsection,
-        company_id: assets[0].company_id,
-        sector_name: assets[0].sector_name,
-        subsection_name: assets[0].subsection_name,
-      });
-    }
     
     return assets.map(apiAssetToEquipment);
   },

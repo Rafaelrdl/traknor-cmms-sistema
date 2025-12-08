@@ -2,17 +2,7 @@
 import { pdfjs } from 'react-pdf';
 
 export function debugPDFConfig() {
-  console.log('=== PDF.js Configuration Debug ===');
-  console.log('Version:', pdfjs.version);
-  console.log('Worker Source:', pdfjs.GlobalWorkerOptions.workerSrc);
-  console.log('Is Worker Configured:', !!pdfjs.GlobalWorkerOptions.workerSrc);
-  
-  if (pdfjs.GlobalWorkerOptions.workerSrc) {
-    console.log('Worker URL looks valid:', 
-      pdfjs.GlobalWorkerOptions.workerSrc.includes('pdf.worker'));
-  }
-  
-  console.log('=== End Debug ===');
+  // PDF.js debug logging removed
 }
 
 // Add to window for browser console access

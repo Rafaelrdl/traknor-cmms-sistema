@@ -56,19 +56,11 @@ function AssetsContent() {
   
   // Debug: log equipment data to check if location fields are present
   useEffect(() => {
-    if (equipment.length > 0) {
-      console.log('[EquipmentPage] Equipment data sample:', {
-        tag: equipment[0].tag,
-        companyId: equipment[0].companyId,
-        sectorId: equipment[0].sectorId,
-        subSectionId: equipment[0].subSectionId,
-      });
-    }
   }, [equipment]);
   
   // Force refetch on mount to get fresh data with location fields
   useEffect(() => {
-    console.log('[EquipmentPage] Forcing refetch on mount...');
+
     queryClient.invalidateQueries({ queryKey: ['equipment'] });
   }, [queryClient]);
   
@@ -249,7 +241,7 @@ function AssetsContent() {
     
     // Adiciona o novo equipamento à lista existente
     // TODO: Implementar useCreateEquipment mutation quando API estiver pronta
-    console.log('TODO: Criar equipamento via API:', equipment_data);
+
     // setEquipment((current) => [...(current || []), equipment_data]);
     
     // Reset do formulário para valores iniciais
@@ -466,7 +458,7 @@ function AssetsContent() {
                   onEquipmentSelect={handleEquipmentSelect}
                   showCreateButton={true} // Sempre mostrar para debug
                   onCreateAsset={() => {
-                    console.log('Create asset clicked, selectedNode:', selectedNode);
+
                     setIsEquipmentDialogOpen(true);
                   }}
                   onEditAsset={handleEditEquipment}
