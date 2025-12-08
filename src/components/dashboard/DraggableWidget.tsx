@@ -1871,26 +1871,54 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
       }
 
       return (
-        <div className="h-full flex flex-col items-center justify-center">
-          <div className="relative w-24 h-12 overflow-hidden">
-            <div className="absolute w-24 h-24 border-8 border-muted rounded-full" />
-            <div 
-              className={`absolute w-24 h-24 border-8 rounded-full transition-all ${gaugeColor}`}
-              style={{ 
-                clipPath: `polygon(0 100%, 100% 100%, 100% 50%, 0 50%)`,
-                transform: `rotate(${(percent / 100) * 180 - 90}deg)`
-              }}
-            />
+        <div className="h-full flex flex-col items-center justify-center px-4 py-2">
+          <div className="relative w-full max-w-40">
+            {/* SVG Gauge */}
+            <div className="relative">
+              <svg className="w-full h-20" viewBox="0 0 120 60" style={{ overflow: 'visible' }}>
+                {/* Background arc */}
+                <path
+                  d="M 20 45 A 25 25 0 0 1 100 45"
+                  stroke="rgb(229, 231, 235)"
+                  strokeWidth="6"
+                  fill="none"
+                  strokeLinecap="round"
+                />
+                {/* Progress arc */}
+                <path
+                  d="M 20 45 A 25 25 0 0 1 100 45"
+                  stroke={displayValue > max ? 'rgb(239, 68, 68)' : displayValue < min ? 'rgb(59, 130, 246)' : 'rgb(59, 130, 246)'}
+                  strokeWidth="6"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeDasharray="125.66" // Comprimento do arco semicircular (π * 25 * 2)
+                  strokeDashoffset={125.66 - (125.66 * percent / 100)}
+                  className="transition-all duration-500"
+                />
+              </svg>
+              
+              {/* Valores mínimo e máximo próximos à base do gauge */}
+              <div className="absolute bottom-0 left-0 text-xs text-muted-foreground" 
+                   style={{ left: '16.67%', transform: 'translateX(-50%)' }}>
+                {min}
+              </div>
+              <div className="absolute bottom-0 right-0 text-xs text-muted-foreground" 
+                   style={{ left: '83.33%', transform: 'translateX(-50%)' }}>
+                {max}
+              </div>
+            </div>
           </div>
-          <div className="text-2xl font-bold mt-2">
-            {`${Number(sensorData.value).toFixed(1)}${unit ? ` ${unit}` : ''}`}
+          
+          <div className="text-2xl font-bold mt-3">
+            {Number(sensorData.value).toFixed(1)}
           </div>
           <div className="text-xs text-muted-foreground">
             {label}
           </div>
+          
           {/* Mostrar indicadores quando valor está fora do range */}
           {(displayValue > max || displayValue < min) && (
-            <div className="text-xs mt-1 px-2 py-1 rounded text-white" 
+            <div className="text-xs mt-2 px-2 py-1 rounded text-white" 
                  style={{ backgroundColor: displayValue > max ? '#ef4444' : '#3b82f6' }}>
               {displayValue > max ? 'Acima do máximo' : 'Abaixo do mínimo'}
             </div>
