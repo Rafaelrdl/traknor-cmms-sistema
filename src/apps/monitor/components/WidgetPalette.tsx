@@ -100,7 +100,7 @@ const overviewWidgetDefinitions: OverviewWidgetDefinition[] = [
   { id: 'gauge-circular', name: 'Medidor Circular', description: 'Medidor circular como gráfico', category: 'graficos-circulares', icon: 'Gauge', defaultSize: 'col-2' },
 
   // MEDIDORES (3)
-  { id: 'gauge-progress', name: 'Barra de Progresso', description: 'Barra de progresso horizontal', category: 'medidores', icon: 'Activity', defaultSize: 'col-3' },
+  { id: 'gauge-progress', name: 'Barra de Progresso', description: 'Barra de progresso horizontal', category: 'medidores', icon: 'BarChart3', defaultSize: 'col-3' },
   { id: 'technician-performance', name: 'Performance Técnicos', description: 'Métricas de desempenho', category: 'medidores', icon: 'Users', defaultSize: 'col-4' },
   { id: 'sla-overview', name: 'Visão Geral SLA', description: 'Métricas de SLA', category: 'medidores', icon: 'Clock', defaultSize: 'col-3' },
 

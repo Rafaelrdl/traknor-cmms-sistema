@@ -72,7 +72,10 @@ export function WidgetPalette({ layoutId, buttonVariant = 'outline' }: WidgetPal
     
     const matchesCategory = !selectedCategory || widget.category === selectedCategory;
     
-    return matchesSearch && matchesCategory;
+    // Filtro específico para o Dashboard: excluir indicadores
+    const isIndicator = widget.id.startsWith('indicator-');
+    
+    return matchesSearch && matchesCategory && !isIndicator;
   });
 
   // Agrupar widgets filtrados por categoria

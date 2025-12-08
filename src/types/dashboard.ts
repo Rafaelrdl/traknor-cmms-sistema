@@ -55,7 +55,6 @@ export type WidgetType =
   | 'card-kpi'              // Card KPI padrão com ícone e tendência
   | 'card-value'            // Card com valor único
   | 'card-stat'             // Card com estatística e trend
-  | 'card-progress'         // Card com barra de progresso
   
   // Cards de Ação
   | 'card-button'           // Card com botão de ação
@@ -77,8 +76,6 @@ export type WidgetType =
   
   // Medidores
   | 'gauge-progress'        // Barra de progresso
-  | 'technician-performance'// Performance dos técnicos
-  | 'sla-overview'          // Visão geral de SLA
   
   // Indicadores
   | 'indicator-status'      // Indicador de status (LED)
@@ -149,16 +146,6 @@ export const widgetDefinitions: WidgetDefinition[] = [
     category: 'cards-simples',
     defaultSize: 'col-2',
     icon: 'TrendingUp',
-    configurable: true,
-    requiresData: true,
-  },
-  {
-    id: 'card-progress',
-    name: 'Card Progresso',
-    description: 'Barra de progresso com percentual',
-    category: 'cards-simples',
-    defaultSize: 'col-2',
-    icon: 'BarChart2',
     configurable: true,
     requiresData: true,
   },
@@ -262,8 +249,8 @@ export const widgetDefinitions: WidgetDefinition[] = [
   },
   {
     id: 'gauge-circular',
-    name: 'Medidor Circular',
-    description: 'Medidor circular como gráfico',
+    name: 'Medidor',
+    description: 'Medidor como gráfico',
     category: 'graficos-circulares',
     defaultSize: 'col-2',
     icon: 'Gauge',
@@ -279,26 +266,6 @@ export const widgetDefinitions: WidgetDefinition[] = [
     category: 'medidores',
     defaultSize: 'col-3',
     icon: 'Activity',
-    configurable: true,
-    requiresData: true,
-  },
-  {
-    id: 'technician-performance',
-    name: 'Performance Técnicos',
-    description: 'Métricas de desempenho',
-    category: 'medidores',
-    defaultSize: 'col-4',
-    icon: 'Users',
-    configurable: true,
-    requiresData: true,
-  },
-  {
-    id: 'sla-overview',
-    name: 'Visão Geral SLA',
-    description: 'Métricas de SLA',
-    category: 'medidores',
-    defaultSize: 'col-3',
-    icon: 'Clock',
     configurable: true,
     requiresData: true,
   },

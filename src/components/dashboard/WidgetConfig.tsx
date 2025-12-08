@@ -230,7 +230,6 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
           </div>
         );
 
-      case 'card-progress':
       case 'gauge-circular':
       case 'gauge-progress':
         return (

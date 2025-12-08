@@ -32,7 +32,6 @@ import {
   Clock,
   ClipboardList,
   Server,
-  Users,
   BarChart3,
   PieChart,
   LineChart as LineChartIcon,
@@ -613,8 +612,6 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
         return renderValueCard();
       case 'card-stat':
         return renderStatCard();
-      case 'card-progress':
-        return renderProgressCard();
 
       // GRÁFICOS
       case 'chart-line-echarts':
@@ -656,12 +653,6 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
         return renderWorkOrdersTable();
       case 'table-equipment':
         return renderEquipmentTable();
-
-      // ESPECÍFICOS CMMS
-      case 'technician-performance':
-        return renderTechnicianPerformance();
-      case 'sla-overview':
-        return renderSLAOverview();
 
       // OUTROS
       case 'text-display':
@@ -1036,99 +1027,6 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
           isCompact ? "text-[10px]" : "text-xs"
         )}>
           {isCompact ? "para exibir" : "para exibir os valores"}
-        </div>
-      </div>
-    );
-  }
-
-  function renderProgressCard() {
-    // Se tiver sensor configurado, usar dados do sensor
-    if (sensorTag && assetId) {
-      if (sensorData.isLoading) {
-        return (
-          <div className="flex flex-col items-center justify-center h-full">
-            <div className="text-sm text-muted-foreground">Carregando...</div>
-          </div>
-        );
-      }
-
-      // Obter valor atual do sensor
-      let currentValue: number = sensorData.value !== null ? Number(sensorData.value) : 0;
-      
-      // Aplicar fórmula de transformação se houver
-      const formula = widget.config?.transform?.formula;
-      if (formula && currentValue !== null) {
-        const transformedValue = evaluateFormula(formula, currentValue);
-        currentValue = typeof transformedValue === 'number' ? transformedValue : Number(transformedValue) || 0;
-      }
-
-      // Obter valores min/max da configuração
-      const minValue = widget.config?.minValue ?? 0;
-      const maxValue = widget.config?.maxValue ?? 100;
-      
-      // Calcular percentual baseado no range configurado
-      const range = maxValue - minValue;
-      const normalizedValue = currentValue - minValue;
-      const percent = range > 0 ? Math.round((normalizedValue / range) * 100) : 0;
-      const clampedPercent = Math.max(0, Math.min(100, percent));
-      
-      // Determinar cor baseado no percentual
-      const getProgressColor = () => {
-        if (clampedPercent >= 75) return 'bg-green-500';
-        if (clampedPercent >= 50) return 'bg-primary';
-        if (clampedPercent >= 25) return 'bg-yellow-500';
-        return 'bg-orange-500';
-      };
-
-      const unit = widget.config?.unit || sensorData.unit || '';
-      const label = widget.config?.label || formatSensorLabel(sensorTag);
-      const decimals = widget.config?.decimals ?? 2;
-      const formattedValue = typeof currentValue === 'number' 
-        ? currentValue.toFixed(decimals) 
-        : String(currentValue);
-      
-      return (
-        <div className="flex flex-col justify-between h-full p-2">
-          {/* Valor principal no topo */}
-          <div className="text-center">
-            <span className="text-2xl font-bold text-foreground">{formattedValue}</span>
-            <span className="text-sm text-muted-foreground ml-1">{unit}</span>
-          </div>
-          
-          {/* Label */}
-          <div className="text-center">
-            <div className="text-xs text-muted-foreground truncate">{label}</div>
-          </div>
-          
-          {/* Barra de progresso */}
-          <div className="w-full">
-            <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
-              <span>{minValue}</span>
-              <span className="font-medium">{clampedPercent}%</span>
-              <span>{maxValue}</span>
-            </div>
-            <div className="h-2 bg-muted rounded-full overflow-hidden">
-              <div 
-                className="h-full rounded-full transition-all duration-500 bg-primary"
-                style={{ width: `${Math.max(clampedPercent, 2)}%` }}
-              />
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // Widget não configurado - mostrar mensagem para configurar
-    return (
-      <div className="flex flex-col items-center justify-center h-full p-2 text-center">
-        <div className="rounded-lg bg-muted/50 flex items-center justify-center w-10 h-10 mb-2">
-          <Settings className="w-5 h-5 text-muted-foreground" />
-        </div>
-        <div className="text-sm text-muted-foreground font-medium">
-          Configure a variável
-        </div>
-        <div className="text-xs text-muted-foreground/70 mt-1">
-          para exibir os valores
         </div>
       </div>
     );
@@ -2272,61 +2170,6 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
               Nenhuma manutenção agendada
             </div>
           )}
-        </div>
-      </div>
-    );
-  }
-
-  function renderTechnicianPerformance() {
-    return (
-      <div className="h-full flex flex-col">
-        <div className="flex items-center gap-2 mb-4">
-          <Users className="w-5 h-5 text-primary" />
-          <span className="font-medium">Performance dos Técnicos</span>
-        </div>
-        <div className="flex-1 space-y-3">
-          {['João Silva', 'Maria Santos', 'Pedro Costa'].map((name, i) => {
-            const percent = [85, 72, 91][i];
-            return (
-              <div key={name} className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span>{name}</span>
-                  <span className="font-medium">{percent}%</span>
-                </div>
-                <Progress value={percent} className="h-2" />
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
-
-  function renderSLAOverview() {
-    const onTime = 87;
-    const breached = 13;
-
-    return (
-      <div className="h-full flex flex-col">
-        <div className="flex items-center gap-2 mb-4">
-          <Clock className="w-5 h-5 text-primary" />
-          <span className="font-medium">Visão Geral SLA</span>
-        </div>
-        <div className="flex-1 flex flex-col items-center justify-center">
-          <div className="text-4xl font-bold text-green-600">{onTime}%</div>
-          <div className="text-sm text-muted-foreground">Dentro do SLA</div>
-          <div className="mt-4 w-full">
-            <div className="h-3 bg-muted rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-green-500 rounded-full"
-                style={{ width: `${onTime}%` }}
-              />
-            </div>
-            <div className="flex justify-between mt-2 text-xs">
-              <span className="text-green-600">No prazo: {onTime}%</span>
-              <span className="text-red-600">Atrasado: {breached}%</span>
-            </div>
-          </div>
         </div>
       </div>
     );
