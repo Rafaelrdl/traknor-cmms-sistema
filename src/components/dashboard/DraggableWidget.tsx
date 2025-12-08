@@ -88,15 +88,69 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
     : chartPeriod === '30d' ? 720 
     : 24;
   
-
-  //   sensorTags,
-  //   assetTag,
-  //   chartTimeRange,
-  //   widgetId: widget.id,
-  //   widgetType: widget.type
-  // });
+  // Para heatmap-time, usar 7 dias de dados com a única variável configurada
+  const heatmapTimeRange = widget.type === 'heatmap-time' ? 168 : chartTimeRange; // 7 dias = 168 horas
+  const heatmapSensorTags = widget.type === 'heatmap-time' && sensorTag ? [sensorTag] : sensorTags;
   
-  const multiSensorHistory = useMultiSensorHistory(sensorTags, assetTag, chartTimeRange, 60000);
+  const multiSensorHistory = useMultiSensorHistory(heatmapSensorTags || sensorTags, assetTag, heatmapTimeRange, 60000);
+  
+  // Dados do heatmap temporal (moved to component level)
+  const heatmapData = useMemo(() => {
+    // Só calcular para widgets heatmap-time
+    if (widget.type !== 'heatmap-time') return null;
+    
+    if (!multiSensorHistory.series.length || !multiSensorHistory.series[0]?.data.length) {
+      return null;
+    }
+
+    const data = multiSensorHistory.series[0].data;
+    const grid: { [day: string]: { [hour: string]: number | null } } = {};
+    let min = Infinity;
+    let max = -Infinity;
+
+    // Processar os últimos 7 dias de dados
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    // Mapeamento padrão dos dias da semana
+    const dayMapping = {
+      0: 'Dom', // Domingo
+      1: 'Seg', // Segunda
+      2: 'Ter', // Terça
+      3: 'Qua', // Quarta
+      4: 'Qui', // Quinta
+      5: 'Sex', // Sexta
+      6: 'Sáb'  // Sábado
+    };
+
+    let processedPoints = 0;
+    data.forEach(point => {
+      const timestamp = new Date(point.timestamp);
+      if (timestamp >= sevenDaysAgo && timestamp <= now) {
+        const dayOfWeek = timestamp.getDay(); // 0 = domingo, 1 = segunda, etc.
+        const dayKey = dayMapping[dayOfWeek as keyof typeof dayMapping];
+        const hourKey = timestamp.getHours().toString().padStart(2, '0');
+        
+        if (!grid[dayKey]) {
+          grid[dayKey] = {};
+        }
+        
+        grid[dayKey][hourKey] = point.value;
+        
+        if (point.value < min) min = point.value;
+        if (point.value > max) max = point.value;
+        
+        processedPoints++;
+      }
+    });
+
+    // Verificar se temos dados válidos
+    if (processedPoints === 0 || min === Infinity || max === -Infinity) {
+      return null;
+    }
+
+    return { grid, min, max };
+  }, [widget.type, multiSensorHistory.series, sensorTag, assetTag]);
   
 
   //   seriesCount: multiSensorHistory.series.length,
@@ -653,6 +707,10 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
         return renderWorkOrdersTable();
       case 'table-equipment':
         return renderEquipmentTable();
+
+      // MAPAS DE CALOR
+      case 'heatmap-time':
+        return renderTemporalHeatmap();
 
       // OUTROS
       case 'text-display':
@@ -1991,6 +2049,109 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
         </div>
         <div className="text-xs text-muted-foreground/70 mt-1">
           para exibir os valores
+        </div>
+      </div>
+    );
+  }
+
+  function renderTemporalHeatmap() {
+    // Se não há sensor configurado, mostrar mensagem de configuração
+    if (!sensorTag || !assetTag) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full p-4 text-center">
+          <div className="rounded-lg bg-muted/50 flex items-center justify-center w-12 h-12 mb-3">
+            <Settings className="w-6 h-6 text-muted-foreground" />
+          </div>
+          <div className="text-sm text-muted-foreground font-medium">
+            Widget: heatmap-time
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">
+            Configure para visualizar dados
+          </div>
+        </div>
+      );
+    }
+
+    const getHeatmapColor = (value: number | null, min: number, max: number) => {
+      if (value === null || value === undefined || min === Infinity || max === -Infinity || min === max) {
+        return 'rgb(243, 244, 246)'; // gray-100
+      }
+      
+      const normalized = (value - min) / (max - min);
+      const intensity = Math.round(255 * (1 - normalized));
+      return `rgb(${255}, ${intensity}, ${intensity})`; // Red scale
+    };
+
+    const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
+
+    if (multiSensorHistory.loading) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full">
+          <div className="text-sm text-muted-foreground">Carregando dados...</div>
+        </div>
+      );
+    }
+
+    if (!heatmapData || !heatmapData.grid || heatmapData.min === Infinity || heatmapData.max === -Infinity) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full">
+          <div className="text-sm text-muted-foreground">Sem dados disponíveis</div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="h-full p-2">
+        <div className="h-full overflow-auto">
+          {/* Cabeçalho com escala */}
+          <div className="mb-2 text-xs text-muted-foreground text-center">
+            {(heatmapData.min !== Infinity && heatmapData.max !== -Infinity) 
+              ? `${heatmapData.min.toFixed(1)} - ${heatmapData.max.toFixed(1)} ${widget.config?.unit || ''}` 
+              : 'Sem dados de escala'
+            }
+          </div>
+          
+          {/* Grid do heatmap */}
+          <div className="grid gap-1" style={{ gridTemplateColumns: `auto repeat(24, 1fr)` }}>
+            {/* Header com horas */}
+            <div></div>
+            {hours.map(hour => (
+              <div key={hour} className="text-xs text-center text-muted-foreground font-mono">
+                {hour}
+              </div>
+            ))}
+            
+            {/* Rows com dias */}
+            {days.map(day => (
+              <>
+                <div key={`${day}-label`} className="text-xs text-right pr-2 text-muted-foreground">
+                  {day}
+                </div>
+                {hours.map(hour => {
+                  const value = heatmapData.grid[day]?.[hour];
+                  const color = getHeatmapColor(value, heatmapData.min, heatmapData.max);
+                  
+                  return (
+                    <div
+                      key={`${day}-${hour}`}
+                      className="aspect-square rounded-sm border border-gray-200 text-xs flex items-center justify-center cursor-pointer hover:opacity-80"
+                      style={{ backgroundColor: color }}
+                      title={value !== null && value !== undefined && typeof value === 'number' ? `${day} ${hour}:00 - ${value.toFixed(2)} ${widget.config?.unit || ''}` : 'Sem dados'}
+                    >
+                      {value !== null && value !== undefined && typeof value === 'number' && (
+                        <span className="text-xs font-mono" style={{ 
+                          color: (heatmapData.min !== Infinity && heatmapData.max !== -Infinity && value > (heatmapData.min + heatmapData.max) / 2) ? 'white' : 'black' 
+                        }}>
+                          {value.toFixed(0)}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </>
+            ))}
+          </div>
         </div>
       </div>
     );

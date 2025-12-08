@@ -182,20 +182,6 @@ export function WidgetConfig({ widget, layoutId, open, onClose }: WidgetConfigPr
   }, [isMultiVariableChart, selectedVariables, selectedSensor, selectedAssetId, selectedDeviceId, assets, deviceGroups, availableSensors]);
 
   const handleSave = () => {
-    console.log('🥧 WidgetConfig - handleSave:', {
-      widgetId: widget.id,
-      widgetType: widget.type,
-      title,
-      size,
-      config,
-      selectedVariables,
-      isMultiVariableChart,
-      finalConfig: {
-        ...config,
-        sensorTags: selectedVariables
-      }
-    });
-    
     // Garantir que sensorTags estão sendo salvos para widgets multi-variável
     const finalConfig = { ...config };
     if (isMultiVariableChart && selectedVariables.length > 0) {
