@@ -1,20 +1,11 @@
 /**
  * MultiSeriesTelemetryChart - Gráfico de séries temporais
  * 
- * Exibe múltiplas séries de dados de telemetria.
+ * Exibe múltiplas séries de dados de telemetria usando ECharts.
  */
 
-import { useMemo } from 'react';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
+import { useEffect, useRef } from 'react';
+import * as echarts from 'echarts';
 
 interface TelemetrySeries {
   sensorId: string;
@@ -44,9 +35,21 @@ const COLORS = [
 ];
 
 export function MultiSeriesTelemetryChart({ data }: MultiSeriesTelemetryChartProps) {
-  // Unificar dados de todas as séries em um único array de pontos
-  const chartData = useMemo(() => {
-    if (!data || data.length === 0) return [];
+  const chartRef = useRef<HTMLDivElement>(null);
+  const chartInstanceRef = useRef<echarts.ECharts | null>(null);
+
+  useEffect(() => {
+    if (!chartRef.current) return;
+
+    // Inicializar instância do ECharts
+    if (!chartInstanceRef.current) {
+      chartInstanceRef.current = echarts.init(chartRef.current);
+    }
+
+    if (!data || data.length === 0) {
+      chartInstanceRef.current.clear();
+      return;
+    }
 
     // Coletar todos os timestamps únicos
     const allTimestamps = new Set<string>();
@@ -59,73 +62,142 @@ export function MultiSeriesTelemetryChart({ data }: MultiSeriesTelemetryChartPro
     // Ordenar timestamps
     const sortedTimestamps = Array.from(allTimestamps).sort();
 
-    // Criar objetos com todos os valores
-    return sortedTimestamps.map(timestamp => {
-      const point: Record<string, any> = { timestamp };
-      data.forEach(series => {
-        const dataPoint = series.data.find(d => d.timestamp === timestamp);
-        point[series.sensorId] = dataPoint?.value ?? null;
+    // Formatar timestamps para exibição
+    const formattedTimestamps = sortedTimestamps.map(timestamp => {
+      const date = new Date(timestamp);
+      return date.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
       });
-      return point;
     });
+
+    // Preparar séries para ECharts
+    const series = data.map((serie, index) => {
+      // Criar mapa de valores por timestamp
+      const valueMap = new Map(
+        serie.data.map(point => [point.timestamp, point.value])
+      );
+
+      // Criar array de valores alinhado com timestamps
+      const values = sortedTimestamps.map(ts => valueMap.get(ts) ?? null);
+
+      return {
+        name: serie.sensorName || serie.sensorId,
+        type: 'line' as const,
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 4,
+        data: values,
+        itemStyle: {
+          color: COLORS[index % COLORS.length]
+        },
+        lineStyle: {
+          width: 2
+        },
+        connectNulls: true
+      };
+    });
+
+    const option: echarts.EChartsOption = {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'cross',
+          label: {
+            backgroundColor: '#6a7985'
+          }
+        },
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        borderColor: '#ddd',
+        borderWidth: 1,
+        textStyle: {
+          color: '#333',
+          fontSize: 12
+        }
+      },
+      legend: {
+        data: series.map(s => s.name),
+        bottom: 10,
+        textStyle: {
+          fontSize: 12
+        }
+      },
+      grid: {
+        left: '60px',
+        right: '30px',
+        bottom: '60px',
+        top: '20px',
+        containLabel: false
+      },
+      xAxis: {
+        type: 'category',
+        boundaryGap: false,
+        data: formattedTimestamps,
+        axisLabel: {
+          fontSize: 11,
+          color: '#666',
+          rotate: 45
+        },
+        axisLine: {
+          lineStyle: {
+            color: '#ddd'
+          }
+        }
+      },
+      yAxis: {
+        type: 'value',
+        axisLabel: {
+          fontSize: 11,
+          color: '#666'
+        },
+        splitLine: {
+          lineStyle: {
+            color: '#eee',
+            type: 'dashed'
+          }
+        },
+        axisLine: {
+          lineStyle: {
+            color: '#ddd'
+          }
+        }
+      },
+      series: series
+    };
+
+    chartInstanceRef.current.setOption(option, { notMerge: true });
+
+    // Resize handler
+    const handleResize = () => {
+      chartInstanceRef.current?.resize();
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, [data]);
 
-  // Formatador de hora para o eixo X
-  const formatXAxis = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  };
+  // Cleanup ao desmontar
+  useEffect(() => {
+    return () => {
+      chartInstanceRef.current?.dispose();
+      chartInstanceRef.current = null;
+    };
+  }, []);
 
-  // Formatador para tooltip
-  const formatTooltipLabel = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleString('pt-BR');
-  };
-
-  if (chartData.length === 0) {
+  if (!data || data.length === 0) {
     return (
-      <div className="h-64 flex items-center justify-center text-muted-foreground">
+      <div className="h-80 flex items-center justify-center text-muted-foreground">
         Nenhum dado para exibir
       </div>
     );
   }
 
   return (
-    <div className="h-80 w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-          <XAxis
-            dataKey="timestamp"
-            tickFormatter={formatXAxis}
-            tick={{ fontSize: 12 }}
-            className="text-muted-foreground"
-          />
-          <YAxis tick={{ fontSize: 12 }} className="text-muted-foreground" />
-          <Tooltip
-            labelFormatter={formatTooltipLabel}
-            contentStyle={{
-              backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: '8px',
-            }}
-          />
-          <Legend />
-          {data.map((series, index) => (
-            <Line
-              key={series.sensorId}
-              type="monotone"
-              dataKey={series.sensorId}
-              name={series.sensorName || series.sensorId}
-              stroke={COLORS[index % COLORS.length]}
-              strokeWidth={2}
-              dot={false}
-              activeDot={{ r: 4 }}
-              connectNulls
-            />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
+    <div ref={chartRef} className="h-80 w-full" />
   );
 }
