@@ -821,52 +821,29 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
       );
     }
 
-    // Fallback para dados de Work Orders se não tiver sensor configurado
-    const openWO = workOrderStats?.open ?? workOrders.filter(wo => wo.status === 'OPEN').length;
-    
-    // Obter o ícone configurado ou usar ClipboardList como padrão para WO
-    const fallbackIconKey = widget.config?.iconName || 'activity';
-    const FallbackIcon = kpiIconMap[fallbackIconKey] || ClipboardList;
-    
+    // Widget não configurado - mostrar mensagem para configurar
     return (
-      <div className="flex flex-col items-center justify-center h-full p-2">
-        {/* Layout horizontal: Ícone + Valor */}
-        <div className="flex items-center gap-4">
-          {/* Ícone */}
-          <div className={cn(
-            "rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0",
-            isCompact ? "w-12 h-12" : "w-16 h-16"
-          )}>
-            <FallbackIcon className={cn(
-              "text-primary",
-              isCompact ? "w-6 h-6" : "w-9 h-9"
-            )} />
-          </div>
-
-          {/* Valor */}
-          <span className={cn(
-            "font-bold text-foreground leading-none",
-            isCompact ? "text-3xl" : "text-4xl"
-          )}>
-            {openWO}
-          </span>
-        </div>
-        
-        {/* Label */}
+      <div className="flex flex-col items-center justify-center h-full p-4 text-center">
         <div className={cn(
-          "text-muted-foreground text-center leading-tight",
-          isCompact ? "text-xs mt-2" : "text-sm mt-3"
+          "rounded-xl bg-muted/50 flex items-center justify-center mb-3",
+          isCompact ? "w-10 h-10" : "w-14 h-14"
         )}>
-          {widget.config?.label || 'OS em Aberto'}
+          <Settings className={cn(
+            "text-muted-foreground",
+            isCompact ? "w-5 h-5" : "w-7 h-7"
+          )} />
         </div>
-        
-        {/* Indicador de tendência */}
         <div className={cn(
-          "flex items-center gap-1 text-green-600",
-          isCompact ? "mt-1 text-xs" : "mt-2 text-sm"
+          "text-muted-foreground font-medium",
+          isCompact ? "text-xs" : "text-sm"
         )}>
-          <TrendingDown className={cn(isCompact ? "w-3 h-3" : "w-4 h-4")} />
-          <span className="font-medium">-12% vs semana anterior</span>
+          {isCompact ? "Configure" : "Configure a variável"}
+        </div>
+        <div className={cn(
+          "text-muted-foreground/70 mt-1",
+          isCompact ? "text-[10px]" : "text-xs"
+        )}>
+          {isCompact ? "para exibir" : "para exibir os valores"}
         </div>
       </div>
     );
@@ -901,13 +878,17 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
       );
     }
 
+    // Widget não configurado - mostrar mensagem para configurar
     return (
-      <div className="flex flex-col items-center justify-center h-full">
-        <div className="text-3xl font-bold text-foreground">
-          {widget.config?.value || '0'}
+      <div className="flex flex-col items-center justify-center h-full text-center">
+        <div className="rounded-lg bg-muted/50 flex items-center justify-center w-10 h-10 mb-2">
+          <Settings className="w-5 h-5 text-muted-foreground" />
         </div>
-        <div className="text-sm text-muted-foreground mt-2">
-          {widget.config?.label || 'Valor'}
+        <div className="text-sm text-muted-foreground font-medium">
+          Configure a variável
+        </div>
+        <div className="text-xs text-muted-foreground/70 mt-1">
+          para exibir os valores
         </div>
       </div>
     );
@@ -1032,28 +1013,29 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
       );
     }
 
-    // Fallback para dados de Work Orders se não tiver sensor configurado
-    const completedWO = workOrderStats?.completed ?? workOrders.filter(wo => wo.status === 'COMPLETED').length;
+    // Widget não configurado - mostrar mensagem para configurar
     return (
-      <div className="flex flex-col items-center justify-center h-full py-2">
+      <div className="flex flex-col items-center justify-center h-full py-2 text-center">
         <div className={cn(
-          "font-bold text-foreground",
-          isCompact ? "text-2xl" : "text-3xl"
+          "rounded-lg bg-muted/50 flex items-center justify-center mb-2",
+          isCompact ? "w-8 h-8" : "w-10 h-10"
         )}>
-          {completedWO}
+          <Settings className={cn(
+            "text-muted-foreground",
+            isCompact ? "w-4 h-4" : "w-5 h-5"
+          )} />
         </div>
         <div className={cn(
-          "text-muted-foreground text-center leading-tight",
-          isCompact ? "text-xs mt-1" : "text-sm mt-1"
+          "text-muted-foreground font-medium",
+          isCompact ? "text-xs" : "text-sm"
         )}>
-          {widget.config?.label || 'Concluídas'}
+          {isCompact ? "Configure" : "Configure a variável"}
         </div>
         <div className={cn(
-          "flex items-center gap-1 text-xs text-green-600",
-          isCompact ? "mt-1" : "mt-2"
+          "text-muted-foreground/70 mt-1",
+          isCompact ? "text-[10px]" : "text-xs"
         )}>
-          <TrendingUp className="w-3 h-3" />
-          <span>+8% este mês</span>
+          {isCompact ? "para exibir" : "para exibir os valores"}
         </div>
       </div>
     );
@@ -1136,31 +1118,17 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
       );
     }
 
-    // Fallback para dados de Work Orders se não tiver sensor configurado
-    const total = workOrders.length || 1;
-    const completed = workOrders.filter(wo => wo.status === 'COMPLETED').length;
-    const percent = Math.round((completed / total) * 100);
-    
+    // Widget não configurado - mostrar mensagem para configurar
     return (
-      <div className="flex flex-col justify-between h-full p-2">
-        {/* Valor principal no topo */}
-        <div className="text-center">
-          <span className="text-2xl font-bold text-foreground">{percent}%</span>
+      <div className="flex flex-col items-center justify-center h-full p-2 text-center">
+        <div className="rounded-lg bg-muted/50 flex items-center justify-center w-10 h-10 mb-2">
+          <Settings className="w-5 h-5 text-muted-foreground" />
         </div>
-        
-        {/* Label */}
-        <div className="text-center">
-          <div className="text-xs text-muted-foreground">{completed} de {total} concluídas</div>
+        <div className="text-sm text-muted-foreground font-medium">
+          Configure a variável
         </div>
-        
-        {/* Barra de progresso */}
-        <div className="w-full">
-          <div className="h-2 bg-muted rounded-full overflow-hidden">
-            <div 
-              className="h-full rounded-full transition-all duration-500 bg-primary"
-              style={{ width: `${Math.max(percent, 2)}%` }}
-            />
-          </div>
+        <div className="text-xs text-muted-foreground/70 mt-1">
+          para exibir os valores
         </div>
       </div>
     );
@@ -1473,6 +1441,232 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
     );
   }
 
+  // Componente interno para gráfico de pizza com tooltip
+  function PieChartWithTooltip({ 
+    slices, 
+    pieData, 
+    describeArc 
+  }: { 
+    slices: Array<{ name: string; value: number; color: string; unit: string; startAngle: number; endAngle: number; percentage: string }>;
+    pieData: Array<{ name: string; value: number; color: string; unit: string }>;
+    describeArc: (x: number, y: number, radius: number, startAngle: number, endAngle: number) => string;
+  }) {
+    const [tooltip, setTooltip] = useState<{ visible: boolean; x: number; y: number; content: string; color: string }>({
+      visible: false,
+      x: 0,
+      y: 0,
+      content: '',
+      color: ''
+    });
+
+    const handleMouseEnter = (e: React.MouseEvent<SVGPathElement>, slice: typeof slices[0]) => {
+      const rect = e.currentTarget.closest('svg')?.getBoundingClientRect();
+      if (rect) {
+        setTooltip({
+          visible: true,
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top - 40,
+          content: `${slice.name}: ${slice.value.toFixed(2)}${slice.unit} (${slice.percentage}%)`,
+          color: slice.color
+        });
+      }
+    };
+
+    const handleMouseMove = (e: React.MouseEvent<SVGPathElement>, slice: typeof slices[0]) => {
+      const rect = e.currentTarget.closest('svg')?.getBoundingClientRect();
+      if (rect) {
+        setTooltip(prev => ({
+          ...prev,
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top - 40,
+          content: `${slice.name}: ${slice.value.toFixed(2)}${slice.unit} (${slice.percentage}%)`,
+          color: slice.color
+        }));
+      }
+    };
+
+    const handleMouseLeave = () => {
+      setTooltip(prev => ({ ...prev, visible: false }));
+    };
+
+    return (
+      <div className="h-full flex flex-col items-center justify-center">
+        <div className="relative w-40 h-40">
+          <svg className="w-40 h-40" viewBox="0 0 100 100">
+            {slices.map((slice, index) => (
+              <path
+                key={index}
+                d={describeArc(50, 50, 48, slice.startAngle, slice.endAngle)}
+                fill={slice.color}
+                stroke="white"
+                strokeWidth="1.5"
+                className="cursor-pointer transition-opacity duration-200 hover:opacity-75"
+                onMouseEnter={(e) => handleMouseEnter(e, slice)}
+                onMouseMove={(e) => handleMouseMove(e, slice)}
+                onMouseLeave={handleMouseLeave}
+              />
+            ))}
+          </svg>
+          {/* Tooltip customizado */}
+          {tooltip.visible && (
+            <div
+              className="absolute pointer-events-none z-50 px-2 py-1 text-xs font-medium text-white bg-gray-900 rounded shadow-lg whitespace-nowrap"
+              style={{
+                left: `${tooltip.x}px`,
+                top: `${tooltip.y}px`,
+                transform: 'translateX(-50%)'
+              }}
+            >
+              <div className="flex items-center gap-1.5">
+                <div 
+                  className="w-2 h-2 rounded-full flex-shrink-0" 
+                  style={{ backgroundColor: tooltip.color }}
+                />
+                <span>{tooltip.content}</span>
+              </div>
+              {/* Seta do tooltip */}
+              <div 
+                className="absolute left-1/2 -translate-x-1/2 -bottom-1 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900"
+              />
+            </div>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2 mt-4 text-xs max-w-[90%] justify-center">
+          {pieData.map((item, index) => (
+            <div key={index} className="flex items-center gap-1">
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: item.color }}
+              />
+              <span>
+                {item.name}: {item.value.toFixed(1)}{item.unit}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Componente interno para gráfico de donut com tooltip
+  function DonutChartWithTooltip({ 
+    segments, 
+    donutData,
+    total,
+    circumference
+  }: { 
+    segments: Array<{ name: string; value: number; color: string; unit: string; segmentLength: number; offset: number; percentage: string }>;
+    donutData: Array<{ name: string; value: number; color: string; unit: string }>;
+    total: number;
+    circumference: number;
+  }) {
+    const [tooltip, setTooltip] = useState<{ 
+      visible: boolean; 
+      x: number; 
+      y: number; 
+      content: string; 
+      color: string 
+    }>({
+      visible: false,
+      x: 0,
+      y: 0,
+      content: '',
+      color: ''
+    });
+
+    const handleMouseEnter = (e: React.MouseEvent<SVGCircleElement>, segment: typeof segments[0]) => {
+      setTooltip({
+        visible: true,
+        x: e.clientX,
+        y: e.clientY - 50,
+        content: `${segment.name}: ${segment.value.toFixed(2)}${segment.unit} (${segment.percentage}%)`,
+        color: segment.color
+      });
+    };
+
+    const handleMouseMove = (e: React.MouseEvent<SVGCircleElement>, segment: typeof segments[0]) => {
+      setTooltip(prev => ({
+        ...prev,
+        x: e.clientX,
+        y: e.clientY - 50,
+        content: `${segment.name}: ${segment.value.toFixed(2)}${segment.unit} (${segment.percentage}%)`,
+        color: segment.color
+      }));
+    };
+
+    const handleMouseLeave = () => {
+      setTooltip(prev => ({ ...prev, visible: false }));
+    };
+
+    return (
+      <div className="h-full flex flex-col items-center justify-center">
+        <div className="relative w-40 h-40">
+          <svg className="w-40 h-40 transform -rotate-90" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#e5e7eb" strokeWidth="12" />
+            {segments.map((segment, index) => (
+              <circle
+                key={index}
+                cx="50"
+                cy="50"
+                r="40"
+                fill="transparent"
+                stroke={segment.color}
+                strokeWidth="12"
+                strokeDasharray={`${segment.segmentLength} ${circumference}`}
+                strokeDashoffset={segment.offset}
+                className="cursor-pointer hover:opacity-75 transition-opacity duration-200"
+                onMouseEnter={(e) => handleMouseEnter(e, segment)}
+                onMouseMove={(e) => handleMouseMove(e, segment)}
+                onMouseLeave={handleMouseLeave}
+              />
+            ))}
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span className="text-xl font-bold">{total.toFixed(1)}</span>
+          </div>
+        </div>
+        
+        {/* Legenda */}
+        <div className="flex flex-wrap gap-2 mt-4 text-xs max-w-[90%] justify-center">
+          {donutData.map((item, index) => (
+            <div key={index} className="flex items-center gap-1">
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: item.color }}
+              />
+              <span>
+                {item.name}: {item.value.toFixed(1)}{item.unit}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Tooltip que segue o mouse */}
+        {tooltip.visible && (
+          <div
+            className="fixed pointer-events-none z-[9999] px-3 py-2 text-xs font-medium text-white bg-gray-900 rounded-lg shadow-lg whitespace-nowrap"
+            style={{
+              left: `${tooltip.x}px`,
+              top: `${tooltip.y}px`,
+              transform: 'translateX(-50%)'
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <div 
+                className="w-3 h-3 rounded-full flex-shrink-0" 
+                style={{ backgroundColor: tooltip.color }}
+              />
+              <span>{tooltip.content}</span>
+            </div>
+            {/* Seta do tooltip */}
+            <div 
+              className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-gray-900"
+            />
+          </div>
+        )}
+      </div>
+    );
+  }
   function renderPieChart() {
     console.log('🥧 renderPieChart - Debug:', {
       widgetId: widget.id,
@@ -1542,97 +1736,29 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
         const slice = {
           ...item,
           startAngle: currentAngle,
-          endAngle: currentAngle + sliceAngle
+          endAngle: currentAngle + sliceAngle,
+          percentage: ((item.value / total) * 100).toFixed(1)
         };
         currentAngle += sliceAngle;
         return slice;
       });
 
       return (
-        <div className="h-full flex flex-col items-center justify-center">
-          <div className="relative w-40 h-40">
-            <svg className="w-40 h-40" viewBox="0 0 100 100">
-              {slices.map((slice, index) => (
-                <path
-                  key={index}
-                  d={describeArc(50, 50, 48, slice.startAngle, slice.endAngle)}
-                  fill={slice.color}
-                  stroke="white"
-                  strokeWidth="1.5"
-                />
-              ))}
-            </svg>
-          </div>
-          <div className="flex flex-wrap gap-2 mt-4 text-xs max-w-[90%] justify-center">
-            {pieData.map((item, index) => (
-              <div key={index} className="flex items-center gap-1">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: item.color }}
-                />
-                <span>
-                  {item.name}: {item.value.toFixed(1)}{item.unit}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <PieChartWithTooltip slices={slices} pieData={pieData} describeArc={describeArc} />
       );
     }
 
-    console.log('🥧 renderPieChart - Usando fallback (status de equipamentos)');
-
-    // Fallback: exibir status de equipamentos se não houver sensor configurado
-    const functioning = equipment.filter(eq => eq.status === 'FUNCTIONING').length;
-    const maintenance = equipment.filter(eq => eq.status === 'MAINTENANCE').length;
-    const stopped = equipment.filter(eq => eq.status === 'STOPPED').length;
-    const total = functioning + maintenance + stopped || 1;
-
+    // Widget não configurado - mostrar mensagem para configurar
     return (
-      <div className="h-full flex flex-col items-center justify-center">
-        <div className="flex items-center gap-2 mb-4">
-          <PieChart className="w-5 h-5 text-primary" />
-          <span className="font-medium">Status dos Equipamentos</span>
+      <div className="h-full flex flex-col items-center justify-center text-center">
+        <div className="rounded-xl bg-muted/50 flex items-center justify-center w-14 h-14 mb-3">
+          <Settings className="w-7 h-7 text-muted-foreground" />
         </div>
-        <div className="relative w-32 h-32">
-          <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#e5e7eb" strokeWidth="10" />
-            <circle 
-              cx="50" cy="50" r="40" fill="transparent" 
-              stroke="#10b981" strokeWidth="10"
-              strokeDasharray={`${(functioning / total) * 251.2} 251.2`}
-              strokeDashoffset="0"
-            />
-            <circle 
-              cx="50" cy="50" r="40" fill="transparent" 
-              stroke="#f59e0b" strokeWidth="10"
-              strokeDasharray={`${(maintenance / total) * 251.2} 251.2`}
-              strokeDashoffset={`${-(functioning / total) * 251.2}`}
-            />
-            <circle 
-              cx="50" cy="50" r="40" fill="transparent" 
-              stroke="#ef4444" strokeWidth="10"
-              strokeDasharray={`${(stopped / total) * 251.2} 251.2`}
-              strokeDashoffset={`${-((functioning + maintenance) / total) * 251.2}`}
-            />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-2xl font-bold">{total}</span>
-          </div>
+        <div className="text-sm text-muted-foreground font-medium">
+          Configure as variáveis
         </div>
-        <div className="flex gap-4 mt-4 text-xs">
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-green-500 rounded-full" />
-            <span>Ok ({functioning})</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-yellow-500 rounded-full" />
-            <span>Manut. ({maintenance})</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-red-500 rounded-full" />
-            <span>Parado ({stopped})</span>
-          </div>
+        <div className="text-xs text-muted-foreground/70 mt-1">
+          para exibir o gráfico de pizza
         </div>
       </div>
     );
@@ -1677,106 +1803,37 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
 
       const total = donutData.reduce((sum, item) => sum + item.value, 0);
       const circumference = 251.2; // 2 * PI * 40 (raio)
+
+      // Calcular os segmentos com offset
       let currentOffset = 0;
+      const segments = donutData.map(item => {
+        const segmentLength = (item.value / total) * circumference;
+        const segment = {
+          ...item,
+          segmentLength,
+          offset: currentOffset,
+          percentage: ((item.value / total) * 100).toFixed(1)
+        };
+        currentOffset -= segmentLength;
+        return segment;
+      });
 
       return (
-        <div className="h-full flex flex-col items-center justify-center">
-          <div className="relative w-40 h-40">
-            <svg className="w-40 h-40 transform -rotate-90" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="40" fill="transparent" stroke="#e5e7eb" strokeWidth="12" />
-              {donutData.map((item, index) => {
-                const segmentLength = (item.value / total) * circumference;
-                const circle = (
-                  <circle
-                    key={index}
-                    cx="50"
-                    cy="50"
-                    r="40"
-                    fill="transparent"
-                    stroke={item.color}
-                    strokeWidth="12"
-                    strokeDasharray={`${segmentLength} ${circumference}`}
-                    strokeDashoffset={currentOffset}
-                  />
-                );
-                currentOffset -= segmentLength;
-                return circle;
-              })}
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-xl font-bold">{total.toFixed(1)}</span>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-2 mt-4 text-xs max-w-[90%] justify-center">
-            {donutData.map((item, index) => (
-              <div key={index} className="flex items-center gap-1">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: item.color }}
-                />
-                <span>
-                  {item.name}: {item.value.toFixed(1)}{item.unit}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <DonutChartWithTooltip segments={segments} donutData={donutData} total={total} circumference={circumference} />
       );
     }
 
-    console.log('🍩 renderDonutChart - Usando fallback (status de equipamentos)');
-
-    // Fallback: exibir status de equipamentos se não houver sensor configurado
-    const functioning = equipment.filter(eq => eq.status === 'FUNCTIONING').length;
-    const maintenance = equipment.filter(eq => eq.status === 'MAINTENANCE').length;
-    const stopped = equipment.filter(eq => eq.status === 'STOPPED').length;
-    const total = functioning + maintenance + stopped || 1;
-
+    // Widget não configurado - mostrar mensagem para configurar
     return (
-      <div className="h-full flex flex-col items-center justify-center">
-        <div className="flex items-center gap-2 mb-4">
-          <PieChart className="w-5 h-5 text-primary" />
-          <span className="font-medium">Status dos Equipamentos</span>
+      <div className="h-full flex flex-col items-center justify-center text-center">
+        <div className="rounded-xl bg-muted/50 flex items-center justify-center w-14 h-14 mb-3">
+          <Settings className="w-7 h-7 text-muted-foreground" />
         </div>
-        <div className="relative w-32 h-32">
-          <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#e5e7eb" strokeWidth="10" />
-            <circle 
-              cx="50" cy="50" r="40" fill="transparent" 
-              stroke="#10b981" strokeWidth="10"
-              strokeDasharray={`${(functioning / total) * 251.2} 251.2`}
-              strokeDashoffset="0"
-            />
-            <circle 
-              cx="50" cy="50" r="40" fill="transparent" 
-              stroke="#f59e0b" strokeWidth="10"
-              strokeDasharray={`${(maintenance / total) * 251.2} 251.2`}
-              strokeDashoffset={`${-(functioning / total) * 251.2}`}
-            />
-            <circle 
-              cx="50" cy="50" r="40" fill="transparent" 
-              stroke="#ef4444" strokeWidth="10"
-              strokeDasharray={`${(stopped / total) * 251.2} 251.2`}
-              strokeDashoffset={`${-((functioning + maintenance) / total) * 251.2}`}
-            />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-2xl font-bold">{total}</span>
-          </div>
+        <div className="text-sm text-muted-foreground font-medium">
+          Configure as variáveis
         </div>
-        <div className="flex gap-4 mt-4 text-xs">
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-green-500 rounded-full" />
-            <span>Ok ({functioning})</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-yellow-500 rounded-full" />
-            <span>Manut. ({maintenance})</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-red-500 rounded-full" />
-            <span>Parado ({stopped})</span>
-          </div>
+        <div className="text-xs text-muted-foreground/70 mt-1">
+          para exibir o gráfico donut
         </div>
       </div>
     );
@@ -1784,10 +1841,82 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
 
   function renderGauge() {
     // Se tiver sensor configurado, usar dados do sensor
-    let percent: number = Number(widget.config?.value) || 75;
-    let label = widget.config?.label || 'Performance';
-    let unit = '';
+    if (sensorTag && assetId && sensorData.value !== null) {
+      let displayValue: number = Number(sensorData.value);
+      const formula = widget.config?.transform?.formula;
+      if (formula) {
+        const result = evaluateFormula(formula, displayValue);
+        if (result !== null && typeof result === 'number') displayValue = result;
+      }
+      
+      // Calcular porcentagem usando os valores mínimo e máximo configurados
+      const min = widget.config?.minValue ?? 0;
+      const max = widget.config?.maxValue ?? 100;
+      
+      // Calcular porcentagem - se o valor está fora do range, limitar entre 0 e 100%
+      const range = max - min;
+      const normalizedValue = displayValue - min;
+      const rawPercent = range > 0 ? (normalizedValue / range) * 100 : 0;
+      const percent = Math.min(100, Math.max(0, rawPercent));
+      
+      const label = widget.config?.label || formatSensorLabel(sensorTag);
+      const unit = widget.config?.unit || sensorData.unit || '';
 
+      // Determinar cor baseada no valor em relação ao range
+      let gaugeColor = 'border-primary';
+      if (displayValue > max) {
+        gaugeColor = 'border-red-500'; // Vermelho se acima do máximo
+      } else if (displayValue < min) {
+        gaugeColor = 'border-blue-500'; // Azul se abaixo do mínimo
+      }
+
+      return (
+        <div className="h-full flex flex-col items-center justify-center">
+          <div className="relative w-24 h-12 overflow-hidden">
+            <div className="absolute w-24 h-24 border-8 border-muted rounded-full" />
+            <div 
+              className={`absolute w-24 h-24 border-8 rounded-full transition-all ${gaugeColor}`}
+              style={{ 
+                clipPath: `polygon(0 100%, 100% 100%, 100% 50%, 0 50%)`,
+                transform: `rotate(${(percent / 100) * 180 - 90}deg)`
+              }}
+            />
+          </div>
+          <div className="text-2xl font-bold mt-2">
+            {`${Number(sensorData.value).toFixed(1)}${unit ? ` ${unit}` : ''}`}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {label}
+          </div>
+          {/* Mostrar indicadores quando valor está fora do range */}
+          {(displayValue > max || displayValue < min) && (
+            <div className="text-xs mt-1 px-2 py-1 rounded text-white" 
+                 style={{ backgroundColor: displayValue > max ? '#ef4444' : '#3b82f6' }}>
+              {displayValue > max ? 'Acima do máximo' : 'Abaixo do mínimo'}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Widget não configurado - mostrar mensagem para configurar
+    return (
+      <div className="h-full flex flex-col items-center justify-center text-center">
+        <div className="rounded-xl bg-muted/50 flex items-center justify-center w-12 h-12 mb-3">
+          <Settings className="w-6 h-6 text-muted-foreground" />
+        </div>
+        <div className="text-sm text-muted-foreground font-medium">
+          Configure a variável
+        </div>
+        <div className="text-xs text-muted-foreground/70 mt-1">
+          para exibir os valores
+        </div>
+      </div>
+    );
+  }
+
+  function renderProgressGauge() {
+    // Se tiver sensor configurado, usar dados do sensor
     if (sensorTag && assetId && sensorData.value !== null) {
       let displayValue: number = Number(sensorData.value);
       const formula = widget.config?.transform?.formula;
@@ -1797,51 +1926,37 @@ export function DraggableWidget({ widget, layoutId }: DraggableWidgetProps) {
       }
       
       // Calcular porcentagem se tiver min/max configurados
-      const min = widget.config?.min ?? 0;
-      const max = widget.config?.max ?? 100;
-      percent = Math.min(100, Math.max(0, ((displayValue - min) / (max - min)) * 100));
-      label = widget.config?.label || formatSensorLabel(sensorTag);
-      unit = widget.config?.unit || sensorData.unit || '';
+      const min = widget.config?.minValue ?? 0;
+      const max = widget.config?.maxValue ?? 100;
+      const percent = Math.min(100, Math.max(0, ((displayValue - min) / (max - min)) * 100));
+      const label = widget.config?.label || formatSensorLabel(sensorTag);
+
+      return (
+        <div className="h-full flex flex-col justify-center">
+          <div className="text-sm font-medium mb-2">
+            {label}
+          </div>
+          <Progress value={percent} className="h-4" />
+          <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+            <span>{min}</span>
+            <span className="font-medium text-foreground">{displayValue.toFixed(1)}</span>
+            <span>{max}</span>
+          </div>
+        </div>
+      );
     }
 
+    // Widget não configurado - mostrar mensagem para configurar
     return (
-      <div className="h-full flex flex-col items-center justify-center">
-        <Gauge className="w-8 h-8 text-primary mb-2" />
-        <div className="relative w-24 h-12 overflow-hidden">
-          <div className="absolute w-24 h-24 border-8 border-muted rounded-full" />
-          <div 
-            className="absolute w-24 h-24 border-8 border-primary rounded-full transition-all"
-            style={{ 
-              clipPath: `polygon(0 100%, 100% 100%, 100% 50%, 0 50%)`,
-              transform: `rotate(${(percent / 100) * 180 - 90}deg)`
-            }}
-          />
+      <div className="h-full flex flex-col items-center justify-center text-center">
+        <div className="rounded-lg bg-muted/50 flex items-center justify-center w-10 h-10 mb-2">
+          <Settings className="w-5 h-5 text-muted-foreground" />
         </div>
-        <div className="text-2xl font-bold mt-2">
-          {sensorTag && assetId && sensorData.value !== null
-            ? `${Number(sensorData.value).toFixed(1)}${unit ? ` ${unit}` : ''}`
-            : `${percent}%`
-          }
+        <div className="text-sm text-muted-foreground font-medium">
+          Configure a variável
         </div>
-        <div className="text-xs text-muted-foreground">
-          {label}
-        </div>
-      </div>
-    );
-  }
-
-  function renderProgressGauge() {
-    const percent: number = Number(widget.config?.value) || 65;
-    return (
-      <div className="h-full flex flex-col justify-center">
-        <div className="text-sm font-medium mb-2">
-          {widget.config?.label || 'Progresso'}
-        </div>
-        <Progress value={percent} className="h-4" />
-        <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-          <span>0%</span>
-          <span className="font-medium text-foreground">{percent}%</span>
-          <span>100%</span>
+        <div className="text-xs text-muted-foreground/70 mt-1">
+          para exibir os valores
         </div>
       </div>
     );
