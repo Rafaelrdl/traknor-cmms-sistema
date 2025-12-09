@@ -4,25 +4,32 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Plus, Edit, Play, CheckCircle, Loader2 } from 'lucide-react';
+import { Calendar, Plus, Edit, Play, CheckCircle, Loader2, Trash2 } from 'lucide-react';
 import { PlanFormModal } from '@/components/PlanFormModal';
 import { 
   useMaintenancePlans, 
   useCreatePlan, 
   useUpdatePlan,
-  useGenerateWorkOrders 
+  useDeletePlan,
+  useGenerateWorkOrders,
+  planKeys
 } from '@/hooks/usePlansQuery';
+import { useQueryClient } from '@tanstack/react-query';
 import { IfCanCreate, IfCanEdit } from '@/components/auth/IfCan';
 import { toast } from 'sonner';
 import type { MaintenancePlan } from '@/models/plan';
 
 export function PlansPage() {
+  // Query client para invalidar queries
+  const queryClient = useQueryClient();
+  
   // React Query hooks
   const { data: plans = [], isLoading, error } = useMaintenancePlans();
   
-  // Mutations
+  // Mutations (mantidos para compatibilidade futura com API)
   const createMutation = useCreatePlan();
   const updateMutation = useUpdatePlan();
+  const deleteMutation = useDeletePlan();
   const generateMutation = useGenerateWorkOrders();
   
   // Local state
@@ -40,20 +47,22 @@ export function PlansPage() {
   };
 
   const handlePlanSave = (savedPlan: MaintenancePlan) => {
-    if (selectedPlan) {
-      // Update via mutation
-      updateMutation.mutate({ id: savedPlan.id, data: savedPlan as any }, {
+    // O plano já foi salvo pelo PlanFormModal no store local
+    // Apenas invalidar as queries para atualizar a lista
+    queryClient.invalidateQueries({ queryKey: planKeys.lists() });
+    queryClient.invalidateQueries({ queryKey: planKeys.stats() });
+    setIsModalOpen(false);
+    // Toast já é mostrado pelo PlanFormModal
+  };
+
+  const handleDeletePlan = (plan: MaintenancePlan) => {
+    if (window.confirm(`Tem certeza que deseja excluir o plano "${plan.name}"?`)) {
+      deleteMutation.mutate(plan.id, {
         onSuccess: () => {
-          setIsModalOpen(false);
-          toast.success('Plano atualizado com sucesso!');
-        }
-      });
-    } else {
-      // Create via mutation
-      createMutation.mutate(savedPlan as any, {
-        onSuccess: () => {
-          setIsModalOpen(false);
-          toast.success('Plano criado com sucesso!');
+          toast.success('Plano excluído com sucesso!');
+        },
+        onError: () => {
+          toast.error('Erro ao excluir plano.');
         }
       });
     }
@@ -253,6 +262,18 @@ export function PlansPage() {
                             Gerar OS
                           </Button>
                         )}
+                        
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleDeletePlan(plan)}
+                          className="flex items-center gap-1 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          aria-label={`Excluir plano ${plan.name}`}
+                          data-testid="plan-delete"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          Excluir
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>

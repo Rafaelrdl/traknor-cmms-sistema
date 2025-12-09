@@ -8,12 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Trash2, CheckSquare } from 'lucide-react';
+import { Plus, Trash2, CheckSquare, Eye, ListChecks } from 'lucide-react';
 import { toast } from 'sonner';
-import type { MaintenancePlan, PlanTask } from '@/models/plan';
+import type { MaintenancePlan } from '@/models/plan';
 import { createPlan, updatePlan } from '@/data/plansStore';
 import { useCompanies, useSectors } from '@/hooks/useLocationsQuery';
 import { useEquipments } from '@/hooks/useEquipmentQuery';
+import { useChecklists } from '@/hooks/useChecklistsQuery';
+import type { ChecklistTemplate } from '@/models/checklist';
 
 interface PlanFormModalProps {
   open: boolean;
@@ -26,6 +28,7 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
   const { data: companies = [] } = useCompanies();
   const { data: sectors = [] } = useSectors();
   const { data: equipment = [] } = useEquipments();
+  const { data: checklists = [] } = useChecklists();
 
   // Form state
   const [formData, setFormData] = useState<{
@@ -38,7 +41,7 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
       equipment_ids: string[];
       equipment_names: string[];
     };
-    tasks: PlanTask[];
+    checklist_id: string;
     status: MaintenancePlan['status'];
     start_date: string;
     auto_generate: boolean;
@@ -52,7 +55,7 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
       equipment_ids: [],
       equipment_names: []
     },
-    tasks: [],
+    checklist_id: '',
     status: 'Ativo',
     start_date: '',
     auto_generate: false
@@ -60,6 +63,8 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedChecklist, setSelectedChecklist] = useState<ChecklistTemplate | null>(null);
+  const [isViewingChecklist, setIsViewingChecklist] = useState(false);
 
   // Load plan data when editing
   useEffect(() => {
@@ -74,7 +79,7 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
           equipment_ids: plan.scope?.equipment_ids || [],
           equipment_names: plan.scope?.equipment_names || []
         },
-        tasks: plan.tasks || [],
+        checklist_id: plan.checklist_id || '',
         status: plan.status,
         start_date: plan.start_date || '',
         auto_generate: plan.auto_generate || false
@@ -91,7 +96,7 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
           equipment_ids: [],
           equipment_names: []
         },
-        tasks: [],
+        checklist_id: '',
         status: 'Ativo',
         start_date: '',
         auto_generate: false
@@ -99,6 +104,16 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
     }
     setErrors({});
   }, [plan, open]);
+
+  // Sincronizar selectedChecklist com formData.checklist_id
+  useEffect(() => {
+    if (formData.checklist_id && checklists.length > 0) {
+      const checklist = checklists.find(c => c.id === formData.checklist_id);
+      setSelectedChecklist(checklist || null);
+    } else {
+      setSelectedChecklist(null);
+    }
+  }, [formData.checklist_id, checklists]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -127,12 +142,10 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
       }
     }
 
-    // Validate tasks
-    formData.tasks.forEach((task, index) => {
-      if (!task.name.trim()) {
-        newErrors[`task-${index}`] = 'Nome da tarefa é obrigatório';
-      }
-    });
+    // Validate checklist
+    if (!formData.checklist_id || formData.checklist_id === "none") {
+      newErrors.checklist = 'Selecione um checklist para o plano de manutenção';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -159,7 +172,7 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
           description: formData.description,
           frequency: formData.frequency as MaintenancePlan['frequency'],
           scope: formData.scope,
-          tasks: formData.tasks,
+          checklist_id: formData.checklist_id,
           status: formData.status,
           start_date: formData.start_date,
           auto_generate: formData.auto_generate
@@ -172,7 +185,7 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
           description: formData.description,
           frequency: formData.frequency as MaintenancePlan['frequency'],
           scope: formData.scope,
-          tasks: formData.tasks,
+          checklist_id: formData.checklist_id,
           status: formData.status,
           start_date: formData.start_date,
           auto_generate: formData.auto_generate
@@ -281,77 +294,15 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
     }));
   };
 
-  const addTask = () => {
-    const newTask: PlanTask = {
-      id: `task-${Date.now()}`,
-      name: '',
-      checklist: []
-    };
-    
-    setFormData(prev => ({
-      ...prev,
-      tasks: [...prev.tasks, newTask]
-    }));
+  const handleChecklistChange = (checklistId: string) => {
+    const actualChecklistId = checklistId === "none" ? "" : checklistId;
+    setFormData(prev => ({ ...prev, checklist_id: actualChecklistId }));
+    const checklist = checklists.find(c => c.id === actualChecklistId);
+    setSelectedChecklist(checklist || null);
   };
 
-  const updateTask = (index: number, updates: Partial<PlanTask>) => {
-    setFormData(prev => ({
-      ...prev,
-      tasks: prev.tasks.map((task, i) => 
-        i === index ? { ...task, ...updates } : task
-      )
-    }));
-  };
-
-  const removeTask = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      tasks: prev.tasks.filter((_, i) => i !== index)
-    }));
-  };
-
-  const addChecklistItem = (taskIndex: number) => {
-    setFormData(prev => ({
-      ...prev,
-      tasks: prev.tasks.map((task, i) => 
-        i === taskIndex 
-          ? { 
-              ...task, 
-              checklist: [...(task.checklist || []), ''] 
-            }
-          : task
-      )
-    }));
-  };
-
-  const updateChecklistItem = (taskIndex: number, itemIndex: number, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      tasks: prev.tasks.map((task, i) => 
-        i === taskIndex 
-          ? { 
-              ...task, 
-              checklist: (task.checklist || []).map((item, j) => 
-                j === itemIndex ? value : item
-              ) 
-            }
-          : task
-      )
-    }));
-  };
-
-  const removeChecklistItem = (taskIndex: number, itemIndex: number) => {
-    setFormData(prev => ({
-      ...prev,
-      tasks: prev.tasks.map((task, i) => 
-        i === taskIndex 
-          ? { 
-              ...task, 
-              checklist: (task.checklist || []).filter((_, j) => j !== itemIndex)
-            }
-          : task
-      )
-    }));
+  const handleViewChecklist = () => {
+    setIsViewingChecklist(true);
   };
 
   // Filter equipment based on selected location (company or sector)
@@ -388,11 +339,104 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[98vw] max-w-7xl h-[95vh] max-h-[95vh] overflow-hidden flex flex-col p-0 sm:w-[95vw] lg:w-[90vw] xl:w-[85vw]">
-        <DialogHeader className="px-6 py-4 border-b border-border shrink-0">
-          <DialogTitle className="text-xl font-semibold focus:outline-none" tabIndex={-1}>
-            {modalTitle}
-          </DialogTitle>
-        </DialogHeader>
+        {isViewingChecklist && selectedChecklist ? (
+          // Modal de Visualização do Checklist
+          <>
+            <DialogHeader className="px-6 py-4 border-b border-border shrink-0">
+              <div className="flex items-center justify-between">
+                <div>
+                  <DialogTitle className="text-xl font-semibold flex items-center gap-2">
+                    <ListChecks className="h-5 w-5 text-primary" />
+                    {selectedChecklist.name}
+                  </DialogTitle>
+                  {selectedChecklist.description && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {selectedChecklist.description}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsViewingChecklist(false)}
+                >
+                  Voltar
+                </Button>
+              </div>
+            </DialogHeader>
+            
+            <div className="flex-1 overflow-auto px-6 py-4 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="p-4">
+                  <div className="text-sm font-medium text-muted-foreground">Categoria</div>
+                  <div className="text-lg font-semibold">HVAC</div>
+                </Card>
+                <Card className="p-4">
+                  <div className="text-sm font-medium text-muted-foreground">Tipo de Equipamento</div>
+                  <div className="text-lg font-semibold">{selectedChecklist.equipment_type || 'Geral'}</div>
+                </Card>
+                <Card className="p-4">
+                  <div className="text-sm font-medium text-muted-foreground">Total de Itens</div>
+                  <div className="text-lg font-semibold">{selectedChecklist.items?.length || 0}</div>
+                </Card>
+              </div>
+
+              <div className="space-y-3">
+                <h3 className="text-lg font-medium">Itens do Checklist</h3>
+                <div className="space-y-3">
+                  {(selectedChecklist.items || []).map((item, index) => (
+                    <Card key={item.id} className="p-4 hover:bg-muted/30 transition-colors">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-sm font-medium text-primary">
+                          {index + 1}
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium text-foreground">
+                              {item.description}
+                            </p>
+                            <div className="flex items-center gap-2">
+                              {item.required && (
+                                <Badge variant="destructive" className="text-xs">
+                                  Obrigatório
+                                </Badge>
+                              )}
+                              <Badge variant="outline" className="text-xs">
+                                {item.type === 'checkbox' ? 'Verificação' :
+                                 item.type === 'number' ? 'Medição' :
+                                 item.type === 'text' ? 'Texto' :
+                                 item.type === 'photo' ? 'Foto' :
+                                 item.type === 'select' ? 'Seleção' : 'Outro'}
+                                {item.unit && ` (${item.unit})`}
+                              </Badge>
+                            </div>
+                          </div>
+                          {item.help_text && (
+                            <p className="text-xs text-muted-foreground">
+                              💡 {item.help_text}
+                            </p>
+                          )}
+                          {item.options && item.options.length > 0 && (
+                            <div className="text-xs text-muted-foreground">
+                              <span className="font-medium">Opções:</span> {item.options.map((opt, i) => `${opt.label}${i < item.options!.length - 1 ? ', ' : ''}`)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          // Formulário Principal
+          <>
+            <DialogHeader className="px-6 py-4 border-b border-border shrink-0">
+              <DialogTitle className="text-xl font-semibold focus:outline-none" tabIndex={-1}>
+                {modalTitle}
+              </DialogTitle>
+            </DialogHeader>
         
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
           <div className="px-6 py-4 space-y-8">
@@ -680,116 +724,116 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
               </div>
             </section>
 
-            {/* Tasks Section */}
+            {/* Checklist Section */}
             <section className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border pb-2">
-                <h3 className="text-lg font-medium text-foreground">Tarefas</h3>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addTask}
-                  className="flex items-center gap-2 w-full sm:w-auto"
-                >
-                  <Plus className="h-4 w-4" />
-                  Adicionar Tarefa
-                </Button>
+                <h3 className="text-lg font-medium text-foreground">Checklist de Manutenção</h3>
               </div>
 
-              {formData.tasks.length === 0 && (
-                <Card className="border-dashed">
-                  <CardContent className="flex items-center justify-center py-12">
-                    <div className="text-center text-muted-foreground max-w-md">
-                      <CheckSquare className="h-12 w-12 mx-auto mb-3 opacity-40" />
-                      <p className="text-base font-medium mb-1">Nenhuma tarefa definida</p>
-                      <p className="text-sm">Clique em "Adicionar Tarefa" para começar a criar as atividades do plano</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
               <div className="space-y-4">
-                {formData.tasks.map((task, taskIndex) => (
-                  <Card key={task.id} className="border border-border">
-                    <CardHeader className="pb-4">
+                <div className="space-y-2">
+                  <Label htmlFor="checklist-select">Selecionar Checklist</Label>
+                  <Select 
+                    value={formData.checklist_id || "none"} 
+                    onValueChange={handleChecklistChange}
+                  >
+                    <SelectTrigger className={errors.checklist ? 'border-red-500' : ''}>
+                      <SelectValue placeholder="Selecione um checklist criado na tela de procedimentos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhum checklist selecionado</SelectItem>
+                      {checklists
+                        .filter(checklist => checklist.is_active)
+                        .map((checklist) => (
+                          <SelectItem key={checklist.id} value={checklist.id}>
+                            {checklist.name}
+                            {checklist.equipment_type && ` - ${checklist.equipment_type}`}
+                          </SelectItem>
+                        ))
+                      }
+                    </SelectContent>
+                  </Select>
+                  {errors.checklist && (
+                    <p className="text-sm text-red-600" role="alert">
+                      {errors.checklist}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Os checklists são criados na tela de Procedimentos e definem as tarefas específicas a serem executadas
+                  </p>
+                </div>
+
+                {/* Checklist Preview */}
+                {selectedChecklist && (
+                  <Card className="bg-muted/30 border-primary/20">
+                    <CardHeader className="pb-3">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                        <CardTitle className="text-base font-semibold">
-                          Tarefa {taskIndex + 1}
-                        </CardTitle>
+                        <div>
+                          <CardTitle className="text-base font-semibold flex items-center gap-2">
+                            <ListChecks className="h-4 w-4 text-primary" />
+                            {selectedChecklist.name}
+                          </CardTitle>
+                          {selectedChecklist.description && (
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {selectedChecklist.description}
+                            </p>
+                          )}
+                        </div>
                         <Button
                           type="button"
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
-                          onClick={() => removeTask(taskIndex)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50 self-start sm:self-center"
-                          aria-label={`Remover tarefa ${taskIndex + 1}`}
+                          onClick={handleViewChecklist}
+                          className="flex items-center gap-2 w-full sm:w-auto"
                         >
-                          <Trash2 className="h-4 w-4" />
-                          <span className="ml-1 sm:hidden">Remover</span>
+                          <Eye className="h-4 w-4" />
+                          Visualizar Completo
                         </Button>
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="space-y-2">
-                        <Label htmlFor={`task-name-${taskIndex}`}>Nome da Tarefa *</Label>
-                        <Input
-                          id={`task-name-${taskIndex}`}
-                          value={task.name}
-                          onChange={(e) => updateTask(taskIndex, { name: e.target.value })}
-                          placeholder="Ex: Limpeza de filtros"
-                          className={errors[`task-${taskIndex}`] ? 'border-red-500' : ''}
-                        />
-                        {errors[`task-${taskIndex}`] && (
-                          <p className="text-sm text-red-600" role="alert">
-                            {errors[`task-${taskIndex}`]}
-                          </p>
-                        )}
-                      </div>
-
+                    <CardContent>
                       <div className="space-y-3">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                          <Label>Checklist (Opcional)</Label>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => addChecklistItem(taskIndex)}
-                            className="flex items-center gap-1 w-full sm:w-auto"
-                          >
-                            <Plus className="h-3 w-3" />
-                            Adicionar Item
-                          </Button>
+                        <div className="text-sm font-medium text-muted-foreground mb-2">
+                          Itens do checklist ({selectedChecklist.items?.length || 0}):
                         </div>
-                        
-                        {task.checklist && task.checklist.length > 0 && (
-                          <div className="space-y-3 pl-4 border-l-2 border-muted bg-muted/20 rounded-r-lg py-3 pr-3">
-                            {task.checklist.map((item, itemIndex) => (
-                              <div key={itemIndex} className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                                <Input
-                                  value={item}
-                                  onChange={(e) => updateChecklistItem(taskIndex, itemIndex, e.target.value)}
-                                  placeholder="Item do checklist"
-                                  className="flex-1"
-                                />
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => removeChecklistItem(taskIndex, itemIndex)}
-                                  className="text-red-600 hover:text-red-700 hover:bg-red-50 w-full sm:w-auto shrink-0"
-                                  aria-label={`Remover item ${itemIndex + 1} do checklist`}
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                  <span className="ml-1 sm:hidden">Remover Item</span>
-                                </Button>
+                        <div className="space-y-2 max-h-32 overflow-y-auto">
+                          {(selectedChecklist.items || []).slice(0, 5).map((item, index) => (
+                            <div key={item.id} className="flex items-center gap-2 text-sm">
+                              <div className="w-4 h-4 border border-muted-foreground rounded-sm bg-background flex items-center justify-center">
+                                <div className="w-2 h-2 bg-muted-foreground rounded-full opacity-50" />
                               </div>
-                            ))}
-                          </div>
-                        )}
+                              <span>{item.description}</span>
+                              {item.required && (
+                                <Badge variant="secondary" className="text-xs px-1 py-0">
+                                  Obrigatório
+                                </Badge>
+                              )}
+                            </div>
+                          ))}
+                          {(selectedChecklist.items?.length || 0) > 5 && (
+                            <div className="text-xs text-muted-foreground pl-6">
+                              ... e mais {(selectedChecklist.items?.length || 0) - 5} itens
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
-                ))}
+                )}
+
+                {!formData.checklist_id && (
+                  <Card className="border-dashed">
+                    <CardContent className="flex items-center justify-center py-12">
+                      <div className="text-center text-muted-foreground max-w-md">
+                        <CheckSquare className="h-12 w-12 mx-auto mb-3 opacity-40" />
+                        <p className="text-base font-medium mb-1">Nenhum checklist selecionado</p>
+                        <p className="text-sm">
+                          Selecione um checklist criado na tela de Procedimentos para definir as tarefas específicas deste plano de manutenção
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </section>
           </div>
@@ -816,6 +860,8 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
             </Button>
           </div>
         </DialogFooter>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

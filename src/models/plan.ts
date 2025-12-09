@@ -1,11 +1,5 @@
 export type PlanStatus = 'Ativo' | 'Inativo';
 
-export interface PlanTask {
-  id: string;            // uuid
-  name: string;          // ex.: "Inspecionar filtros"
-  checklist?: string[];  // itens opcionais do passo
-}
-
 export interface MaintenancePlan {
   id: string;                  // uuid
   name: string;                // "Preventiva Chiller Mensal"
@@ -17,7 +11,7 @@ export interface MaintenancePlan {
     equipment_ids?: string[];    // Múltiplos equipamentos (opcional para flexibilidade)
     equipment_names?: string[];  // Nomes dos equipamentos para exibição (opcional)
   };
-  tasks: PlanTask[];
+  checklist_id?: string;       // ID do checklist template selecionado
   status: PlanStatus;
   start_date?: string;         // ISO
   next_execution_date?: string; // Próxima data de execução automática

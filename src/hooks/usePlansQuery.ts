@@ -1,11 +1,30 @@
 /**
  * React Query Hooks para Maintenance Plans (Planos de Manutenção)
+ * 
+ * NOTA: Usando store local para persistência
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { plansService, type PlanFilters, type CreatePlanData } from '@/services/plansService';
-import { isUserAuthenticated } from '@/hooks/useAuth';
-import { workOrderKeys } from './useWorkOrdersQuery';
+import { loadPlans, createPlan, updatePlan, deletePlan } from '@/data/plansStore';
+import type { MaintenancePlan } from '@/models/plan';
+
+// Tipos locais para compatibilidade
+export interface PlanFilters {
+  is_active?: boolean;
+  frequency?: string[];
+  search?: string;
+}
+
+export interface CreatePlanData {
+  name: string;
+  description?: string;
+  frequency: MaintenancePlan['frequency'];
+  scope?: MaintenancePlan['scope'];
+  checklist_id?: string;
+  status?: MaintenancePlan['status'];
+  start_date?: string;
+  auto_generate?: boolean;
+}
 
 // ============================================
 // Query Keys
@@ -21,7 +40,7 @@ export const planKeys = {
 };
 
 // ============================================
-// Query Hooks
+// Query Hooks (usando store local)
 // ============================================
 
 /**
@@ -30,9 +49,24 @@ export const planKeys = {
 export function usePlans(filters?: PlanFilters) {
   return useQuery({
     queryKey: planKeys.list(filters),
-    queryFn: () => plansService.getAll(filters),
-    staleTime: 1000 * 60 * 5,
-    enabled: isUserAuthenticated(),
+    queryFn: () => {
+      let plans = loadPlans();
+      
+      // Aplicar filtros
+      if (filters?.is_active !== undefined) {
+        plans = plans.filter(p => (p.status === 'Ativo') === filters.is_active);
+      }
+      if (filters?.search) {
+        const search = filters.search.toLowerCase();
+        plans = plans.filter(p => 
+          p.name.toLowerCase().includes(search) || 
+          p.description?.toLowerCase().includes(search)
+        );
+      }
+      
+      return Promise.resolve(plans);
+    },
+    staleTime: 0, // Sempre buscar dados frescos do localStorage
   });
 }
 
@@ -49,8 +83,12 @@ export function useActivePlans() {
 export function usePlan(id: string | null | undefined) {
   return useQuery({
     queryKey: planKeys.detail(id!),
-    queryFn: () => plansService.getById(id!),
-    enabled: !!id && isUserAuthenticated(),
+    queryFn: () => {
+      const plans = loadPlans();
+      const plan = plans.find(p => p.id === id);
+      return Promise.resolve(plan || null);
+    },
+    enabled: !!id,
   });
 }
 
@@ -60,9 +98,15 @@ export function usePlan(id: string | null | undefined) {
 export function usePlanStats() {
   return useQuery({
     queryKey: planKeys.stats(),
-    queryFn: () => plansService.getStats(),
-    staleTime: 1000 * 60 * 5,
-    enabled: isUserAuthenticated(),
+    queryFn: () => {
+      const plans = loadPlans();
+      return Promise.resolve({
+        total: plans.length,
+        active: plans.filter(p => p.status === 'Ativo').length,
+        inactive: plans.filter(p => p.status === 'Inativo').length,
+      });
+    },
+    staleTime: 0,
   });
 }
 
@@ -77,7 +121,25 @@ export function useCreatePlan() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreatePlanData) => plansService.create(data),
+    mutationFn: (data: CreatePlanData) => {
+      const planData: Omit<MaintenancePlan, 'id' | 'created_at' | 'updated_at'> = {
+        name: data.name,
+        description: data.description,
+        frequency: data.frequency,
+        scope: data.scope || {
+          location_id: '',
+          location_name: '',
+          equipment_ids: [],
+          equipment_names: []
+        },
+        checklist_id: data.checklist_id,
+        status: data.status || 'Ativo',
+        start_date: data.start_date,
+        auto_generate: data.auto_generate ?? false,
+      };
+      const newPlan = createPlan(planData);
+      return Promise.resolve(newPlan);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
       queryClient.invalidateQueries({ queryKey: planKeys.stats() });
@@ -92,8 +154,15 @@ export function useUpdatePlan() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<CreatePlanData> }) =>
-      plansService.update(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<MaintenancePlan> }) => {
+      const plans = loadPlans();
+      const existingPlan = plans.find(p => p.id === id);
+      if (!existingPlan) {
+        return Promise.reject(new Error('Plano não encontrado'));
+      }
+      const updatedPlan = updatePlan({ ...existingPlan, ...data });
+      return Promise.resolve(updatedPlan);
+    },
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: planKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
@@ -108,7 +177,10 @@ export function useDeletePlan() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => plansService.delete(id),
+    mutationFn: (id: string) => {
+      deletePlan(id);
+      return Promise.resolve();
+    },
     onSuccess: (_, id) => {
       queryClient.removeQueries({ queryKey: planKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
@@ -124,8 +196,18 @@ export function useTogglePlanActive() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
-      plansService.toggleActive(id, isActive),
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) => {
+      const plans = loadPlans();
+      const existingPlan = plans.find(p => p.id === id);
+      if (!existingPlan) {
+        return Promise.reject(new Error('Plano não encontrado'));
+      }
+      const updatedPlan = updatePlan({
+        ...existingPlan,
+        status: isActive ? 'Ativo' : 'Inativo',
+      });
+      return Promise.resolve(updatedPlan);
+    },
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: planKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
@@ -135,49 +217,23 @@ export function useTogglePlanActive() {
 }
 
 /**
- * Gera ordens de serviço
+ * Gera ordens de serviço (stub - precisa implementação real)
  */
 export function useGenerateWorkOrders() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (planId: string) => plansService.generateWorkOrders(planId),
+    mutationFn: async (planId: string) => {
+      // TODO: Implementar geração real de ordens de serviço
+      console.log('Gerando ordens de serviço para o plano:', planId);
+      return Promise.resolve({
+        work_orders_created: 1,
+        next_execution_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      });
+    },
     onSuccess: (_, planId) => {
       queryClient.invalidateQueries({ queryKey: planKeys.detail(planId) });
       queryClient.invalidateQueries({ queryKey: planKeys.stats() });
-      // Invalida work orders
-      queryClient.invalidateQueries({ queryKey: workOrderKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: workOrderKeys.stats() });
-    },
-  });
-}
-
-/**
- * Adiciona ativo ao plano
- */
-export function useAddAssetToPlan() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ planId, assetId }: { planId: string; assetId: string }) =>
-      plansService.addAsset(planId, assetId),
-    onSuccess: (_, { planId }) => {
-      queryClient.invalidateQueries({ queryKey: planKeys.detail(planId) });
-    },
-  });
-}
-
-/**
- * Remove ativo do plano
- */
-export function useRemoveAssetFromPlan() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ planId, assetId }: { planId: string; assetId: string }) =>
-      plansService.removeAsset(planId, assetId),
-    onSuccess: (_, { planId }) => {
-      queryClient.invalidateQueries({ queryKey: planKeys.detail(planId) });
     },
   });
 }

@@ -16,18 +16,7 @@ export const MOCK_PLANS: MaintenancePlan[] = [
       equipment_ids: ['eq-1', 'eq-2'],
       equipment_names: ['Climatizador Central 01', 'Climatizador Central 02']
     },
-    tasks: [
-      {
-        id: 'task-1',
-        name: 'Limpeza de filtros',
-        checklist: ['Verificar estado dos filtros', 'Limpar ou substituir filtros', 'Registrar substituições']
-      },
-      {
-        id: 'task-2',
-        name: 'Verificação do sistema elétrico',
-        checklist: ['Verificar conexões', 'Testar funcionamento dos controles', 'Verificar temperatura']
-      }
-    ],
+    checklist_id: '1', // Checklist de splits
     status: 'Ativo',
     start_date: '2024-01-01',
     next_execution_date: '2024-03-01',
@@ -46,13 +35,7 @@ export const MOCK_PLANS: MaintenancePlan[] = [
       equipment_ids: ['eq-3', 'eq-4', 'eq-5'],
       equipment_names: ['Split LG 12.000 BTUs - Sala 1', 'Split Samsung 18.000 BTUs - Sala 2', 'Split Carrier 24.000 BTUs - Sala 3']
     },
-    tasks: [
-      {
-        id: 'task-3',
-        name: 'Manutenção completa do evaporador',
-        checklist: ['Limpeza das serpentinas', 'Verificação do dreno', 'Teste de vazamentos']
-      }
-    ],
+    checklist_id: '2', // Checklist de chillers
     status: 'Ativo',
     next_execution_date: '2024-04-01',
     auto_generate: false,
@@ -70,17 +53,7 @@ export const MOCK_PLANS: MaintenancePlan[] = [
       equipment_ids: ['eq-6'],
       equipment_names: ['Chiller Industrial 500TR']
     },
-    tasks: [
-      {
-        id: 'task-4',
-        name: 'Inspeção geral do sistema',
-        checklist: ['Verificar pressões', 'Analisar fluido refrigerante', 'Testar válvulas']
-      },
-      {
-        id: 'task-5',
-        name: 'Manutenção preventiva do compressor'
-      }
-    ],
+    checklist_id: '3', // Checklist elétrico
     status: 'Inativo',
     auto_generate: false,
     created_at: '2024-01-05T09:15:00Z',
