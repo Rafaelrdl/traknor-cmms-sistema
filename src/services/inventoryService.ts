@@ -4,11 +4,12 @@
  * Gerencia operações de estoque via API TrakSense
  */
 
-import api from '@/lib/api';
+import { api } from '@/lib/api';
 import type {
   ApiInventoryItem,
   ApiInventoryCategory,
   ApiInventoryMovement,
+  PaginatedResponse,
 } from '@/types/api';
 
 // ============================================================================
@@ -148,6 +149,8 @@ export interface InventoryMovementParams {
   created_at__lte?: string;
   search?: string;
   ordering?: string;
+  page?: number;
+  page_size?: number;
 }
 
 export interface CreateMovementData {
@@ -186,7 +189,7 @@ export interface TopConsumedItem {
 
 export const inventoryMovementsService = {
   async getAll(params?: InventoryMovementParams) {
-    const response = await api.get<ApiInventoryMovement[]>('/inventory/movements/', { params });
+    const response = await api.get<PaginatedResponse<ApiInventoryMovement>>('/inventory/movements/', { params });
     return response.data;
   },
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, KeyboardEvent } from 'react';
 import { cn } from '@/lib/utils';
 
-type TabValue = 'table' | 'cards' | 'analysis';
+type TabValue = 'table' | 'cards' | 'analysis' | 'history';
 
 interface Tab {
   value: TabValue;

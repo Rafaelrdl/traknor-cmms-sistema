@@ -13,6 +13,7 @@ import { InventoryTable } from '@/components/inventory/InventoryTable';
 import { InventoryCards } from '@/components/inventory/InventoryCards';
 import { InventoryAnalysis } from '@/components/inventory/InventoryAnalysis';
 import { NewItemModal } from '@/components/inventory/NewItemModal';
+import { InventoryHistory } from '@/components/inventory/InventoryHistory';
 import { EditItemModal } from '@/components/inventory/EditItemModal';
 import { MoveItemModal } from '@/components/inventory/MoveItemModal';
 import { ViewItemModal } from '@/components/inventory/ViewItemModal';
@@ -233,6 +234,11 @@ export function InventoryPage() {
       value: 'analysis' as const,
       label: 'Análise',
       content: <InventoryAnalysis />
+    },
+    {
+      value: 'history' as const,
+      label: 'Histórico',
+      content: <InventoryHistory />
     }
   ];
 
