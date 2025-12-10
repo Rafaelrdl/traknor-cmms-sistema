@@ -6,12 +6,63 @@
  * - Refetch inteligente
  * - Invalidação de queries relacionadas
  * - Optimistic updates
+ * - Integração com localStorage para OSs geradas localmente
  */
 
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { workOrdersService, type WorkOrderFilters, type CompleteWorkOrderData, type WorkOrderStats } from '@/services/workOrdersService';
+import { loadWorkOrders } from '@/data/workOrdersStore';
 import { isUserAuthenticated } from '@/hooks/useAuth';
 import type { WorkOrder } from '@/types';
+import type { WorkOrder as LocalWorkOrder } from '@/models/workOrder';
+
+// ============================================
+// Helpers para conversão de modelos
+// ============================================
+
+/**
+ * Converte WorkOrder do modelo local (português) para o modelo da API (inglês)
+ */
+function convertLocalToApiWorkOrder(local: LocalWorkOrder): WorkOrder {
+  const statusMap: Record<string, WorkOrder['status']> = {
+    'Aberta': 'OPEN',
+    'Em Execução': 'IN_PROGRESS',
+    'Concluída': 'COMPLETED',
+  };
+  
+  const typeMap: Record<string, WorkOrder['type']> = {
+    'Preventiva': 'PREVENTIVE',
+    'Corretiva': 'CORRECTIVE',
+  };
+  
+  const priorityMap: Record<string, WorkOrder['priority']> = {
+    'Baixa': 'LOW',
+    'Média': 'MEDIUM',
+    'Alta': 'HIGH',
+    'Crítica': 'CRITICAL',
+  };
+  
+  return {
+    id: local.id,
+    number: local.number,
+    equipmentId: local.equipment_ids?.[0] || '',
+    type: typeMap[local.type] || 'PREVENTIVE',
+    status: statusMap[local.status] || 'OPEN',
+    scheduledDate: local.scheduled_date,
+    assignedTo: local.assigned_to,
+    assignedToName: local.assigned_to_name,
+    priority: priorityMap[local.priority] || 'MEDIUM',
+    description: local.title || local.description || '',
+    createdAt: local.created_at,
+    startedAt: local.started_at,
+    completedAt: local.completed_at,
+    checklistResponses: local.tasks?.map(task => ({
+      taskId: task.id,
+      taskName: task.name,
+      completed: task.completed,
+    })),
+  };
+}
 
 // ============================================
 // Query Keys
@@ -35,12 +86,46 @@ export const workOrderKeys = {
 
 /**
  * Lista todas as ordens de serviço com filtros
+ * Mescla dados da API com dados do localStorage (OSs geradas localmente)
  */
 export function useWorkOrders(filters?: WorkOrderFilters) {
   return useQuery({
     queryKey: workOrderKeys.list(filters),
-    queryFn: () => workOrdersService.getAll(filters),
-    staleTime: 1000 * 60 * 2, // 2 minutos
+    queryFn: async () => {
+      // Buscar da API
+      let apiWorkOrders: WorkOrder[] = [];
+      try {
+        apiWorkOrders = await workOrdersService.getAll(filters);
+      } catch (error) {
+        console.warn('Erro ao buscar OSs da API, usando apenas localStorage:', error);
+      }
+      
+      // Buscar do localStorage (OSs geradas localmente pelos planos)
+      const localWorkOrders = loadWorkOrders();
+      console.log('[useWorkOrders] OSs locais encontradas:', localWorkOrders.length, localWorkOrders);
+      
+      const convertedLocalWorkOrders = localWorkOrders.map(convertLocalToApiWorkOrder);
+      console.log('[useWorkOrders] OSs convertidas:', convertedLocalWorkOrders);
+      
+      // Mesclar, evitando duplicatas por ID
+      const apiIds = new Set(apiWorkOrders.map(wo => wo.id));
+      const uniqueLocalWorkOrders = convertedLocalWorkOrders.filter(wo => !apiIds.has(wo.id));
+      
+      console.log('[useWorkOrders] OSs da API:', apiWorkOrders.length);
+      console.log('[useWorkOrders] OSs locais únicas:', uniqueLocalWorkOrders.length);
+      
+      const allWorkOrders = [...apiWorkOrders, ...uniqueLocalWorkOrders];
+      
+      // Ordenar por data de criação (mais recentes primeiro)
+      allWorkOrders.sort((a, b) => {
+        const dateA = new Date(a.createdAt || a.scheduledDate).getTime();
+        const dateB = new Date(b.createdAt || b.scheduledDate).getTime();
+        return dateB - dateA;
+      });
+      
+      return allWorkOrders;
+    },
+    staleTime: 0, // Sempre buscar dados frescos para incluir OSs recém-geradas
     enabled: isUserAuthenticated(),
   });
 }

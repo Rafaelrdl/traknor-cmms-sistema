@@ -5,7 +5,9 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { loadPlans, createPlan, updatePlan, deletePlan } from '@/data/plansStore';
+import { loadPlans, createPlan, updatePlan, deletePlan, updatePlanNextExecution, findPlanById } from '@/data/plansStore';
+import { generateWorkOrdersFromPlan } from '@/data/workOrdersStore';
+import { workOrderKeys } from '@/hooks/useWorkOrdersQuery';
 import type { MaintenancePlan } from '@/models/plan';
 
 // Tipos locais para compatibilidade
@@ -217,23 +219,42 @@ export function useTogglePlanActive() {
 }
 
 /**
- * Gera ordens de serviço (stub - precisa implementação real)
+ * Gera ordens de serviço a partir de um plano de manutenção
  */
 export function useGenerateWorkOrders() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (planId: string) => {
-      // TODO: Implementar geração real de ordens de serviço
-      console.log('Gerando ordens de serviço para o plano:', planId);
+      console.log('[useGenerateWorkOrders] Iniciando geração para plano:', planId);
+      
+      // Buscar o plano
+      const plan = findPlanById(planId);
+      if (!plan) {
+        console.error('[useGenerateWorkOrders] Plano não encontrado:', planId);
+        throw new Error('Plano não encontrado');
+      }
+      console.log('[useGenerateWorkOrders] Plano encontrado:', plan);
+      
+      // Gerar as ordens de serviço
+      const workOrders = generateWorkOrdersFromPlan(plan);
+      console.log('[useGenerateWorkOrders] OSs geradas:', workOrders.length, workOrders);
+      
+      // Atualizar a próxima data de execução do plano
+      const updatedPlan = updatePlanNextExecution(planId);
+      
       return Promise.resolve({
-        work_orders_created: 1,
-        next_execution_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        work_orders_created: workOrders.length,
+        next_execution_date: updatedPlan?.next_execution_date || null,
       });
     },
     onSuccess: (_, planId) => {
+      console.log('[useGenerateWorkOrders] Sucesso! Invalidando queries...');
       queryClient.invalidateQueries({ queryKey: planKeys.detail(planId) });
+      queryClient.invalidateQueries({ queryKey: planKeys.lists() });
       queryClient.invalidateQueries({ queryKey: planKeys.stats() });
+      // Invalidar também as queries de work orders
+      queryClient.invalidateQueries({ queryKey: workOrderKeys.lists() });
     },
   });
 }

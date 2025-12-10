@@ -1,5 +1,6 @@
 import { WorkOrder, WorkOrderCreationData } from '@/models/workOrder';
 import { MaintenancePlan } from '@/models/plan';
+import { getChecklist } from '@/data/checklistsStore';
 
 const WORK_ORDERS_KEY = 'workOrders:db';
 
@@ -126,12 +127,39 @@ export function createWorkOrder(data: WorkOrderCreationData): WorkOrder {
 
 // Generate work orders from maintenance plan
 export function generateWorkOrdersFromPlan(plan: MaintenancePlan, scheduledDate?: string): WorkOrder[] {
+  console.log('[generateWorkOrdersFromPlan] Iniciando para plano:', plan.name);
+  
   const equipmentIds = plan.scope.equipment_ids || [];
   if (equipmentIds.length === 0) {
+    console.error('[generateWorkOrdersFromPlan] Nenhum equipamento no plano');
     throw new Error('Plano deve ter pelo menos um equipamento selecionado');
   }
   
   const useDate = scheduledDate || plan.next_execution_date || new Date().toISOString().split('T')[0];
+  console.log('[generateWorkOrdersFromPlan] Data de agendamento:', useDate);
+  
+  // Buscar tasks do checklist associado ao plano
+  let tasks: { name: string; checklist: string[] }[] = [];
+  if (plan.checklist_id) {
+    const checklist = getChecklist(plan.checklist_id);
+    console.log('[generateWorkOrdersFromPlan] Checklist encontrado:', checklist?.name);
+    if (checklist && checklist.items) {
+      // Converter itens do checklist em tasks
+      tasks = [{
+        name: checklist.name,
+        checklist: checklist.items.map(item => item.description)
+      }];
+    }
+  }
+  
+  // Se não há checklist, criar uma task genérica
+  if (tasks.length === 0) {
+    console.log('[generateWorkOrdersFromPlan] Sem checklist, criando task genérica');
+    tasks = [{
+      name: plan.name,
+      checklist: plan.description ? [plan.description] : ['Executar manutenção conforme plano']
+    }];
+  }
   
   // Create one work order per equipment
   const workOrders: WorkOrder[] = [];
@@ -142,22 +170,23 @@ export function generateWorkOrdersFromPlan(plan: MaintenancePlan, scheduledDate?
     const equipmentIndex = equipmentIds.indexOf(equipmentId);
     const equipmentName = equipmentNames[equipmentIndex] || `Equipment ${equipmentId}`;
     
+    console.log('[generateWorkOrdersFromPlan] Criando OS para:', equipmentName);
+    
     const workOrder = createWorkOrder({
       plan_id: plan.id,
       equipment_ids: [equipmentId],
       scheduled_date: useDate,
       title: `${plan.name} - ${equipmentName}`,
       description: plan.description,
-      tasks: plan.tasks.map(task => ({
-        name: task.name,
-        checklist: task.checklist || []
-      })),
+      tasks: tasks,
       priority: 'Média'
     });
     
+    console.log('[generateWorkOrdersFromPlan] OS criada:', workOrder.id, workOrder.number);
     workOrders.push(workOrder);
   }
   
+  console.log('[generateWorkOrdersFromPlan] Total de OSs criadas:', workOrders.length);
   return workOrders;
 }
 
