@@ -57,9 +57,11 @@ export function useOnboardingFlow() {
       return '/quick-setup';
     }
     
-    if (!state.tourCompleted) {
-      return '/welcome-tour';
-    }
+    // Tour is now handled as an interactive overlay on the dashboard
+    // No redirect needed - TourProvider will auto-start the tour
+    // if (!state.tourCompleted) {
+    //   return '/welcome-tour';
+    // }
 
     return null;
   };
@@ -91,9 +93,10 @@ export function useOnboardingFlow() {
 
   const getProgress = (): { completed: number; total: number; percentage: number } => {
     const state = getOnboardingState();
-    const steps = Object.values(state);
-    const completed = steps.filter(Boolean).length;
-    const total = steps.length;
+    // Only count visible steps (exclude inviteAccepted which is not shown to user)
+    const visibleSteps = [state.setupCompleted, state.tourCompleted, state.firstTimeGuideCompleted];
+    const completed = visibleSteps.filter(Boolean).length;
+    const total = visibleSteps.length;
     const percentage = Math.round((completed / total) * 100);
     
     return { completed, total, percentage };

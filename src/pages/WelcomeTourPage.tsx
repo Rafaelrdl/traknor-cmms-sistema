@@ -179,6 +179,7 @@ export function WelcomeTourPage() {
   const progress = ((currentStep + 1) / availableSteps.length) * 100;
   const isLastStep = currentStep === availableSteps.length - 1;
   const isFirstStep = currentStep === 0;
+  const currentStepData = availableSteps[currentStep];
 
   useEffect(() => {
     // Mark current step as completed when user spends some time on it
@@ -290,8 +291,6 @@ export function WelcomeTourPage() {
       default: return role;
     }
   };
-
-  const currentStepData = availableSteps[currentStep];
 
   if (!currentStepData) {
     return null;

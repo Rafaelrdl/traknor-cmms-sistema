@@ -3,13 +3,14 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { LogOut, User, Users, Settings2, HelpCircle } from 'lucide-react';
+import { LogOut, User, Users, Settings2, HelpCircle, Sparkles } from 'lucide-react';
 import { useUsers } from '@/data/usersStore';
 import { IfCan } from '@/components/auth/IfCan';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileNavbar, DesktopNavbar } from '@/components/Navbar';
 import { FirstTimeGuide, useFirstTimeGuide } from '@/components/onboarding/FirstTimeGuide';
 import { TourHint } from '@/components/tour/TourHint';
+import { useTour } from '@/components/tour';
 import { useAutomaticWorkOrderGeneration } from '@/hooks/useWorkOrderGeneration';
 import { ProductSwitcher } from '@/components/ProductSwitcher';
 import { logout as logoutService } from '@/services/authService';
@@ -26,6 +27,7 @@ export function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { shouldShow, handleComplete, handleSkip } = useFirstTimeGuide();
+  const { startWelcomeTour } = useTour();
   
   // Detect current module based on URL
   const isMonitorModule = location.pathname.startsWith('/monitor');
@@ -90,8 +92,12 @@ export function Layout({ children }: LayoutProps) {
 
             {/* User Menu - Always visible */}
             <DropdownMenu>
-              <DropdownMenuTrigger asChild data-tour="user-menu">
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full flex-shrink-0">
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  className="relative h-8 w-8 rounded-full flex-shrink-0"
+                  data-tour="user-menu"
+                >
                   <Avatar className="h-8 w-8">
                     {user.avatar_url && (
                       <AvatarImage src={user.avatar_url} alt={user.name} />
@@ -131,6 +137,10 @@ export function Layout({ children }: LayoutProps) {
                     <Settings2 className="mr-2 h-4 w-4" />
                     <span>Configuração</span>
                   </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={startWelcomeTour}>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  <span>Iniciar Tour</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>

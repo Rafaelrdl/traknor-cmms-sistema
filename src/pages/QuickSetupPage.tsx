@@ -15,10 +15,7 @@ import {
   Settings, 
   Bell, 
   CheckCircle,
-  Upload,
-  Moon,
-  Sun,
-  Monitor
+  Upload
 } from 'lucide-react';
 import { useCurrentUser, useUpdateCurrentUser } from '@/data/usersStore';
 import { toast } from 'sonner';
@@ -140,7 +137,9 @@ export function QuickSetupPage() {
       localStorage.setItem('onboarding:setupCompleted', 'true');
       
       toast.success('Configuração concluída com sucesso!');
-      navigate('/welcome-tour');
+      // Mark that interactive tour should start on dashboard
+      localStorage.setItem('onboarding:shouldStartTour', 'true');
+      navigate('/');
     } catch (error) {
       console.error('Erro ao salvar configurações:', error);
       toast.error('Erro ao salvar configurações');
@@ -151,7 +150,9 @@ export function QuickSetupPage() {
 
   const handleSkipSetup = () => {
     localStorage.setItem('onboarding:setupCompleted', 'true');
-    navigate('/welcome-tour');
+    // Mark that interactive tour should start on dashboard
+    localStorage.setItem('onboarding:shouldStartTour', 'true');
+    navigate('/');
   };
 
   const renderProfileStep = () => (
@@ -213,50 +214,6 @@ export function QuickSetupPage() {
 
   const renderPreferencesStep = () => (
     <div className="space-y-6">
-      {/* Theme */}
-      <div className="space-y-3">
-        <Label>Tema da Interface</Label>
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { value: 'light', label: 'Claro', icon: Sun },
-            { value: 'dark', label: 'Escuro', icon: Moon },
-            { value: 'system', label: 'Sistema', icon: Monitor }
-          ].map(({ value, label, icon: Icon }) => (
-            <button
-              key={value}
-              onClick={() => handleInputChange('theme', value)}
-              className={`
-                flex flex-col items-center space-y-2 p-4 rounded-lg border-2 transition-colors
-                ${setupData.theme === value 
-                  ? 'border-primary bg-primary/5' 
-                  : 'border-muted hover:border-muted-foreground/50'
-                }
-              `}
-            >
-              <Icon className="w-6 h-6" />
-              <span className="text-sm font-medium">{label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Language */}
-      <div className="space-y-2">
-        <Label htmlFor="language">Idioma</Label>
-        <Select 
-          value={setupData.language} 
-          onValueChange={(value) => handleInputChange('language', value)}
-        >
-          <SelectTrigger id="language">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="pt-BR">Português (Brasil)</SelectItem>
-            <SelectItem value="en-US">English (US)</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
       {/* Date Format */}
       <div className="space-y-2">
         <Label htmlFor="dateFormat">Formato de Data</Label>
@@ -332,8 +289,8 @@ export function QuickSetupPage() {
         <h4 className="font-medium mb-2">Resumo das suas preferências:</h4>
         <ul className="text-sm space-y-1 text-muted-foreground">
           <li>• Nome: {setupData.name || 'Não informado'}</li>
-          <li>• Tema: {setupData.theme === 'system' ? 'Sistema' : setupData.theme === 'light' ? 'Claro' : 'Escuro'}</li>
-          <li>• Idioma: {setupData.language === 'pt-BR' ? 'Português' : 'English'}</li>
+          <li>• Formato de Data: {setupData.dateFormat === 'DD/MM/YYYY' ? 'DD/MM/AAAA' : 'AAAA-MM-DD'}</li>
+          <li>• Formato de Hora: {setupData.timeFormat === '24h' ? '24 horas' : '12 horas'}</li>
           <li>• Email: {setupData.emailNotifications ? 'Ativado' : 'Desativado'}</li>
           <li>• Push: {setupData.pushNotifications ? 'Ativado' : 'Desativado'}</li>
         </ul>

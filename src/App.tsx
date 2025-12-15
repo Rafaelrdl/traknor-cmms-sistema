@@ -9,6 +9,7 @@ import { Toaster } from '@/components/ui/sonner';
 // import { RoleSwitcher } from '@/components/auth/RoleSwitcher';
 import { AuthProvider } from '@/components/auth/AuthProvider';
 import { OnboardingManager } from '@/hooks/useOnboardingFlow';
+import { TourProvider } from '@/components/tour';
 
 // Módulos da plataforma
 import { CmmsRoutes, MonitorRoutes } from '@/apps';
@@ -43,21 +44,23 @@ function App() {
               
               {/* Rotas protegidas (com layout) */}
               <Route path="/*" element={
-                <Layout>
-                  <Routes>
-                    {/* Módulo CMMS (TrakNor) */}
-                    <Route path="/cmms/*" element={<CmmsRoutes />} />
-                    
-                    {/* Módulo Monitor (TrakSense) */}
-                    <Route path="/monitor/*" element={<MonitorRoutes />} />
-                    
-                    {/* Redirect raiz para CMMS */}
-                    <Route path="/" element={<Navigate to="/cmms" replace />} />
-                    
-                    {/* Fallback - redireciona rotas desconhecidas para CMMS */}
-                    <Route path="*" element={<Navigate to="/cmms" replace />} />
-                  </Routes>
-                </Layout>
+                <TourProvider autoStartWelcomeTour={false}>
+                  <Layout>
+                    <Routes>
+                      {/* Módulo CMMS (TrakNor) */}
+                      <Route path="/cmms/*" element={<CmmsRoutes />} />
+                      
+                      {/* Módulo Monitor (TrakSense) */}
+                      <Route path="/monitor/*" element={<MonitorRoutes />} />
+                      
+                      {/* Redirect raiz para CMMS */}
+                      <Route path="/" element={<Navigate to="/cmms" replace />} />
+                      
+                      {/* Fallback - redireciona rotas desconhecidas para CMMS */}
+                      <Route path="*" element={<Navigate to="/cmms" replace />} />
+                    </Routes>
+                  </Layout>
+                </TourProvider>
               } />
             </Routes>
           </OnboardingManager>

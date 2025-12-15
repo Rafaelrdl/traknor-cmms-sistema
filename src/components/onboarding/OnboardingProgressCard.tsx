@@ -3,12 +3,14 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, Circle, Sparkles, ArrowRight } from 'lucide-react';
+import { CheckCircle, Circle, Sparkles, ArrowRight, Play } from 'lucide-react';
 import { useOnboardingFlow } from '@/hooks/useOnboardingFlow';
+import { useTour } from '@/components/tour';
 
 export function OnboardingProgressCard() {
   const navigate = useNavigate();
   const { getOnboardingState, getProgress, isNewUser } = useOnboardingFlow();
+  const { startWelcomeTour } = useTour();
 
   // Don't show for existing users or if all steps are completed
   if (!isNewUser) {
@@ -29,21 +31,21 @@ export function OnboardingProgressCard() {
       label: 'Configuração Inicial',
       description: 'Configure suas preferências pessoais',
       completed: state.setupCompleted,
-      route: '/quick-setup'
+      action: () => navigate('/quick-setup')
     },
     {
       key: 'tourCompleted', 
       label: 'Tour do Sistema',
       description: 'Conheça as principais funcionalidades',
       completed: state.tourCompleted,
-      route: '/welcome-tour'
+      action: () => startWelcomeTour() // Start interactive tour overlay
     },
     {
       key: 'firstTimeGuideCompleted',
       label: 'Guia Interativo',
       description: 'Navegação guiada pela interface',
       completed: state.firstTimeGuideCompleted,
-      route: '/' // Will trigger guide on dashboard
+      action: () => startWelcomeTour() // Also starts the tour
     }
   ];
 
@@ -51,7 +53,7 @@ export function OnboardingProgressCard() {
 
   const handleContinue = () => {
     if (nextStep) {
-      navigate(nextStep.route);
+      nextStep.action();
     }
   };
 
@@ -122,6 +124,20 @@ export function OnboardingProgressCard() {
                   Concluído
                 </Badge>
               )}
+              {!step.completed && step === nextStep && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    step.action();
+                  }}
+                  className="text-xs h-7"
+                >
+                  <Play className="w-3 h-3 mr-1" />
+                  Iniciar
+                </Button>
+              )}
             </div>
           ))}
         </div>
@@ -135,6 +151,21 @@ export function OnboardingProgressCard() {
             <Button onClick={handleContinue} size="sm" className="flex items-center space-x-1">
               <span>Continuar</span>
               <ArrowRight className="w-3 h-3" />
+            </Button>
+          </div>
+        )}
+
+        {/* Fallback button to restart tour even if all completed */}
+        {!nextStep && (
+          <div className="flex justify-center pt-2 border-t">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={startWelcomeTour}
+              className="flex items-center space-x-1"
+            >
+              <Play className="w-3 h-3" />
+              <span>Reiniciar Tour</span>
             </Button>
           </div>
         )}

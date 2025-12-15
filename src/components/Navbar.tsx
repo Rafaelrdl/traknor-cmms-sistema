@@ -190,11 +190,11 @@ export function MobileNavbar({ isOpen, onOpenChange }: MobileNavbarProps) {
   );
 }
 
-interface DesktopNavbarProps {
+interface DesktopNavbarProps extends React.HTMLAttributes<HTMLElement> {
   className?: string;
 }
 
-export function DesktopNavbar({ className }: DesktopNavbarProps) {
+export function DesktopNavbar({ className, ...props }: DesktopNavbarProps) {
   const location = useLocation();
   const navigation = useModuleNavigation();
   const isMonitor = location.pathname.startsWith('/monitor');
@@ -216,6 +216,7 @@ export function DesktopNavbar({ className }: DesktopNavbarProps) {
         ref={containerRef}
         className={cn("hidden md:flex items-center overflow-hidden flex-1", className)}
         data-compact={isCompact ? "true" : "false"}
+        {...props}
       >
         {/* Lista de itens com min-width:0 para prevenir overflow */}
         <ul 
