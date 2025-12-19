@@ -24,7 +24,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Play, Edit, ClipboardList, AlertTriangle, User, FileText, UserPlus, Eye } from 'lucide-react';
+import { Play, Edit, ClipboardList, AlertTriangle, User, FileText, UserPlus, Eye, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useEquipments } from '@/hooks/useEquipmentQuery';
 import { useSectors, useCompanies } from '@/hooks/useLocationsQuery';
 import { useTechnicians } from '@/hooks/useTeamQuery';
@@ -41,6 +51,7 @@ interface WorkOrderListProps {
   onStartWorkOrder?: (id: string, technicianId?: string) => void;
   onEditWorkOrder?: (wo: WorkOrder) => void;
   onViewWorkOrder?: (wo: WorkOrder) => void;
+  onDeleteWorkOrder?: (id: string) => void;
   compact?: boolean;
 }
 
@@ -49,6 +60,7 @@ export function WorkOrderList({
   onStartWorkOrder, 
   onEditWorkOrder,
   onViewWorkOrder,
+  onDeleteWorkOrder,
   compact = false
 }: WorkOrderListProps) {
   const { data: equipment = [] } = useEquipments();
@@ -63,6 +75,10 @@ export function WorkOrderList({
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [pendingWorkOrder, setPendingWorkOrder] = useState<WorkOrder | null>(null);
   const [selectedTechnicianId, setSelectedTechnicianId] = useState<string>('none');
+  
+  // Estado para modal de confirmação de exclusão
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [workOrderToDelete, setWorkOrderToDelete] = useState<WorkOrder | null>(null);
 
   const currentUser = getCurrentUser();
 
@@ -97,6 +113,21 @@ export function WorkOrderList({
     }
     setIsAssignModalOpen(false);
     setPendingWorkOrder(null);
+  };
+
+  // Handler para abrir modal de confirmação de exclusão
+  const handleDeleteClick = (workOrder: WorkOrder) => {
+    setWorkOrderToDelete(workOrder);
+    setDeleteDialogOpen(true);
+  };
+
+  // Handler para confirmar exclusão
+  const confirmDelete = () => {
+    if (workOrderToDelete && onDeleteWorkOrder) {
+      onDeleteWorkOrder(workOrderToDelete.id);
+    }
+    setDeleteDialogOpen(false);
+    setWorkOrderToDelete(null);
   };
 
   const handleWorkOrderClick = (workOrder: WorkOrder) => {
@@ -458,6 +489,24 @@ export function WorkOrderList({
                         <p>Imprimir OS</p>
                       </TooltipContent>
                     </Tooltip>
+                    {onDeleteWorkOrder && !isLocalWorkOrder && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleDeleteClick(wo)}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            aria-label={`Excluir ordem de serviço ${wo.number}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Excluir OS</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                   </TooltipProvider>
                 </div>
               </TableCell>
@@ -538,6 +587,36 @@ export function WorkOrderList({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    {/* Modal de confirmação de exclusão */}
+    <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Excluir Ordem de Serviço</AlertDialogTitle>
+          <AlertDialogDescription>
+            {workOrderToDelete && (
+              <>
+                Tem certeza que deseja excluir a ordem de serviço <strong>{workOrderToDelete.number}</strong>?
+                <br />
+                Esta ação não pode ser desfeita.
+              </>
+            )}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={() => setWorkOrderToDelete(null)}>
+            Cancelar
+          </AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={confirmDelete}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Excluir
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     </>
   );
 }

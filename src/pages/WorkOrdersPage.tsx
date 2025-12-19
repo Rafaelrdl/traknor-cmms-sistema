@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, ClipboardList, CheckCircle, Camera, Loader2, Calendar, LayoutGrid } from 'lucide-react';
+import { toast } from 'sonner';
 import { ViewToggle } from '@/components/ViewToggle';
 import { WorkOrderList } from '@/components/WorkOrderList';
 import { WorkOrderKanban } from '@/components/WorkOrderKanban';
@@ -23,7 +24,8 @@ import {
   useCreateWorkOrder, 
   useUpdateWorkOrder,
   useStartWorkOrder,
-  useCompleteWorkOrder 
+  useCompleteWorkOrder,
+  useDeleteWorkOrder
 } from '@/hooks/useWorkOrdersQuery';
 import { useEquipments } from '@/hooks/useEquipmentQuery';
 import { useWorkOrderView } from '@/hooks/useWorkOrderView';
@@ -71,6 +73,7 @@ export function WorkOrdersPage() {
   const updateMutation = useUpdateWorkOrder();
   const startMutation = useStartWorkOrder();
   const completeMutation = useCompleteWorkOrder();
+  const deleteMutation = useDeleteWorkOrder();
   
   // Local state
   const [view, setView] = useWorkOrderView();
@@ -132,6 +135,24 @@ export function WorkOrdersPage() {
 
   const updateWorkOrder = (id: string, updates: Partial<WorkOrder>) => {
     updateMutation.mutate({ id, data: updates });
+  };
+
+  const deleteWorkOrder = (id: string) => {
+    // Verifica se é uma OS local (gerada por planos de manutenção)
+    if (id.startsWith('wo-')) {
+      toast.error('Esta OS foi gerada localmente e não pode ser excluída do servidor');
+      return;
+    }
+    
+    deleteMutation.mutate(id, {
+      onSuccess: () => {
+        toast.success('Ordem de serviço excluída com sucesso');
+      },
+      onError: (error) => {
+        console.error('Erro ao excluir OS:', error);
+        toast.error('Erro ao excluir ordem de serviço. Verifique se ela ainda existe.');
+      }
+    });
   };
 
   const handleSaveWorkOrder = (workOrder: WorkOrder) => {
@@ -247,6 +268,7 @@ export function WorkOrdersPage() {
               onStartWorkOrder={startWorkOrder}
               onEditWorkOrder={setEditingOrder}
               onViewWorkOrder={setViewingOrder}
+              onDeleteWorkOrder={deleteWorkOrder}
             />
           )}
           

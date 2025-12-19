@@ -17,15 +17,13 @@ import {
 } from '@/hooks/useProceduresQuery';
 import {
   useChecklists,
-  // useChecklistCategories,
-  // useChecklistStats,
-  // useCreateChecklist,
-  // useUpdateChecklist,
-  // useDeleteChecklist,
-  // useDuplicateChecklist,
-  // useToggleChecklistActive,
-  // type ApiChecklistTemplate,
-  // type ApiChecklistCategory,
+  useChecklistCategories,
+  useChecklistStats,
+  useCreateChecklist,
+  useUpdateChecklist,
+  useDeleteChecklist,
+  useDuplicateChecklist,
+  useToggleChecklistActive,
 } from '@/hooks/useChecklistsQuery';
 import { Procedure, ProcedureCategory, ProcedureStatus } from '@/models/procedure';
 import { ChecklistTemplate, ChecklistCategory } from '@/models/checklist';
