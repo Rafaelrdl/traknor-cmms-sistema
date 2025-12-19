@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { Plus, Trash2, CheckSquare, Eye, ListChecks } from 'lucide-react';
 import { toast } from 'sonner';
 import type { MaintenancePlan } from '@/models/plan';
-import { createPlan, updatePlan } from '@/data/plansStore';
+import { plansService } from '@/services/plansService';
 import { useCompanies, useSectors } from '@/hooks/useLocationsQuery';
 import { useEquipments } from '@/hooks/useEquipmentQuery';
 import { useChecklists } from '@/hooks/useChecklistsQuery';
@@ -164,32 +164,24 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
     try {
       let savedPlan: MaintenancePlan;
       
+      // Preparar dados para a API
+      const apiData = {
+        name: formData.name,
+        description: formData.description,
+        frequency: formData.frequency as MaintenancePlan['frequency'],
+        is_active: formData.status === 'Ativo',
+        assets: formData.scope.equipment_ids,
+        checklist_template: formData.checklist_id || undefined,
+        auto_generate: formData.auto_generate,
+      };
+      
       if (plan) {
-        // Update existing plan
-        savedPlan = updatePlan({
-          ...plan,
-          name: formData.name,
-          description: formData.description,
-          frequency: formData.frequency as MaintenancePlan['frequency'],
-          scope: formData.scope,
-          checklist_id: formData.checklist_id,
-          status: formData.status,
-          start_date: formData.start_date,
-          auto_generate: formData.auto_generate
-        });
+        // Update existing plan via API
+        savedPlan = await plansService.update(plan.id, apiData);
         toast.success('Plano atualizado com sucesso.');
       } else {
-        // Create new plan
-        savedPlan = createPlan({
-          name: formData.name,
-          description: formData.description,
-          frequency: formData.frequency as MaintenancePlan['frequency'],
-          scope: formData.scope,
-          checklist_id: formData.checklist_id,
-          status: formData.status,
-          start_date: formData.start_date,
-          auto_generate: formData.auto_generate
-        });
+        // Create new plan via API
+        savedPlan = await plansService.create(apiData);
         toast.success('Plano criado com sucesso.');
       }
       

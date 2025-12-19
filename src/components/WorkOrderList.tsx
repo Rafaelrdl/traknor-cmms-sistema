@@ -354,11 +354,8 @@ export function WorkOrderList({
           const eq = equipment.find(e => e.id === wo.equipmentId);
           const sector = sectors.find(s => s.id === eq?.sectorId);
           
-          // Verifica se é uma OS local (gerada pelos planos de manutenção)
-          const isLocalWorkOrder = wo.id.startsWith('wo-');
-          
-          // Calcula status do SLA - não aplicável para OSs preventivas locais
-          const slaStatus = slaSettings.enabled && wo.createdAt && !isLocalWorkOrder && wo.type !== 'PREVENTIVE'
+          // Calcula status do SLA - não aplicável para OSs preventivas
+          const slaStatus = slaSettings.enabled && wo.createdAt && wo.type !== 'PREVENTIVE'
             ? calculateSLAStatus(
                 wo.createdAt,
                 wo.startedAt,
@@ -489,7 +486,7 @@ export function WorkOrderList({
                         <p>Imprimir OS</p>
                       </TooltipContent>
                     </Tooltip>
-                    {onDeleteWorkOrder && !isLocalWorkOrder && (
+                    {onDeleteWorkOrder && (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button 

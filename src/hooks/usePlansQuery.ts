@@ -1,32 +1,15 @@
 /**
  * React Query Hooks para Maintenance Plans (Planos de Manutenção)
  * 
- * NOTA: Usando store local para persistência
+ * Integração completa com API do backend para gerenciamento de planos.
+ * Todas as operações (CRUD e geração de OS) são feitas via API.
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { loadPlans, createPlan, updatePlan, deletePlan, updatePlanNextExecution, findPlanById } from '@/data/plansStore';
-import { generateWorkOrdersFromPlan } from '@/data/workOrdersStore';
+import { plansService, type PlanFilters, type CreatePlanData } from '@/services/plansService';
 import { workOrderKeys } from '@/hooks/useWorkOrdersQuery';
-import type { MaintenancePlan } from '@/models/plan';
-
-// Tipos locais para compatibilidade
-export interface PlanFilters {
-  is_active?: boolean;
-  frequency?: string[];
-  search?: string;
-}
-
-export interface CreatePlanData {
-  name: string;
-  description?: string;
-  frequency: MaintenancePlan['frequency'];
-  scope?: MaintenancePlan['scope'];
-  checklist_id?: string;
-  status?: MaintenancePlan['status'];
-  start_date?: string;
-  auto_generate?: boolean;
-}
+import { isUserAuthenticated } from '@/hooks/useAuth';
+import type { MaintenancePlan } from '@/types';
 
 // ============================================
 // Query Keys
@@ -41,34 +24,22 @@ export const planKeys = {
   stats: () => [...planKeys.all, 'stats'] as const,
 };
 
+// Re-exportar tipos para compatibilidade
+export type { PlanFilters, CreatePlanData };
+
 // ============================================
-// Query Hooks (usando store local)
+// Query Hooks
 // ============================================
 
 /**
- * Lista todos os planos
+ * Lista todos os planos de manutenção
  */
 export function usePlans(filters?: PlanFilters) {
   return useQuery({
     queryKey: planKeys.list(filters),
-    queryFn: () => {
-      let plans = loadPlans();
-      
-      // Aplicar filtros
-      if (filters?.is_active !== undefined) {
-        plans = plans.filter(p => (p.status === 'Ativo') === filters.is_active);
-      }
-      if (filters?.search) {
-        const search = filters.search.toLowerCase();
-        plans = plans.filter(p => 
-          p.name.toLowerCase().includes(search) || 
-          p.description?.toLowerCase().includes(search)
-        );
-      }
-      
-      return Promise.resolve(plans);
-    },
-    staleTime: 0, // Sempre buscar dados frescos do localStorage
+    queryFn: () => plansService.getAll(filters),
+    staleTime: 1000 * 60 * 2, // 2 minutos
+    enabled: isUserAuthenticated(),
   });
 }
 
@@ -80,17 +51,13 @@ export function useActivePlans() {
 }
 
 /**
- * Detalhes de um plano
+ * Detalhes de um plano específico
  */
 export function usePlan(id: string | null | undefined) {
   return useQuery({
     queryKey: planKeys.detail(id!),
-    queryFn: () => {
-      const plans = loadPlans();
-      const plan = plans.find(p => p.id === id);
-      return Promise.resolve(plan || null);
-    },
-    enabled: !!id,
+    queryFn: () => plansService.getById(id!),
+    enabled: !!id && isUserAuthenticated(),
   });
 }
 
@@ -100,15 +67,9 @@ export function usePlan(id: string | null | undefined) {
 export function usePlanStats() {
   return useQuery({
     queryKey: planKeys.stats(),
-    queryFn: () => {
-      const plans = loadPlans();
-      return Promise.resolve({
-        total: plans.length,
-        active: plans.filter(p => p.status === 'Ativo').length,
-        inactive: plans.filter(p => p.status === 'Inativo').length,
-      });
-    },
-    staleTime: 0,
+    queryFn: () => plansService.getStats(),
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    enabled: isUserAuthenticated(),
   });
 }
 
@@ -117,31 +78,13 @@ export function usePlanStats() {
 // ============================================
 
 /**
- * Cria novo plano
+ * Cria novo plano de manutenção
  */
 export function useCreatePlan() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreatePlanData) => {
-      const planData: Omit<MaintenancePlan, 'id' | 'created_at' | 'updated_at'> = {
-        name: data.name,
-        description: data.description,
-        frequency: data.frequency,
-        scope: data.scope || {
-          location_id: '',
-          location_name: '',
-          equipment_ids: [],
-          equipment_names: []
-        },
-        checklist_id: data.checklist_id,
-        status: data.status || 'Ativo',
-        start_date: data.start_date,
-        auto_generate: data.auto_generate ?? false,
-      };
-      const newPlan = createPlan(planData);
-      return Promise.resolve(newPlan);
-    },
+    mutationFn: (data: CreatePlanData) => plansService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
       queryClient.invalidateQueries({ queryKey: planKeys.stats() });
@@ -150,21 +93,14 @@ export function useCreatePlan() {
 }
 
 /**
- * Atualiza plano
+ * Atualiza plano de manutenção
  */
 export function useUpdatePlan() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<MaintenancePlan> }) => {
-      const plans = loadPlans();
-      const existingPlan = plans.find(p => p.id === id);
-      if (!existingPlan) {
-        return Promise.reject(new Error('Plano não encontrado'));
-      }
-      const updatedPlan = updatePlan({ ...existingPlan, ...data });
-      return Promise.resolve(updatedPlan);
-    },
+    mutationFn: ({ id, data }: { id: string; data: Partial<CreatePlanData> }) => 
+      plansService.update(id, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: planKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
@@ -173,16 +109,13 @@ export function useUpdatePlan() {
 }
 
 /**
- * Deleta plano
+ * Deleta plano de manutenção
  */
 export function useDeletePlan() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => {
-      deletePlan(id);
-      return Promise.resolve();
-    },
+    mutationFn: (id: string) => plansService.delete(id),
     onSuccess: (_, id) => {
       queryClient.removeQueries({ queryKey: planKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
@@ -192,24 +125,14 @@ export function useDeletePlan() {
 }
 
 /**
- * Toggle ativo/inativo
+ * Toggle ativo/inativo do plano
  */
 export function useTogglePlanActive() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) => {
-      const plans = loadPlans();
-      const existingPlan = plans.find(p => p.id === id);
-      if (!existingPlan) {
-        return Promise.reject(new Error('Plano não encontrado'));
-      }
-      const updatedPlan = updatePlan({
-        ...existingPlan,
-        status: isActive ? 'Ativo' : 'Inativo',
-      });
-      return Promise.resolve(updatedPlan);
-    },
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) => 
+      plansService.toggleActive(id, isActive),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: planKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
@@ -220,41 +143,73 @@ export function useTogglePlanActive() {
 
 /**
  * Gera ordens de serviço a partir de um plano de manutenção
+ * 
+ * Usa o endpoint POST /cmms/plans/{id}/generate/ do backend.
+ * As OSs são criadas diretamente no banco de dados com IDs válidos.
  */
 export function useGenerateWorkOrders() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (planId: string) => {
-      console.log('[useGenerateWorkOrders] Iniciando geração para plano:', planId);
+      console.log('[useGenerateWorkOrders] Gerando OSs via API para plano:', planId);
       
-      // Buscar o plano
-      const plan = findPlanById(planId);
-      if (!plan) {
-        console.error('[useGenerateWorkOrders] Plano não encontrado:', planId);
-        throw new Error('Plano não encontrado');
-      }
-      console.log('[useGenerateWorkOrders] Plano encontrado:', plan);
+      const result = await plansService.generateWorkOrders(planId);
       
-      // Gerar as ordens de serviço
-      const workOrders = generateWorkOrdersFromPlan(plan);
-      console.log('[useGenerateWorkOrders] OSs geradas:', workOrders.length, workOrders);
+      console.log('[useGenerateWorkOrders] Resultado:', result);
       
-      // Atualizar a próxima data de execução do plano
-      const updatedPlan = updatePlanNextExecution(planId);
-      
-      return Promise.resolve({
-        work_orders_created: workOrders.length,
-        next_execution_date: updatedPlan?.next_execution_date || null,
-      });
+      return {
+        work_orders_created: result.work_orders_created,
+        work_order_ids: result.work_order_ids,
+        next_execution_date: result.next_execution || null,
+      };
     },
-    onSuccess: (_, planId) => {
-      console.log('[useGenerateWorkOrders] Sucesso! Invalidando queries...');
+    onSuccess: (data, planId) => {
+      console.log('[useGenerateWorkOrders] Sucesso! OSs criadas:', data.work_orders_created);
+      
+      // Invalidar queries de planos
       queryClient.invalidateQueries({ queryKey: planKeys.detail(planId) });
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
       queryClient.invalidateQueries({ queryKey: planKeys.stats() });
-      // Invalidar também as queries de work orders
+      
+      // Invalidar queries de work orders para carregar as novas OSs
       queryClient.invalidateQueries({ queryKey: workOrderKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: workOrderKeys.stats() });
+    },
+    onError: (error) => {
+      console.error('[useGenerateWorkOrders] Erro ao gerar OSs:', error);
+    }
+  });
+}
+
+/**
+ * Adiciona ativo a um plano
+ */
+export function useAddAssetToPlan() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ planId, assetId }: { planId: string; assetId: string }) => 
+      plansService.addAsset(planId, assetId),
+    onSuccess: (_, { planId }) => {
+      queryClient.invalidateQueries({ queryKey: planKeys.detail(planId) });
+      queryClient.invalidateQueries({ queryKey: planKeys.lists() });
+    },
+  });
+}
+
+/**
+ * Remove ativo de um plano
+ */
+export function useRemoveAssetFromPlan() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ planId, assetId }: { planId: string; assetId: string }) => 
+      plansService.removeAsset(planId, assetId),
+    onSuccess: (_, { planId }) => {
+      queryClient.invalidateQueries({ queryKey: planKeys.detail(planId) });
+      queryClient.invalidateQueries({ queryKey: planKeys.lists() });
     },
   });
 }
@@ -264,6 +219,6 @@ export function useGenerateWorkOrders() {
 // ============================================
 
 /**
- * Alias para usePlans - mantém compatibilidade com código que usa MaintenancePlans
+ * Alias para usePlans - mantém compatibilidade com código existente
  */
 export const useMaintenancePlans = usePlans;

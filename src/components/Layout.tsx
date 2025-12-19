@@ -11,7 +11,6 @@ import { MobileNavbar, DesktopNavbar } from '@/components/Navbar';
 import { FirstTimeGuide, useFirstTimeGuide } from '@/components/onboarding/FirstTimeGuide';
 import { TourHint } from '@/components/tour/TourHint';
 import { useTour } from '@/components/tour';
-import { useAutomaticWorkOrderGeneration } from '@/hooks/useWorkOrderGeneration';
 import { ProductSwitcher } from '@/components/ProductSwitcher';
 import { logout as logoutService } from '@/services/authService';
 import { AlertsNotificationDropdown } from '@/components/AlertsNotificationDropdown';
@@ -33,8 +32,8 @@ export function Layout({ children }: LayoutProps) {
   const isMonitorModule = location.pathname.startsWith('/monitor');
   const modulePrefix = isMonitorModule ? '/monitor' : '/cmms';
   
-  // Initialize automatic work order generation
-  useAutomaticWorkOrderGeneration();
+  // NOTE: Geração automática de OS agora é responsabilidade do backend (Celery/cron)
+  // O frontend apenas exibe as OSs geradas pela API
 
   const user = getCurrentUser();
 
