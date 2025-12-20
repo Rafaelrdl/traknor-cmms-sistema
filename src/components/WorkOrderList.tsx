@@ -24,7 +24,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Play, Edit, ClipboardList, AlertTriangle, User, FileText, UserPlus, Eye, Trash2 } from 'lucide-react';
+import { Play, Edit, ClipboardList, AlertTriangle, User, FileText, UserPlus, Eye, Trash2, Calendar } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -336,6 +336,7 @@ export function WorkOrderList({
           <TableHead>Número</TableHead>
           <TableHead>Equipamento</TableHead>
           <TableHead>Tipo</TableHead>
+          <TableHead>Origem</TableHead>
           <TableHead>Prioridade</TableHead>
           <TableHead>Data Agendada</TableHead>
           <TableHead>Responsável</TableHead>
@@ -378,6 +379,22 @@ export function WorkOrderList({
               </TableCell>
               <TableCell>
                 <StatusBadge status={wo.type} />
+              </TableCell>
+              <TableCell>
+                {wo.maintenancePlanId ? (
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    <Calendar className="h-3 w-3 mr-1" />
+                    Plano
+                  </Badge>
+                ) : wo.requestId ? (
+                  <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                    Solicitação
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+                    Manual
+                  </Badge>
+                )}
               </TableCell>
               <TableCell>
                 <StatusBadge status={wo.priority} />

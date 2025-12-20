@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -66,9 +66,33 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
   const [selectedChecklist, setSelectedChecklist] = useState<ChecklistTemplate | null>(null);
   const [isViewingChecklist, setIsViewingChecklist] = useState(false);
 
+  // Função para inferir localização a partir dos equipamentos
+  const inferLocationFromEquipments = (equipmentIds: string[]) => {
+    if (equipmentIds.length === 0 || equipment.length === 0) {
+      return { location_id: '', location_name: '' };
+    }
+    
+    // Pega o primeiro equipamento para inferir a localização
+    const firstEquipmentId = equipmentIds[0];
+    const firstEquipment = equipment.find(eq => eq.id === firstEquipmentId);
+    
+    if (firstEquipment?.sectorId) {
+      const sector = sectors.find(s => s.id === firstEquipment.sectorId);
+      if (sector) {
+        return { location_id: sector.id, location_name: sector.name };
+      }
+    }
+    
+    return { location_id: '', location_name: '' };
+  };
+
   // Load plan data when editing
   useEffect(() => {
     if (plan) {
+      // Usar assets diretamente da API ou fallback para scope legado
+      const equipmentIds = plan.assets || plan.scope?.equipment_ids || [];
+      const equipmentNames = plan.asset_names || plan.scope?.equipment_names || [];
+      
       setFormData({
         name: plan.name,
         description: plan.description || '',
@@ -76,12 +100,12 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
         scope: {
           location_id: plan.scope?.location_id || '',
           location_name: plan.scope?.location_name || '',
-          equipment_ids: plan.scope?.equipment_ids || [],
-          equipment_names: plan.scope?.equipment_names || []
+          equipment_ids: equipmentIds,
+          equipment_names: equipmentNames
         },
         checklist_id: plan.checklist_id || '',
-        status: plan.status,
-        start_date: plan.start_date || '',
+        status: plan.status || (plan.isActive ? 'Ativo' : 'Inativo'),
+        start_date: plan.next_execution_date?.split('T')[0] || '', // Usar next_execution como referência
         auto_generate: plan.auto_generate || false
       });
     } else {
@@ -104,6 +128,36 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
     }
     setErrors({});
   }, [plan, open]);
+
+  // Efeito separado para inferir localização quando os dados de equipamentos/setores carregarem
+  useEffect(() => {
+    if (plan && equipment.length > 0 && sectors.length > 0) {
+      const equipmentIds = plan.assets || plan.scope?.equipment_ids || [];
+      console.log('[PlanFormModal] Inferindo localização:', {
+        equipmentIds,
+        equipmentCount: equipment.length,
+        sectorsCount: sectors.length,
+        currentLocationId: formData.scope.location_id
+      });
+      
+      // Só infere se ainda não tem localização definida e tem equipamentos
+      if (equipmentIds.length > 0 && !formData.scope.location_id) {
+        const locationInfo = inferLocationFromEquipments(equipmentIds);
+        console.log('[PlanFormModal] Localização inferida:', locationInfo);
+        
+        if (locationInfo.location_id) {
+          setFormData(prev => ({
+            ...prev,
+            scope: {
+              ...prev.scope,
+              location_id: locationInfo.location_id,
+              location_name: locationInfo.location_name,
+            }
+          }));
+        }
+      }
+    }
+  }, [plan, equipment, sectors, formData.scope.location_id]);
 
   // Sincronizar selectedChecklist com formData.checklist_id
   useEffect(() => {
@@ -163,16 +217,18 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
     
     try {
       let savedPlan: MaintenancePlan;
+      const isNewPlan = !plan;
       
       // Preparar dados para a API
       const apiData = {
         name: formData.name,
         description: formData.description,
-        frequency: formData.frequency as MaintenancePlan['frequency'],
+        frequency: formData.frequency, // Já está em inglês (MONTHLY, QUARTERLY, etc.)
         is_active: formData.status === 'Ativo',
         assets: formData.scope.equipment_ids,
         checklist_template: formData.checklist_id || undefined,
         auto_generate: formData.auto_generate,
+        next_execution: formData.start_date || undefined, // Data de início = próxima execução
       };
       
       if (plan) {
@@ -183,6 +239,26 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
         // Create new plan via API
         savedPlan = await plansService.create(apiData);
         toast.success('Plano criado com sucesso.');
+      }
+      
+      // Se é um novo plano com geração automática e a data de início já passou,
+      // gerar as ordens de serviço automaticamente
+      if (isNewPlan && formData.auto_generate && formData.start_date) {
+        const startDate = new Date(formData.start_date + 'T12:00:00');
+        const today = new Date();
+        today.setHours(12, 0, 0, 0);
+        
+        if (startDate <= today) {
+          try {
+            const result = await plansService.generateWorkOrders(savedPlan.id);
+            toast.success(`${result.work_orders_created} ordem(s) de serviço gerada(s) automaticamente!`, {
+              description: 'A data de início já passou, então as OS foram criadas.'
+            });
+          } catch (error) {
+            console.error('Erro ao gerar OS automaticamente:', error);
+            toast.warning('Plano criado, mas erro ao gerar OS automaticamente.');
+          }
+        }
       }
       
       onSave(savedPlan);
@@ -327,10 +403,16 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
 
   const isEditing = !!plan;
   const modalTitle = isEditing ? 'Editar Plano de Manutenção' : 'Novo Plano de Manutenção';
+  const modalDescription = isEditing 
+    ? 'Edite as configurações do plano de manutenção preventiva' 
+    : 'Configure um novo plano de manutenção preventiva para seus equipamentos';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[98vw] max-w-7xl h-[95vh] max-h-[95vh] overflow-hidden flex flex-col p-0 sm:w-[95vw] lg:w-[90vw] xl:w-[85vw]">
+      <DialogContent 
+        className="w-[98vw] max-w-7xl h-[95vh] max-h-[95vh] overflow-hidden flex flex-col p-0 sm:w-[95vw] lg:w-[90vw] xl:w-[85vw]"
+      >
+        <DialogDescription className="sr-only">{modalDescription}</DialogDescription>
         {isViewingChecklist && selectedChecklist ? (
           // Modal de Visualização do Checklist
           <>
@@ -458,7 +540,7 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
                 <div className="space-y-2">
                   <Label htmlFor="frequency">Frequência *</Label>
                   <Select
-                    value={formData.frequency || undefined}
+                    value={formData.frequency || ''}
                     onValueChange={(value) => setFormData(prev => ({ 
                       ...prev, 
                       frequency: value as MaintenancePlan['frequency']
@@ -468,12 +550,12 @@ export function PlanFormModal({ open, onOpenChange, plan, onSave }: PlanFormModa
                       <SelectValue placeholder="Selecione a frequência" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Semanal">Semanal</SelectItem>
-                      <SelectItem value="Mensal">Mensal</SelectItem>
-                      <SelectItem value="Bimestral">Bimestral</SelectItem>
-                      <SelectItem value="Trimestral">Trimestral</SelectItem>
-                      <SelectItem value="Semestral">Semestral</SelectItem>
-                      <SelectItem value="Anual">Anual</SelectItem>
+                      <SelectItem value="WEEKLY">Semanal</SelectItem>
+                      <SelectItem value="MONTHLY">Mensal</SelectItem>
+                      <SelectItem value="BIWEEKLY">Quinzenal</SelectItem>
+                      <SelectItem value="QUARTERLY">Trimestral</SelectItem>
+                      <SelectItem value="SEMI_ANNUAL">Semestral</SelectItem>
+                      <SelectItem value="ANNUAL">Anual</SelectItem>
                     </SelectContent>
                   </Select>
                   {errors.frequency && (

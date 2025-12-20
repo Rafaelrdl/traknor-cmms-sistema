@@ -37,6 +37,7 @@ export interface CreatePlanData {
   assets: string[]; // IDs dos ativos
   checklist_template?: string;
   auto_generate?: boolean;
+  next_execution?: string; // Data de início (YYYY-MM-DD)
 }
 
 export interface GenerateWorkOrdersResult {
@@ -51,9 +52,9 @@ export interface GenerateWorkOrdersResult {
 
 const mapFrequency = (freq: ApiMaintenancePlan['frequency']): MaintenancePlan['frequency'] => {
   const mapping: Record<ApiMaintenancePlan['frequency'], MaintenancePlan['frequency']> = {
-    'DAILY': 'MONTHLY', // Fallback - frontend não tem DAILY
-    'WEEKLY': 'MONTHLY',
-    'BIWEEKLY': 'MONTHLY',
+    'DAILY': 'DAILY',
+    'WEEKLY': 'WEEKLY',
+    'BIWEEKLY': 'BIWEEKLY',
     'MONTHLY': 'MONTHLY',
     'QUARTERLY': 'QUARTERLY',
     'SEMI_ANNUAL': 'SEMI_ANNUAL',
@@ -65,9 +66,25 @@ const mapFrequency = (freq: ApiMaintenancePlan['frequency']): MaintenancePlan['f
 const mapPlan = (plan: ApiMaintenancePlan): MaintenancePlan => ({
   id: String(plan.id),
   name: plan.name,
-  description: plan.description,
+  description: plan.description || '',
   frequency: mapFrequency(plan.frequency),
   isActive: plan.is_active,
+  // Campos da API - com valores defensivos
+  assets: (plan.assets || []).map(String),
+  asset_tags: plan.asset_tags || [],
+  asset_names: plan.asset_names || [],
+  checklist_id: plan.checklist_template ? String(plan.checklist_template) : undefined,
+  checklist_name: plan.checklist_template_name || null,
+  next_execution_date: plan.next_execution || null,
+  last_execution_date: plan.last_execution || null,
+  auto_generate: plan.auto_generate ?? false,
+  work_orders_generated: plan.work_orders_generated ?? 0,
+  // Campos legados para compatibilidade com UI existente
+  scope: {
+    equipment_ids: (plan.assets || []).map(String),
+    equipment_names: plan.asset_names || [],
+  },
+  status: plan.is_active ? 'Ativo' : 'Inativo',
 });
 
 // ============================================
@@ -89,8 +106,17 @@ export const plansService = {
     if (filters?.page) params.page = filters.page;
     if (filters?.page_size) params.page_size = filters.page_size;
 
-    const response = await api.get<PaginatedResponse<ApiMaintenancePlan>>('/cmms/plans/', { params });
-    return response.data.results.map(mapPlan);
+    try {
+      const response = await api.get<PaginatedResponse<ApiMaintenancePlan>>('/cmms/plans/', { params });
+      console.log('[plansService.getAll] Response:', response.data);
+      return response.data.results.map(mapPlan);
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { status: number; data: unknown } };
+        console.error('[plansService.getAll] Erro:', axiosError.response?.status, axiosError.response?.data);
+      }
+      throw error;
+    }
   },
 
   /**
@@ -120,7 +146,7 @@ export const plansService = {
    * Cria novo plano
    */
   async create(data: CreatePlanData): Promise<MaintenancePlan> {
-    const payload = {
+    const payload: Record<string, unknown> = {
       name: data.name,
       description: data.description || '',
       frequency: data.frequency,
@@ -129,8 +155,24 @@ export const plansService = {
       checklist_template: data.checklist_template ? Number(data.checklist_template) : null,
       auto_generate: data.auto_generate ?? true,
     };
-    const response = await api.post<ApiMaintenancePlan>('/cmms/plans/', payload);
-    return mapPlan(response.data);
+    
+    // Adicionar next_execution se fornecido
+    if (data.next_execution) {
+      payload.next_execution = data.next_execution;
+    }
+    
+    console.log('[plansService.create] Payload:', JSON.stringify(payload, null, 2));
+    try {
+      const response = await api.post<ApiMaintenancePlan>('/cmms/plans/', payload);
+      return mapPlan(response.data);
+    } catch (error: unknown) {
+      // Captura detalhes do erro para debug
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { status: number; data: unknown } };
+        console.error('[plansService.create] Erro:', axiosError.response?.status, axiosError.response?.data);
+      }
+      throw error;
+    }
   },
 
   /**
@@ -148,6 +190,9 @@ export const plansService = {
       payload.checklist_template = data.checklist_template ? Number(data.checklist_template) : null;
     }
     if (data.auto_generate !== undefined) payload.auto_generate = data.auto_generate;
+    if (data.next_execution !== undefined) {
+      payload.next_execution = data.next_execution || null;
+    }
 
     const response = await api.patch<ApiMaintenancePlan>(`/cmms/plans/${id}/`, payload);
     return mapPlan(response.data);

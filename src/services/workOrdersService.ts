@@ -133,6 +133,8 @@ const mapWorkOrder = (wo: ApiWorkOrder): WorkOrder => ({
   assignedTo: wo.assigned_to ? String(wo.assigned_to) : undefined,
   assignedToName: wo.assigned_to_name || undefined,
   executionDescription: wo.execution_description || undefined,
+  maintenancePlanId: wo.maintenance_plan ? String(wo.maintenance_plan) : undefined,
+  requestId: wo.request ? String(wo.request) : undefined,
   photos: Array.isArray(wo.photos) ? wo.photos.map((p): UploadedPhoto => ({
     id: String(p.id),
     url: normalizeFileUrl(p.file),

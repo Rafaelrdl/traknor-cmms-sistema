@@ -86,8 +86,27 @@ export interface MaintenancePlan {
   id: string;
   name: string;
   description: string;
-  frequency: 'MONTHLY' | 'QUARTERLY' | 'SEMI_ANNUAL' | 'ANNUAL';
+  frequency: 'DAILY' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'SEMI_ANNUAL' | 'ANNUAL';
   isActive: boolean;
+  // Campos da API
+  assets?: string[];
+  asset_tags?: string[];
+  asset_names?: string[];
+  checklist_id?: string;
+  checklist_name?: string | null;
+  next_execution_date?: string | null;
+  last_execution_date?: string | null;
+  auto_generate?: boolean;
+  work_orders_generated?: number;
+  // Campos legados para compatibilidade
+  scope?: {
+    location_id?: string;
+    location_name?: string;
+    equipment_ids?: string[];
+    equipment_names?: string[];
+  };
+  status?: 'Ativo' | 'Inativo';
+  start_date?: string;
 }
 
 export interface WorkOrder {
@@ -108,6 +127,10 @@ export interface WorkOrder {
   executionDescription?: string;
   photos?: UploadedPhoto[];
   checklistResponses?: ChecklistResponse[];
+  /** ID do plano de manutenção que gerou esta OS (se aplicável) */
+  maintenancePlanId?: string;
+  /** ID da solicitação que gerou esta OS (se aplicável) */
+  requestId?: string;
 }
 
 export interface WorkOrderStockItem {

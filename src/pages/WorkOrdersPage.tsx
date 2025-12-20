@@ -79,6 +79,7 @@ export function WorkOrdersPage() {
   const [view, setView] = useWorkOrderView();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [originFilter, setOriginFilter] = useState<string>('ALL');
   const [selectedOrder, setSelectedOrder] = useState<WorkOrder | null>(null);
   const [editingOrder, setEditingOrder] = useState<WorkOrder | null>(null);
   const [viewingOrder, setViewingOrder] = useState<WorkOrder | null>(null);
@@ -110,9 +111,20 @@ export function WorkOrdersPage() {
       const matchesSearch = wo.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            wo.description.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'ALL' || wo.status === statusFilter;
-      return matchesSearch && matchesStatus;
+      
+      // Filtro por origem
+      let matchesOrigin = true;
+      if (originFilter === 'PLAN') {
+        matchesOrigin = !!wo.maintenancePlanId;
+      } else if (originFilter === 'REQUEST') {
+        matchesOrigin = !!wo.requestId;
+      } else if (originFilter === 'MANUAL') {
+        matchesOrigin = !wo.maintenancePlanId && !wo.requestId;
+      }
+      
+      return matchesSearch && matchesStatus && matchesOrigin;
     });
-  }, [workOrders, searchTerm, statusFilter]);
+  }, [workOrders, searchTerm, statusFilter, originFilter]);
 
   const startWorkOrder = (id: string, technicianId?: string) => {
     startMutation.mutate({ id, technicianId });
@@ -242,6 +254,17 @@ export function WorkOrdersPage() {
                   <SelectItem value="OPEN">Abertas</SelectItem>
                   <SelectItem value="IN_PROGRESS">Em Execução</SelectItem>
                   <SelectItem value="COMPLETED">Concluídas</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={originFilter} onValueChange={setOriginFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Todas Origens</SelectItem>
+                  <SelectItem value="PLAN">Plano de Manutenção</SelectItem>
+                  <SelectItem value="REQUEST">Solicitação</SelectItem>
+                  <SelectItem value="MANUAL">Manual</SelectItem>
                 </SelectContent>
               </Select>
             </div>

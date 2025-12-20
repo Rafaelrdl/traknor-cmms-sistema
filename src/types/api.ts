@@ -308,6 +308,8 @@ export interface ApiWorkOrder {
   items: ApiWorkOrderItem[];
   created_by: number | null;
   created_by_name: string | null;
+  maintenance_plan: number | null;
+  request: number | null;
   created_at: string;
   updated_at: string;
 }

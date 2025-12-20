@@ -14,6 +14,7 @@ import {
   useGenerateWorkOrders,
   planKeys
 } from '@/hooks/usePlansQuery';
+import { plansService } from '@/services/plansService';
 import { useQueryClient } from '@tanstack/react-query';
 import { IfCanCreate, IfCanEdit } from '@/components/auth/IfCan';
 import { toast } from 'sonner';
@@ -35,15 +36,30 @@ export function PlansPage() {
   // Local state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<MaintenancePlan | undefined>();
+  const [isLoadingPlanDetails, setIsLoadingPlanDetails] = useState(false);
 
   const handleNewPlan = () => {
     setSelectedPlan(undefined);
     setIsModalOpen(true);
   };
 
-  const handleEditPlan = (plan: MaintenancePlan) => {
-    setSelectedPlan(plan);
-    setIsModalOpen(true);
+  const handleEditPlan = async (plan: MaintenancePlan) => {
+    // Buscar detalhes completos do plano (inclui assets, asset_names, etc.)
+    setIsLoadingPlanDetails(true);
+    try {
+      const planDetails = await plansService.getById(plan.id);
+      console.log('[PlansPage] Plan details loaded:', planDetails);
+      setSelectedPlan(planDetails);
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error('[PlansPage] Error loading plan details:', error);
+      toast.error('Erro ao carregar detalhes do plano');
+      // Fallback: usar dados da lista mesmo sem os assets
+      setSelectedPlan(plan);
+      setIsModalOpen(true);
+    } finally {
+      setIsLoadingPlanDetails(false);
+    }
   };
 
   const handlePlanSave = (savedPlan: MaintenancePlan) => {
@@ -89,31 +105,44 @@ export function PlansPage() {
     });
   };
 
-  const formatDate = (dateString?: string) => {
+  const formatDate = (dateString?: string | null) => {
     if (!dateString) return 'Não definida';
     try {
-      return new Date(dateString).toLocaleDateString('pt-BR');
+      // Adiciona horário meio-dia para evitar problemas de timezone
+      // quando a string é apenas YYYY-MM-DD
+      const dateToFormat = dateString.includes('T') 
+        ? dateString 
+        : `${dateString}T12:00:00`;
+      return new Date(dateToFormat).toLocaleDateString('pt-BR');
     } catch {
       return 'Data inválida';
     }
   };
 
+  const formatFrequency = (frequency: string) => {
+    const frequencyMap: Record<string, string> = {
+      'DAILY': 'Diária',
+      'WEEKLY': 'Semanal',
+      'BIWEEKLY': 'Quinzenal',
+      'MONTHLY': 'Mensal',
+      'QUARTERLY': 'Trimestral',
+      'SEMI_ANNUAL': 'Semestral',
+      'ANNUAL': 'Anual',
+    };
+    return frequencyMap[frequency] || frequency;
+  };
+
   const getScopeDisplay = (plan: MaintenancePlan) => {
-    const { scope } = plan;
-    if (!scope) return 'Geral';
+    // Usar asset_names diretamente da API ou fallback para scope legado
+    const equipmentNames = plan.asset_names || plan.scope?.equipment_names || [];
     
-    const parts = [];
-    if (scope.location_name) parts.push(scope.location_name);
-    const equipmentNames = scope.equipment_names || [];
-    if (equipmentNames.length > 0) {
-      if (equipmentNames.length === 1) {
-        parts.push(equipmentNames[0]);
-      } else {
-        parts.push(`${equipmentNames.length} equipamentos`);
-      }
+    if (equipmentNames.length === 0) return 'Geral';
+    
+    if (equipmentNames.length === 1) {
+      return equipmentNames[0];
     }
     
-    return parts.length > 0 ? parts.join(' / ') : 'Geral';
+    return `${equipmentNames.length} equipamentos`;
   };
 
   return (
@@ -201,18 +230,21 @@ export function PlansPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">
-                        {plan.frequency}
+                        {formatFrequency(plan.frequency)}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
                         <div>{getScopeDisplay(plan)}</div>
-                        {plan.scope.equipment_names && plan.scope.equipment_names.length > 1 && (
-                          <div className="text-xs text-muted-foreground">
-                            {plan.scope.equipment_names.slice(0, 2).join(', ')}
-                            {plan.scope.equipment_names.length > 2 && ` +${plan.scope.equipment_names.length - 2}`}
-                          </div>
-                        )}
+                        {(() => {
+                          const equipmentNames = plan.asset_names || plan.scope?.equipment_names || [];
+                          return equipmentNames.length > 1 && (
+                            <div className="text-xs text-muted-foreground">
+                              {equipmentNames.slice(0, 2).join(', ')}
+                              {equipmentNames.length > 2 && ` +${equipmentNames.length - 2}`}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -240,16 +272,21 @@ export function PlansPage() {
                             variant="outline" 
                             size="sm"
                             onClick={() => handleEditPlan(plan)}
+                            disabled={isLoadingPlanDetails}
                             className="flex items-center gap-1"
                             aria-label={`Editar plano ${plan.name}`}
                             data-testid="plan-edit"
                           >
-                            <Edit className="h-3 w-3" />
+                            {isLoadingPlanDetails ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Edit className="h-3 w-3" />
+                            )}
                             Editar
                           </Button>
                         </IfCanEdit>
                         
-                        {plan.status === 'Ativo' && (plan.scope.equipment_ids || []).length > 0 && (
+                        {plan.status === 'Ativo' && (plan.assets?.length || plan.scope?.equipment_ids?.length || 0) > 0 && (
                           <Button 
                             variant="default" 
                             size="sm"
