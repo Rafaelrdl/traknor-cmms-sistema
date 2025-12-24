@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useUsers } from '@/data/usersStore';
+import { changePassword } from '@/services/authService';
 import { toast } from 'sonner';
 import type { User } from '@/models/user';
 
@@ -96,8 +97,11 @@ export function SecurityForm({ security, onSave }: SecurityFormProps) {
 
     setIsLoading(true);
     try {
-      // Simular validação da senha atual (em um app real, seria no backend)
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await changePassword(
+        passwordData.currentPassword,
+        passwordData.newPassword,
+        passwordData.confirmPassword
+      );
       
       // Limpar formulário
       setPasswordData({
@@ -108,7 +112,11 @@ export function SecurityForm({ security, onSave }: SecurityFormProps) {
       
       toast.success('Senha alterada com sucesso');
     } catch (error: any) {
-      toast.error('Erro ao alterar senha');
+      const errorMessage = error.response?.data?.error || 
+                          error.response?.data?.old_password?.[0] ||
+                          error.response?.data?.new_password?.[0] ||
+                          'Erro ao alterar senha';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

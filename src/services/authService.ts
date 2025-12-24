@@ -109,3 +109,16 @@ export async function confirmPasswordReset(token: string, newPassword: string): 
   });
   return data;
 }
+
+export async function changePassword(
+  oldPassword: string, 
+  newPassword: string, 
+  newPasswordConfirm: string
+): Promise<{ message: string }> {
+  const { data } = await api.post<{ message: string }>('/users/me/change-password/', {
+    old_password: oldPassword,
+    new_password: newPassword,
+    new_password_confirm: newPasswordConfirm,
+  });
+  return data;
+}
