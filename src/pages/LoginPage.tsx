@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { AlertCircle, Eye, EyeOff, Mail, Shield, BarChart3, Wrench, ThermometerSnowflake, CheckCircle2 } from 'lucide-react';
 import { AxiosError } from 'axios';
 import { toast } from 'sonner';
@@ -9,6 +10,7 @@ import { login as loginService } from '@/services/authService';
 import ClimatrakLogoUrl from '@/assets/images/logo_climatrak.svg';
 
 export function LoginPage() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -147,13 +149,12 @@ export function LoginPage() {
                   <Label htmlFor="password" className="text-sm font-medium text-foreground">
                     Senha
                   </Label>
-                  <button
-                    type="button"
+                  <Link
+                    to="/forgot-password"
                     className="text-xs text-primary hover:text-primary/80 transition-colors font-medium"
-                    onClick={() => toast.info('Funcionalidade em desenvolvimento')}
                   >
                     Esqueceu a senha?
-                  </button>
+                  </Link>
                 </div>
                 <div className="relative">
                   <Input
@@ -203,21 +204,6 @@ export function LoginPage() {
                 ) : 'Entrar'}
               </Button>
             </form>
-
-            {/* Demo Credentials */}
-            <div className="bg-muted/40 rounded-xl p-4 border border-border/50">
-              <p className="text-xs font-medium text-muted-foreground mb-2">Credenciais de demonstração:</p>
-              <div className="space-y-1.5 text-xs">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <span className="px-1.5 py-0.5 bg-primary/10 text-primary rounded font-medium">Admin</span>
-                  <span>admin@umc.com / admin123</span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <span className="px-1.5 py-0.5 bg-secondary text-secondary-foreground rounded font-medium">Técnico</span>
-                  <span>tecnico@umc.com / tecnico123</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -319,8 +305,8 @@ export function LoginPage() {
           </div>
         </div>
 
-        {/* Floating Elements */}
-        <div className="absolute top-32 left-12 bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-white/60 animate-float">
+        {/* Floating Elements - Left Side (descendo) */}
+        <div className="absolute top-24 left-8 bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-white/60 animate-float-down">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
               <CheckCircle2 className="w-4 h-4 text-green-600" />
@@ -332,7 +318,32 @@ export function LoginPage() {
           </div>
         </div>
 
-        <div className="absolute bottom-24 right-16 bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-white/60 animate-float-delayed">
+        <div className="absolute top-52 left-16 bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-white/60 animate-float-down-delayed">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center">
+              <Wrench className="w-4 h-4 text-orange-600" />
+            </div>
+            <div>
+              <div className="text-xs font-medium text-foreground">Manutenção Preventiva</div>
+              <div className="text-[10px] text-muted-foreground">Chiller 02 - Agendada</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="absolute bottom-40 left-10 bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-white/60 animate-float-down-slow">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+              <BarChart3 className="w-4 h-4 text-blue-600" />
+            </div>
+            <div>
+              <div className="text-xs font-medium text-foreground">Relatório PMOC</div>
+              <div className="text-[10px] text-muted-foreground">Gerado com sucesso</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Floating Elements - Right Side (subindo) */}
+        <div className="absolute top-32 right-12 bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-white/60 animate-float-up">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <ThermometerSnowflake className="w-4 h-4 text-primary" />
@@ -343,24 +354,79 @@ export function LoginPage() {
             </div>
           </div>
         </div>
+
+        <div className="absolute top-56 right-20 bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-white/60 animate-float-up-delayed">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-yellow-100 flex items-center justify-center">
+              <BarChart3 className="w-4 h-4 text-yellow-600" />
+            </div>
+            <div>
+              <div className="text-xs font-medium text-foreground">Eficiência Energética</div>
+              <div className="text-[10px] text-muted-foreground">+15% este mês</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="absolute bottom-32 right-14 bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-white/60 animate-float-up-slow">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center">
+              <Wrench className="w-4 h-4 text-red-600" />
+            </div>
+            <div>
+              <div className="text-xs font-medium text-foreground">Alerta Preventivo</div>
+              <div className="text-[10px] text-muted-foreground">Filtro AC-03 - Trocar</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Custom Animations */}
       <style>{`
-        @keyframes float {
+        @keyframes float-down {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(12px); }
+        }
+        @keyframes float-down-delayed {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(10px); }
+        }
+        @keyframes float-down-slow {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(8px); }
+        }
+        @keyframes float-up {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-12px); }
+        }
+        @keyframes float-up-delayed {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-10px); }
         }
-        @keyframes float-delayed {
+        @keyframes float-up-slow {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-8px); }
         }
-        .animate-float {
-          animation: float 4s ease-in-out infinite;
+        .animate-float-down {
+          animation: float-down 4s ease-in-out infinite;
         }
-        .animate-float-delayed {
-          animation: float-delayed 5s ease-in-out infinite;
+        .animate-float-down-delayed {
+          animation: float-down-delayed 5s ease-in-out infinite;
+          animation-delay: 0.5s;
+        }
+        .animate-float-down-slow {
+          animation: float-down-slow 6s ease-in-out infinite;
           animation-delay: 1s;
+        }
+        .animate-float-up {
+          animation: float-up 4s ease-in-out infinite;
+        }
+        .animate-float-up-delayed {
+          animation: float-up-delayed 5s ease-in-out infinite;
+          animation-delay: 0.7s;
+        }
+        .animate-float-up-slow {
+          animation: float-up-slow 6s ease-in-out infinite;
+          animation-delay: 1.2s;
         }
       `}</style>
     </div>

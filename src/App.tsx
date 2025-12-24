@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Layout } from '@/components/Layout';
 import { LoginPage } from '@/pages/LoginPage';
+import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
+import ResetPasswordPage from '@/pages/ResetPasswordPage';
 import { OnboardingPage } from '@/pages/OnboardingPage';
 import { QuickSetupPage } from '@/pages/QuickSetupPage';
 import { WelcomeTourPage } from '@/pages/WelcomeTourPage';
@@ -38,6 +40,8 @@ function App() {
             <Routes>
               {/* Rotas públicas (sem layout) */}
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/onboarding/accept" element={<OnboardingPage />} />
               <Route path="/accept-invite" element={<OnboardingPage />} />
               <Route path="/quick-setup" element={<QuickSetupPage />} />
