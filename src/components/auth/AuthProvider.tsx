@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
 // Rotas públicas que não precisam de autenticação
-const PUBLIC_ROUTES = ['/login', '/onboarding/accept', '/quick-setup', '/welcome-tour'];
+const PUBLIC_ROUTES = ['/login', '/onboarding/accept', '/accept-invite', '/quick-setup', '/welcome-tour'];
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();

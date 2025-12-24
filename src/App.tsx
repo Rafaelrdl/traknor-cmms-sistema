@@ -39,6 +39,7 @@ function App() {
               {/* Rotas públicas (sem layout) */}
               <Route path="/login" element={<LoginPage />} />
               <Route path="/onboarding/accept" element={<OnboardingPage />} />
+              <Route path="/accept-invite" element={<OnboardingPage />} />
               <Route path="/quick-setup" element={<QuickSetupPage />} />
               <Route path="/welcome-tour" element={<WelcomeTourPage />} />
               

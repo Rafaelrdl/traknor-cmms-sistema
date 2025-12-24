@@ -6,10 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle, AlertCircle, User, Shield, Zap } from 'lucide-react';
-import { useInvites } from '@/data/invitesStore';
+import { CheckCircle, AlertCircle, User, Shield, Zap, Eye } from 'lucide-react';
+import { inviteService, type InviteInfo } from '@/services/inviteService';
 import { toast } from 'sonner';
-import type { Invite } from '@/models/invite';
+import TrakNorLogoUrl from '@/assets/images/traknor-logo.svg';
 
 interface OnboardingFormData {
   name: string;
@@ -20,14 +20,14 @@ interface OnboardingFormData {
 export function OnboardingPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { getInviteByToken, acceptInvite } = useInvites();
   
   const [token] = useState(() => searchParams.get('token') || '');
-  const [invite, setInvite] = useState<Invite | null>(null);
+  const [invite, setInvite] = useState<InviteInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState<'validate' | 'form' | 'complete'>('validate');
   const [error, setError] = useState<string>('');
+  const [createdUser, setCreatedUser] = useState<{ tenant_slug: string } | null>(null);
   
   const [formData, setFormData] = useState<OnboardingFormData>({
     name: '',
@@ -47,22 +47,19 @@ export function OnboardingPage() {
       }
 
       try {
-        const inviteData = getInviteByToken(token);
-        if (!inviteData) {
-          setError('Token de convite inválido ou expirado');
-        } else {
-          setInvite(inviteData);
-          setStep('form');
-        }
-      } catch (err) {
-        setError('Erro ao validar convite');
+        const inviteData = await inviteService.validateInvite(token);
+        setInvite(inviteData);
+        setStep('form');
+      } catch (err: any) {
+        const message = err.response?.data?.detail || 'Token de convite inválido ou expirado';
+        setError(message);
       } finally {
         setLoading(false);
       }
     };
 
     validateToken();
-  }, [token, getInviteByToken]);
+  }, [token]);
 
   const validateForm = (): boolean => {
     const errors: Partial<OnboardingFormData> = {};
@@ -77,8 +74,6 @@ export function OnboardingPage() {
       errors.password = 'Senha é obrigatória';
     } else if (formData.password.length < 8) {
       errors.password = 'Senha deve ter pelo menos 8 caracteres';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      errors.password = 'Senha deve conter pelo menos uma letra maiúscula, uma minúscula e um número';
     }
 
     if (!formData.confirmPassword) {
@@ -97,16 +92,21 @@ export function OnboardingPage() {
     if (!validateForm()) return;
 
     setSubmitting(true);
+    setError('');
+    
     try {
-      await acceptInvite(token, {
+      const result = await inviteService.acceptInvite({
+        token,
         name: formData.name.trim(),
         password: formData.password,
       });
       
+      setCreatedUser({ tenant_slug: result.membership.tenant_slug });
       setStep('complete');
       toast.success('Conta criada com sucesso!');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao criar conta');
+    } catch (err: any) {
+      const message = err.response?.data?.detail || 'Erro ao criar conta. Tente novamente.';
+      setError(message);
     } finally {
       setSubmitting(false);
     }
@@ -125,18 +125,35 @@ export function OnboardingPage() {
   const getRoleDisplayName = (role: string) => {
     switch (role) {
       case 'admin': return 'Administrador';
+      case 'owner': return 'Proprietário';
       case 'technician': return 'Técnico';
-      case 'requester': return 'Solicitante';
+      case 'operator': return 'Operador';
+      case 'viewer': return 'Visualizador';
       default: return role;
     }
   };
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case 'admin': return Shield;
-      case 'technician': return Zap;
-      case 'requester': return User;
-      default: return User;
+      case 'admin': 
+      case 'owner': 
+        return Shield;
+      case 'technician': 
+      case 'operator': 
+        return Zap;
+      case 'viewer': 
+        return Eye;
+      default: 
+        return User;
+    }
+  };
+
+  const handleGoToLogin = () => {
+    if (createdUser?.tenant_slug) {
+      // Redirect to tenant-specific login
+      window.location.href = `http://${createdUser.tenant_slug}.localhost:5173/login`;
+    } else {
+      navigate('/login');
     }
   };
 
@@ -159,7 +176,7 @@ export function OnboardingPage() {
     );
   }
 
-  if (error || !invite) {
+  if (error && !invite) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
@@ -195,13 +212,16 @@ export function OnboardingPage() {
       <div className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center gap-3">
               <img 
-                src="/src/assets/images/traknor-logo.svg" 
-                alt="TrakNor Logo" 
-                className="h-8 w-8 text-primary" 
+                src={TrakNorLogoUrl} 
+                alt="Logo TrakNor" 
+                className="h-10 w-10"
               />
-              <h1 className="text-xl font-semibold">TrakNor CMMS</h1>
+              <div className="flex flex-col">
+                <span className="text-lg font-semibold text-blue-700">TrakNor CMMS</span>
+                <span className="text-xs text-muted-foreground">Gestão de Manutenção</span>
+              </div>
             </div>
             <Progress 
               value={step === 'form' ? 50 : step === 'complete' ? 100 : 25} 
@@ -212,27 +232,45 @@ export function OnboardingPage() {
       </div>
 
       <div className="container mx-auto px-4 py-8 max-w-md">
-        {step === 'form' && (
-          <Card>
-            <CardHeader className="text-center">
-              <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                {(() => {
-                  const Icon = getRoleIcon(invite.role);
-                  return <Icon className="w-6 h-6 text-primary" />;
-                })()}
+        {step === 'form' && invite && (
+          <Card className="shadow-lg">
+            <CardHeader className="text-center pb-2">
+              <div className="mx-auto mb-4">
+                <img 
+                  src={TrakNorLogoUrl} 
+                  alt="Logo TrakNor" 
+                  className="h-16 w-16 mx-auto"
+                />
               </div>
-              <CardTitle>Bem-vindo ao TrakNor!</CardTitle>
-              <CardDescription>
-                Você foi convidado como{' '}
-                <span className="font-medium text-foreground">
-                  {getRoleDisplayName(invite.role)}
+              <CardTitle className="text-2xl">Bem-vindo!</CardTitle>
+              <CardDescription className="text-base">
+                Você foi convidado para{' '}
+                <span className="font-semibold text-foreground">
+                  {invite.tenant_name}
                 </span>
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="mb-6 p-3 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">Email:</p>
-                <p className="font-medium">{invite.email}</p>
+              <div className="mb-6 p-4 bg-muted/50 rounded-xl border space-y-3">
+                <div className="flex items-center gap-2 pb-2 border-b">
+                  {(() => {
+                    const Icon = getRoleIcon(invite.role);
+                    return <Icon className="w-5 h-5 text-primary" />;
+                  })()}
+                  <span className="font-semibold">
+                    {getRoleDisplayName(invite.role)}
+                  </span>
+                </div>
+                <div className="grid gap-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Email</span>
+                    <span className="font-medium">{invite.email}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Convidado por</span>
+                    <span className="font-medium">{invite.invited_by_name}</span>
+                  </div>
+                </div>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -273,7 +311,7 @@ export function OnboardingPage() {
                     </p>
                   ) : (
                     <p id="password-help" className="text-xs text-muted-foreground">
-                      Mínimo 8 caracteres, incluindo maiúscula, minúscula e número
+                      Mínimo 8 caracteres
                     </p>
                   )}
                 </div>
@@ -316,15 +354,24 @@ export function OnboardingPage() {
           </Card>
         )}
 
-        {step === 'complete' && (
-          <Card>
+        {step === 'complete' && invite && (
+          <Card className="shadow-lg">
             <CardHeader className="text-center">
-              <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                <CheckCircle className="w-6 h-6 text-green-600" />
+              <div className="mx-auto mb-4">
+                <div className="relative">
+                  <img 
+                    src={TrakNorLogoUrl} 
+                    alt="Logo TrakNor" 
+                    className="h-16 w-16 mx-auto"
+                  />
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                    <CheckCircle className="w-4 h-4 text-white" />
+                  </div>
+                </div>
               </div>
-              <CardTitle>Conta Criada com Sucesso!</CardTitle>
-              <CardDescription>
-                Bem-vindo ao TrakNor CMMS
+              <CardTitle className="text-2xl">Conta Criada!</CardTitle>
+              <CardDescription className="text-base">
+                Bem-vindo ao {invite.tenant_name}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -332,26 +379,24 @@ export function OnboardingPage() {
                 <p className="text-sm text-muted-foreground">
                   Sua conta foi criada e você já pode acessar o sistema.
                 </p>
-                <p className="text-sm">
-                  <span className="font-medium">Função:</span>{' '}
-                  {getRoleDisplayName(invite.role)}
-                </p>
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">Organização:</span>{' '}
+                    <span className="font-medium">{invite.tenant_name}</span>
+                  </p>
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">Função:</span>{' '}
+                    <span className="font-medium">{getRoleDisplayName(invite.role)}</span>
+                  </p>
+                </div>
               </div>
 
               <div className="space-y-3">
                 <Button 
                   className="w-full" 
-                  onClick={() => navigate('/')}
+                  onClick={handleGoToLogin}
                 >
-                  Acessar Sistema
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => navigate('/welcome-tour')}
-                >
-                  Fazer Tour Guiado
+                  Fazer Login
                 </Button>
               </div>
             </CardContent>

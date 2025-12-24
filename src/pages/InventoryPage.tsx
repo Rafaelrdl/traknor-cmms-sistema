@@ -112,7 +112,7 @@ export function InventoryPage() {
   // Memoize the filter options to prevent infinite re-renders
   const filterOptions = useMemo(() => ({
     includeInactive: role === 'admin' || role === 'technician',
-    onlyOwned: role === 'requester' // Requesters see limited inventory
+    onlyOwned: role === 'viewer' // Viewers see limited inventory
   }), [role]);
 
   // Apply role-based filtering to inventory items

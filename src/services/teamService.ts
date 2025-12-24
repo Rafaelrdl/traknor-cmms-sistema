@@ -36,11 +36,11 @@ export interface TeamInvite {
   email: string;
   role: 'owner' | 'admin' | 'operator' | 'viewer' | 'technician';
   status: 'pending' | 'accepted' | 'expired' | 'cancelled';
-  invited_by: {
+  invited_by?: {
     id: number;
     email: string;
     full_name: string;
-  };
+  } | null;
   created_at: string;
   expires_at: string;
   is_valid: boolean;

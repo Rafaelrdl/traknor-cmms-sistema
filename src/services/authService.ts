@@ -16,7 +16,11 @@ const mapApiRoleToAppRole = (role?: string | null): UserRole => {
     return 'technician';
   }
 
-  return 'requester';
+  if (normalized === 'OPERATOR') {
+    return 'operator';
+  }
+
+  return 'viewer';
 };
 
 const mapApiUserToUser = (apiUser: ApiUser): User => {

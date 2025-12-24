@@ -28,7 +28,8 @@ interface InviteUserModalProps {
 const roleOptions = [
   { value: 'admin' as UserRole, label: 'Administrador', description: 'Acesso completo ao sistema' },
   { value: 'technician' as UserRole, label: 'Técnico', description: 'Pode executar e gerenciar ordens de serviço' },
-  { value: 'requester' as UserRole, label: 'Solicitante', description: 'Pode criar e acompanhar solicitações' },
+  { value: 'operator' as UserRole, label: 'Operador', description: 'Pode operar o sistema e criar solicitações' },
+  { value: 'viewer' as UserRole, label: 'Visualizador', description: 'Acesso somente leitura' },
 ];
 
 export function InviteUserModal({ isOpen, onClose, onInvite }: InviteUserModalProps) {

@@ -55,16 +55,18 @@ export function TeamPage() {
 
   // Mapear convites da API para o formato esperado pelo TeamTable
   const invites: Invite[] = useMemo(() => {
-    return teamInvites.map(invite => ({
-      id: String(invite.id),
-      email: invite.email,
-      role: invite.role as 'admin' | 'technician' | 'requester',
-      status: invite.status as 'pending' | 'accepted' | 'expired',
-      sent_at: invite.created_at,
-      expires_at: invite.expires_at,
-      invited_by_user_id: String(invite.invited_by.id),
-      accepted_at: undefined,
-    }));
+    return teamInvites
+      .filter(invite => invite && invite.id) // Filtrar convites inválidos
+      .map(invite => ({
+        id: String(invite.id),
+        email: invite.email,
+        role: invite.role as 'admin' | 'technician' | 'requester',
+        status: invite.status as 'pending' | 'accepted' | 'expired',
+        sent_at: invite.created_at,
+        expires_at: invite.expires_at,
+        invited_by_user_id: invite.invited_by?.id ? String(invite.invited_by.id) : '',
+        accepted_at: undefined,
+      }));
   }, [teamInvites]);
 
   // Estatísticas
