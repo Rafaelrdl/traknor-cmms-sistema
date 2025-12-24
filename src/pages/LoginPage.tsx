@@ -151,6 +151,7 @@ export function LoginPage() {
                   </Label>
                   <Link
                     to="/forgot-password"
+                    state={{ email: formData.email }}
                     className="text-xs text-primary hover:text-primary/80 transition-colors font-medium"
                   >
                     Esqueceu a senha?

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { AxiosError } from 'axios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +17,7 @@ import {
   Shield,
   Key
 } from 'lucide-react';
+import { validateResetToken, confirmPasswordReset } from '@/services/authService';
 import climatrakLogo from '@/assets/images/logo_climatrak.svg';
 
 export default function ResetPasswordPage() {
@@ -47,7 +49,7 @@ export default function ResetPasswordPage() {
 
   // Validate token on mount
   useEffect(() => {
-    const validateToken = async () => {
+    const doValidateToken = async () => {
       if (!token) {
         setTokenError('Token não fornecido');
         setIsValidating(false);
@@ -55,29 +57,24 @@ export default function ResetPasswordPage() {
       }
 
       try {
-        const response = await fetch('/api/auth/password-reset/validate/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ token }),
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.valid) {
+        const data = await validateResetToken(token);
+        if (data.valid) {
           setIsTokenValid(true);
         } else {
-          setTokenError(data.error || 'Token inválido ou expirado');
+          setTokenError('Token inválido ou expirado');
         }
       } catch (err) {
-        setTokenError('Erro ao validar token');
+        if (err instanceof AxiosError) {
+          setTokenError(err.response?.data?.error || 'Token inválido ou expirado');
+        } else {
+          setTokenError('Erro ao validar token');
+        }
       } finally {
         setIsValidating(false);
       }
     };
 
-    validateToken();
+    doValidateToken();
   }, [token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -97,23 +94,14 @@ export default function ResetPasswordPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/password-reset/confirm/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token, new_password: password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setIsSuccess(true);
-      } else {
-        setError(data.error || 'Erro ao redefinir senha');
-      }
+      await confirmPasswordReset(token!, password);
+      setIsSuccess(true);
     } catch (err) {
-      setError('Erro de conexão. Tente novamente.');
+      if (err instanceof AxiosError) {
+        setError(err.response?.data?.error || 'Erro ao redefinir senha');
+      } else {
+        setError('Erro de conexão. Tente novamente.');
+      }
     } finally {
       setIsLoading(false);
     }

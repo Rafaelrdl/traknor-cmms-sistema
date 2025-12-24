@@ -19,14 +19,22 @@ export default defineConfig({
   server: {
     proxy: {
       // 🔐 Proxy API requests to backend (enables cookie sharing)
-      // Frontend (localhost:5173) → Backend (umc.localhost:8000)
-      // This way cookies work because both are on localhost:5173 from browser's perspective
+      // Frontend (*.localhost:5173) → Backend (*.localhost:8000)
+      // This way cookies work because both are on same origin from browser's perspective
       '/api': {
         target: 'http://umc.localhost:8000',
-        changeOrigin: true,
+        changeOrigin: false, // Keep original host header
         secure: false,
-        // Preserve /api prefix in the request
-        // rewrite: (path) => path.replace(/^\/api/, '/api'),
+        // Use router to dynamically set target based on request host
+        router: (req) => {
+          const host = req.headers.host || 'localhost:5173';
+          const subdomain = host.split('.')[0];
+          
+          if (subdomain && subdomain !== 'localhost') {
+            return `http://${subdomain}.localhost:8000`;
+          }
+          return 'http://localhost:8000';
+        },
       }
     }
   },

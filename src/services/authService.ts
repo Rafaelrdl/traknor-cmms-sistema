@@ -90,3 +90,22 @@ export async function logout() {
     window.dispatchEvent(new Event('authChange'));
   }
 }
+
+// Password Reset Functions
+export async function requestPasswordReset(email: string): Promise<{ message: string }> {
+  const { data } = await api.post<{ message: string }>('/auth/password-reset/request/', { email });
+  return data;
+}
+
+export async function validateResetToken(token: string): Promise<{ valid: boolean; email?: string }> {
+  const { data } = await api.post<{ valid: boolean; email?: string }>('/auth/password-reset/validate/', { token });
+  return data;
+}
+
+export async function confirmPasswordReset(token: string, newPassword: string): Promise<{ message: string }> {
+  const { data } = await api.post<{ message: string }>('/auth/password-reset/confirm/', { 
+    token, 
+    new_password: newPassword 
+  });
+  return data;
+}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { AxiosError } from 'axios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,11 +15,13 @@ import {
   Wind,
   AlertTriangle
 } from 'lucide-react';
-import climatrakLogo from '@/assets/images/logo_climatrak.svg';
+import { requestPasswordReset } from '@/services/authService';
+import climatrakLogo from '@/assets/images/logo_climatrak1.svg';
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
+  const location = useLocation();
+  const [email, setEmail] = useState((location.state as { email?: string })?.email || '');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -29,23 +32,14 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/password-reset/request/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setIsSuccess(true);
-      } else {
-        setError(data.error || 'Erro ao processar solicitação');
-      }
+      await requestPasswordReset(email);
+      setIsSuccess(true);
     } catch (err) {
-      setError('Erro de conexão. Tente novamente.');
+      if (err instanceof AxiosError) {
+        setError(err.response?.data?.error || 'Erro ao processar solicitação');
+      } else {
+        setError('Erro de conexão. Tente novamente.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -55,8 +49,8 @@ export default function ForgotPasswordPage() {
   const floatingCards = [
     {
       icon: Snowflake,
-      title: 'Refrigeração',
-      subtitle: 'Sistema otimizado',
+      title: 'Chiller',
+      subtitle: 'Operando 100%',
       color: 'from-cyan-500 to-blue-600',
       position: 'top-[15%] left-[8%]',
       animation: 'animate-float-down',
@@ -106,7 +100,7 @@ export default function ForgotPasswordPage() {
             <img 
               src={climatrakLogo} 
               alt="Climatrak" 
-              className="h-20 w-auto"
+              className="h-28 w-auto"
             />
           </motion.div>
 
@@ -201,8 +195,8 @@ export default function ForgotPasswordPage() {
               transition={{ duration: 0.5 }}
               className="text-center"
             >
-              <div className="mb-6 inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30">
-                <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
+              <div className="mb-5 inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 shadow-lg shadow-green-500/30">
+                <CheckCircle2 className="h-5 w-5 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-foreground mb-2">
                 Email enviado!
