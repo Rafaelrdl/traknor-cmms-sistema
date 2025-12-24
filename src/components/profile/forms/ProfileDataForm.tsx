@@ -91,7 +91,6 @@ export function ProfileDataForm({ user, onSave }: ProfileDataFormProps) {
     setIsLoading(true);
     try {
       await onSave(formData);
-      toast.success('Dados pessoais atualizados com sucesso');
     } catch (error: any) {
       toast.error(error.message || 'Erro ao atualizar dados');
     } finally {

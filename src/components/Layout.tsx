@@ -102,7 +102,7 @@ export function Layout({ children }: LayoutProps) {
                       <AvatarImage src={user.avatar_url} alt={user.name} />
                     )}
                     <AvatarFallback className="bg-primary text-primary-foreground">
-                      {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                      {user.name.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 </Button>

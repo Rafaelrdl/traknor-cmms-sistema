@@ -162,7 +162,7 @@ export function QuickSetupPage() {
         <Avatar className="w-24 h-24">
           <AvatarImage src={setupData.avatar} />
           <AvatarFallback className="text-lg">
-            {setupData.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+            {setupData.name.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase()}
           </AvatarFallback>
         </Avatar>
         

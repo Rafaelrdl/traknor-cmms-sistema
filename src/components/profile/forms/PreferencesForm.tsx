@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Monitor, Sun, Moon, Mail, Bell, Clock } from 'lucide-react';
+import { Mail, Bell, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -62,17 +62,6 @@ export function PreferencesForm({ preferences, onSave }: PreferencesFormProps) {
     }
   };
 
-  const themeOptions = [
-    { value: 'system', label: 'Sistema', icon: Monitor },
-    { value: 'light', label: 'Claro', icon: Sun },
-    { value: 'dark', label: 'Escuro', icon: Moon },
-  ];
-
-  const languageOptions = [
-    { value: 'pt-BR', label: 'Português (Brasil)' },
-    { value: 'en-US', label: 'English (US)' },
-  ];
-
   const dateFormatOptions = [
     { value: 'DD/MM/YYYY', label: 'DD/MM/AAAA (31/12/2024)' },
     { value: 'YYYY-MM-DD', label: 'AAAA-MM-DD (2024-12-31)' },
@@ -109,55 +98,6 @@ export function PreferencesForm({ preferences, onSave }: PreferencesFormProps) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Tema */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">Tema</Label>
-          <Select
-            value={formData.theme}
-            onValueChange={(value) => handleSelectChange('theme', value)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {themeOptions.map((option) => {
-                const Icon = option.icon;
-                return (
-                  <SelectItem key={option.value} value={option.value}>
-                    <div className="flex items-center gap-2">
-                      <Icon className="w-4 h-4" />
-                      {option.label}
-                    </div>
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-muted-foreground">
-            Escolha entre tema claro, escuro ou seguir as configurações do sistema
-          </p>
-        </div>
-
-        {/* Idioma */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">Idioma</Label>
-          <Select
-            value={formData.language}
-            onValueChange={(value) => handleSelectChange('language', value)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {languageOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
         {/* Formato de Data */}
         <div className="space-y-3">
           <Label className="text-sm font-medium">Formato de Data</Label>
