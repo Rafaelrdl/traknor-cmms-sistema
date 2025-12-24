@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, Mail, Shield, BarChart3, Wrench, ThermometerSnowflake, CheckCircle2 } from 'lucide-react';
 import { AxiosError } from 'axios';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { login as loginService } from '@/services/authService';
@@ -65,7 +64,6 @@ export function LoginPage() {
       await loginService(formData.email, formData.password);
       toast.success('Login realizado com sucesso!');
       
-      // Forçar redirecionamento com window.location para garantir a navegação
       setTimeout(() => {
         window.location.href = '/';
       }, 300);
@@ -83,205 +81,289 @@ export function LoginPage() {
     }
   };
 
+  const features = [
+    { icon: Wrench, title: 'Manutenção Inteligente', desc: 'Ordens de serviço automatizadas' },
+    { icon: ThermometerSnowflake, title: 'Monitoramento HVAC', desc: 'Sensores IoT em tempo real' },
+    { icon: BarChart3, title: 'Relatórios PMOC', desc: 'Conformidade com normas brasileiras' },
+    { icon: Shield, title: 'Segurança Total', desc: 'Dados criptografados e seguros' },
+  ];
+
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-background">
       {/* Left Panel - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-background">
-        <div className="w-full max-w-md space-y-8">
-          {/* Logo and Title */}
-          <div className="text-center space-y-2">
-            <h1 className="text-4xl font-bold text-primary">TRAKNOR</h1>
-            <p className="text-sm text-muted-foreground">Sistema de Gestão de Manutenção</p>
+      <div className="w-full lg:w-[480px] xl:w-[520px] flex flex-col justify-between p-8 lg:p-12 bg-white">
+        <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
+          {/* Logo */}
+          <div className="mb-10">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+                <ThermometerSnowflake className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-2xl font-bold text-foreground tracking-tight">TRAKNOR</span>
+            </div>
+            <p className="text-sm text-muted-foreground ml-[52px]">Sistema de Gestão de Manutenção</p>
           </div>
 
-          {/* Login Form */}
-          <Card className="border-0 shadow-none">
-            <CardHeader className="space-y-2 pb-6">
-              <CardTitle className="text-2xl font-semibold text-foreground">
-                Acesse a plataforma
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Email Field */}
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium text-foreground">
-                    E-mail
-                  </Label>
+          {/* Form */}
+          <div className="space-y-6">
+            <div>
+              <h1 className="text-2xl font-semibold text-foreground mb-1">
+                Bem-vindo de volta
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Entre com suas credenciais para acessar a plataforma
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Email Field */}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium text-foreground">
+                  E-mail
+                </Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
                     placeholder="nome@empresa.com"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
-                    className={`h-12 ${errors.email ? 'border-destructive' : ''}`}
+                    className={`h-11 pl-10 bg-muted/30 border-muted-foreground/20 focus:border-primary focus:ring-primary ${errors.email ? 'border-destructive' : ''}`}
                     aria-invalid={!!errors.email}
                     aria-describedby={errors.email ? 'email-error' : undefined}
                   />
-                  {errors.email && (
-                    <div id="email-error" role="alert" className="flex items-center gap-1 text-sm text-destructive">
-                      <AlertCircle className="h-4 w-4" />
-                      {errors.email}
-                    </div>
-                  )}
                 </div>
+                {errors.email && (
+                  <div id="email-error" role="alert" className="flex items-center gap-1 text-sm text-destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    {errors.email}
+                  </div>
+                )}
+              </div>
 
-                {/* Password Field */}
-                <div className="space-y-2">
+              {/* Password Field */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
                   <Label htmlFor="password" className="text-sm font-medium text-foreground">
                     Senha
                   </Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Digite sua senha"
-                      value={formData.password}
-                      onChange={(e) => handleInputChange('password', e.target.value)}
-                      className={`h-12 pr-10 ${errors.password ? 'border-destructive' : ''}`}
-                      aria-invalid={!!errors.password}
-                      aria-describedby={errors.password ? 'password-error' : undefined}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-12 px-3 py-0 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
-                      aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </Button>
-                  </div>
-                  {errors.password && (
-                    <div id="password-error" role="alert" className="flex items-center gap-1 text-sm text-destructive">
-                      <AlertCircle className="h-4 w-4" />
-                      {errors.password}
-                    </div>
-                  )}
-                </div>
-
-                {/* Submit Button */}
-                <Button
-                  type="submit"
-                  className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Entrando...' : 'Acessar'}
-                </Button>
-
-                {/* Demo Credentials */}
-                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground">Credenciais de demonstração:</p>
-                  <div className="space-y-1 text-xs text-muted-foreground">
-                    <div>Admin: admin@umc.com / admin123</div>
-                    <div>Técnico: tecnico@umc.com / tecnico123</div>
-                  </div>
-                </div>
-
-                {/* Forgot Password Link */}
-                <div className="text-center">
                   <button
                     type="button"
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    className="text-xs text-primary hover:text-primary/80 transition-colors font-medium"
                     onClick={() => toast.info('Funcionalidade em desenvolvimento')}
                   >
-                    Problemas de acesso? Fale conosco
+                    Esqueceu a senha?
                   </button>
                 </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Right Panel - HVAC Background Image */}
-      <div className="hidden lg:block flex-1 relative bg-gradient-to-br from-primary/5 to-primary/10">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent" />
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-60"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(`
-              <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#f0f9ff;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#e0f2fe;stop-opacity:1" />
-                  </linearGradient>
-                </defs>
-                <rect width="400" height="300" fill="url(#bg)"/>
-                
-                <!-- HVAC Pipes -->
-                <g stroke="#64748b" stroke-width="3" fill="none" opacity="0.6">
-                  <!-- Horizontal pipes -->
-                  <line x1="50" y1="80" x2="350" y2="80"/>
-                  <line x1="50" y1="120" x2="350" y2="120"/>
-                  <line x1="50" y1="160" x2="350" y2="160"/>
-                  <line x1="50" y1="200" x2="350" y2="200"/>
-                  
-                  <!-- Vertical pipes -->
-                  <line x1="100" y1="60" x2="100" y2="220"/>
-                  <line x1="150" y1="60" x2="150" y2="220"/>
-                  <line x1="250" y1="60" x2="250" y2="220"/>
-                  <line x1="300" y1="60" x2="300" y2="220"/>
-                  
-                  <!-- Joints -->
-                  <circle cx="100" cy="80" r="4" fill="#64748b"/>
-                  <circle cx="150" cy="120" r="4" fill="#64748b"/>
-                  <circle cx="250" cy="160" r="4" fill="#64748b"/>
-                  <circle cx="300" cy="200" r="4" fill="#64748b"/>
-                </g>
-                
-                <!-- Equipment boxes -->
-                <g fill="#94a3b8" opacity="0.4">
-                  <rect x="320" y="100" width="60" height="40" rx="4"/>
-                  <rect x="320" y="180" width="60" height="40" rx="4"/>
-                  <rect x="20" y="140" width="40" height="60" rx="4"/>
-                </g>
-                
-                <!-- Dashboard mockup -->
-                <g transform="translate(180, 240)">
-                  <rect x="0" y="0" width="120" height="80" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
-                  <rect x="10" y="10" width="100" height="8" rx="4" fill="#e2e8f0"/>
-                  <rect x="10" y="25" width="80" height="6" rx="3" fill="#cbd5e1"/>
-                  <rect x="10" y="35" width="60" height="6" rx="3" fill="#cbd5e1"/>
-                  <circle cx="85" cy="55" r="15" fill="none" stroke="#0ea5e9" stroke-width="2"/>
-                  <path d="M 75 55 A 10 10 0 0 1 85 45" stroke="#06b6d4" stroke-width="3" fill="none"/>
-                </g>
-              </svg>
-            `)}`
-          }}
-        />
-        
-        {/* Overlay Content */}
-        <div className="absolute inset-0 flex items-center justify-center p-12">
-          <div className="text-center space-y-6 max-w-md">
-            <div className="space-y-4">
-              <h2 className="text-3xl font-bold text-primary">
-                Gestão Inteligente de HVAC
-              </h2>
-              <p className="text-lg text-muted-foreground">
-                Monitore, mantenha e otimize seus sistemas de climatização com eficiência total.
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 text-left">
-                <div className="font-semibold text-primary mb-1">Manutenção Preventiva</div>
-                <div className="text-muted-foreground">Agendamento automático e controle de execução</div>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    className={`h-11 pr-10 bg-muted/30 border-muted-foreground/20 focus:border-primary focus:ring-primary ${errors.password ? 'border-destructive' : ''}`}
+                    aria-invalid={!!errors.password}
+                    aria-describedby={errors.password ? 'password-error' : undefined}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-11 px-3 py-0 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                </div>
+                {errors.password && (
+                  <div id="password-error" role="alert" className="flex items-center gap-1 text-sm text-destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    {errors.password}
+                  </div>
+                )}
               </div>
-              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 text-left">
-                <div className="font-semibold text-primary mb-1">Relatórios PMOC</div>
-                <div className="text-muted-foreground">Conformidade total com as normas brasileiras</div>
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-medium shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Entrando...
+                  </div>
+                ) : 'Entrar'}
+              </Button>
+            </form>
+
+            {/* Demo Credentials */}
+            <div className="bg-muted/40 rounded-xl p-4 border border-border/50">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Credenciais de demonstração:</p>
+              <div className="space-y-1.5 text-xs">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <span className="px-1.5 py-0.5 bg-primary/10 text-primary rounded font-medium">Admin</span>
+                  <span>admin@umc.com / admin123</span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <span className="px-1.5 py-0.5 bg-secondary text-secondary-foreground rounded font-medium">Técnico</span>
+                  <span>tecnico@umc.com / tecnico123</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Footer */}
+        <div className="pt-8 text-center">
+          <p className="text-xs text-muted-foreground">
+            Problemas de acesso?{' '}
+            <button 
+              className="text-primary hover:text-primary/80 font-medium transition-colors"
+              onClick={() => toast.info('Funcionalidade em desenvolvimento')}
+            >
+              Fale conosco
+            </button>
+          </p>
+        </div>
       </div>
+
+      {/* Right Panel - Visual Hero */}
+      <div className="hidden lg:flex flex-1 relative overflow-hidden">
+        {/* Gradient Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-primary/20" />
+        
+        {/* Animated Grid Pattern */}
+        <div className="absolute inset-0 opacity-30">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+                <path d="M 60 0 L 0 0 0 60" fill="none" stroke="currentColor" strokeWidth="0.5" className="text-primary/40" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)" />
+          </svg>
+        </div>
+
+        {/* Decorative Circles */}
+        <div className="absolute top-20 right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-32 left-20 w-96 h-96 bg-primary/15 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 right-1/3 w-48 h-48 bg-accent/10 rounded-full blur-2xl" />
+
+        {/* Content */}
+        <div className="relative z-10 flex flex-col justify-center items-center w-full p-12">
+          {/* Main Visual Card */}
+          <div className="w-full max-w-2xl">
+            {/* Hero Section */}
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-white/50 mb-6">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <span className="text-sm font-medium text-foreground">Sistema Online</span>
+              </div>
+              <h2 className="text-4xl xl:text-5xl font-bold text-foreground mb-4 leading-tight">
+                Gestão Completa de<br />
+                <span className="text-primary">Manutenção</span>
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-md mx-auto">
+                Monitore, gerencie e otimize a manutenção dos seus equipamentos com inteligência e eficiência.
+              </p>
+            </div>
+
+            {/* Feature Cards */}
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              {features.map((feature, index) => (
+                <div 
+                  key={index}
+                  className="group bg-white/70 backdrop-blur-sm rounded-2xl p-5 border border-white/60 shadow-lg shadow-black/5 hover:bg-white/90 hover:shadow-xl transition-all duration-300"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
+                    <feature.icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-foreground mb-1">{feature.title}</h3>
+                  <p className="text-sm text-muted-foreground">{feature.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Stats/Trust Banner */}
+            <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-white/60">
+              <div className="flex items-center justify-around">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">99.9%</div>
+                  <div className="text-xs text-muted-foreground">Uptime</div>
+                </div>
+                <div className="w-px h-10 bg-border" />
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">+500</div>
+                  <div className="text-xs text-muted-foreground">Equipamentos</div>
+                </div>
+                <div className="w-px h-10 bg-border" />
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">24/7</div>
+                  <div className="text-xs text-muted-foreground">Monitoramento</div>
+                </div>
+                <div className="w-px h-10 bg-border" />
+                <div className="text-center flex flex-col items-center">
+                  <CheckCircle2 className="w-6 h-6 text-green-500 mb-1" />
+                  <div className="text-xs text-muted-foreground">ISO 27001</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Floating Elements */}
+        <div className="absolute top-32 left-12 bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-white/60 animate-float">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+              <CheckCircle2 className="w-4 h-4 text-green-600" />
+            </div>
+            <div>
+              <div className="text-xs font-medium text-foreground">OS #1247 Concluída</div>
+              <div className="text-[10px] text-muted-foreground">Agora mesmo</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="absolute bottom-24 right-16 bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-white/60 animate-float-delayed">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <ThermometerSnowflake className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <div className="text-xs font-medium text-foreground">Sensor Ativo</div>
+              <div className="text-[10px] text-muted-foreground">Temp: 22°C</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Custom Animations */}
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        @keyframes float-delayed {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
+        }
+        .animate-float {
+          animation: float 4s ease-in-out infinite;
+        }
+        .animate-float-delayed {
+          animation: float-delayed 5s ease-in-out infinite;
+          animation-delay: 1s;
+        }
+      `}</style>
     </div>
   );
 }
