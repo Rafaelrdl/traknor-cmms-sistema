@@ -16,7 +16,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { requestPasswordReset } from '@/services/authService';
-import climatrakLogo from '@/assets/images/logo_climatrak1.svg';
+import climatrakLogo from '@/assets/images/logo_climatrak.svg';
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
@@ -52,7 +52,7 @@ export default function ForgotPasswordPage() {
       title: 'Chiller',
       subtitle: 'Operando 100%',
       color: 'from-cyan-500 to-blue-600',
-      position: 'top-[15%] left-[8%]',
+      position: 'top-[12%] left-[8%]',
       animation: 'animate-float-down',
       delay: '0s'
     },
@@ -61,7 +61,7 @@ export default function ForgotPasswordPage() {
       title: 'Temperatura',
       subtitle: '22°C ideal',
       color: 'from-orange-500 to-red-600',
-      position: 'top-[45%] left-[5%]',
+      position: 'bottom-[35%] left-[3%]',
       animation: 'animate-float-down',
       delay: '1s'
     },
@@ -70,7 +70,7 @@ export default function ForgotPasswordPage() {
       title: 'Ventilação',
       subtitle: 'Fluxo normal',
       color: 'from-teal-500 to-emerald-600',
-      position: 'top-[75%] left-[10%]',
+      position: 'bottom-[10%] left-[8%]',
       animation: 'animate-float-down',
       delay: '2s'
     },
@@ -88,7 +88,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left Panel - Form */}
-      <div className="w-full lg:w-[45%] flex flex-col justify-center px-8 sm:px-12 lg:px-16 xl:px-24 bg-background">
+      <div className="w-full lg:w-[45%] flex flex-col justify-center px-8 sm:px-12 lg:px-16 xl:px-24 bg-white">
         <div className="w-full max-w-md mx-auto">
           {/* Logo */}
           <motion.div 
@@ -160,7 +160,7 @@ export default function ForgotPasswordPage() {
 
                 <Button
                   type="submit"
-                  className="w-full h-12 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-medium transition-all duration-200"
+                  className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium transition-all duration-200"
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -211,7 +211,7 @@ export default function ForgotPasswordPage() {
               <div className="space-y-3">
                 <Button
                   onClick={() => navigate('/login')}
-                  className="w-full h-12 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-medium"
+                  className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium"
                 >
                   Voltar para o login
                 </Button>
@@ -232,7 +232,7 @@ export default function ForgotPasswordPage() {
       </div>
 
       {/* Right Panel - Visual Hero */}
-      <div className="hidden lg:flex lg:w-[55%] relative bg-gradient-to-br from-slate-900 via-cyan-900 to-blue-900 overflow-hidden">
+      <div className="hidden lg:flex lg:w-[55%] relative bg-gradient-to-br from-slate-900 via-teal-900 to-emerald-900 overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
@@ -242,8 +242,8 @@ export default function ForgotPasswordPage() {
         </div>
 
         {/* Gradient Orbs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-emerald-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
 
         {/* Floating Cards */}
         {floatingCards.map((card, index) => (
@@ -292,15 +292,15 @@ export default function ForgotPasswordPage() {
             className="flex flex-col gap-4 text-left max-w-sm"
           >
             <div className="flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-cyan-500 text-white font-bold text-sm">1</div>
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-teal-500 text-white font-bold text-sm">1</div>
               <p className="text-white/90">Digite seu email cadastrado</p>
             </div>
             <div className="flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-cyan-500 text-white font-bold text-sm">2</div>
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-teal-500 text-white font-bold text-sm">2</div>
               <p className="text-white/90">Acesse o link enviado por email</p>
             </div>
             <div className="flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-cyan-500 text-white font-bold text-sm">3</div>
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-teal-500 text-white font-bold text-sm">3</div>
               <p className="text-white/90">Crie uma nova senha segura</p>
             </div>
           </motion.div>

@@ -116,7 +116,7 @@ export default function ResetPasswordPage() {
           animate={{ opacity: 1, scale: 1 }}
           className="text-center"
         >
-          <Loader2 className="h-12 w-12 animate-spin text-cyan-600 mx-auto mb-4" />
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
           <p className="text-muted-foreground">Validando token...</p>
         </motion.div>
       </div>
@@ -147,7 +147,7 @@ export default function ResetPasswordPage() {
           <div className="space-y-3">
             <Button
               onClick={() => navigate('/forgot-password')}
-              className="w-full h-12 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-medium"
+              className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium"
             >
               Solicitar novo link
             </Button>
@@ -168,7 +168,7 @@ export default function ResetPasswordPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left Panel - Form */}
-      <div className="w-full lg:w-[45%] flex flex-col justify-center px-8 sm:px-12 lg:px-16 xl:px-24 bg-background">
+      <div className="w-full lg:w-[45%] flex flex-col justify-center px-8 sm:px-12 lg:px-16 xl:px-24 bg-white">
         <div className="w-full max-w-md mx-auto">
           {/* Logo */}
           <motion.div 
@@ -180,7 +180,7 @@ export default function ResetPasswordPage() {
             <img 
               src={climatrakLogo} 
               alt="Climatrak" 
-              className="h-20 w-auto"
+              className="h-28 w-auto"
             />
           </motion.div>
 
@@ -330,7 +330,7 @@ export default function ResetPasswordPage() {
 
                 <Button
                   type="submit"
-                  className="w-full h-12 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-medium transition-all duration-200"
+                  className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium transition-all duration-200"
                   disabled={isLoading || passwordStrength < 4 || !passwordsMatch}
                 >
                   {isLoading ? (
@@ -366,7 +366,7 @@ export default function ResetPasswordPage() {
               </p>
               <Button
                 onClick={() => navigate('/login')}
-                className="w-full h-12 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-medium"
+                className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium"
               >
                 Ir para o login
               </Button>
@@ -376,7 +376,7 @@ export default function ResetPasswordPage() {
       </div>
 
       {/* Right Panel - Visual Hero */}
-      <div className="hidden lg:flex lg:w-[55%] relative bg-gradient-to-br from-slate-900 via-cyan-900 to-blue-900 overflow-hidden">
+      <div className="hidden lg:flex lg:w-[55%] relative bg-gradient-to-br from-slate-900 via-teal-900 to-emerald-900 overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
@@ -386,8 +386,8 @@ export default function ResetPasswordPage() {
         </div>
 
         {/* Gradient Orbs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-emerald-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
 
         {/* Floating Security Icons */}
         <motion.div
@@ -403,7 +403,7 @@ export default function ResetPasswordPage() {
               </div>
               <div>
                 <p className="text-white font-medium text-sm">Segurança</p>
-                <p className="text-white/70 text-xs">Criptografia AES-256</p>
+                <p className="text-white/70 text-xs">Dados protegidos</p>
               </div>
             </div>
           </div>
@@ -413,12 +413,12 @@ export default function ResetPasswordPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
-          className="absolute top-[60%] right-[12%] animate-float-up"
+          className="absolute bottom-[15%] right-[8%] animate-float-up"
           style={{ animationDelay: '0.5s' }}
         >
           <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 shadow-xl">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600">
+              <div className="p-2 rounded-lg bg-gradient-to-r from-teal-500 to-emerald-600">
                 <Key className="h-5 w-5 text-white" />
               </div>
               <div>
@@ -437,7 +437,7 @@ export default function ResetPasswordPage() {
             transition={{ duration: 0.8, delay: 0.5 }}
           >
             <div className="mb-6 inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/10 backdrop-blur-sm">
-              <Lock className="h-10 w-10 text-cyan-400" />
+              <Lock className="h-10 w-10 text-teal-400" />
             </div>
             <h2 className="text-4xl xl:text-5xl font-bold text-white mb-6">
               Proteja sua conta
@@ -455,15 +455,15 @@ export default function ResetPasswordPage() {
             className="text-left max-w-sm space-y-3"
           >
             <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <CheckCircle2 className="h-5 w-5 text-cyan-400 mt-0.5 flex-shrink-0" />
+              <CheckCircle2 className="h-5 w-5 text-teal-400 mt-0.5 flex-shrink-0" />
               <p className="text-white/90 text-sm">Use uma combinação de letras maiúsculas, minúsculas e números</p>
             </div>
             <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <CheckCircle2 className="h-5 w-5 text-cyan-400 mt-0.5 flex-shrink-0" />
+              <CheckCircle2 className="h-5 w-5 text-teal-400 mt-0.5 flex-shrink-0" />
               <p className="text-white/90 text-sm">Evite usar informações pessoais como datas ou nomes</p>
             </div>
             <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <CheckCircle2 className="h-5 w-5 text-cyan-400 mt-0.5 flex-shrink-0" />
+              <CheckCircle2 className="h-5 w-5 text-teal-400 mt-0.5 flex-shrink-0" />
               <p className="text-white/90 text-sm">Não reutilize senhas de outros serviços</p>
             </div>
           </motion.div>
