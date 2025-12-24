@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { login as loginService } from '@/services/authService';
+import ClimatrakLogoUrl from '@/assets/images/logo_climatrak.svg';
 
 export function LoginPage() {
   const [formData, setFormData] = useState({
@@ -94,19 +95,17 @@ export function LoginPage() {
       <div className="w-full lg:w-[480px] xl:w-[520px] flex flex-col justify-between p-8 lg:p-12 bg-white">
         <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
           {/* Logo */}
-          <div className="mb-10">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                <ThermometerSnowflake className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-foreground tracking-tight">TRAKNOR</span>
-            </div>
-            <p className="text-sm text-muted-foreground ml-[52px]">Sistema de Gestão de Manutenção</p>
+          <div className="mb-10 flex justify-center">
+            <img 
+              src={ClimatrakLogoUrl} 
+              alt="Climatrak" 
+              className="h-28 w-auto"
+            />
           </div>
 
           {/* Form */}
           <div className="space-y-6">
-            <div>
+            <div className="text-center">
               <h1 className="text-2xl font-semibold text-foreground mb-1">
                 Bem-vindo de volta
               </h1>
