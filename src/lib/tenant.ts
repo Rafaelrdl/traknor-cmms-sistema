@@ -46,6 +46,37 @@ const decodeJWT = (token: string): any => {
 };
 
 /**
+ * Constrói a URL da API para um tenant específico
+ * 
+ * Estratégias suportadas:
+ * 1. DEV: Usa URL relativa '/api' (proxy do Vite redireciona)
+ * 2. PROD com pattern: Substitui {tenant} no padrão (ex: https://{tenant}.api.traknor.com/api)
+ * 3. PROD com URL fixa: Usa VITE_API_URL diretamente
+ * 4. Fallback: localhost com subdomínio
+ */
+const buildApiUrlForTenant = (tenantSlug: string): string => {
+  // DEV: URL relativa (proxy do Vite cuida do roteamento)
+  if (import.meta.env.DEV) {
+    return '/api';
+  }
+  
+  // PROD: Usa pattern de URL se disponível
+  const urlPattern = import.meta.env.VITE_API_URL_PATTERN;
+  if (urlPattern && urlPattern.includes('{tenant}')) {
+    return urlPattern.replace('{tenant}', tenantSlug);
+  }
+  
+  // PROD: URL fixa da API (single tenant ou API centralizada)
+  const fixedUrl = import.meta.env.VITE_API_URL;
+  if (fixedUrl) {
+    return fixedUrl;
+  }
+  
+  // Fallback: localhost com subdomínio (dev sem .env)
+  return `http://${tenantSlug}.localhost:8000/api`;
+};
+
+/**
  * Extrai tenant do hostname
  * Suporta formatos:
  * - umc.localhost:5173 → "umc"
@@ -57,7 +88,7 @@ const getTenantFromHostname = (): string | null => {
   
   // Ignorar localhost simples
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return null;
+    return null;;
   }
   
   // Extrair primeiro segmento do domínio
@@ -124,7 +155,8 @@ export const getTenantConfig = (): TenantConfig => {
     const payload = decodeJWT(token);
     if (payload?.tenant_id) {
       const tenantSlug = payload.tenant_slug || payload.tenant_id;
-      const apiBaseUrl = payload.api_base_url || `http://${tenantSlug}.localhost:8000/api`;
+      // Usar URL do backend se disponível, senão construir baseado no ambiente
+      const apiBaseUrl = payload.api_base_url || buildApiUrlForTenant(tenantSlug);
       
       const config: TenantConfig = {
         tenantId: payload.tenant_id,
@@ -147,19 +179,20 @@ export const getTenantConfig = (): TenantConfig => {
       tenantId: hostnameTenant,
       tenantSlug: hostnameTenant,
       tenantName: hostnameTenant.toUpperCase(),
-      apiBaseUrl: `http://${hostnameTenant}.localhost:8000/api`,
+      apiBaseUrl: buildApiUrlForTenant(hostnameTenant),
       branding: TENANT_BRANDINGS[hostnameTenant] || TENANT_BRANDINGS.default,
     };
   }
   
-  // 4. Default tenant
-  const defaultUrl = import.meta.env.VITE_API_URL || 'http://umc.localhost:8000/api';
+  // 4. Default tenant (from env or fallback)
+  const defaultTenant = import.meta.env.VITE_DEFAULT_TENANT || 'umc';
+  const defaultUrl = buildApiUrlForTenant(defaultTenant);
   return {
-    tenantId: 'default',
-    tenantSlug: 'umc', // Default para UMC
+    tenantId: defaultTenant,
+    tenantSlug: defaultTenant,
     tenantName: 'TrakNor CMMS',
     apiBaseUrl: defaultUrl,
-    branding: TENANT_BRANDINGS.default,
+    branding: TENANT_BRANDINGS[defaultTenant] || TENANT_BRANDINGS.default,
   };
 };
 

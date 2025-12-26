@@ -47,7 +47,6 @@ export const api = axios.create({
 export const reconfigureApiForTenant = (tenantSlugOrUrl: string): void => {
   // 🔧 DEV MODE: Keep using relative URL (proxy handles routing)
   if (import.meta.env.DEV) {
-
     // Don't change baseURL in dev mode - proxy handles it
     return;
   }
@@ -59,12 +58,17 @@ export const reconfigureApiForTenant = (tenantSlugOrUrl: string): void => {
   if (tenantSlugOrUrl.startsWith('http://') || tenantSlugOrUrl.startsWith('https://')) {
     newBaseUrl = tenantSlugOrUrl;
   } else {
-    // Caso contrário, constrói URL para localhost (dev)
-    newBaseUrl = `http://${tenantSlugOrUrl}.localhost:8000/api`;
+    // Usa pattern de URL se disponível
+    const urlPattern = import.meta.env.VITE_API_URL_PATTERN;
+    if (urlPattern && urlPattern.includes('{tenant}')) {
+      newBaseUrl = urlPattern.replace('{tenant}', tenantSlugOrUrl);
+    } else {
+      // Fallback: usa URL fixa ou constrói com subdomínio
+      newBaseUrl = import.meta.env.VITE_API_URL || `http://${tenantSlugOrUrl}.localhost:8000/api`;
+    }
   }
   
   api.defaults.baseURL = newBaseUrl;
-
 };
 
 /**
