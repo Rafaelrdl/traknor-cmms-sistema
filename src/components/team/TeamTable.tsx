@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { MoreHorizontal, Mail, UserCheck, UserX, RotateCcw, Shield } from 'lucide-react';
+import { MoreHorizontal, Mail, UserCheck, UserX, RotateCcw, Shield, Clock, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -23,7 +25,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { IfCan } from '@/components/auth/IfCan';
+import { cn } from '@/lib/utils';
 import type { User } from '@/models/user';
 import type { Invite } from '@/models/invite';
 
@@ -42,6 +51,7 @@ const statusVariants = {
   active: 'default',
   invited: 'secondary',
   disabled: 'destructive',
+  pending: 'secondary',
 } as const;
 
 const roleLabels: Record<string, string> = {
@@ -50,14 +60,16 @@ const roleLabels: Record<string, string> = {
   operator: 'Operador',
   technician: 'Técnico',
   viewer: 'Visualizador',
+  requester: 'Solicitante',
 };
 
-const roleColors: Record<string, string> = {
-  owner: 'text-purple-500',
-  admin: 'text-red-500',
-  operator: 'text-blue-500',
-  technician: 'text-green-500',
-  viewer: 'text-gray-500',
+const roleColors: Record<string, { text: string; bg: string }> = {
+  owner: { text: 'text-purple-600', bg: 'bg-purple-500/10' },
+  admin: { text: 'text-red-600', bg: 'bg-red-500/10' },
+  operator: { text: 'text-blue-600', bg: 'bg-blue-500/10' },
+  technician: { text: 'text-green-600', bg: 'bg-green-500/10' },
+  viewer: { text: 'text-gray-600', bg: 'bg-gray-500/10' },
+  requester: { text: 'text-cyan-600', bg: 'bg-cyan-500/10' },
 };
 
 const statusLabels: Record<string, string> = {
@@ -66,6 +78,7 @@ const statusLabels: Record<string, string> = {
   disabled: 'Desativado',
   inactive: 'Inativo',
   suspended: 'Suspenso',
+  pending: 'Pendente',
 };
 
 export function TeamTable({
@@ -113,47 +126,141 @@ export function TeamTable({
     return dateB - dateA;
   });
 
+  const getInitials = (name?: string, email?: string) => {
+    if (name) {
+      return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    }
+    if (email) {
+      return email.substring(0, 2).toUpperCase();
+    }
+    return '??';
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <div className="h-2 w-2 rounded-full bg-green-500" />;
+      case 'pending':
+      case 'invited':
+        return <Clock className="h-3 w-3 text-amber-500" />;
+      case 'disabled':
+      case 'inactive':
+        return <div className="h-2 w-2 rounded-full bg-red-500" />;
+      default:
+        return <div className="h-2 w-2 rounded-full bg-gray-400" />;
+    }
+  };
+
+  const formatRelativeDate = (dateString?: string) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+
+    if (diffMinutes < 1) return 'Agora';
+    if (diffMinutes < 60) return `${diffMinutes}min atrás`;
+    if (diffHours < 24) return `${diffHours}h atrás`;
+    if (diffDays < 7) return `${diffDays}d atrás`;
+    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+  };
+
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead scope="col">Nome</TableHead>
-            <TableHead scope="col">Email</TableHead>
-            <TableHead scope="col">Papel</TableHead>
-            <TableHead scope="col">Status</TableHead>
-            <TableHead scope="col">Último Acesso</TableHead>
-            <TableHead scope="col" className="w-[70px]">
-              <span className="sr-only">Ações</span>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {tableData.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center">
-                <div className="flex flex-col items-center gap-2">
-                  <Mail className="h-6 w-6 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">
-                    Nenhum usuário ou convite encontrado
-                  </p>
-                </div>
-              </TableCell>
+    <TooltipProvider>
+      <div className="rounded-lg border bg-card overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent bg-muted/50">
+              <TableHead scope="col" className="w-[300px] font-medium">Membro</TableHead>
+              <TableHead scope="col" className="font-medium">Papel</TableHead>
+              <TableHead scope="col" className="w-[100px] font-medium">Status</TableHead>
+              <TableHead scope="col" className="w-[140px] font-medium">Último Acesso</TableHead>
+              <TableHead scope="col" className="w-[48px]">
+                <span className="sr-only">Ações</span>
+              </TableHead>
             </TableRow>
+          </TableHeader>
+          <TableBody>
+            {tableData.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="h-32 text-center">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="rounded-full bg-muted p-3">
+                      <Mail className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">Nenhum membro encontrado</p>
+                      <p className="text-xs text-muted-foreground">
+                        Convide membros para sua equipe
+                      </p>
+                    </div>
+                  </div>
+                </TableCell>
+              </TableRow>
           ) : (
             tableData.map((item) => {
               const isUser = item.type === 'user';
               const data = item.data;
               const uniqueId = isUser ? `user-${data.id}` : `invite-${data.id}`;
+              const userName = isUser ? (data as User).name : undefined;
+              const isCurrentUser = isUser && data.id === currentUserId;
               
               return (
-                <TableRow key={uniqueId}>
-                  <TableCell className="font-medium">
-                    {isUser ? data.name : '—'}
-                  </TableCell>
-                  <TableCell>{data.email}</TableCell>
+                <TableRow 
+                  key={uniqueId}
+                  className={cn(
+                    "group transition-colors",
+                    isCurrentUser && "bg-primary/5"
+                  )}
+                >
+                  {/* Avatar + Nome + Email */}
                   <TableCell>
-                    {isUser && isAdmin && data.id !== currentUserId && onChangeUserRole ? (
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <Avatar className="h-9 w-9 border">
+                          {isUser && (data as User).avatar_url ? (
+                            <AvatarImage src={(data as User).avatar_url} alt={userName} />
+                          ) : null}
+                          <AvatarFallback className={cn(
+                            "text-xs font-medium",
+                            !isUser && "bg-amber-100 text-amber-700"
+                          )}>
+                            {getInitials(userName, data.email)}
+                          </AvatarFallback>
+                        </Avatar>
+                        {/* Status indicator */}
+                        <div className="absolute -bottom-0.5 -right-0.5 rounded-full bg-background p-0.5">
+                          {getStatusIcon(data.status)}
+                        </div>
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm truncate">
+                            {userName || 'Convite Pendente'}
+                          </span>
+                          {isCurrentUser && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
+                              Você
+                            </Badge>
+                          )}
+                          {!isUser && (
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-amber-100 text-amber-700 border-amber-200">
+                              Pendente
+                            </Badge>
+                          )}
+                        </div>
+                        <span className="text-xs text-muted-foreground truncate">
+                          {data.email}
+                        </span>
+                      </div>
+                    </div>
+                  </TableCell>
+
+                  {/* Papel */}
+                  <TableCell>
+                    {isUser && isAdmin && !isCurrentUser && onChangeUserRole ? (
                       <Select
                         value={data.role}
                         onValueChange={(newRole) => {
@@ -164,11 +271,11 @@ export function TeamTable({
                         }}
                         disabled={loadingStates[`role-${data.id}`]}
                       >
-                        <SelectTrigger className="h-8 w-[140px]">
+                        <SelectTrigger className="h-8 w-[150px] text-xs">
                           <SelectValue>
-                            <div className="flex items-center gap-1.5">
-                              <Shield className={`h-3 w-3 ${roleColors[data.role] || 'text-gray-500'}`} />
-                              {roleLabels[data.role] || data.role}
+                            <div className="flex items-center gap-2">
+                              <Shield className={cn("h-3.5 w-3.5", roleColors[data.role]?.text || 'text-gray-500')} />
+                              <span>{roleLabels[data.role] || data.role}</span>
                             </div>
                           </SelectValue>
                         </SelectTrigger>
@@ -197,41 +304,88 @@ export function TeamTable({
                               Visualizador
                             </div>
                           </SelectItem>
+                          <SelectItem value="requester">
+                            <div className="flex items-center gap-2">
+                              <Shield className="h-4 w-4 text-cyan-500" />
+                              Solicitante
+                            </div>
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     ) : (
-                      <Badge variant="outline">
+                      <div className={cn(
+                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium",
+                        roleColors[data.role]?.bg || 'bg-gray-100',
+                        roleColors[data.role]?.text || 'text-gray-600'
+                      )}>
+                        <Shield className="h-3 w-3" />
                         {roleLabels[data.role] || data.role}
-                      </Badge>
+                      </div>
                     )}
                   </TableCell>
+
+                  {/* Status */}
                   <TableCell>
                     <Badge 
-                      variant={statusVariants[data.status]}
-                      className="whitespace-nowrap"
+                      variant={statusVariants[data.status] || 'secondary'}
+                      className={cn(
+                        "text-xs font-medium",
+                        data.status === 'active' && "bg-green-100 text-green-700 border-green-200",
+                        data.status === 'pending' && "bg-amber-100 text-amber-700 border-amber-200",
+                        data.status === 'disabled' && "bg-red-100 text-red-700 border-red-200"
+                      )}
                     >
-                      {statusLabels[data.status]}
+                      {statusLabels[data.status] || data.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {isUser 
-                      ? formatDate((data as User).last_login_at) 
-                      : `Convidado em ${formatDate((data as Invite).sent_at)}`
-                    }
+
+                  {/* Último Acesso */}
+                  <TableCell>
+                    {isUser ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground cursor-default">
+                            <Clock className="h-3.5 w-3.5" />
+                            <span>{formatRelativeDate((data as User).last_login_at) || 'Nunca'}</span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {(data as User).last_login_at 
+                            ? formatDate((data as User).last_login_at)
+                            : 'Nunca acessou'
+                          }
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground cursor-default">
+                            <Calendar className="h-3.5 w-3.5" />
+                            <span>{formatRelativeDate((data as Invite).sent_at)}</span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          Convite enviado em {formatDate((data as Invite).sent_at)}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                   </TableCell>
+
+                  {/* Ações */}
                   <TableCell>
                     <IfCan action="manage" subject="user">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
                             variant="ghost"
-                            className="h-8 w-8 p-0"
+                            size="icon"
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
                             aria-label={`Ações para ${data.email}`}
                           >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" className="w-48">
                           {!isUser && data.status === 'pending' && (
                             <>
                               <DropdownMenuItem
@@ -240,18 +394,19 @@ export function TeamTable({
                                   () => onResendInvite(data.id)
                                 )}
                                 disabled={loadingStates[`resend-${data.id}`]}
-                                className="flex items-center gap-2"
+                                className="gap-2"
                               >
                                 <RotateCcw className="h-4 w-4" />
                                 Reenviar Convite
                               </DropdownMenuItem>
+                              <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 onClick={() => handleAction(
                                   `revoke-${data.id}`,
                                   () => onRevokeInvite(data.id)
                                 )}
                                 disabled={loadingStates[`revoke-${data.id}`]}
-                                className="flex items-center gap-2 text-destructive focus:text-destructive"
+                                className="gap-2 text-destructive focus:text-destructive"
                               >
                                 <UserX className="h-4 w-4" />
                                 Revogar Convite
@@ -259,14 +414,17 @@ export function TeamTable({
                             </>
                           )}
                           
-                          {isUser && data.id !== currentUserId && (
+                          {isUser && !isCurrentUser && (
                             <DropdownMenuItem
                               onClick={() => handleAction(
                                 `toggle-${data.id}`,
                                 () => onToggleUserStatus(data.id, data.status)
                               )}
                               disabled={loadingStates[`toggle-${data.id}`]}
-                              className="flex items-center gap-2"
+                              className={cn(
+                                "gap-2",
+                                data.status === 'active' && "text-destructive focus:text-destructive"
+                              )}
                             >
                               {data.status === 'active' ? (
                                 <>
@@ -282,9 +440,10 @@ export function TeamTable({
                             </DropdownMenuItem>
                           )}
                           
-                          {isUser && data.id === currentUserId && (
-                            <DropdownMenuItem disabled className="text-muted-foreground">
-                              Você mesmo
+                          {isCurrentUser && (
+                            <DropdownMenuItem disabled className="gap-2 text-muted-foreground">
+                              <Shield className="h-4 w-4" />
+                              Este é você
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>
@@ -297,6 +456,7 @@ export function TeamTable({
           )}
         </TableBody>
       </Table>
-    </div>
+      </div>
+    </TooltipProvider>
   );
 }
