@@ -1,15 +1,32 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { PageHeader } from '@/components/PageHeader';
+import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { ProfileTabs } from '@/components/profile/ProfileTabs';
 import { ProfileDataForm } from '@/components/profile/forms/ProfileDataForm';
 import { PreferencesForm } from '@/components/profile/forms/PreferencesForm';
 import { SecurityForm } from '@/components/profile/forms/SecurityForm';
 import { useUsers } from '@/data/usersStore';
 import { toast } from 'sonner';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 type TabValue = 'dados' | 'preferencias' | 'seguranca';
 
 const STORAGE_KEY = 'profile:lastTab';
+
+const tabTitles: Record<TabValue, { title: string; subtitle: string }> = {
+  dados: {
+    title: 'Dados Pessoais',
+    subtitle: 'Atualize suas informações pessoais e foto de perfil',
+  },
+  preferencias: {
+    title: 'Preferências do Sistema',
+    subtitle: 'Personalize a aparência e o comportamento do sistema',
+  },
+  seguranca: {
+    title: 'Configurações de Segurança',
+    subtitle: 'Gerencie sua senha e configurações de autenticação',
+  },
+};
 
 export function ProfilePage() {
   const [activeTab, setActiveTab] = useState<TabValue>(() => {
@@ -18,6 +35,8 @@ export function ProfilePage() {
   });
 
   const { getCurrentUser, updateCurrentUser } = useUsers();
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleTabChange = useCallback((tab: TabValue) => {
     setActiveTab(tab);
@@ -54,7 +73,18 @@ export function ProfilePage() {
     }
   }, [updateCurrentUser]);
 
+  const handleAvatarClick = useCallback(() => {
+    // Switch to profile data tab and focus on avatar upload
+    setActiveTab('dados');
+    localStorage.setItem(STORAGE_KEY, 'dados');
+    // Trigger file input after a short delay to ensure tab change
+    setTimeout(() => {
+      fileInputRef.current?.click();
+    }, 100);
+  }, []);
+
   const currentUser = getCurrentUser();
+  const currentTabInfo = tabTitles[activeTab];
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -63,6 +93,7 @@ export function ProfilePage() {
           <ProfileDataForm
             user={currentUser}
             onSave={handleSaveProfile}
+            externalFileInputRef={fileInputRef}
           />
         );
       case 'preferencias':
@@ -85,21 +116,48 @@ export function ProfilePage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-8">
       <PageHeader
-        title="Perfil"
+        title="Meu Perfil"
         subtitle="Gerencie suas informações pessoais, preferências e configurações de segurança"
       />
 
-      <div className="bg-card rounded-lg border shadow-sm">
-        <ProfileTabs
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-        />
+      {/* Profile Header Card */}
+      <ProfileHeader 
+        user={currentUser} 
+        onAvatarClick={handleAvatarClick}
+      />
 
-        <div className="p-6">
-          {renderTabContent()}
-        </div>
+      {/* Main Content Area */}
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Sidebar Navigation (Desktop) / Tabs (Mobile) */}
+        <aside className={isDesktop ? "w-72 shrink-0" : "w-full"}>
+          <div className="bg-card rounded-xl border shadow-sm p-4 sticky top-4">
+            <ProfileTabs
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+              variant={isDesktop ? 'vertical' : 'horizontal'}
+            />
+          </div>
+        </aside>
+
+        {/* Content Area */}
+        <main className="flex-1 min-w-0">
+          <div className="bg-card rounded-xl border shadow-sm">
+            {/* Content Header */}
+            <div className="border-b px-6 py-4">
+              <h2 className="text-lg font-semibold">{currentTabInfo.title}</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {currentTabInfo.subtitle}
+              </p>
+            </div>
+            
+            {/* Content Body */}
+            <div className="p-6">
+              {renderTabContent()}
+            </div>
+          </div>
+        </main>
       </div>
     </div>
   );
