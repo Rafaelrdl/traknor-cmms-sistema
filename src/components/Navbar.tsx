@@ -61,7 +61,6 @@ const monitorNavigation: NavItem[] = [
   { name: 'Sensores', href: '/monitor/sensores', icon: Cpu },
   { name: 'Alertas', href: '/monitor/alertas', icon: Bell },
   { name: 'Regras', href: '/monitor/regras', icon: AlertTriangle },
-  { name: 'Relatórios', href: '/monitor/relatorios', icon: FileText },
 ];
 
 // Hook para obter a navegação baseada no módulo ativo

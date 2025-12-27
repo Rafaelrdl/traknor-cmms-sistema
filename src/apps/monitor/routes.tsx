@@ -5,7 +5,6 @@ import {
   MonitorAssetsPage, 
   MonitorAssetDetailPage,
   RulesPage,
-  ReportsPage,
   EditableOverviewPage,
   CustomDashboardPage
 } from './pages';
@@ -24,7 +23,6 @@ import { SettingsPage } from '@/pages/SettingsPage';
  * - /monitor/sensores       → Grid de Sensores/Devices
  * - /monitor/ativos         → Lista de Ativos HVAC
  * - /monitor/regras         → Configuração de Regras
- * - /monitor/relatorios     → Relatórios de Monitoramento
  * - /monitor/profile        → Perfil do Usuário
  * - /monitor/admin/team     → Gerenciamento de Equipe
  */
@@ -54,9 +52,6 @@ export function MonitorRoutes() {
       
       {/* Configuração de regras */}
       <Route path="/regras" element={<RulesPage />} />
-
-      {/* Relatórios */}
-      <Route path="/relatorios" element={<ReportsPage />} />
       
       {/* Perfil do usuário (compartilhado) */}
       <Route path="/profile" element={<ProfilePage />} />

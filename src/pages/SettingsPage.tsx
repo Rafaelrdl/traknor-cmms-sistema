@@ -366,7 +366,7 @@ export function SettingsPage() {
         </aside>
 
         {/* Área de conteúdo */}
-        <main className="flex-1 min-w-0 bg-muted/10">
+        <main className="flex-1 min-w-0">
           <ScrollArea className="h-full">
             <div className="p-6">
               {renderContent()}
@@ -412,7 +412,7 @@ function WorkOrdersSection({
   handleRemoveType,
 }: WorkOrdersSectionProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header da seção */}
       <div>
         <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -424,176 +424,175 @@ function WorkOrdersSection({
         </p>
       </div>
 
-      {/* Grid de duas colunas para Status e Tipos */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Status Section */}
-        <Card className="h-fit">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Tag className="h-4 w-4" />
-              Status de Ordem de Serviço
-            </CardTitle>
-            <CardDescription>
-              Defina os status que uma ordem de serviço pode ter.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Lista de status existentes */}
-            <div className="grid grid-cols-2 gap-2">
-              {localWOSettings.statuses.map((status) => (
-                <div 
-                  key={status.id}
-                  className="group flex items-center justify-between p-2.5 border rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full border-2" 
-                      style={{ backgroundColor: status.color, borderColor: status.color }}
-                    />
-                    <span className="text-sm font-medium">{status.label}</span>
-                  </div>
-                  {status.isDefault ? (
-                    <Badge variant="secondary" className="text-[10px]">Padrão</Badge>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
-                      onClick={() => handleRemoveStatus(status.id)}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  )}
+      {/* Status Section */}
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Tag className="h-4 w-4" />
+            Status de Ordem de Serviço
+          </CardTitle>
+          <CardDescription>
+            Defina os status que uma ordem de serviço pode ter durante seu ciclo de vida.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Lista de status existentes */}
+          <div className="flex flex-wrap gap-3">
+            {localWOSettings.statuses.map((status) => (
+              <div 
+                key={status.id}
+                className="group flex items-center gap-3 px-3 py-2 border rounded-lg hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-3 h-3 rounded-full border-2" 
+                    style={{ backgroundColor: status.color, borderColor: status.color }}
+                  />
+                  <span className="text-sm font-medium">{status.label}</span>
                 </div>
-              ))}
-            </div>
-            
-            <Separator />
-            
-            {/* Formulário para adicionar novo status */}
-            <div className="space-y-3 p-3 bg-muted/30 rounded-lg border border-dashed">
-              <div className="space-y-2">
-                <Label htmlFor="new-status" className="text-sm">Novo Status</Label>
-                <Input
-                  id="new-status"
-                  placeholder="Ex: Em Análise, Aguardando Peças..."
-                  value={newStatusLabel}
-                  onChange={(e) => setNewStatusLabel(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddStatus()}
-                  className="h-9"
-                />
+                {status.isDefault ? (
+                  <Badge variant="secondary" className="text-[10px]">Padrão</Badge>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
+                    onClick={() => handleRemoveStatus(status.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                )}
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex gap-1.5">
-                  {colorOptions.map((color) => (
-                    <button
-                      key={color.value}
-                      type="button"
-                      className={cn(
-                        "w-6 h-6 rounded-full transition-all",
-                        color.class,
-                        newStatusColor === color.value 
-                          ? 'ring-2 ring-offset-2 ring-primary scale-110' 
-                          : 'hover:scale-105 opacity-70 hover:opacity-100'
-                      )}
-                      onClick={() => setNewStatusColor(color.value)}
-                      title={color.label}
-                    />
-                  ))}
-                </div>
-                <Button onClick={handleAddStatus} size="sm" className="h-8 gap-1.5">
-                  <Plus className="h-4 w-4" />
-                  Adicionar
-                </Button>
+            ))}
+          </div>
+          
+          <Separator />
+          
+          {/* Formulário para adicionar novo status */}
+          <div className="flex items-end gap-4 p-4 bg-muted/30 rounded-lg border border-dashed">
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="new-status" className="text-sm">Novo Status</Label>
+              <Input
+                id="new-status"
+                placeholder="Ex: Em Análise, Aguardando Peças..."
+                value={newStatusLabel}
+                onChange={(e) => setNewStatusLabel(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddStatus()}
+                className="h-9"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm">Cor</Label>
+              <div className="flex gap-1.5">
+                {colorOptions.map((color) => (
+                  <button
+                    key={color.value}
+                    type="button"
+                    className={cn(
+                      "w-7 h-7 rounded-full transition-all",
+                      color.class,
+                      newStatusColor === color.value 
+                        ? 'ring-2 ring-offset-2 ring-primary scale-110' 
+                        : 'hover:scale-105 opacity-70 hover:opacity-100'
+                    )}
+                    onClick={() => setNewStatusColor(color.value)}
+                    title={color.label}
+                  />
+                ))}
               </div>
             </div>
-          </CardContent>
-        </Card>
+            <Button onClick={handleAddStatus} size="sm" className="h-9 gap-1.5">
+              <Plus className="h-4 w-4" />
+              Adicionar
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Types Section */}
-        <Card className="h-fit">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Palette className="h-4 w-4" />
-              Tipos de Serviço
-            </CardTitle>
-            <CardDescription>
-              Categorize as ordens de serviço por tipo.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Lista de tipos existentes */}
-            <div className="grid grid-cols-2 gap-2">
-              {localWOSettings.types.map((type) => (
-                <div 
-                  key={type.id}
-                  className="group flex items-center justify-between p-2.5 border rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full border-2" 
-                      style={{ backgroundColor: type.color, borderColor: type.color }}
-                    />
-                    <span className="text-sm font-medium">{type.label}</span>
-                  </div>
-                  {type.isDefault ? (
-                    <Badge variant="secondary" className="text-[10px]">Padrão</Badge>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
-                      onClick={() => handleRemoveType(type.id)}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  )}
+      {/* Types Section */}
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Palette className="h-4 w-4" />
+            Tipos de Serviço
+          </CardTitle>
+          <CardDescription>
+            Categorize as ordens de serviço por tipo para melhor organização e relatórios.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Lista de tipos existentes */}
+          <div className="flex flex-wrap gap-3">
+            {localWOSettings.types.map((type) => (
+              <div 
+                key={type.id}
+                className="group flex items-center gap-3 px-3 py-2 border rounded-lg hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-3 h-3 rounded-full border-2" 
+                    style={{ backgroundColor: type.color, borderColor: type.color }}
+                  />
+                  <span className="text-sm font-medium">{type.label}</span>
                 </div>
-              ))}
-            </div>
-            
-            <Separator />
-            
-            {/* Formulário para adicionar novo tipo */}
-            <div className="space-y-3 p-3 bg-muted/30 rounded-lg border border-dashed">
-              <div className="space-y-2">
-                <Label htmlFor="new-type" className="text-sm">Novo Tipo de Serviço</Label>
-                <Input
-                  id="new-type"
-                  placeholder="Ex: Emergencial, Instalação..."
-                  value={newTypeLabel}
-                  onChange={(e) => setNewTypeLabel(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddType()}
-                  className="h-9"
-                />
+                {type.isDefault ? (
+                  <Badge variant="secondary" className="text-[10px]">Padrão</Badge>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
+                    onClick={() => handleRemoveType(type.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                )}
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex gap-1.5">
-                  {colorOptions.map((color) => (
-                    <button
-                      key={color.value}
-                      type="button"
-                      className={cn(
-                        "w-6 h-6 rounded-full transition-all",
-                        color.class,
-                        newTypeColor === color.value 
-                          ? 'ring-2 ring-offset-2 ring-primary scale-110' 
-                          : 'hover:scale-105 opacity-70 hover:opacity-100'
-                      )}
-                      onClick={() => setNewTypeColor(color.value)}
-                      title={color.label}
-                    />
-                  ))}
-                </div>
-                <Button onClick={handleAddType} size="sm" className="h-8 gap-1.5">
-                  <Plus className="h-4 w-4" />
-                  Adicionar
-                </Button>
+            ))}
+          </div>
+          
+          <Separator />
+          
+          {/* Formulário para adicionar novo tipo */}
+          <div className="flex items-end gap-4 p-4 bg-muted/30 rounded-lg border border-dashed">
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="new-type" className="text-sm">Novo Tipo de Serviço</Label>
+              <Input
+                id="new-type"
+                placeholder="Ex: Emergencial, Instalação, Calibração..."
+                value={newTypeLabel}
+                onChange={(e) => setNewTypeLabel(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddType()}
+                className="h-9"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm">Cor</Label>
+              <div className="flex gap-1.5">
+                {colorOptions.map((color) => (
+                  <button
+                    key={color.value}
+                    type="button"
+                    className={cn(
+                      "w-7 h-7 rounded-full transition-all",
+                      color.class,
+                      newTypeColor === color.value 
+                        ? 'ring-2 ring-offset-2 ring-primary scale-110' 
+                        : 'hover:scale-105 opacity-70 hover:opacity-100'
+                    )}
+                    onClick={() => setNewTypeColor(color.value)}
+                    title={color.label}
+                  />
+                ))}
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <Button onClick={handleAddType} size="sm" className="h-9 gap-1.5">
+              <Plus className="h-4 w-4" />
+              Adicionar
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -610,7 +609,7 @@ interface SLASectionProps {
 
 function SLASection({ localSLASettings, setLocalSLASettings, updatePrioritySLA }: SLASectionProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header da seção */}
       <div>
         <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -622,70 +621,63 @@ function SLASection({ localSLASettings, setLocalSLASettings, updatePrioritySLA }
         </p>
       </div>
 
-      {/* Toggle SLA + Legenda lado a lado */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        {/* Toggle SLA */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className={cn(
-                  "flex items-center justify-center w-12 h-12 rounded-xl transition-colors",
-                  localSLASettings.enabled ? "bg-green-500/10" : "bg-muted"
-                )}>
-                  <Timer className={cn(
-                    "h-6 w-6 transition-colors",
-                    localSLASettings.enabled ? "text-green-600" : "text-muted-foreground"
-                  )} />
-                </div>
-                <div>
-                  <div className="font-medium">Controle de SLA</div>
-                  <p className="text-sm text-muted-foreground">
-                    {localSLASettings.enabled 
-                      ? 'Os indicadores de SLA estão visíveis nas ordens de serviço' 
-                      : 'Ative para monitorar tempos de atendimento e resolução'}
-                  </p>
-                </div>
+      {/* Toggle SLA */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className={cn(
+                "flex items-center justify-center w-12 h-12 rounded-xl transition-colors",
+                localSLASettings.enabled ? "bg-green-500/10" : "bg-muted"
+              )}>
+                <Timer className={cn(
+                  "h-6 w-6 transition-colors",
+                  localSLASettings.enabled ? "text-green-600" : "text-muted-foreground"
+                )} />
               </div>
-              <Switch
-                checked={localSLASettings.enabled}
-                onCheckedChange={(checked) => 
-                  setLocalSLASettings((prev) => ({ ...prev, enabled: checked }))
-                }
-              />
+              <div>
+                <div className="font-medium">Controle de SLA</div>
+                <p className="text-sm text-muted-foreground">
+                  {localSLASettings.enabled 
+                    ? 'Os indicadores de SLA estão visíveis nas ordens de serviço' 
+                    : 'Ative para monitorar tempos de atendimento e resolução'}
+                </p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+            <Switch
+              checked={localSLASettings.enabled}
+              onCheckedChange={(checked) => 
+                setLocalSLASettings((prev) => ({ ...prev, enabled: checked }))
+              }
+            />
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Legenda */}
-        <Card className="border-dashed bg-muted/30">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-6 h-full">
-              <div className="flex items-center gap-2 text-sm">
-                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/10">
-                  <Clock className="h-4 w-4 text-blue-600" />
-                </div>
-                <div>
-                  <div className="font-medium">SLA de Atendimento</div>
-                  <div className="text-xs text-muted-foreground">Tempo máximo para iniciar a OS</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-green-500/10">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                </div>
-                <div>
-                  <div className="font-medium">SLA de Fechamento</div>
-                  <div className="text-xs text-muted-foreground">Tempo máximo para concluir a OS</div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Legenda */}
+      <div className="flex flex-wrap gap-6 p-4 bg-muted/30 rounded-lg">
+        <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/10">
+            <Clock className="h-4 w-4 text-blue-600" />
+          </div>
+          <div>
+            <div className="font-medium">SLA de Atendimento</div>
+            <div className="text-xs text-muted-foreground">Tempo máximo para iniciar a OS</div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-green-500/10">
+            <CheckCircle2 className="h-4 w-4 text-green-600" />
+          </div>
+          <div>
+            <div className="font-medium">SLA de Fechamento</div>
+            <div className="text-xs text-muted-foreground">Tempo máximo para concluir a OS</div>
+          </div>
+        </div>
       </div>
 
-      {/* Configurações por prioridade - Grid de 2 colunas */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+      {/* Configurações por prioridade */}
+      <div className="space-y-4">
         {(Object.keys(priorityLabels) as Array<keyof typeof priorityLabels>).map((priority) => {
           const { label, icon: Icon, color, bgColor, borderColor } = priorityLabels[priority];
           const config = localSLASettings.priorities[priority];
@@ -698,47 +690,51 @@ function SLASection({ localSLASettings, setLocalSLASettings, updatePrioritySLA }
                 !localSLASettings.enabled && "opacity-50"
               )}
             >
-              <CardContent className="p-4">
-                <div className="flex items-center gap-4">
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
                   {/* Ícone e Label */}
-                  <div className="flex items-center gap-3 min-w-[160px]">
+                  <div className="flex items-center gap-3">
                     <div className={cn("flex items-center justify-center w-10 h-10 rounded-lg", bgColor)}>
                       <Icon className={cn("h-5 w-5", color)} />
                     </div>
                     <div>
-                      <div className="font-medium text-sm">Prioridade {label}</div>
+                      <div className="font-medium">Prioridade {label}</div>
                       <Badge variant="outline" className={cn("text-[10px] mt-0.5", borderColor)}>
                         {priority}
                       </Badge>
                     </div>
                   </div>
 
-                  {/* Inputs */}
-                  <div className="flex-1 flex items-center gap-6">
-                    <div className="flex items-center gap-2">
+                  {/* Inputs lado a lado */}
+                  <div className="flex items-center gap-8">
+                    <div className="flex items-center gap-3">
                       <Clock className="h-4 w-4 text-blue-500" />
-                      <Input
-                        type="number"
-                        min="0"
-                        value={config.responseTime}
-                        onChange={(e) => updatePrioritySLA(priority, 'responseTime', e.target.value)}
-                        className="w-16 h-8 text-center text-sm"
-                        disabled={!localSLASettings.enabled}
-                      />
-                      <span className="text-xs text-muted-foreground">h</span>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min="0"
+                          value={config.responseTime}
+                          onChange={(e) => updatePrioritySLA(priority, 'responseTime', e.target.value)}
+                          className="w-20 h-9 text-center"
+                          disabled={!localSLASettings.enabled}
+                        />
+                        <span className="text-sm text-muted-foreground">horas</span>
+                      </div>
                     </div>
                     
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      <Input
-                        type="number"
-                        min="0"
-                        value={config.resolutionTime}
-                        onChange={(e) => updatePrioritySLA(priority, 'resolutionTime', e.target.value)}
-                        className="w-16 h-8 text-center text-sm"
-                        disabled={!localSLASettings.enabled}
-                      />
-                      <span className="text-xs text-muted-foreground">h</span>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min="0"
+                          value={config.resolutionTime}
+                          onChange={(e) => updatePrioritySLA(priority, 'resolutionTime', e.target.value)}
+                          className="w-20 h-9 text-center"
+                          disabled={!localSLASettings.enabled}
+                        />
+                        <span className="text-sm text-muted-foreground">horas</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -759,7 +755,7 @@ function NotificationsSection() {
   const [statusChange, setStatusChange] = useState(true);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header da seção */}
       <div>
         <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -771,87 +767,84 @@ function NotificationsSection() {
         </p>
       </div>
 
-      {/* Grid de duas colunas */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Canais de notificação */}
-        <Card className="h-fit">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-base">Canais de Notificação</CardTitle>
-            <CardDescription>
-              Escolha os meios pelos quais deseja receber notificações.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-blue-500/10">
-                  <Bell className="h-4 w-4 text-blue-600" />
-                </div>
-                <div>
-                  <div className="font-medium text-sm">Notificações por Email</div>
-                  <div className="text-xs text-muted-foreground">Receba alertas no seu email</div>
-                </div>
+      {/* Canais de notificação */}
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-base">Canais de Notificação</CardTitle>
+          <CardDescription>
+            Escolha os meios pelos quais deseja receber notificações.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-500/10">
+                <Bell className="h-5 w-5 text-blue-600" />
               </div>
-              <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
-            </div>
-            
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-purple-500/10">
-                  <Bell className="h-4 w-4 text-purple-600" />
-                </div>
-                <div>
-                  <div className="font-medium text-sm">Notificações Push</div>
-                  <div className="text-xs text-muted-foreground">Alertas em tempo real no navegador</div>
-                </div>
+              <div>
+                <div className="font-medium">Notificações por Email</div>
+                <div className="text-sm text-muted-foreground">Receba alertas no seu email cadastrado</div>
               </div>
-              <Switch checked={pushNotifications} onCheckedChange={setPushNotifications} />
             </div>
-          </CardContent>
-        </Card>
+            <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
+          </div>
+          
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-purple-500/10">
+                <Bell className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <div className="font-medium">Notificações Push</div>
+                <div className="text-sm text-muted-foreground">Receba alertas em tempo real no navegador</div>
+              </div>
+            </div>
+            <Switch checked={pushNotifications} onCheckedChange={setPushNotifications} />
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Tipos de notificação */}
-        <Card className="h-fit">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-base">Eventos de Notificação</CardTitle>
-            <CardDescription>
-              Selecione os eventos que devem gerar notificações.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex items-center justify-between py-2.5 px-3 border rounded-lg">
-              <div>
-                <div className="font-medium text-sm">Violação de SLA</div>
-                <div className="text-xs text-muted-foreground">Quando uma OS ultrapassa o tempo de SLA</div>
-              </div>
-              <Switch checked={slaBreach} onCheckedChange={setSlaBreach} />
+      {/* Tipos de notificação */}
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-base">Eventos de Notificação</CardTitle>
+          <CardDescription>
+            Selecione os eventos que devem gerar notificações.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between py-3 border-b">
+            <div>
+              <div className="font-medium text-sm">Violação de SLA</div>
+              <div className="text-xs text-muted-foreground">Quando uma OS ultrapassa o tempo de SLA</div>
             </div>
-            
-            <div className="flex items-center justify-between py-2.5 px-3 border rounded-lg">
-              <div>
-                <div className="font-medium text-sm">Nova Ordem de Serviço</div>
-                <div className="text-xs text-muted-foreground">Quando uma nova OS é criada</div>
-              </div>
-              <Switch checked={newWorkOrder} onCheckedChange={setNewWorkOrder} />
+            <Switch checked={slaBreach} onCheckedChange={setSlaBreach} />
+          </div>
+          
+          <div className="flex items-center justify-between py-3 border-b">
+            <div>
+              <div className="font-medium text-sm">Nova Ordem de Serviço</div>
+              <div className="text-xs text-muted-foreground">Quando uma nova OS é criada</div>
             </div>
-            
-            <div className="flex items-center justify-between py-2.5 px-3 border rounded-lg">
-              <div>
-                <div className="font-medium text-sm">Mudança de Status</div>
-                <div className="text-xs text-muted-foreground">Quando o status de uma OS é alterado</div>
-              </div>
-              <Switch checked={statusChange} onCheckedChange={setStatusChange} />
+            <Switch checked={newWorkOrder} onCheckedChange={setNewWorkOrder} />
+          </div>
+          
+          <div className="flex items-center justify-between py-3">
+            <div>
+              <div className="font-medium text-sm">Mudança de Status</div>
+              <div className="text-xs text-muted-foreground">Quando o status de uma OS é alterado</div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <Switch checked={statusChange} onCheckedChange={setStatusChange} />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
 function OrganizationSection() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header da seção */}
       <div>
         <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -865,46 +858,40 @@ function OrganizationSection() {
 
       <Card>
         <CardContent className="p-6 space-y-5">
-          {/* Linha 1: Nome e CNPJ */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            <div className="space-y-2 xl:col-span-2">
-              <Label htmlFor="org-name">Nome da Empresa</Label>
-              <Input id="org-name" placeholder="Nome da empresa" defaultValue="UMC - Universidade de Mogi das Cruzes" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="org-cnpj">CNPJ</Label>
-              <Input id="org-cnpj" placeholder="00.000.000/0000-00" defaultValue="52.562.758/0001-00" />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="org-name">Nome da Empresa</Label>
+            <Input id="org-name" placeholder="Nome da empresa" defaultValue="UMC - Universidade de Mogi das Cruzes" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="org-cnpj">CNPJ</Label>
+            <Input id="org-cnpj" placeholder="00.000.000/0000-00" defaultValue="52.562.758/0001-00" />
           </div>
           
-          {/* Linha 2: Endereço */}
           <div className="space-y-2">
             <Label htmlFor="org-address">Endereço</Label>
             <Input id="org-address" placeholder="Endereço completo" defaultValue="Av. Dr. Cândido Xavier de Almeida Souza, 200" />
           </div>
           
-          {/* Linha 3: Cidade, Estado, CEP */}
-          <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4">
-            <div className="space-y-2 col-span-2">
-              <Label htmlFor="org-city">Cidade</Label>
-              <Input id="org-city" placeholder="Cidade" defaultValue="Mogi das Cruzes" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="org-state">Estado</Label>
-              <Input id="org-state" placeholder="UF" defaultValue="SP" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="org-cep">CEP</Label>
-              <Input id="org-cep" placeholder="00000-000" defaultValue="08780-911" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="org-phone">Telefone</Label>
-              <Input id="org-phone" placeholder="(00) 0000-0000" defaultValue="(11) 4798-7000" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="org-email">Email</Label>
-              <Input id="org-email" type="email" placeholder="contato@empresa.com" defaultValue="contato@umc.br" />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="org-city">Cidade</Label>
+            <Input id="org-city" placeholder="Cidade" defaultValue="Mogi das Cruzes" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="org-state">Estado</Label>
+            <Input id="org-state" placeholder="UF" defaultValue="SP" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="org-cep">CEP</Label>
+            <Input id="org-cep" placeholder="00000-000" defaultValue="08780-911" />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="org-phone">Telefone</Label>
+            <Input id="org-phone" placeholder="(00) 0000-0000" defaultValue="(11) 4798-7000" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="org-email">Email</Label>
+            <Input id="org-email" type="email" placeholder="contato@empresa.com" defaultValue="contato@umc.br" />
           </div>
         </CardContent>
       </Card>
@@ -914,7 +901,7 @@ function OrganizationSection() {
 
 function IntegrationsSection() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header da seção */}
       <div>
         <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -926,24 +913,23 @@ function IntegrationsSection() {
         </p>
       </div>
 
-      {/* Grid de integrações */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="space-y-4">
         {/* API */}
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10">
-                  <Shield className="h-5 w-5 text-blue-600" />
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-500/10">
+                  <Shield className="h-6 w-6 text-blue-600" />
                 </div>
                 <div>
-                  <div className="font-medium text-sm">API REST</div>
-                  <p className="text-xs text-muted-foreground">
-                    Integre via API
+                  <div className="font-medium">API REST</div>
+                  <p className="text-sm text-muted-foreground">
+                    Integre via API para automatizar processos
                   </p>
                 </div>
               </div>
-              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-[10px]">
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                 Conectado
               </Badge>
             </div>
@@ -954,18 +940,18 @@ function IntegrationsSection() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-purple-500/10">
-                  <Plug className="h-5 w-5 text-purple-600" />
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-purple-500/10">
+                  <Plug className="h-6 w-6 text-purple-600" />
                 </div>
                 <div>
-                  <div className="font-medium text-sm">Webhooks</div>
-                  <p className="text-xs text-muted-foreground">
-                    Eventos em tempo real
+                  <div className="font-medium">Webhooks</div>
+                  <p className="text-sm text-muted-foreground">
+                    Receba eventos em tempo real
                   </p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" className="h-7 text-xs">Configurar</Button>
+              <Button variant="outline" size="sm">Configurar</Button>
             </div>
           </CardContent>
         </Card>
@@ -974,80 +960,18 @@ function IntegrationsSection() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-500/10">
-                  <Building2 className="h-5 w-5 text-amber-600" />
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-amber-500/10">
+                  <Building2 className="h-6 w-6 text-amber-600" />
                 </div>
                 <div>
-                  <div className="font-medium text-sm">Integração ERP</div>
-                  <p className="text-xs text-muted-foreground">
-                    Sistema de gestão
+                  <div className="font-medium">Integração ERP</div>
+                  <p className="text-sm text-muted-foreground">
+                    Conecte com seu sistema de gestão
                   </p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" className="h-7 text-xs">Conectar</Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* MQTT */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-green-500/10">
-                  <Plug className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <div className="font-medium text-sm">MQTT Broker</div>
-                  <p className="text-xs text-muted-foreground">
-                    IoT e sensores
-                  </p>
-                </div>
-              </div>
-              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-[10px]">
-                Conectado
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Email */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-500/10">
-                  <Bell className="h-5 w-5 text-red-600" />
-                </div>
-                <div>
-                  <div className="font-medium text-sm">SMTP Email</div>
-                  <p className="text-xs text-muted-foreground">
-                    Envio de notificações
-                  </p>
-                </div>
-              </div>
-              <Button variant="outline" size="sm" className="h-7 text-xs">Configurar</Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* SSO */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-500/10">
-                  <Shield className="h-5 w-5 text-indigo-600" />
-                </div>
-                <div>
-                  <div className="font-medium text-sm">SSO / SAML</div>
-                  <p className="text-xs text-muted-foreground">
-                    Login único corporativo
-                  </p>
-                </div>
-              </div>
-              <Button variant="outline" size="sm" className="h-7 text-xs">Conectar</Button>
+              <Button variant="outline" size="sm">Conectar</Button>
             </div>
           </CardContent>
         </Card>
