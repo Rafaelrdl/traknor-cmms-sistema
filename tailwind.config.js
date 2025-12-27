@@ -25,6 +25,9 @@ const defaultTheme = {
       // Custom breakpoints for better navbar responsiveness
       'nav-md': '900px',   // Intermediate breakpoint for navbar
       'nav-lg': '1140px',  // Better control between lg and xl
+      // Ultrawide monitor breakpoints
+      '3xl': '1920px',     // Full HD / ultrawide
+      '4xl': '2560px',     // 4K / large ultrawide
     },
     colors: {
       background: "var(--background)",
