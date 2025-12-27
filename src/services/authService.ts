@@ -102,10 +102,15 @@ export async function validateResetToken(token: string): Promise<{ valid: boolea
   return data;
 }
 
-export async function confirmPasswordReset(token: string, newPassword: string): Promise<{ message: string }> {
+export async function confirmPasswordReset(
+  token: string, 
+  password: string, 
+  passwordConfirm: string
+): Promise<{ message: string }> {
   const { data } = await api.post<{ message: string }>('/auth/password-reset/confirm/', { 
     token, 
-    new_password: newPassword 
+    password,
+    password_confirm: passwordConfirm
   });
   return data;
 }
